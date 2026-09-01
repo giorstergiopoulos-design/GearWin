@@ -1,41 +1,50 @@
-using System;
-using System.Linq;
 using System.Windows;
+using System.Windows.Media;
 
 namespace OptimizerWpf
 {
-    // Swaps the merged theme ResourceDictionary at runtime - mirrors Optimizer.ps1's
-    // $global:isDarkMode toggle + Update-UITheme, but WPF's DynamicResource bindings mean every
-    // control that reads a theme brush repaints itself automatically, with no manual per-control
-    // refresh loop needed (unlike the WinForms allCards/allTextLabels tracking arrays).
+    // Applies a ThemeColors palette directly onto the app's resource brushes (MainBgBrush,
+    // CardBgBrush, etc. - the same keys every XAML file already binds to via DynamicResource).
+    // Replaced the earlier Dark.xaml/Light.xaml ResourceDictionary-swap approach: with 21 themes
+    // now in ThemeCatalog, one dictionary file per theme would mean 21 near-duplicate XAML files -
+    // setting brushes straight from a C# record is far less to keep in sync, and DynamicResource
+    // still repaints every bound control automatically either way.
     public static class ThemeManager
     {
         public static bool IsDarkMode { get; private set; } = true;
+        public static ThemeColors CurrentTheme { get; private set; } = ThemeCatalog.Windows11FluentDark;
 
-        public static void SetTheme(bool dark)
+        public static void ApplyTheme(ThemeColors theme, bool? forceDarkMode = null)
         {
-            IsDarkMode = dark;
-            var dictName = dark ? "Themes/Dark.xaml" : "Themes/Light.xaml";
-            var merged = Application.Current.Resources.MergedDictionaries;
+            CurrentTheme = theme;
+            if (forceDarkMode.HasValue) IsDarkMode = forceDarkMode.Value;
 
-            var themeDict = merged.FirstOrDefault(d =>
-                d.Source != null &&
-                (d.Source.OriginalString.Contains("Dark.xaml") || d.Source.OriginalString.Contains("Light.xaml")));
-
-            var newDict = new ResourceDictionary { Source = new Uri(dictName, UriKind.Relative) };
-
-            if (themeDict != null)
-            {
-                var index = merged.IndexOf(themeDict);
-                merged.RemoveAt(index);
-                merged.Insert(index, newDict);
-            }
-            else
-            {
-                merged.Insert(0, newDict);
-            }
+            var res = Application.Current.Resources;
+            res["MainBgBrush"] = new SolidColorBrush(theme.MainBg);
+            res["TabBgBrush"] = new SolidColorBrush(theme.TabBg);
+            res["TabSelectBrush"] = new SolidColorBrush(theme.TabSelect);
+            res["TextBrush"] = new SolidColorBrush(theme.Text);
+            res["SubTextBrush"] = new SolidColorBrush(theme.SubText);
+            res["StatusTextBrush"] = new SolidColorBrush(theme.StatusText);
+            res["CardBgBrush"] = new SolidColorBrush(theme.CardBg);
+            res["CardBorderBrush"] = new SolidColorBrush(theme.CardBorder);
+            res["BtnDefaultBrush"] = new SolidColorBrush(theme.BtnDefault);
+            res["BtnHoverBrush"] = new SolidColorBrush(theme.BtnHover);
+            res["AccentBrush"] = new SolidColorBrush(theme.Accent);
         }
 
-        public static void ToggleTheme() => SetTheme(!IsDarkMode);
+        // The Light Mode toggle only has real data for the default Windows 11 Fluent theme (the
+        // only one Optimizer.ps1 fully built out a light variant for) - toggling it while any other
+        // theme is selected just re-applies that theme's one (dark) palette. Documented gap, not a
+        // bug: matches what's actually available to port right now.
+        public static void ToggleLightDark()
+        {
+            var goingDark = !IsDarkMode;
+            var isFluent = CurrentTheme == ThemeCatalog.Windows11FluentDark || CurrentTheme == ThemeCatalog.Windows11FluentLight;
+            var next = isFluent
+                ? (goingDark ? ThemeCatalog.Windows11FluentDark : ThemeCatalog.Windows11FluentLight)
+                : CurrentTheme;
+            ApplyTheme(next, goingDark);
+        }
     }
 }

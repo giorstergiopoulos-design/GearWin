@@ -6,9 +6,8 @@
     <Application.Resources>
         <ResourceDictionary>
             <ResourceDictionary.MergedDictionaries>
-                <!-- Dark is the default theme dictionary - ThemeManager.SetTheme swaps index 0 at
-                     runtime to switch Dark/Light, matching Optimizer.ps1's default (isDarkMode = $true). -->
-                <ResourceDictionary Source="Themes/Dark.xaml"/>
+                <!-- Theme color brushes (MainBgBrush, CardBgBrush, etc.) are set at runtime by
+                     ThemeManager.ApplyTheme - see App.xaml.cs OnStartup - not defined here anymore. -->
                 <ResourceDictionary Source="Themes/Styles.xaml"/>
             </ResourceDictionary.MergedDictionaries>
         </ResourceDictionary>

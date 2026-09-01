@@ -55,6 +55,15 @@
             <StackPanel Grid.Column="2" Orientation="Horizontal" VerticalAlignment="Center">
                 <Button x:Name="BtnLanguage" Content="&#x1F310;" Width="36" Height="36" Margin="0,0,8,0" Style="{StaticResource FlatButtonStyle}"/>
                 <Button x:Name="BtnHamburger" Content="&#x2261;" Width="36" Height="36" Margin="0,0,8,0" Style="{StaticResource FlatButtonStyle}"/>
+                <!-- Θέμα (θέση διπλα στο Light/Dark Mode, ρητό αίτημα χρήστη): άμεση επιλογή ενός
+                     από τα 21 θέματα της εφαρμογής (ίδια λίστα με το $themeNamesList στο Optimizer.ps1) -
+                     βλ. ThemeCatalog.cs για τις παλέτες χρωμάτων και ThemeManager.ApplyTheme για την
+                     εφαρμογή τους. Ξεχωριστό, ανεξάρτητο control από το Light/Dark Mode toggle δίπλα του. -->
+                <ComboBox x:Name="CboTheme" Width="170" Height="36" Margin="0,0,8,0"
+                          DisplayMemberPath="Name"
+                          Background="{DynamicResource BtnDefaultBrush}" Foreground="{DynamicResource TextBrush}"
+                          BorderBrush="{DynamicResource CardBorderBrush}"
+                          SelectionChanged="CboTheme_SelectionChanged"/>
                 <Button x:Name="BtnThemeToggle" Width="120" Height="36" Style="{StaticResource FlatButtonStyle}" Click="BtnThemeToggle_Click">
                     <TextBlock x:Name="TxtThemeToggle" Text="&#x2600; Light Mode"/>
                 </Button>
