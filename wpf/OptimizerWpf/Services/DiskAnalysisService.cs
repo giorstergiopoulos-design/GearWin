@@ -6,8 +6,13 @@ using System.Threading.Tasks;
 
 namespace OptimizerWpf.Services
 {
-    public record DiskCategory(string Name, double SizeGb);
+    // Roots (ρητό αίτημα χρήστη - δευτερεύον παράθυρο "περαιτέρω ανάλυσης"): ίδια πληροφορία με το
+    // ps1's $categories[$k].Roots - τα root φακέλους της κατηγορίας, ώστε το drilldown παράθυρο να
+    // μπορεί να σαρώσει ΤΟΥΣ ΙΔΙΟΥΣ φακέλους (π.χ. τα Steam/Epic/... roots για "Games") αντί να
+    // μαντεύει. "Other" δεν έχει roots (δεν αντιστοιχεί σε συγκεκριμένο φάκελο) - ίδιο με το ps1.
+    public record DiskCategory(string Name, double SizeGb, IReadOnlyList<string> Roots);
     public record DiskAnalysisResult(double TotalUsedGb, IReadOnlyList<DiskCategory> Categories);
+    public record DiskSubfolderSize(string Name, double SizeGb);
 
     // C# port of the category-detection scan script embedded in Optimizer.ps1's
     // Start-DiskCategoryAnalysis (line ~18167) - same category roots (Steam/Epic/Origin/EA/GOG/
@@ -43,34 +48,42 @@ namespace OptimizerWpf.Services
 
             var gamesSize = gameRoots.Sum(GetFolderSizeBytes);
             foreach (var r in gameRoots) usedRoots.Add(r);
-            categories.Add(new DiskCategory("Games", gamesSize / 1_073_741_824.0));
+            categories.Add(new DiskCategory("Games", gamesSize / 1_073_741_824.0, gameRoots));
 
             var appsSize = 0L;
+            var appRoots = new List<string>();
             foreach (var pf in new[] { Path.Combine(driveRoot, "Program Files"), Path.Combine(driveRoot, "Program Files (x86)") })
             {
                 if (!Directory.Exists(pf)) continue;
+                appRoots.Add(pf);
                 foreach (var sub in SafeEnumerateDirectories(pf))
                 {
                     if (usedRoots.Contains(sub)) continue;
                     appsSize += GetFolderSizeBytes(sub);
                 }
             }
-            categories.Add(new DiskCategory("Apps", appsSize / 1_073_741_824.0));
+            categories.Add(new DiskCategory("Apps", appsSize / 1_073_741_824.0, appRoots));
 
-            categories.Add(new DiskCategory("Photos", GetFolderSizeBytes(UserFolderOnDrive(Environment.GetFolderPath(Environment.SpecialFolder.MyPictures), driveRoot)) / 1_073_741_824.0));
-            categories.Add(new DiskCategory("Videos", GetFolderSizeBytes(UserFolderOnDrive(Environment.GetFolderPath(Environment.SpecialFolder.MyVideos), driveRoot)) / 1_073_741_824.0));
-            categories.Add(new DiskCategory("Documents", GetFolderSizeBytes(UserFolderOnDrive(Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments), driveRoot)) / 1_073_741_824.0));
-            categories.Add(new DiskCategory("Downloads", GetFolderSizeBytes(UserFolderOnDrive(Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.UserProfile), "Downloads"), driveRoot)) / 1_073_741_824.0));
+            var picturesPath = UserFolderOnDrive(Environment.GetFolderPath(Environment.SpecialFolder.MyPictures), driveRoot);
+            var videosPath = UserFolderOnDrive(Environment.GetFolderPath(Environment.SpecialFolder.MyVideos), driveRoot);
+            var docsPath = UserFolderOnDrive(Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments), driveRoot);
+            var dlPath = UserFolderOnDrive(Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.UserProfile), "Downloads"), driveRoot);
+
+            categories.Add(new DiskCategory("Photos", GetFolderSizeBytes(picturesPath) / 1_073_741_824.0, RootsOf(picturesPath)));
+            categories.Add(new DiskCategory("Videos", GetFolderSizeBytes(videosPath) / 1_073_741_824.0, RootsOf(videosPath)));
+            categories.Add(new DiskCategory("Documents", GetFolderSizeBytes(docsPath) / 1_073_741_824.0, RootsOf(docsPath)));
+            categories.Add(new DiskCategory("Downloads", GetFolderSizeBytes(dlPath) / 1_073_741_824.0, RootsOf(dlPath)));
 
             var isSystemDrive = string.Equals(driveRoot.TrimEnd('\\'), Path.GetPathRoot(Environment.SystemDirectory)?.TrimEnd('\\'), StringComparison.OrdinalIgnoreCase);
-            var winSize = isSystemDrive ? GetFolderSizeBytes(Path.Combine(driveRoot, "Windows")) : 0;
-            categories.Add(new DiskCategory("Windows", winSize / 1_073_741_824.0));
+            var winPath = isSystemDrive ? Path.Combine(driveRoot, "Windows") : null;
+            var winSize = winPath != null ? GetFolderSizeBytes(winPath) : 0;
+            categories.Add(new DiskCategory("Windows", winSize / 1_073_741_824.0, RootsOf(winPath)));
 
             var drive = new DriveInfo(driveRoot);
             var totalUsedBytes = drive.TotalSize - drive.TotalFreeSpace;
             var categorizedBytes = (long)(categories.Sum(c => c.SizeGb) * 1_073_741_824.0);
             var otherBytes = Math.Max(0, totalUsedBytes - categorizedBytes);
-            categories.Add(new DiskCategory("Other", otherBytes / 1_073_741_824.0));
+            categories.Add(new DiskCategory("Other", otherBytes / 1_073_741_824.0, Array.Empty<string>()));
 
             return new DiskAnalysisResult(Math.Round(totalUsedBytes / 1_073_741_824.0, 2), categories);
         }
@@ -80,6 +93,31 @@ namespace OptimizerWpf.Services
             if (string.IsNullOrEmpty(folderPath) || !Directory.Exists(folderPath)) return null;
             var root = Path.GetPathRoot(folderPath);
             return string.Equals(root, driveRoot, StringComparison.OrdinalIgnoreCase) ? folderPath : null;
+        }
+
+        private static IReadOnlyList<string> RootsOf(string? path) =>
+            path != null ? new[] { path } : Array.Empty<string>();
+
+        // Port του Show-DiskCategoryDrilldown scan script (Optimizer.ps1 ~18397-18411): για κάθε root
+        // φάκελο της κατηγορίας, αθροίζει το μέγεθος ΚΑΘΕ ΑΜΕΣΟΥ υποφακέλου (recursive άθροισμα
+        // αρχείων μέσα του) - όχι το βαθύτερο δέντρο ξανά, μόνο ένα επίπεδο "πόσο χώρο πιάνει το
+        // καθένα" - ταξινομημένο φθίνουσα, μέχρι 40 αποτελέσματα, ίδιο όριο με το ps1.
+        public static Task<IReadOnlyList<DiskSubfolderSize>> DrilldownAsync(IReadOnlyList<string> roots) =>
+            Task.Run(() => Drilldown(roots));
+
+        private static IReadOnlyList<DiskSubfolderSize> Drilldown(IReadOnlyList<string> roots)
+        {
+            var results = new List<DiskSubfolderSize>();
+            foreach (var root in roots)
+            {
+                if (!Directory.Exists(root)) continue;
+                foreach (var sub in SafeEnumerateDirectories(root))
+                {
+                    var sizeGb = GetFolderSizeBytes(sub) / 1_073_741_824.0;
+                    results.Add(new DiskSubfolderSize(Path.GetFileName(sub), Math.Round(sizeGb, 2)));
+                }
+            }
+            return results.OrderByDescending(r => r.SizeGb).Take(40).ToList();
         }
 
         private static long GetFolderSizeBytes(string? path)

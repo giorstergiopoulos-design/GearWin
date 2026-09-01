@@ -5,10 +5,12 @@ using System.IO;
 using System.Linq;
 using System.Runtime.InteropServices;
 using System.Threading.Tasks;
+using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Media;
 using System.Windows.Threading;
 using OptimizerWpf.Services;
+using OptimizerWpf.Views;
 
 namespace OptimizerWpf.Views
 {
@@ -19,7 +21,14 @@ namespace OptimizerWpf.Views
         // GlobalMemoryStatusEx are both fast, synchronous, safe to call directly on the Dispatcher
         // tick without a background thread.
         private readonly DispatcherTimer _refreshTimer;
+        // ΔΙΟΡΘΩΣΗ (ρητό αίτημα χρήστη: "η ανανέωση των δίσκων να γίνεται όταν αλλάζει το ποσοστό,
+        // δεν χρειάζεται live gauge, ελάφρυνση εφαρμογής") - ο χώρος δίσκου ΔΕΝ αλλάζει αισθητά μέσα
+        // σε 1 δευτερόλεπτο σαν το CPU, οπότε δεν χρειάζεται να ξαναδιαβάζεται κάθε tick του γρήγορου
+        // timer. Ξεχωριστός, πολύ πιο αραιός timer (20s) μόνο για τον δίσκο - CPU/RAM/GPU παραμένουν
+        // στο γρήγορο 1s timer (αυτά ΕΙΝΑΙ πραγματικά live).
+        private readonly DispatcherTimer _diskRefreshTimer;
         private PerformanceCounter? _cpuCounter;
+        private PerformanceCounter[]? _gpuCounters;
         private readonly List<string> _drives = new();
         private int _driveIndex;
 
@@ -28,14 +37,37 @@ namespace OptimizerWpf.Views
             InitializeComponent();
             PopulateDriveList();
             TryInitCpuCounter();
+            TryInitGpuCounters();
 
             _refreshTimer = new DispatcherTimer { Interval = TimeSpan.FromSeconds(1) };
-            _refreshTimer.Tick += (_, _) => RefreshMetrics();
+            _refreshTimer.Tick += (_, _) => RefreshCpuRamGpu();
             _refreshTimer.Start();
 
-            RefreshMetrics();
+            _diskRefreshTimer = new DispatcherTimer { Interval = TimeSpan.FromSeconds(20) };
+            _diskRefreshTimer.Tick += (_, _) => RefreshDisk();
+            _diskRefreshTimer.Start();
+
+            RefreshCpuRamGpu();
+            RefreshDisk();
             _ = UpdateDiskIconAsync();
             _ = RefreshHealthScoreAsync();
+            _ = RefreshCpuTemperatureAsync();
+            _ = LoadGpuNameAsync();
+
+            // ΔΙΟΡΘΩΣΗ ("ελάφρυνση εφαρμογής"): κάθε επιστροφή στην Αρχική δημιουργεί ΝΕΟ HomeView
+            // (βλ. MainWindow.ShowTabContent) - χωρίς αυτό, οι timers του ΠΑΛΙΟΥ instance θα
+            // συνέχιζαν να τρέχουν επ' αόριστον στο παρασκήνιο (διαρροή) κάθε φορά που ο χρήστης
+            // αλλάζει καρτέλα και ξαναγυρνάει.
+            Unloaded += (_, _) =>
+            {
+                _refreshTimer.Stop();
+                _diskRefreshTimer.Stop();
+            };
+        }
+
+        private async Task LoadGpuNameAsync()
+        {
+            TxtGpuName.Text = await Task.Run(GpuInfoService.GetName);
         }
 
         private void TryInitCpuCounter()
@@ -51,6 +83,16 @@ namespace OptimizerWpf.Views
                 // corrupted counter database) - degrade to "--%" instead of crashing the tab.
                 _cpuCounter = null;
             }
+        }
+
+        private void TryInitGpuCounters() => _gpuCounters = GpuInfoService.CreateUsageCounters();
+
+        // Δεν αλλάζει σε δευτερόλεπτα σαν το CPU - αρκεί μία φορά στην εκκίνηση, καμία ανάγκη για
+        // επαναλαμβανόμενο timer (ίδιο σκεπτικό "ελάφρυνση εφαρμογής" με τον δίσκο παραπάνω).
+        private async Task RefreshCpuTemperatureAsync()
+        {
+            var temp = await Task.Run(HardwareSensorService.GetCpuTemperatureCelsius);
+            TxtCpuTemp.Text = temp.HasValue ? $"{temp}°C" : "—";
         }
 
         // ΔΙΟΡΘΩΣΗ (ρητό αίτημα χρήστη): αντί για ComboBox, τα δύο βελάκια στο πλακίδιο του δίσκου
@@ -78,7 +120,7 @@ namespace OptimizerWpf.Views
             if (_drives.Count == 0) return;
             _driveIndex = (_driveIndex + delta + _drives.Count) % _drives.Count;
             TxtDriveLabel.Text = _drives[_driveIndex];
-            RefreshMetrics();
+            RefreshDisk();
             await UpdateDiskIconAsync();
         }
 
@@ -117,9 +159,17 @@ namespace OptimizerWpf.Views
                     new GradientStop(c3, 1),
                 },
             };
+
+            // Μάρκα/περιγραφή δίσκου + θερμοκρασία (ρητό αίτημα χρήστη) - μαζί με το είδος δίσκου
+            // εδώ, όχι στο γρήγορο 1s tick, αφού ΚΑΝΕΝΑ από τα δύο δεν αλλάζει ζωντανά.
+            var model = await Task.Run(() => DriveTypeService.GetDiskModel(drive));
+            TxtDriveModel.Text = model ?? "";
+            var diskTemp = await Task.Run(() => HardwareSensorService.GetDiskTemperatureCelsius(drive));
+            TxtDiskTemp.Text = diskTemp.HasValue ? $"{diskTemp}°C" : "—";
         }
 
-        private void RefreshMetrics()
+        // Live κάθε 1s - CPU/RAM/GPU αλλάζουν πραγματικά μέσα σε δευτερόλεπτα.
+        private void RefreshCpuRamGpu()
         {
             if (_cpuCounter != null)
             {
@@ -142,20 +192,35 @@ namespace OptimizerWpf.Views
                 TxtRamDetail.Text = $"{usedGb:0.0} / {totalGb:0.0} GB";
             }
 
-            if (CurrentDrive is string driveName)
+            if (_gpuCounters != null)
             {
                 try
                 {
-                    var drive = new DriveInfo(driveName);
-                    var totalGb = drive.TotalSize / 1024.0 / 1024.0 / 1024.0;
-                    var freeGb = drive.TotalFreeSpace / 1024.0 / 1024.0 / 1024.0;
-                    var usedPct = (int)Math.Round(100.0 * (1 - drive.TotalFreeSpace / (double)drive.TotalSize));
-                    TxtDiskPercent.Text = $"{usedPct}%";
-                    BarDisk.Value = usedPct;
-                    TxtDiskDetail.Text = $"{freeGb:0.0} GB ελεύθερα από {totalGb:0.0} GB";
+                    var gpu = GpuInfoService.SampleUsagePercent(_gpuCounters);
+                    TxtGpuPercent.Text = $"{gpu}%";
+                    BarGpu.Value = gpu;
                 }
-                catch { /* drive can become unready (removable media ejected mid-run) */ }
+                catch { /* an engine instance can disappear mid-run (its process exited) */ }
             }
+        }
+
+        // ΔΙΟΡΘΩΣΗ (ρητό αίτημα χρήστη: "η ανανέωση των δίσκων να γίνεται όταν αλλάζει το ποσοστό,
+        // δεν χρειάζεται live gauge") - αραιό timer (20s) + κλήση στην εκκίνηση/αλλαγή δίσκου, ΟΧΙ
+        // πλέον σε κάθε 1s tick του γρήγορου timer.
+        private void RefreshDisk()
+        {
+            if (CurrentDrive is not string driveName) return;
+            try
+            {
+                var drive = new DriveInfo(driveName);
+                var totalGb = drive.TotalSize / 1024.0 / 1024.0 / 1024.0;
+                var freeGb = drive.TotalFreeSpace / 1024.0 / 1024.0 / 1024.0;
+                var usedPct = (int)Math.Round(100.0 * (1 - drive.TotalFreeSpace / (double)drive.TotalSize));
+                TxtDiskPercent.Text = $"{usedPct}%";
+                BarDisk.Value = usedPct;
+                TxtDiskDetail.Text = $"{freeGb:0.0} GB ελεύθερα από {totalGb:0.0} GB";
+            }
+            catch { /* drive can become unready (removable media ejected mid-run) */ }
         }
 
         private async void BtnRefreshHealth_Click(object sender, System.Windows.RoutedEventArgs e) => await RefreshHealthScoreAsync();
@@ -215,27 +280,66 @@ namespace OptimizerWpf.Views
             ["Other"] = Color.FromRgb(140, 140, 140),
         };
 
+        // Port του Get-DiskCategoryLabel (Optimizer.ps1 ~18105) - ίδιες ελληνικές ετικέτες.
+        private static readonly Dictionary<string, string> CategoryLabels = new()
+        {
+            ["Games"] = "Παιχνίδια",
+            ["Apps"] = "Εφαρμογές",
+            ["Photos"] = "Φωτογραφίες",
+            ["Videos"] = "Βίντεο",
+            ["Documents"] = "Έγγραφα",
+            ["Downloads"] = "Λήψεις",
+            ["Windows"] = "Windows",
+            ["Other"] = "Λοιπά",
+        };
+
         private async void BtnAnalyzeDisk_Click(object sender, System.Windows.RoutedEventArgs e)
         {
             if (CurrentDrive is not string driveName) return;
 
             TxtDiskAnalysisStatus.Text = $"Ανάλυση σε εξέλιξη για {driveName} - μπορεί να διαρκέσει λίγα λεπτά ανάλογα με το πλήθος αρχείων...";
             StatusService.SetBusy($"Ανάλυση χώρου δίσκου {driveName}...");
-            ListDiskCategories.ItemsSource = null;
+            DiskBarGrid.ColumnDefinitions.Clear();
+            DiskBarGrid.Children.Clear();
+            ListDiskLegend.ItemsSource = null;
 
             var result = await DiskAnalysisService.AnalyzeAsync(driveName);
             StatusService.SetIdle("Έτοιμο για χρήση");
 
-            TxtDiskAnalysisStatus.Text = $"Σύνολο χρησιμοποιημένου χώρου: {result.TotalUsedGb:0.0} GB";
-            var maxGb = Math.Max(0.01, result.Categories.Max(c => c.SizeGb));
-            ListDiskCategories.ItemsSource = result.Categories
-                .OrderByDescending(c => c.SizeGb)
-                .Select(c => new DiskCategoryRow(
-                    c.Name,
-                    $"{c.SizeGb:0.0} GB",
-                    280.0 * c.SizeGb / maxGb,
-                    new SolidColorBrush(CategoryColors.GetValueOrDefault(c.Name, Color.FromRgb(150, 150, 150)))))
-                .ToList();
+            TxtDiskAnalysisStatus.Text = $"Σύνολο χρησιμοποιημένου χώρου: {result.TotalUsedGb:0.0} GB ({driveName})";
+
+            var cats = result.Categories.Where(c => c.SizeGb > 0).OrderByDescending(c => c.SizeGb).ToList();
+            if (cats.Count == 0) return;
+
+            var totalGb = Math.Max(0.01, result.TotalUsedGb);
+            foreach (var cat in cats)
+            {
+                var color = CategoryColors.GetValueOrDefault(cat.Name, Color.FromRgb(150, 150, 150));
+                DiskBarGrid.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(Math.Max(0.5, cat.SizeGb), GridUnitType.Star) });
+                var seg = new Border { Background = new SolidColorBrush(color) };
+                Grid.SetColumn(seg, DiskBarGrid.ColumnDefinitions.Count - 1);
+                DiskBarGrid.Children.Add(seg);
+            }
+
+            ListDiskLegend.ItemsSource = cats.Select(c =>
+            {
+                var pct = Math.Round(100.0 * c.SizeGb / totalGb, 1);
+                var label = CategoryLabels.GetValueOrDefault(c.Name, c.Name);
+                return new DiskLegendRow(
+                    label,
+                    $"{label} - {c.SizeGb:0.0} GB ({pct}%)",
+                    new SolidColorBrush(CategoryColors.GetValueOrDefault(c.Name, Color.FromRgb(150, 150, 150))),
+                    c.Roots);
+            }).ToList();
+        }
+
+        // Port του Show-DiskCategoryDrilldown click routing (Optimizer.ps1 ~18341-18348) - μόνο
+        // κατηγορίες με roots (όλες εκτός "Λοιπά") ανοίγουν το δευτερεύον παράθυρο.
+        private void DiskLegendItem_Click(object sender, System.Windows.RoutedEventArgs e)
+        {
+            if (sender is not System.Windows.Controls.Button { Tag: DiskLegendRow row } || row.Roots.Count == 0) return;
+            var window = new DiskDrilldownWindow(row.CategoryLabel, row.Roots) { Owner = System.Windows.Window.GetWindow(this) };
+            window.Show();
         }
 
         private async Task RefreshHealthScoreAsync()
@@ -274,8 +378,8 @@ namespace OptimizerWpf.Views
     // score-colored dot per issue that Optimizer.ps1 draws next to each issue label).
     public record HealthIssueRow(string Title, Brush DotColor);
 
-    // Bindable row for the Disk Analysis category list/bar chart.
-    public record DiskCategoryRow(string Name, string SizeText, double BarWidth, Brush BarColor);
+    // Bindable row for the Disk Analysis legend (WrapPanel below the single segmented bar).
+    public record DiskLegendRow(string CategoryLabel, string LegendText, Brush BarColor, IReadOnlyList<string> Roots);
 
     internal static class NativeMethods
     {

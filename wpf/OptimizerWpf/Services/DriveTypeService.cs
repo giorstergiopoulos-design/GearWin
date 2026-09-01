@@ -65,6 +65,33 @@ namespace OptimizerWpf.Services
             }
         }
 
+        // Μάρκα/περιγραφή δίσκου (ρητό αίτημα χρήστη: "δεν αναφέρεις... την περιγραφή του δίσκου")
+        // - χρησιμοποιεί το ΚΛΑΣΙΚΟ Win32_DiskDrive.Model (π.χ. "Samsung SSD 970 EVO Plus 1TB") μέσω
+        // της παλιάς associator αλυσίδας Win32_LogicalDisk -> Win32_DiskPartition -> Win32_DiskDrive
+        // - ΔΕΝ χρησιμοποιεί τη νεότερη root\Microsoft\Windows\Storage (όπως το Detect() παραπάνω)
+        // επειδή το Win32_DiskDrive.Model είναι πιο καθολικά διαθέσιμο/σταθερό σε παλαιότερα Windows.
+        public static string? GetDiskModel(string driveLetter)
+        {
+            try
+            {
+                var deviceId = driveLetter.TrimEnd('\\');
+                using var partitionSearcher = new ManagementObjectSearcher(
+                    $"ASSOCIATORS OF {{Win32_LogicalDisk.DeviceID='{deviceId}'}} WHERE AssocClass=Win32_LogicalDiskToPartition");
+                var partition = partitionSearcher.Get().Cast<ManagementBaseObject>().FirstOrDefault();
+                if (partition == null) return null;
+
+                using var diskSearcher = new ManagementObjectSearcher(
+                    $"ASSOCIATORS OF {{Win32_DiskPartition.DeviceID='{partition["DeviceID"]}'}} WHERE AssocClass=Win32_DiskDriveToDiskPartition");
+                var disk = diskSearcher.Get().Cast<ManagementBaseObject>().FirstOrDefault();
+                var model = disk?["Model"]?.ToString();
+                return string.IsNullOrWhiteSpace(model) ? null : model.Trim();
+            }
+            catch
+            {
+                return null;
+            }
+        }
+
         private static string EscapeObjectId(string objectId) => objectId.Replace(@"\", @"\\").Replace("\"", "\\\"");
     }
 }
