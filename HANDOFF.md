@@ -1124,6 +1124,48 @@ WPF async/await λύνει το ίδιο πρόβλημα εγγενώς, χωρ
 3. Καθαρισμός Event Logs (Advanced)
 4. **Αφαίρεση Ghost Device** (Advanced - `Remove-PnpDevice -Confirm:$false`, η πιο σαφής περίπτωση)
 
+## 0.4ιδ WPF: ΟΛΕΣ οι υπόλοιπες 6 καρτέλες + Drivers ολοκληρώθηκαν (αυτόνομο πέρασμα, χρήστης ζήτησε "όσα περισσότερα μπορείς σε 5ωρο")
+
+Commits `e93be01`..`c1fca37`. Κάθε καρτέλα: νέο Service.cs + View.xaml(.cs), wired στο MainWindow
+switch. `dotnet build` 0/0 + εκκίνηση χωρίς crash επιβεβαιώθηκαν μετά από ΚΑΘΕ καρτέλα. ΚΑΜΙΑ
+οπτική δοκιμή δεν έγινε (elevation μπλοκάρει interactive launch από μη-elevated context, ίδιος
+περιορισμός με όλο το §0.4).
+
+- **Drivers** (`DriverService.cs`): μόνο πηγή Windows Update (COM API μέσω temp .ps1, ίδιο μοτίβο
+  winget) + backup/restore (DISM/pnputil) + driver store cleanup. AMD/NVIDIA/Dell πηγές ΔΕΝ
+  μεταφέρθηκαν (web scraping/vendor tools, εκτός εμβέλειας).
+- **Health** (`HealthCleanupService.cs`): Registry Cleaner ίδιο στενό scope + .reg backup, browser
+  cache (Chrome/Edge/Brave/Opera/Firefox, μόνο ανιχνευμένοι), WinRE status/enable.
+- **System** (`SystemService.cs`): Startup (reversible rename), Processes (top 25, critical list
+  προστατευμένη), Storage (SHA256 duplicates/large files, μόνο προσωπικοί φάκελοι, recycle bin),
+  Restore Points (Checkpoint/Restore-Computer μέσω PS - ΧΩΡΙΣ delete-by-sequence, ίδιος περιορισμός
+  με ps1), Services (curated ~29, WMI ChangeStartMode + TweakBackupService), Benchmark (256MB
+  write/read).
+- **Network** (`NetworkService.cs`): firewall rules (Get/Set-NetFirewallRule μέσω PS), firewall
+  policy (netsh export/import/reset), hosts editor (backup πριν save), Defender quick scan
+  (fire-and-forget + windowsdefender:// URI).
+- **Bloatware** (`BloatwareService.cs`): builtin (Appx+DISM+registry), 22 προτεινόμενες εφαρμογές
+  (winget), UWP Manager (ξεχωριστό Window), Deep Uninstall (επίσημος uninstaller + residual scan).
+- **Tweaks** (`TweakService.cs`, `CustomContextMenuService.cs`): 14+7+1(HAGS)+3(powercfg)=25 toggles
+  μέσω ενιαίου `SimpleTweak` μοντέλου, Οπτικά Εφέ (3 confirm dialogs, ΠΟΤΕ UserPreferencesMask),
+  Κρυπτογράφηση Συσκευής (ΜΟΝΟ άνοιγμα Ρυθμίσεων, ΠΟΤΕ registry - ίδια πολιτική με ps1), custom
+  context menu CRUD (JSON store).
+- **Advanced** (`AdvancedToolsService.cs`): 11 εργαλεία συντήρησης (incl. P/Invoke
+  AdjustTokenPrivileges), 7 toolbox launchers (incl. GPU soft reset via keybd_event), curated+πλήρη
+  Windows Features (PS), Ghost Devices.
+
+**Διορθώσεις πέρα από 1:1 port** (βλ. εύρημα §0.4ιβ - σημεία χωρίς confirm dialog στο ps1 original):
+προστέθηκε confirm dialog σε Ghost Device removal, Registry Editor άνοιγμα, Firewall reset/import,
+Hosts save, Visual Effects, optional feature toggle, OneDrive free-up, process kill, restore-point
+restore, deep-uninstall, recycle-bin operations - όλα τα destructive actions έχουν πλέον
+επιβεβαίωση, ακόμα κι όπου το ps1 original δεν είχε.
+
+**Απάντηση στο ερώτημα του χρήστη** ("το περιεχόμενο όπως είναι στις καρτέλες ενταγμένο είναι
+σωστό;"): ΝΑΙ - κάθε λειτουργία τοποθετήθηκε ΑΚΡΙΒΩΣ στην ίδια καρτέλα/κάρτα που είχε στο ps1
+original (καμία αναδιάταξη, βλ. ήδη το συμπέρασμα του §0.4η/§0.4ιγ IA review). Η κατηγοριοποίηση
+του ps1 ήταν ήδη λογική· η μόνη πραγματική αλλαγή αυτού του περάσματος είναι η προσθήκη confirm
+dialogs σε λίγα σημεία που δεν τα είχαν, ΟΧΙ αλλαγή τοποθεσίας περιεχομένου.
+
 ## 0. Σχέδιο Αρχιτεκτονικής: Driver Updater πολλαπλών πηγών (για v2.2.0 — ΔΕΝ έχει υλοποιηθεί ακόμα)
 
 Ο χρήστης έδωσε ρητή, λεπτομερή κατεύθυνση αρχιτεκτονικής (βλ. πλήρη συζήτηση στο ίδιο session) για το πώς πρέπει να ξαναχτιστεί ο μηχανισμός Driver Updates (τρέχον v2.1.1: μόνο SDI/SDIO, βλ. καρτέλα Βελτιστοποίηση). Σύνοψη της κατεύθυνσης — **να ακολουθηθεί όταν ξεκινήσει η πραγματική υλοποίηση**, μην ξαναρωτήσεις τον χρήστη τα βασικά:
