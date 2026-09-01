@@ -50,7 +50,13 @@
             <Border Style="{StaticResource CardStyle}">
                 <StackPanel>
                     <TextBlock Text="Διαχειριστής Ενημερώσεων Λογισμικού" Style="{StaticResource CardTitleStyle}" Margin="0,0,0,4"/>
-                    <TextBlock x:Name="TxtWingetStatus" Text="Πατήστε 'Σάρωση' για έλεγχο διαθέσιμων ενημερώσεων." Style="{StaticResource SubTextStyle}" Margin="0,0,0,10"/>
+                    <TextBlock x:Name="TxtWingetStatus" Text="Πατήστε 'Σάρωση' για έλεγχο διαθέσιμων ενημερώσεων." Style="{StaticResource SubTextStyle}" Margin="0,0,0,6"/>
+                    <!-- ΝΕΟ (χρήστης ανέφερε: "δεν βλέπω progress bar"): ορατή μόνο όσο τρέχει σάρωση/
+                         αναβάθμιση (IsIndeterminate - το winget CLI δεν εκθέτει πραγματικό ποσοστό
+                         προόδου ανά αρχείο, μόνο τελικό exit code, οπότε ένα καθορισμένο 0-100% θα ήταν
+                         ψεύτικο· η ασαφής/κυλιόμενη ("indeterminate") μπάρα δείχνει τίμια "σε εξέλιξη"
+                         χωρίς να προσποιείται ακρίβεια που δεν υπάρχει). -->
+                    <ProgressBar x:Name="ProgressWinget" Height="6" IsIndeterminate="True" Visibility="Collapsed" Margin="0,0,0,10"/>
 
                     <Border Background="{DynamicResource MainBgBrush}" CornerRadius="6" MinHeight="120" MaxHeight="320" Padding="4">
                         <ScrollViewer VerticalScrollBarVisibility="Auto">
@@ -90,8 +96,8 @@
                         </Grid.ColumnDefinitions>
                         <CheckBox x:Name="ChkSelectAll" Grid.Column="0" Content="Επιλογή Όλων" VerticalAlignment="Center"
                                   Foreground="{DynamicResource TextBrush}" Click="ChkSelectAll_Click"/>
-                        <Button Grid.Column="1" Content="Σάρωση" Style="{StaticResource FlatButtonStyle}" Width="130" Margin="0,0,10,0" Click="BtnScanWinget_Click"/>
-                        <Button Grid.Column="2" Content="Αναβάθμιση Επιλεγμένων" Style="{StaticResource AccentButtonStyle}" Width="180" Click="BtnUpgradeSelected_Click"/>
+                        <Button x:Name="BtnScanWinget" Grid.Column="1" Content="Σάρωση" Style="{StaticResource FlatButtonStyle}" Width="130" Margin="0,0,10,0" Click="BtnScanWinget_Click"/>
+                        <Button x:Name="BtnUpgradeSelected" Grid.Column="2" Content="Αναβάθμιση Επιλεγμένων" Style="{StaticResource AccentButtonStyle}" Width="180" Click="BtnUpgradeSelected_Click"/>
                     </Grid>
                 </StackPanel>
             </Border>

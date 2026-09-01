@@ -22,12 +22,42 @@
         <Grid.RowDefinitions>
             <RowDefinition Height="Auto"/>
             <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
             <RowDefinition Height="*"/>
             <RowDefinition Height="Auto"/>
         </Grid.RowDefinitions>
 
+        <!-- ===== Κλασικό μενού (Εργαλεία/Προβολή/Ρυθμίσεις/Βοήθεια) - ρητό αίτημα χρήστη -
+             αντιστοιχεί στο $mainMenu (MainMenu) του Optimizer.ps1. Το "Προβολή" εναλλάσσει
+             πραγματικά καρτέλες (πλήρως λειτουργικό) - τα υπόλοιπα ανοίγουν προσωρινό μήνυμα, αφού
+             τα πραγματικά τους παράθυρα (Βοήθεια/Ιστορικό/ViVeTool/UWP Manager/Ρυθμίσεις Εμφάνισης)
+             δεν έχουν μεταφερθεί ακόμα στο WPF - βλ. HANDOFF.md. -->
+        <Menu Grid.Row="0" Background="{DynamicResource TabBgBrush}" Foreground="{DynamicResource TextBrush}">
+            <MenuItem Header="🛠️ Εργαλεία">
+                <MenuItem Header="Κρυφές Λειτουργίες (ViVeTool)..." Click="MenuNotPorted_Click"/>
+                <MenuItem Header="Διαχείριση UWP Εφαρμογών..." Click="MenuNotPorted_Click"/>
+            </MenuItem>
+            <MenuItem Header="👁️ Προβολή">
+                <MenuItem Header="Αρχική" Tag="Home" Click="MenuViewTab_Click" InputGestureText="Ctrl+1"/>
+                <MenuItem Header="Βελτιστοποίηση" Tag="Optimization" Click="MenuViewTab_Click" InputGestureText="Ctrl+2"/>
+                <MenuItem Header="Υγεία &amp; Συντήρηση" Tag="Health" Click="MenuViewTab_Click" InputGestureText="Ctrl+3"/>
+                <MenuItem Header="Δίκτυο &amp; Ασφάλεια" Tag="Network" Click="MenuViewTab_Click" InputGestureText="Ctrl+4"/>
+                <MenuItem Header="Επιπλέον Ρυθμίσεις" Tag="Tweaks" Click="MenuViewTab_Click" InputGestureText="Ctrl+5"/>
+                <MenuItem Header="Εφαρμογές &amp; Bloat" Tag="Bloatware" Click="MenuViewTab_Click" InputGestureText="Ctrl+6"/>
+                <MenuItem Header="Προηγμένα Εργαλεία" Tag="Advanced" Click="MenuViewTab_Click"/>
+                <MenuItem Header="Σύστημα" Tag="System" Click="MenuViewTab_Click"/>
+            </MenuItem>
+            <MenuItem Header="⚙️ Ρυθμίσεις">
+                <MenuItem Header="Εμφάνιση Εφαρμογής..." Click="MenuNotPorted_Click"/>
+            </MenuItem>
+            <MenuItem Header="❓ Βοήθεια">
+                <MenuItem Header="Ιστορικό Εκδόσεων" Click="MenuNotPorted_Click"/>
+                <MenuItem Header="Οδηγίες &amp; Πληροφορίες" Click="MenuNotPorted_Click"/>
+            </MenuItem>
+        </Menu>
+
         <!-- ===== Title bar ===== -->
-        <Grid Grid.Row="0" Margin="24,16,24,8">
+        <Grid Grid.Row="1" Margin="24,16,24,8">
             <Grid.ColumnDefinitions>
                 <ColumnDefinition Width="Auto"/>
                 <ColumnDefinition Width="*"/>
@@ -84,7 +114,7 @@
         </Grid>
 
         <!-- ===== Tab strip ===== -->
-        <StackPanel Grid.Row="1" Orientation="Horizontal" Margin="24,0,24,12" x:Name="TabStrip">
+        <StackPanel Grid.Row="2" Orientation="Horizontal" Margin="24,0,24,12" x:Name="TabStrip">
             <RadioButton x:Name="TabHome" Content="Αρχική" Tag="Home" Style="{StaticResource TabPillStyle}" Checked="TabButton_Checked"/>
             <RadioButton Content="Βελτιστοποίηση" Tag="Optimization" Style="{StaticResource TabPillStyle}" Checked="TabButton_Checked"/>
             <RadioButton Content="Υγεία &amp; Συντήρηση" Tag="Health" Style="{StaticResource TabPillStyle}" Checked="TabButton_Checked"/>
@@ -96,12 +126,12 @@
         </StackPanel>
 
         <!-- ===== Content host ===== -->
-        <Border Grid.Row="2" Margin="24,0,24,12" Background="{DynamicResource MainBgBrush}">
+        <Border Grid.Row="3" Margin="24,0,24,12" Background="{DynamicResource MainBgBrush}">
             <ContentControl x:Name="ContentHost"/>
         </Border>
 
         <!-- ===== Status bar ===== -->
-        <Border Grid.Row="3" Background="{DynamicResource CardBgBrush}" Height="46">
+        <Border Grid.Row="4" Background="{DynamicResource CardBgBrush}" Height="46">
             <Grid Margin="24,0">
                 <TextBlock x:Name="TxtStatus" Text="Κατάσταση: Έτοιμο για χρήση (WPF Preview)"
                            VerticalAlignment="Center" HorizontalAlignment="Left"

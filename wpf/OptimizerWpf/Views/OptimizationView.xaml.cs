@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.ComponentModel;
 using System.Linq;
@@ -43,6 +44,7 @@ namespace OptimizerWpf.Views
 
         private async void BtnScanWinget_Click(object sender, RoutedEventArgs e)
         {
+            SetBusy(true);
             TxtWingetStatus.Text = "Σάρωση σε εξέλιξη...";
             _updates.Clear();
 
@@ -52,6 +54,7 @@ namespace OptimizerWpf.Views
             TxtWingetStatus.Text = results.Count == 0
                 ? "Δεν βρέθηκαν διαθέσιμες ενημερώσεις."
                 : $"Βρέθηκαν {results.Count} διαθέσιμες ενημερώσεις εφαρμογών:";
+            SetBusy(false);
         }
 
         private void ChkSelectAll_Click(object sender, RoutedEventArgs e)
@@ -60,18 +63,42 @@ namespace OptimizerWpf.Views
             foreach (var row in _updates) row.IsSelected = selectAll;
         }
 
+        // ΝΕΟ (χρήστης ανέφερε: "δεν βγαίνει κανένα μήνυμα επιτυχούς εγκατάστασης, ελέγξτο, pop-up ή
+        // γραμμή κατάστασης"): τώρα υπάρχουν ΚΑΙ τα δύο - η γραμμή κατάστασης της κάρτας δείχνει
+        // αριθμό επιτυχιών/αποτυχιών, ΚΑΙ ένα MessageBox συνοψίζει το αποτέλεσμα στο τέλος (η
+        // WingetService.UpgradeAsync ελέγχει πλέον το πραγματικό exit code, βλ. εκεί - πριν πάντα
+        // επέστρεφε "επιτυχία" εκτός αν πετάγονταν exception, ΣΧΕΔΟΝ ΠΟΤΕ, άρα μια πραγματική αποτυχία
+        // δεν θα αναφερόταν ποτέ).
         private async void BtnUpgradeSelected_Click(object sender, RoutedEventArgs e)
         {
             var selected = _updates.Where(u => u.IsSelected).ToList();
             if (selected.Count == 0) return;
 
-            TxtWingetStatus.Text = $"Αναβάθμιση {selected.Count} εφαρμογών...";
+            SetBusy(true);
+            var succeeded = new List<string>();
+            var failed = new List<string>();
             foreach (var row in selected)
             {
-                await WingetService.UpgradeAsync(row.Update.Id);
-                _updates.Remove(row);
+                TxtWingetStatus.Text = $"Αναβάθμιση {row.Update.Name}... ({succeeded.Count + failed.Count + 1}/{selected.Count})";
+                var ok = await WingetService.UpgradeAsync(row.Update.Id);
+                if (ok) { succeeded.Add(row.Update.Name); _updates.Remove(row); }
+                else { failed.Add(row.Update.Name); }
             }
-            TxtWingetStatus.Text = "Ολοκληρώθηκε. Πατήστε 'Σάρωση' για να δείτε τυχόν υπόλοιπες ενημερώσεις.";
+            SetBusy(false);
+
+            var summary = failed.Count == 0
+                ? $"Ολοκληρώθηκε: {succeeded.Count} εφαρμογές αναβαθμίστηκαν επιτυχώς."
+                : $"Ολοκληρώθηκε: {succeeded.Count} επιτυχείς, {failed.Count} απέτυχαν ({string.Join(", ", failed)}).";
+            TxtWingetStatus.Text = summary;
+            MessageBox.Show(summary, "Αναβάθμιση Εφαρμογών", MessageBoxButton.OK,
+                failed.Count == 0 ? MessageBoxImage.Information : MessageBoxImage.Warning);
+        }
+
+        private void SetBusy(bool busy)
+        {
+            ProgressWinget.Visibility = busy ? Visibility.Visible : Visibility.Collapsed;
+            BtnScanWinget.IsEnabled = !busy;
+            BtnUpgradeSelected.IsEnabled = !busy;
         }
     }
 

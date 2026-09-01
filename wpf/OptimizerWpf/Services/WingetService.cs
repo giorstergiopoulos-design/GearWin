@@ -18,20 +18,21 @@ namespace OptimizerWpf.Services
     {
         public static async Task<IReadOnlyList<WingetUpdate>> ScanAsync()
         {
-            var output = await RunWingetAsync("upgrade --include-unknown --accept-source-agreements --disable-interactivity");
+            var (output, _) = await RunWingetAsync("upgrade --include-unknown --accept-source-agreements --disable-interactivity");
             return ParseTable(output);
         }
 
+        // ΝΕΟ (χρήστης ανέφερε: "δεν βγαίνει κανένα μήνυμα επιτυχούς εγκατάστασης, έλεγξέ το") - πριν
+        // το "success" ήταν πάντα true εκτός αν πετάχτηκε exception (σχεδόν ποτέ), άρα ένα πραγματικό
+        // αποτυχημένο winget (π.χ. exit code μη-μηδενικό - πακέτο κλειδωμένο/χρειάζεται επανεκκίνηση)
+        // ΔΕΝ θα αναφερόταν ποτέ ως αποτυχία. Τώρα ελέγχεται το πραγματικό exit code της διεργασίας.
         public static async Task<bool> UpgradeAsync(string id)
         {
-            var output = await RunWingetAsync($"upgrade --id \"{id}\" --silent --accept-package-agreements --accept-source-agreements --disable-interactivity");
-            // winget doesn't give a clean machine-readable success signal on this path - a 0 exit
-            // code (no exception thrown by RunWingetAsync) is treated as success, matching the
-            // WinForms app's own approach of trusting winget's process exit code.
-            return output != null;
+            var (_, exitCode) = await RunWingetAsync($"upgrade --id \"{id}\" --silent --accept-package-agreements --accept-source-agreements --disable-interactivity");
+            return exitCode == 0;
         }
 
-        private static async Task<string> RunWingetAsync(string arguments)
+        private static async Task<(string Output, int ExitCode)> RunWingetAsync(string arguments)
         {
             var psi = new ProcessStartInfo
             {
@@ -48,7 +49,7 @@ namespace OptimizerWpf.Services
             process.Start();
             var stdout = await process.StandardOutput.ReadToEndAsync();
             await process.WaitForExitAsync();
-            return stdout;
+            return (stdout, process.ExitCode);
         }
 
         private static IReadOnlyList<WingetUpdate> ParseTable(string rawText)

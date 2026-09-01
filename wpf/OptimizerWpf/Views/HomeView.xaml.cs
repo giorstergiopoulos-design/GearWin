@@ -20,6 +20,8 @@ namespace OptimizerWpf.Views
         // tick without a background thread.
         private readonly DispatcherTimer _refreshTimer;
         private PerformanceCounter? _cpuCounter;
+        private readonly List<string> _drives = new();
+        private int _driveIndex;
 
         public HomeView()
         {
@@ -32,6 +34,7 @@ namespace OptimizerWpf.Views
             _refreshTimer.Start();
 
             RefreshMetrics();
+            _ = UpdateDiskIconAsync();
             _ = RefreshHealthScoreAsync();
         }
 
@@ -50,13 +53,68 @@ namespace OptimizerWpf.Views
             }
         }
 
+        // ΔΙΟΡΘΩΣΗ (ρητό αίτημα χρήστη): αντί για ComboBox, τα δύο βελάκια στο πλακίδιο του δίσκου
+        // κυκλώνουν μέσα σε αυτή τη λίστα - βλ. BtnDrivePrev_Click/BtnDriveNext_Click. Περιλαμβάνει
+        // πλέον ΚΑΙ αφαιρούμενους δίσκους (USB), όχι μόνο Fixed, ώστε η ανίχνευση τύπου δίσκου να
+        // έχει νόημα να δείξει "USB" όταν υπάρχει συνδεδεμένο flash drive.
         private void PopulateDriveList()
         {
-            foreach (var drive in DriveInfo.GetDrives().Where(d => d.IsReady && d.DriveType == DriveType.Fixed))
+            _drives.Clear();
+            foreach (var drive in DriveInfo.GetDrives().Where(d => d.IsReady && (d.DriveType == DriveType.Fixed || d.DriveType == DriveType.Removable)))
             {
-                CboHomeDrive.Items.Add(drive.Name.TrimEnd('\\'));
+                _drives.Add(drive.Name.TrimEnd('\\'));
             }
-            if (CboHomeDrive.Items.Count > 0) CboHomeDrive.SelectedIndex = 0;
+            _driveIndex = 0;
+            if (_drives.Count > 0) TxtDriveLabel.Text = _drives[_driveIndex];
+        }
+
+        private string? CurrentDrive => _drives.Count > 0 ? _drives[_driveIndex] : null;
+
+        private async void BtnDrivePrev_Click(object sender, System.Windows.RoutedEventArgs e) => await SwitchDrive(-1);
+        private async void BtnDriveNext_Click(object sender, System.Windows.RoutedEventArgs e) => await SwitchDrive(1);
+
+        private async Task SwitchDrive(int delta)
+        {
+            if (_drives.Count == 0) return;
+            _driveIndex = (_driveIndex + delta + _drives.Count) % _drives.Count;
+            TxtDriveLabel.Text = _drives[_driveIndex];
+            RefreshMetrics();
+            await UpdateDiskIconAsync();
+        }
+
+        // Icon/color/label per physical drive type (HDD/SSD/USB) - the WMI lookup in
+        // DriveTypeService can take a moment, so this runs off the UI thread and is only called
+        // when the selected drive actually changes (at startup and on prev/next), not on every
+        // 1-second RefreshMetrics tick.
+        private async Task UpdateDiskIconAsync()
+        {
+            var drive = CurrentDrive;
+            if (drive == null) return;
+
+            var kind = await Task.Run(() => DriveTypeService.Detect(drive));
+            var (glyph, label, c1, c2, c3) = kind switch
+            {
+                PhysicalDriveKind.Ssd => ("\U0001F5B4", "SSD", Color.FromRgb(140, 255, 210), Color.FromRgb(0, 191, 165), Color.FromRgb(0, 105, 92)),
+                PhysicalDriveKind.Hdd => ("\U0001F4BF", "HDD", Color.FromRgb(255, 213, 140), Color.FromRgb(255, 152, 0), Color.FromRgb(191, 100, 0)),
+                PhysicalDriveKind.Usb => ("\U0001F50C", "USB", Color.FromRgb(200, 170, 255), Color.FromRgb(140, 90, 220), Color.FromRgb(90, 50, 160)),
+                _ => ("\U0001F4BF", "", Color.FromRgb(255, 213, 140), Color.FromRgb(255, 152, 0), Color.FromRgb(191, 100, 0)),
+            };
+
+            TxtDiskIcon.Text = glyph;
+            TxtDriveKind.Text = label;
+            BorderDiskIcon.Background = new RadialGradientBrush
+            {
+                GradientOrigin = new System.Windows.Point(0.3, 0.3),
+                Center = new System.Windows.Point(0.5, 0.5),
+                RadiusX = 0.9,
+                RadiusY = 0.9,
+                GradientStops = new GradientStopCollection
+                {
+                    new GradientStop(c1, 0),
+                    new GradientStop(c2, 0.6),
+                    new GradientStop(c3, 1),
+                },
+            };
         }
 
         private void RefreshMetrics()
@@ -82,7 +140,7 @@ namespace OptimizerWpf.Views
                 TxtRamDetail.Text = $"{usedGb:0.0} / {totalGb:0.0} GB";
             }
 
-            if (CboHomeDrive.SelectedItem is string driveName)
+            if (CurrentDrive is string driveName)
             {
                 try
                 {
@@ -157,7 +215,7 @@ namespace OptimizerWpf.Views
 
         private async void BtnAnalyzeDisk_Click(object sender, System.Windows.RoutedEventArgs e)
         {
-            if (CboHomeDrive.SelectedItem is not string driveName) return;
+            if (CurrentDrive is not string driveName) return;
 
             TxtDiskAnalysisStatus.Text = $"Ανάλυση σε εξέλιξη για {driveName} - μπορεί να διαρκέσει λίγα λεπτά ανάλογα με το πλήθος αρχείων...";
             ListDiskCategories.ItemsSource = null;
