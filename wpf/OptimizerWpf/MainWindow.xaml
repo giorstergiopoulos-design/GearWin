@@ -49,8 +49,8 @@
                 <MenuItem Header="Δίκτυο &amp; Ασφάλεια" Tag="Network" Click="MenuViewTab_Click" InputGestureText="Ctrl+4"/>
                 <MenuItem Header="Επιπλέον Ρυθμίσεις" Tag="Tweaks" Click="MenuViewTab_Click" InputGestureText="Ctrl+5"/>
                 <MenuItem Header="Εφαρμογές &amp; Bloat" Tag="Bloatware" Click="MenuViewTab_Click" InputGestureText="Ctrl+6"/>
-                <MenuItem Header="Προηγμένα Εργαλεία" Tag="Advanced" Click="MenuViewTab_Click"/>
-                <MenuItem Header="Σύστημα" Tag="System" Click="MenuViewTab_Click"/>
+                <MenuItem Header="Προηγμένα Εργαλεία" Tag="Advanced" Click="MenuViewTab_Click" InputGestureText="Ctrl+7"/>
+                <MenuItem Header="Σύστημα" Tag="System" Click="MenuViewTab_Click" InputGestureText="Ctrl+8"/>
             </MenuItem>
             <MenuItem Header="⚙️ Ρυθμίσεις">
                 <MenuItem Header="Εμφάνιση Εφαρμογής..." Click="MenuNotPorted_Click"/>
@@ -129,16 +129,29 @@
         <!-- Εικονίδια στις καρτέλες (ρητό αίτημα χρήστη: "στις καρτέλες δεν έχεις ενσωματώσει
              εικονίδια") - το WinForms nav rail είχε εικονίδιο+κείμενο ανά pill, το WPF είχε μείνει
              μόνο κείμενο. Κάθε RadioButton.Content είναι τώρα ένα StackPanel γλυφή+κείμενο αντί για
-             απλό string - το TabPillStyle ContentPresenter τα δείχνει και τα δύο αυτόματα. -->
-        <StackPanel Grid.Row="2" Orientation="Horizontal" Margin="24,0,24,12" x:Name="TabStrip">
+             απλό string - το TabPillStyle ContentPresenter τα δείχνει και τα δύο αυτόματα.
+             ΔΙΟΡΘΩΣΗ (χρήστης ανέφερε με screenshot: η καρτέλα "Σύστημα" κόβεται στη δεξιά άκρη του
+             παραθύρου): 8 pills με εικονίδιο+κείμενο δεν χωράνε πια σε ένα πλάτος 1000-1280px χωρίς
+             κάποιο overflow. Τυλίχτηκε σε οριζόντιο ScrollViewer - ΠΟΤΕ clipping, αν δεν χωράει
+             εμφανίζεται λεπτή οριζόντια μπάρα κύλισης (το ίδιο μοντέρνο ScrollBar style του
+             Styles.xaml) αντί να κόβεται σιωπηλά η τελευταία καρτέλα (ίδιος κανόνας με το
+             "no truncated descriptions" - βλ. memory). -->
+        <ScrollViewer Grid.Row="2" Margin="24,0,24,12" HorizontalScrollBarVisibility="Auto" VerticalScrollBarVisibility="Disabled">
+        <StackPanel Orientation="Horizontal" x:Name="TabStrip">
             <RadioButton x:Name="TabHome" Tag="Home" Style="{StaticResource TabPillStyle}" Checked="TabButton_Checked">
                 <StackPanel Orientation="Horizontal"><TextBlock Text="&#x1F3E0;" Margin="0,0,6,0"/><TextBlock Text="Αρχική"/></StackPanel>
             </RadioButton>
             <RadioButton Tag="Optimization" Style="{StaticResource TabPillStyle}" Checked="TabButton_Checked">
                 <StackPanel Orientation="Horizontal"><TextBlock Text="&#x26A1;" Margin="0,0,6,0"/><TextBlock Text="Βελτιστοποίηση"/></StackPanel>
             </RadioButton>
+            <!-- ΔΙΟΡΘΩΣΗ (χρήστης ανέφερε με screenshot: το εικονίδιο της Υγείας δεν φαίνεται - "tofu"
+                 κουτάκι αντί για glyph): το U+1FA7A (Stethoscope) είναι πολύ πρόσφατο Unicode block
+                 (Emoji 13.1), δεν καλύπτεται αξιόπιστα από το Segoe UI Emoji σε όλες τις εκδόσεις
+                 Windows 10/11. Αντικαταστάθηκε με το καθιερωμένο ιατρικό σταυρό ✚ (U+271A, Dingbats
+                 block - πολύ παλιό/καθολικά υποστηριζόμενο), σύμφωνα με την ήδη καθιερωμένη πολιτική
+                 του project "αν ένα glyph δεν είναι εγγυημένα ασφαλές, μη χρησιμοποιείται". -->
             <RadioButton Tag="Health" Style="{StaticResource TabPillStyle}" Checked="TabButton_Checked">
-                <StackPanel Orientation="Horizontal"><TextBlock Text="&#x1FA7A;" Margin="0,0,6,0"/><TextBlock Text="Υγεία &amp; Συντήρηση"/></StackPanel>
+                <StackPanel Orientation="Horizontal"><TextBlock Text="&#x271A;" Margin="0,0,6,0"/><TextBlock Text="Υγεία &amp; Συντήρηση"/></StackPanel>
             </RadioButton>
             <RadioButton Tag="Network" Style="{StaticResource TabPillStyle}" Checked="TabButton_Checked">
                 <StackPanel Orientation="Horizontal"><TextBlock Text="&#x1F310;" Margin="0,0,6,0"/><TextBlock Text="Δίκτυο &amp; Ασφάλεια"/></StackPanel>
@@ -156,6 +169,7 @@
                 <StackPanel Orientation="Horizontal"><TextBlock Text="&#x1F5A5;" Margin="0,0,6,0"/><TextBlock Text="Σύστημα"/></StackPanel>
             </RadioButton>
         </StackPanel>
+        </ScrollViewer>
 
         <!-- ===== Content host ===== -->
         <Border Grid.Row="3" Margin="24,0,24,12" Background="{DynamicResource MainBgBrush}">

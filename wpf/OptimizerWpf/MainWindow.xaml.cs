@@ -88,6 +88,8 @@ public partial class MainWindow : Window
             Key.D4 or Key.NumPad4 => "Network",
             Key.D5 or Key.NumPad5 => "Tweaks",
             Key.D6 or Key.NumPad6 => "Bloatware",
+            Key.D7 or Key.NumPad7 => "Advanced",
+            Key.D8 or Key.NumPad8 => "System",
             _ => null,
         };
         if (tag == null) return;
