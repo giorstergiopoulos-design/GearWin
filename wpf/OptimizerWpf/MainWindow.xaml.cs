@@ -130,6 +130,7 @@ public partial class MainWindow : Window
             "System" => new SystemView(),
             "Network" => new NetworkView(),
             "Bloatware" => new BloatwareView(),
+            "Tweaks" => new TweaksView(),
             _ => new PlaceholderView(label)
         };
     }
