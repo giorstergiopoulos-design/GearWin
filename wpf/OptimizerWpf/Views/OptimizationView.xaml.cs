@@ -16,6 +16,7 @@ namespace OptimizerWpf.Views
         private readonly ObservableCollection<WingetUpdateRow> _updates = new();
         private readonly ObservableCollection<DriverUpdate> _driverUpdates = new();
         private readonly ObservableCollection<DriverStoreEntry> _driverStoreEntries = new();
+        private readonly ObservableCollection<CatalogCandidate> _catalogUpdates = new();
 
         public OptimizationView()
         {
@@ -23,6 +24,7 @@ namespace OptimizerWpf.Views
             ListWingetUpdates.ItemsSource = _updates;
             ListDriverUpdates.ItemsSource = _driverUpdates;
             ListDriverStore.ItemsSource = _driverStoreEntries;
+            ListCatalogUpdates.ItemsSource = _catalogUpdates;
         }
 
         // Πλέον καλεί το ΠΛΗΡΕΣ Office/Gaming Mode (Set-OfficeMode/Disable-OfficeMode κ.λπ. του
@@ -250,6 +252,75 @@ namespace OptimizerWpf.Views
                 button.IsEnabled = true;
                 MessageBox.Show($"Η διαγραφή του οδηγού {entry.OriginalFileName} απέτυχε (μπορεί να βρίσκεται σε ενεργή χρήση).",
                     "Σφάλμα", MessageBoxButton.OK, MessageBoxImage.Warning);
+            }
+        }
+
+        // ===== Microsoft Update Catalog (δεύτερη πηγή, ρητό αίτημα χρήστη μετά από αξιολόγηση του
+        // Driver_Updater.ps1) - βλ. HANDOFF.md §0.4ιε. =====
+
+        private async void BtnScanCatalog_Click(object sender, RoutedEventArgs e)
+        {
+            ProgressCatalog.Visibility = Visibility.Visible;
+            BtnScanCatalog.IsEnabled = false;
+            _catalogUpdates.Clear();
+            TxtCatalogStatus.Text = "Καταγραφή συσκευών συστήματος...";
+            StatusService.SetBusy("Καταγραφή συσκευών συστήματος...");
+
+            var devices = await DriverService.GetSystemDevicesAsync();
+            var progress = new Progress<string>(name => StatusService.SetBusy($"Έλεγχος Catalog: {name}..."));
+            var (candidates, looksBlocked) = await DriverService.ScanCatalogAsync(devices, progress);
+
+            StatusService.SetIdle("Έτοιμο για χρήση");
+            ProgressCatalog.Visibility = Visibility.Collapsed;
+            BtnScanCatalog.IsEnabled = true;
+
+            if (looksBlocked)
+            {
+                TxtCatalogStatus.Text = $"Καμία απάντηση από το Catalog για {devices.Count} συσκευές - πιθανό προσωρινό μπλοκάρισμα ή αλλαγή στη σελίδα, ΟΧΙ απαραίτητα ότι όλα είναι ενημερωμένα. Δοκιμάστε ξανά αργότερα.";
+                return;
+            }
+
+            foreach (var c in candidates) _catalogUpdates.Add(c);
+            TxtCatalogStatus.Text = candidates.Count == 0
+                ? $"Ελέγχθηκαν {devices.Count} συσκευές - καμία νεότερη, σταθερή ενημέρωση δεν βρέθηκε στο Catalog."
+                : $"Βρέθηκαν {candidates.Count} ενημερώσεις (από {devices.Count} συσκευές):";
+        }
+
+        // Ρητό αίτημα χρήστη ("βρες λύσεις για τα ρίσκα και ενσωμάτωσε") - προτείνει σημείο επαναφοράς
+        // πριν από εγκατάσταση οδηγού από πηγή εκτός Windows Update (η WU έχει ήδη τη δική της
+        // εσωτερική προστασία/rollback, το Catalog download όχι) - επαναχρησιμοποιεί το ήδη υπάρχον
+        // SystemService.CreateRestorePointAsync, καμία διπλή υλοποίηση.
+        private async void BtnInstallCatalogDriver_Click(object sender, RoutedEventArgs e)
+        {
+            if (sender is not Button { Tag: CatalogCandidate candidate } button) return;
+
+            var confirm = MessageBox.Show(
+                $"Λήψη και εγκατάσταση του '{candidate.Title}' από το Microsoft Update Catalog για: {candidate.DeviceName}.\n\n" +
+                "Συνιστάται να δημιουργηθεί πρώτα σημείο επαναφοράς συστήματος. Δημιουργία τώρα;",
+                "Επιβεβαίωση", MessageBoxButton.YesNoCancel, MessageBoxImage.Warning);
+            if (confirm == MessageBoxResult.Cancel) return;
+
+            button.IsEnabled = false;
+            if (confirm == MessageBoxResult.Yes)
+            {
+                StatusService.SetBusy("Δημιουργία σημείου επαναφοράς...");
+                await SystemService.CreateRestorePointAsync();
+            }
+
+            StatusService.SetBusy($"Λήψη/επαλήθευση/εγκατάσταση: {candidate.Title}...");
+            var ok = await DriverService.InstallCatalogDriverAsync(candidate);
+            StatusService.SetIdle("Έτοιμο για χρήση");
+
+            if (ok)
+            {
+                _catalogUpdates.Remove(candidate);
+                MessageBox.Show($"Ο οδηγός εγκαταστάθηκε.\n{DriverService.LastInstallLog}", "Επιτυχία", MessageBoxButton.OK, MessageBoxImage.Information);
+            }
+            else
+            {
+                button.IsEnabled = true;
+                MessageBox.Show("Η λήψη/επαλήθευση/εγκατάσταση απέτυχε (πιθανή αιτία: μη έγκυρη ψηφιακή υπογραφή ή αποτυχία λήψης - η εγκατάσταση διακόπτεται αυτόματα σε μη επαληθευμένο πακέτο).",
+                    "Αποτυχία", MessageBoxButton.OK, MessageBoxImage.Error);
             }
         }
     }

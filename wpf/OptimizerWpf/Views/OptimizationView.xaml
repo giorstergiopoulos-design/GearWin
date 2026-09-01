@@ -114,9 +114,10 @@
                 </StackPanel>
             </Border>
 
-            <!-- Ενημερώσεις Οδηγών Συσκευών - port του Optimizer.ps1's cardOpt4 (~11847). Μόνο η πηγή
-                 Windows Update μεταφέρθηκε σε αυτό το πέρασμα - ΟΧΙ οι AMD/NVIDIA/Dell πηγές (web
-                 scraping/vendor tools, εκτός εμβέλειας - βλ. HANDOFF.md §0.4ιβ, ΣΗΜΕΙΩΣΗ ΕΙΛΙΚΡΙΝΕΙΑΣ). -->
+            <!-- Ενημερώσεις Οδηγών Συσκευών - port του Optimizer.ps1's cardOpt4 (~11847). Windows
+                 Update πηγή. AMD/NVIDIA/Dell ΠΑΡΑΜΕΝΟΥΝ εκτός εμβέλειας (web scraping/vendor tools
+                 συγκεκριμένα ανά κατασκευαστή, δεν καλύπτουν τη γενική περίπτωση) - βλ. δεύτερη πηγή
+                 (Microsoft Update Catalog) παρακάτω που καλύπτει τη γενική περίπτωση αντ' αυτών. -->
             <Border Style="{StaticResource CardStyle}" Margin="0,16,0,0">
                 <StackPanel>
                     <TextBlock Text="Ενημερώσεις Οδηγών Συσκευών (Windows Update)" Style="{StaticResource CardTitleStyle}" Margin="0,0,0,4"/>
@@ -154,6 +155,48 @@
                     </Border>
                     <Button x:Name="BtnScanDrivers" Content="Σάρωση Ενημερώσεων Οδηγών" Style="{StaticResource AccentButtonStyle}" Width="260"
                             HorizontalAlignment="Left" Margin="0,12,0,0" Click="BtnScanDrivers_Click"/>
+                </StackPanel>
+            </Border>
+
+            <!-- Ενημερώσεις Οδηγών - Microsoft Update Catalog (νέα, δεύτερη πηγή, ρητό αίτημα χρήστη
+                 μετά από αξιολόγηση του Driver_Updater.ps1 - βλ. HANDOFF.md §0.4ιε). Αναζήτηση ανά
+                 Hardware ID σε ΟΛΕΣ τις συσκευές, όχι μόνο ό,τι η WU θεωρεί επιλέξιμο. Throttled +
+                 sanity-checked - βλ. DriverService.ScanCatalogAsync. -->
+            <Border Style="{StaticResource CardStyle}" Margin="0,16,0,0">
+                <StackPanel>
+                    <TextBlock Text="Ενημερώσεις Οδηγών - Microsoft Update Catalog" Style="{StaticResource CardTitleStyle}" Margin="0,0,0,4"/>
+                    <TextBlock x:Name="TxtCatalogStatus" Text="Αναζητά ενημερώσεις ανά Hardware ID για κάθε συσκευή απευθείας στο Microsoft Update Catalog - μπορεί να διαρκέσει αρκετά λεπτά για πολλές συσκευές." Style="{StaticResource SubTextStyle}" Margin="0,0,0,6" TextWrapping="Wrap"/>
+                    <ProgressBar x:Name="ProgressCatalog" Height="6" IsIndeterminate="True" Visibility="Collapsed" Margin="0,0,0,10"/>
+                    <Border Background="{DynamicResource MainBgBrush}" CornerRadius="6" MinHeight="80" MaxHeight="280" Padding="4">
+                        <ScrollViewer VerticalScrollBarVisibility="Auto">
+                            <ItemsControl x:Name="ListCatalogUpdates">
+                                <ItemsControl.ItemTemplate>
+                                    <DataTemplate>
+                                        <Border Background="{DynamicResource CardBgBrush}" CornerRadius="4" Margin="4" Padding="10">
+                                            <Grid>
+                                                <Grid.ColumnDefinitions>
+                                                    <ColumnDefinition Width="*"/>
+                                                    <ColumnDefinition Width="Auto"/>
+                                                </Grid.ColumnDefinitions>
+                                                <StackPanel Grid.Column="0">
+                                                    <TextBlock Text="{Binding Title}" Foreground="{DynamicResource TextBrush}" FontWeight="SemiBold" TextWrapping="Wrap"/>
+                                                    <TextBlock Style="{StaticResource SubTextStyle}">
+                                                        <Run Text="{Binding DeviceName, Mode=OneWay}"/>
+                                                        <Run Text=" &#x00B7; v"/>
+                                                        <Run Text="{Binding Version, Mode=OneWay}"/>
+                                                    </TextBlock>
+                                                </StackPanel>
+                                                <Button Grid.Column="1" Content="Εγκατάσταση" Style="{StaticResource FlatButtonStyle}" VerticalAlignment="Center"
+                                                        Click="BtnInstallCatalogDriver_Click" Tag="{Binding}" Margin="10,0,0,0"/>
+                                            </Grid>
+                                        </Border>
+                                    </DataTemplate>
+                                </ItemsControl.ItemTemplate>
+                            </ItemsControl>
+                        </ScrollViewer>
+                    </Border>
+                    <Button x:Name="BtnScanCatalog" Content="Σάρωση Microsoft Update Catalog" Style="{StaticResource AccentButtonStyle}" Width="280"
+                            HorizontalAlignment="Left" Margin="0,12,0,0" Click="BtnScanCatalog_Click"/>
                 </StackPanel>
             </Border>
 
