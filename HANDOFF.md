@@ -855,8 +855,274 @@ kernel driver του LibreHardwareMonitorLib φορτώνει χωρίς excepti
    Optional Features management, Διαχείριση Συσκευών-Φαντασμάτων) - καλύτερα να χτιστούν αφού θα
    υπάρχει ήδη ώριμο, δοκιμασμένο πρότυπο toggle/registry/WMI patterns από τα προηγούμενα.
 
-Αυτή η σειρά ΔΕΝ έχει ακόμα εφαρμοστεί/ξεκινήσει - είναι η προτεινόμενη σειρά προς έγκριση/
-προσαρμογή από τον χρήστη πριν ξεκινήσει το επόμενο πέρασμα υλοποίησης.
+Ο χρήστης ενέκρινε τη σειρά ("το αφήνεις έτσι για τις καρτέλες") και ζήτησε ρητά βαθύτερη έρευνα
+περιεχομένου πριν ξεκινήσει η υλοποίηση ("τι θα βάλεις μέσα όμως ψάξε καλά") - βλ. §0.4ιβ παρακάτω.
+
+## 0.4ιβ Λεπτομερές περιεχόμενο ανά προτεραιότητα (ρητό αίτημα χρήστη: "ψάξε καλά")
+
+Πλήρης ανάγνωση κώδικα (όχι μόνο τίτλοι καρτών) για τα 2 πρώτα στη σειρά προτεραιότητας. Τα
+υπόλοιπα 5 (Δίκτυο/Bloatware/Advanced/Σύστημα/Tweaks) ανατέθηκαν σε background research agents -
+τα αποτελέσματά τους θα προστεθούν εδώ όταν ολοκληρωθούν.
+
+### 1. Βελτιστοποίηση - ολοκλήρωση "Ενημερώσεις Οδηγών Συσκευών" (cardOpt4, ~11847-13035)
+
+**ΠΟΛΥ μεγαλύτερο σε πραγματικότητα από μία απλή "κάρτα"** - 4 ανεξάρτητες, headless πηγές δεδομένων
+(καμία δεν ανοίγει δικό της παράθυρο - ρητή, επαναλαμβανόμενη απαίτηση χρήστη στο ιστορικό, SDIO
+ρητά απορρίφθηκε):
+1. **Windows Update COM API** (`Microsoft.Update.Session`, φιλτραρισμένο σε `Type='Driver'`) - η
+   κύρια πηγή, συνδυάζεται με `Win32_PnPSignedDriver` (εγκατεστημένοι, τοπικό/χωρίς δίκτυο). Ελέγχει
+   ΚΑΙ την πολιτική `ExcludeWUDriversInQualityUpdate` (πολλαπλά πιθανά registry paths) πριν πει
+   ψευδώς "όλα ενημερωμένα".
+2. **AMD** (μόνο για AMD GPUs, `Win32_VideoController -match "AMD|Radeon"`) - server-rendered HTML
+   scraping της επίσημης σελίδας `drivers.amd.com` ανά μοντέλο (regex στο HTML για version+ημερομηνία
+   λήψης) - σύγκριση με ΗΜΕΡΟΜΗΝΙΕΣ, όχι version strings (ασύμβατη αρίθμηση Windows vs Adrenalin).
+3. **NVIDIA** (μόνο για NVIDIA GPUs) - το ΔΙΚΟ ΤΗΣ δημόσιο API (lookupValueSearch.aspx + geforce.com
+   AjaxDriverService.php) - ίδιος μηχανισμός με το ανοιχτού κώδικα TinyNvidiaUpdateChecker.
+4. **Dell** (μόνο αν `Win32_ComputerSystem.Manufacturer -match "Dell"` ΚΑΙ το επίσημο Dell Command
+   Update ήδη εγκατεστημένο) - τρέχει `dcu-cli.exe /scan` αθόρυβα, διαβάζει το XML report του.
+   ΣΗΜΕΙΩΣΗ ΕΙΛΙΚΡΙΝΕΙΑΣ (ήδη στο ίδιο το ps1): ΔΕΝ δοκιμάστηκε ζωντανά με πραγματικό Dell hardware.
+
+Εγκατάσταση (`Install-DriverUpdate`): ξεχωριστή background PowerShell διεργασία ανά driver
+(Windows Update Session/Downloader/Installer COM), ΟΧΙ inline. Κυκλικό κουμπί σάρωσης με progress
+arc + περιστρεφόμενο γρανάζι (οπτικό στοιχείο - στο WPF θα χρειαστεί δικό του custom-drawn/Path
+equivalent, ήδη υπάρχει προηγούμενο από το status bar spinner). Checkbox opt-in "αυτόματη λήψη &
+εγκατάσταση" (persisted σε `$appSettings`).
+
+**cardOpt5 - Αντίγραφο Ασφαλείας Οδηγών** (~13037-13134): 2 κουμπιά - "Δημιουργία Αντιγράφου"
+(`dism.exe /Online /Export-Driver /Destination:...`, μόνο drivers τρίτων, ΠΟΤΕ Windows native) και
+"Επαναφορά" (`pnputil.exe /add-driver *.inf /subdirs /install`, με explicit Yes/No επιβεβαίωση - ΟΧΙ
+αναστρέψιμη ενέργεια). Κοινό timer/state και για τις δύο λειτουργίες (async, ΔΕΝ μπλοκάρει το UI -
+ήδη διορθωμένο bug στο ps1 ιστορικό, το pnputil μπορεί να πάρει αρκετά λεπτά).
+
+**cardDriverStore - Καθαρισμός Αποθήκης Οδηγών** (~13136+): `Get-WindowsDriver` (DISM cmdlet, ΟΧΙ
+ανάλυση κειμένου pnputil - το τελευταίο είναι localized ανά γλώσσα Windows, ήδη προκάλεσε bug
+αλλού). Φιλτράρει `Inbox=false` (μόνο 3rd-party, ΠΟΤΕ εργοστασιακούς), ομαδοποιεί κατά
+`OriginalFileName`, προτείνει διαγραφή ΜΟΝΟ των παλιότερων εκδόσεων (κρατά πάντα την πιο πρόσφατη).
+Το ίδιο το pnputil αρνείται να διαγράψει driver σε ενεργή χρήση - καμία πρόσθετη προστασία
+χρειάζεται στο C# port.
+
+### 2. Υγεία & Συντήρηση (πλήρης καρτέλα, ~13300-13792)
+
+**cardRegClean - Καθαρισμός Μητρώου** (~13411-13664): ΣΚΟΠΙΜΑ στενός/ασφαλής, ΟΧΙ επιθετική
+σάρωση - μόνο 2 κατηγορίες: (α) `MissingUninstaller` - εγγραφές `...\Uninstall\*` όπου το exe path
+του `UninstallString` δεν υπάρχει πια (με προστασία system-folder paths: System32/SysWOW64/WinSxS/
+κ.λπ. ΠΟΤΕ δεν προτείνονται), (β) `ObsoleteMuiCache` - παρωχημένα cached ονόματα σε
+`HKCU\...\Shell\MuiCache` όπου το path δεν υπάρχει πια. Αυτόματο `.reg` backup ΠΡΙΝ από κάθε
+διαγραφή (`Invoke-RegistryCleanDelete`). Background scan process, ίδιο async μοτίβο.
+
+**cardBrowserCache - Καθαρισμός Cache Περιηγητών** (~13665-13699): Δυναμική λίστα (μόνο browsers
+που πραγματικά ανιχνεύτηκαν στο σύστημα, `$global:browserCacheCatalog`) - ένα κουμπί ανά browser σε
+grid 3 στηλών, κάθε κουμπί καθαρίζει ΜΟΝΟ cache folders (ΟΧΙ ιστορικό/κωδικούς/σελιδοδείκτες), όλα τα
+προφίλ. Χρειάζεται πρώτα να βρω/ξαναχτίσω το `$browserCacheCatalog` (ποιοι browsers/paths
+υποστηρίζονται) σε επόμενο πέρασμα υλοποίησης.
+
+**cardWinRE - Περιβάλλον Ανάκτησης Windows** (~13701-13791): `reagentc.exe /info` (σχεδόν ακαριαίο,
+συγχρονισμένη κλήση OK) για κατάσταση, χρωματισμένη ένδειξη (πράσινο Ενεργό/κόκκινο Ανενεργό).
+"Ενεργοποίηση WinRE" ζητά explicit Yes/No επιβεβαίωση (αλλάζει boot configuration data) πριν
+`reagentc.exe /enable`. Requires elevation (ήδη διαθέσιμο στο WPF).
+
+### 3. Δίκτυο & Ασφάλεια (~13792-14193)
+
+5 μεμονωμένα κουμπιά πάνω από τις κάρτες: Πλήρης Επαναφορά Δικτύου (winsock/ip reset+ipconfig
+release/renew/flushdns), Πληροφορίες Δικτύου (ipconfig /all, read-only), Επανεκκίνηση Wi-Fi
+(`Restart-NetAdapter -Name "*"` - ΧΩΡΙΣ επιβεβαίωση παρότι επηρεάζει ΟΛΟΥΣ τους adapters), Άνοιγμα
+WF.msc (native Firewall), Πίνακας Δρομολόγησης (read-only).
+
+**cardFirewall - Διαχείριση Κανόνων**: search box (τοπικό φιλτράρισμα σε ήδη φορτωμένα, όριο 50
+αποτελέσματα)· "Φόρτωση Κανόνων" = async pattern (temp .ps1 `Get-NetFirewallRule | ConvertTo-Json`,
+Timer 700ms poll πάνω σε Start-Process - ΙΔΙΟ μοτίβο με winget, να γίνει `Process.WaitForExitAsync`
+στο C#)· κάθε κανόνας toggle switch → `Set-NetFirewallRule -Enabled` ΧΩΡΙΣ επιβεβαίωση.
+
+**cardFirewallTools**: Εξαγωγή/Εισαγωγή πολιτικής (.wfw, `netsh advfirewall export/import` -
+εισαγωγή έχει confirm dialog, ΑΝΤΙΚΑΘΙΣΤΑ ολόκληρη την πολιτική)· "Επαναφορά Προεπιλογών" (κόκκινο
+κουμπί, `netsh advfirewall reset`, confirm dialog, **ΜΗ αναστρέψιμο** χωρίς προηγούμενη εξαγωγή -
+πιο επικίνδυνη ενέργεια της καρτέλας).
+
+**cardHostsEditor**: auto-load στο άνοιγμα καρτέλας· Φόρτωση/Αποθήκευση (backup .bak με timestamp
+πριν την εγγραφή, `Encoding.ASCII` - ΠΡΟΣΟΧΗ στο port, non-ASCII hostnames θα χαλάσουν)/Επαναφορά
+Προεπιλογών (μόνο textbox, ΔΕΝ γράφει δίσκο)/Άνοιγμα με Σημειωματάριο (bypass του in-app editor -
+ΧΩΡΙΣ backup αν αποθηκευτεί από εκεί). Αποθήκευση έχει confirm dialog + backup, επικίνδυνη ενέργεια
+(system file, χρειάζεται elevation - ήδη διαθέσιμο).
+
+**cardDefenderScan**: "Έναρξη Γρήγορης Σάρωσης" = fire-and-forget (temp .ps1 `Start-MpScan
+-ScanType QuickScan` + ΤΑΥΤΟΧΡΟΝΟ άνοιγμα `windowsdefender://scan/?scantype=quick` URI ώστε ο
+χρήστης να βλέπει ζωντανή πρόοδο ΣΤΟ ίδιο το Windows Security app) - **σκόπιμα ΚΑΝΕΝΑ Timer
+polling εδώ** (η σάρωση μπορεί να πάρει 15+ λεπτά, το app παραδίδει την προόδο στο native UI).
+
+### 4. Εφαρμογές & Bloat (~14193-15000)
+
+**cardBuiltin** (6 σειρές Install/Uninstall): Copilot/Xbox Gaming Overlay/News&Weather/HEVC
+Extensions μέσω `Restore-AppxPackage` (νέο helper: δοκιμάζει provisioned-package re-register →
+winget install → άνοιγμα ms-windows-store:// URI ως τελευταία λύση) + `Remove-AppxPackage`· Windows
+Media Player Legacy μέσω `Enable/Disable-WindowsOptionalFeature` + auto default-app-association +
+taskbar pin· Windows Photo Viewer μέσω απευθείας registry key (`HKLM:\...\Photo
+Viewer\Capabilities\FileAssociations`).
+
+**cardRecommended** (7 υποκατηγορίες, ΚΑΘΑΡΑ δηλωτική λίστα Τίτλος+WingetId+Tooltip - Browsers[4]/
+Archivers[2]/Media[4+K-Lite ειδική περίπτωση]/Communication[4]/Tools[3]/Documents[2]/System
+Libraries[3], ~22 απλές εγγραφές): κοινός μηχανισμός `Start-AppInstallOrUninstall` -
+`Test-WingetAppInstalled` (συγχρονισμένο, `winget list`) → `Start-Process winget install/uninstall
+--silent` (async) → ΚΟΙΝΟΣ `$appOpsTimer` (600ms) polling πολλαπλών ταυτόχρονων operations. Το
+K-Lite Codec Pack έχει ΔΙΚΟ ΤΟΥ timer (μετά την εγκατάσταση: εντοπισμός MPC-HC, ρύθμιση
+προεπιλεγμένων εφαρμογών ήχου/βίντεο, taskbar pin και για τα δύο players).
+
+**cardUwpManage**: ένα κουμπί ανοίγει ξεχωριστό dialog (`Show-UwpAppManagerWindow`, 900x700 modal) -
+σάρωση `Get-AppxPackage` φιλτραρισμένο σε ΜΟΝΟ πραγματικά Store apps (`SignatureKind -eq "Store"`,
+όχι frameworks/resource-packages), friendly names μέσω ~29-εγγραφών hashtable
+(`Get-FriendlyAppName`), per-app Uninstall ΜΕ confirm dialog (`Remove-AppxPackage`, ΣΥΓΧΡΟΝΑ στο UI
+thread - ασυνέπεια με το Deep Uninstall παρακάτω που ΕΙΝΑΙ async, να διορθωθεί στο port).
+
+**cardDeepUninstall**: τρέχει ΠΑΝΤΑ τον ΕΠΙΣΗΜΟ uninstaller της εφαρμογής (registry
+`UninstallString`, ΚΑΝΕΝΑ silent flag injection) - confirm dialog → async (Timer 500ms, ίδιο
+μοτίβο) → μετά την ολοκλήρωση σαρώνει για "residual folders" (`%LOCALAPPDATA%`/`%APPDATA%`/
+`%ProgramData%`, top-level μόνο) → αν βρεθούν, δεύτερο confirm dialog → διαγραφή ΠΑΝΤΑ στον Κάδο
+Ανακύκλωσης (`Microsoft.VisualBasic.FileIO.FileSystem]::DeleteDirectory`, ΠΟΤΕ μόνιμη διαγραφή).
+
+### 5. Προηγμένα Εργαλεία (~15001-15621)
+
+**cardAdvMaintenance** (10 κουμπιά): πλήρης συντήρηση (temp cleanup+SFC+DISM RestoreHealth)·
+ενεργοποίηση προνομίων token (P/Invoke `AdjustTokenPrivileges` - χρειάζεται δικό του C# wrapper)·
+δικτυακό reset· **καθαρισμός Event Logs** (`EventLogSession.ClearLog` - ΚΑΤΑΣΤΡΕΠΤΙΚΟ, ΧΩΡΙΣ
+confirm dialog στο ps1 - πρέπει να προστεθεί στο port)· GC (placebo, μόνο η ίδια η διεργασία)· Deep
+Diagnostics report σε αρχείο· άνοιγμα devmgmt.msc· WU troubleshooter (ms-settings: URI)· System
+Report· reset υπηρεσιών WU (net stop/start wuauserv+bits)· .NET RollForward env var (ΧΩΡΙΣ
+confirm)· καθαρισμός Xbox credentials (`cmdkey`, locale-safe regex)· εγκατάσταση Group Policy
+Editor (dism .mum packages).
+
+**cardAdvToolbox** (7 κουμπιά): καθαροί launchers (Snipping Tool/Notepad/Calculator/Control
+Panel/Task Manager/regedit) + "Επανεκκίνηση GPU Driver" (προσομοίωση Win+Ctrl+Shift+B keystroke -
+ΟΧΙ πραγματικό API, χρειάζεται SendInput equivalent στο C#).
+
+**cardWinFeatures** (6 curated: .NET 3.5/Windows Sandbox/Hyper-V/WSL/Telnet/SMB1) vs
+**cardAllWinFeatures** (ΠΛΗΡΗΣ, αναζητήσιμη λίστα ~150-250 features, ΕΞΑΙΡΕΙ ρητά τα 6 curated +
+WindowsMediaPlayer [η δικιά της πλουσιότερη λογική ζει στο Bloatware tab] - ΔΕΝ είναι διπλότυπο,
+σκόπιμος σχεδιασμός). Κοινό `Invoke-OptionalFeatureToggle`: confirm dialog → async toggle. Η πλήρης
+λίστα έχει ΤΟ ΙΔΙΟ temp-script+Timer-polling μοτίβο με winget/firewall/storage.
+
+**cardGhostDevices**: `Get-PnpDevice -PresentOnly:$false` φιλτραρισμένο σε `Present=$false` (ΠΟΤΕ
+συνδεδεμένο hardware), async scan (Timer 800ms)· per-row "Αφαίρεση" = `Remove-PnpDevice
+-Confirm:$false` **ΧΩΡΙΣ κανένα confirm dialog στο ps1 - η πιο επικίνδυνη, ανεπιβεβαίωτη ενέργεια
+όλης της καρτέλας, ΠΡΕΠΕΙ να προστεθεί confirm στο port**.
+
+### 6. Σύστημα (~15622-16518)
+
+**cardStartup**: toggle ανά στοιχείο εκκίνησης, ΠΑΝΤΑ αναστρέψιμο (rename value σε
+`OptimizerDisabled_X` αντί για διαγραφή - ΠΟΤΕ χάνεται δεδομένο).
+
+**cardProcesses**: `Get-Process` top 25 κατά μνήμη, hardcoded λίστα κρίσιμων διεργασιών (System/
+Idle/csrss/lsass/winlogon/explorer/dwm/κ.λπ.) που ΔΕΝ παίρνουν καν κουμπί Τερματισμού· confirm
+dialog πριν από `Stop-Process -Force`.
+
+**cardStorage**: Εύρεση Διπλότυπων (SHA256 hash grouping, μόνο προσωπικοί φάκελοι: Έγγραφα/Λήψεις/
+Επιφάνεια/Εικόνες/Βίντεο, ΠΟΤΕ system) / Εύρεση Μεγάλων Αρχείων (ίδιοι φάκελοι, top 50)· "OneDrive
+- Ελευθέρωση Χώρου" (`attrib +U -P` κάνει αρχεία online-only, async)· διαγραφή αποτελεσμάτων ΠΑΝΤΑ
+στον Κάδο Ανακύκλωσης με confirm.
+
+**cardRestorePoints**: Δημιουργία (`Checkpoint-Computer`, όριο Windows 1/24ωρο)· Άνοιγμα native
+Ρυθμίσεων Προστασίας (SystemPropertiesProtection.exe) ως "διέξοδος" για διαγραφή μεμονωμένου
+σημείου - **ΣΚΟΠΙΜΑ ΔΕΝ υλοποιείται diagnostic delete-by-sequence** (τεκμηριωμένος περιορισμός: το
+WMI SystemRestore ΔΕΝ έχει Delete method, το vssadmin έχει ασύμβατο ID scheme, ρίσκο λάθος
+διαγραφής - να ΜΗΝ ξαναπροσπαθηθεί στο port)· "Επαναφορά" = confirm dialog έντονης διατύπωσης
+(άμεση επανεκκίνηση) → `Restore-Computer`.
+
+**cardServicesOpt**: curated λίστα ~29 υπηρεσιών (DiagTrack/MapsBroker/WSearch/XblAuthManager/κ.λπ.,
+αρκετές με προειδοποιήσεις στην περιγραφή τους) - toggle Αυτόματο↔Χειροκίνητο με backup/restore
+μηχανισμό (κοινή "tweak backup" υποδομή, ΙΔΙΑ με άλλα σημεία της εφαρμογής) - μόνο υπηρεσίες που
+ήταν ΗΔΗ Αυτόματες αγγίζονται ποτέ.
+
+**cardDriveBenchmark**: 256MB test file write+read timing (Stopwatch), προ-έλεγχος ελεύθερου χώρου
+(≥1GB), async (Timer 500ms) - **τεκμηριωμένος περιορισμός**: η ανάγνωση επηρεάζεται από Windows
+file-cache (μόλις γραμμένο αρχείο) - ενδεικτικό test, ΟΧΙ CrystalDiskMark-level ακρίβεια, ήδη
+τεκμηριωμένο στο ίδιο το ps1.
+
+### 7. Επιπλέον Ρυθμίσεις (~16519-17573)
+
+Η ΠΥΚΝΟΤΕΡΗ καρτέλα - 4 κάρτες + 3 standalone ενότητες. ΟΛΑ τα toggle rows μοιράζονται τον ΙΔΙΟ
+`Add-TweakRow` factory (label+ToggleSwitch+OnScript/OffScript κλείσιμο) - το "restore" σημαίνει
+"επαναφορά στην ΠΡΑΓΜΑΤΙΚΗ προηγούμενη τιμή του χρήστη" (backup σε κοινό JSON store,
+`Backup-RegValueIfNeeded`/`Restore-BackedUpRegValue`), ΟΧΙ hardcoded default - σημαντικό
+αρχιτεκτονικό detail να διατηρηθεί στο port (χρειάζεται μια αντίστοιχη C# "tweak backup" υπηρεσία).
+
+**cardMainTweaks** (845px, 14 toggles, όλα registry-based εκτός #7/#8): Storage Sense αυτόματος
+καθαρισμός, Fast Startup, Κλασικό Win10 δεξί-κλικ μενού (CLSID key create/delete + explorer
+restart), Εμφάνιση επεκτάσεων/κρυφών αρχείων, Delivery Optimization P2P, Απενεργοποίηση επιτάχυνσης
+ποντικιού, Αρχείο Αδρανοποίησης (`powercfg /hibernate on/off`), Ultimate Performance πλάνο
+(`powercfg -duplicatescheme` + καθαρισμός στην επαναφορά), Αφαίρεση "Προτεινόμενα" από Start,
+Ιστορικό Πρόχειρου (Win+V), Απενεργοποίηση Network Throttling, Βελτιστοποίηση System
+Responsiveness, Απενεργοποίηση Game Bar/DVR (ΞΕΧΩΡΙΣΤΟ από το Gaming Mode του tab 1 - αγγίζει ΜΟΝΟ
+Game DVR), Τηλεμετρία στο ελάχιστο επιτρεπτό επίπεδο (Home/Pro).
+
+**cardAiCopilotBg** (7 toggles, v1.8.9): Απενεργοποίηση Copilot ("μαλακή" - το πακέτο μένει
+εγκατεστημένο, πλήρης αφαίρεση ζει στο Bloatware tab), Windows Recall, Click To Do (Windows 11
+25H2), αυτόματη εκκίνηση AI service, AI λειτουργίες σε Edge/Paint/Notepad - όλα registry policy
+keys.
+
+**cardPerfBg** (4 toggles - ΜΕΡΙΚΩΣ ήδη γνωστό, HAGS/μπαταρία/USB/PCIe - το ΙΔΙΟ HAGS key
+(`HwSchMode`) χρησιμοποιείται ΚΑΙ από το πλήρες Gaming Mode που ήδη υλοποιήθηκε στο WPF, πιθανή
+επικάλυψη προς εξέταση όταν χτιστεί αυτό το tab ώστε να μη συγκρούονται).
+
+**3 standalone ενότητες (ΕΚΤΟΣ κάρτας)**:
+- **Κρυπτογράφηση Συσκευής**: ΣΚΟΠΙΜΑ ΟΧΙ toggle - μόνο άνοιγμα των native Ρυθμίσεων
+  (BitLocker applet fallback σε ms-settings: URI) - το ps1 ΠΟΤΕ αγγίζει BitLocker registry
+  απευθείας (ρίσκο κλειδώματος δεδομένων χωρίς σωστό recovery key) - **να διατηρηθεί ΑΥΣΤΗΡΑ ίδια
+  πολιτική στο port, ΠΟΤΕ registry-based toggle εδώ**.
+- **2 hardcoded δεξί-κλικ επιλογές** (Ιδιοκτησία/Take Ownership - `icacls /grant *S-1-3-4:F /t`
+  αναδρομικά, **ΧΩΡΙΣ confirm dialog στο ps1**· Άνοιγμα PowerShell εδώ) - μέσω `HKEY_CLASSES_ROOT`,
+  ΞΕΧΩΡΙΣΤΑ από το JSON-tracked custom menu builder παρακάτω.
+- **3 κουμπιά Οπτικών Εφέ** (Καλύτερη Εμφάνιση/Απόδοση/Ισορροπημένο) - **ΤΑ ΜΟΝΑ 3 σημεία σε ΟΛΗ
+  την καρτέλα με πραγματικό Yes/No confirm dialog** (κλείνουν explorer.exe) - ΠΟΤΕ αγγίζουν το
+  undocumented binary `UserPreferencesMask` (ρητή προφύλαξη στο ps1 - λάθος bit σπάει οπτικά την
+  επιφάνεια εργασίας).
+
+**cardCustomMenu** - πλήρες CRUD (όχι fixed λίστα): JSON store παρακολουθεί ΜΟΝΟ entries που
+έφτιαξε η ίδια η εφαρμογή (`OptimizerCustom_<guid>` keys), ώστε να μπορεί να τα αφαιρέσει με
+ασφάλεια χωρίς να αγγίξει προϋπάρχοντα shell verbs τρίτων. 3 scopes (Files/Directory/
+FolderBackground). Modal dialog προσθήκης (MenuText+Command+Scope, auto-appends `%1`/`%V`
+placeholder). **Ρίσκο προς σημείωση**: ουσιαστικά αυθαίρετη εκτέλεση εντολής registered στο μενού
+των Windows, καμία επικύρωση πέρα από "μη κενό" - άξιο προσοχής στο port (ίσως προειδοποίηση προς
+τον χρήστη).
+
+**Cross-cutting εύρημα ειδικά για αυτή την καρτέλα**: ΚΑΝΕΝΑ από τα 4 tweak/AI/perf cards δεν έχει
+async/Timer pattern (όλα συγχρονισμένα registry/powercfg calls, γρήγορα) - deferred `.SendToBack()`
+z-order bugs (2 φορές επαναλαμβανόμενο σε cardAiCopilotBg/cardPerfBg) είναι WinForms-specific,
+άσχετο στο WPF (declarative layout, όχι z-order dance).
+
+## 0.4ιγ Συνολικό συμπέρασμα μετά την πλήρη έρευνα περιεχομένου
+
+Πέρα από το ΗΔΗ καταγεγραμμένο "καμία αναδιάταξη καρτελών δεν χρειάζεται" (§0.4η), η πλήρης ανάγνωση
+περιεχομένου αποκάλυψε ΕΝΑ γενικό, επαναλαμβανόμενο αρχιτεκτονικό μοτίβο σε ΣΧΕΔΟΝ όλες τις 6
+εναπομείνασες καρτέλες: εξωτερική powershell.exe διεργασία + Timer polling + JSON handoff, για ΚΑΘΕ
+βαριά λειτουργία (σαρώσεις firewall/features/ghost devices/storage/drivers/registry clean). Στο
+WPF αυτό ΔΕΝ χρειάζεται να αντιγραφεί κατά γράμμα ανά λειτουργία - ένας ΚΟΙΝΟΣ, επαναχρησιμοποιήσιμος
+async helper (ή απευθείας in-process `Task.Run` λογική, χωρίς καν να χρειάζεται να καλεί ξανά
+powershell.exe) καλύπτει όλες τις περιπτώσεις - πραγματική ευκαιρία απλοποίησης κατά το port, όχι
+μόνο μηχανική μεταφορά.
+
+Επίσης εντοπίστηκαν 5 σημεία σε όλη την εφαρμογή όπου λείπει confirmation dialog παρά τον πραγματικό
+κίνδυνο (βλ. λίστα §0.4ιβ σημείο 3-6 + Take Ownership στο §0.4ιβ σημείο 7) - συνιστάται να προστεθούν
+στο WPF port ως βελτίωση, όχι απλή 1:1 αντιγραφή της υπάρχουσας (ελλιπούς σε αυτά τα σημεία)
+συμπεριφοράς.
+
+### Cross-cutting εύρημα (και τα 6 πάνω tabs): επαναλαμβανόμενο async pattern
+
+Optimization/Health/Network/Bloatware/Advanced/System ΟΛΑ επαναλαμβάνουν το ΙΔΙΟ μοτίβο: temp .ps1
+script γράφεται σε TEMP → `Start-Process powershell.exe -WindowStyle Hidden/Minimized -PassThru` →
+`System.Windows.Forms.Timer` (500-800ms) polling `Process.HasExited` → ανάγνωση/διαγραφή temp JSON
+αρχείου. Στο WPF/C# port, αυτό ΔΕΝ χρειάζεται να ξαναγραφτεί ως ξεχωριστό `DispatcherTimer` ανά
+λειτουργία - μπορεί να γίνει ΕΝΑΣ κοινός, επαναχρησιμοποιήσιμος async helper
+(`Process.Start`+`await process.WaitForExitAsync()`+`System.Text.Json`), ή ακόμα καλύτερα να
+τρέξει η ΙΔΙΑ η λογική in-process μέσω `Task.Run` αντί να καλεί ξανά ξεχωριστό powershell.exe (το
+WinForms original χρειαζόταν ξεχωριστή διεργασία ΕΙΔΙΚΑ για να μείνει το UI thread responsive - το
+WPF async/await λύνει το ίδιο πρόβλημα εγγενώς, χωρίς να χρειάζεται καν το process spawning).
+
+### Cross-cutting εύρημα: ενέργειες ΧΩΡΙΣ επιβεβαίωση που πιθανώς χρειάζονται μία στο port
+
+Εντοπίστηκαν 4 σημεία όπου το ίδιο το ps1 ΔΕΝ έχει confirm dialog παρά την επικινδυνότητα -
+ΣΗΜΕΙΩΣΗ για το port, όχι απαραίτητα bug προς "διόρθωση" (μπορεί να ήταν σκόπιμη επιλογή):
+1. Επανεκκίνηση Wi-Fi adapters (Δίκτυο - top-level κουμπί)
+2. Firewall rule enable/disable toggle (Δίκτυο)
+3. Καθαρισμός Event Logs (Advanced)
+4. **Αφαίρεση Ghost Device** (Advanced - `Remove-PnpDevice -Confirm:$false`, η πιο σαφής περίπτωση)
 
 ## 0. Σχέδιο Αρχιτεκτονικής: Driver Updater πολλαπλών πηγών (για v2.2.0 — ΔΕΝ έχει υλοποιηθεί ακόμα)
 
