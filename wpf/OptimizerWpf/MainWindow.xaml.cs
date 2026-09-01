@@ -128,6 +128,7 @@ public partial class MainWindow : Window
             "Optimization" => new OptimizationView(),
             "Health" => new HealthView(),
             "System" => new SystemView(),
+            "Network" => new NetworkView(),
             _ => new PlaceholderView(label)
         };
     }

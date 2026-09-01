@@ -1,0 +1,86 @@
+<UserControl x:Class="OptimizerWpf.Views.NetworkView"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             mc:Ignorable="d">
+    <!-- Δίκτυο & Ασφάλεια - port του $tabNetwork (~13792-14193). Βλ. NetworkService.cs. -->
+    <ScrollViewer VerticalScrollBarVisibility="Auto">
+        <StackPanel Margin="0,8,0,24">
+
+            <WrapPanel Margin="0,0,0,16">
+                <Button Content="Πλήρης Επαναφορά Δικτύου" Style="{StaticResource FlatButtonStyle}" Width="200" Margin="0,0,10,10" Click="BtnFullReset_Click"/>
+                <Button Content="Πληροφορίες Δικτύου" Style="{StaticResource FlatButtonStyle}" Width="180" Margin="0,0,10,10" Click="BtnIpConfig_Click"/>
+                <Button Content="Επανεκκίνηση Wi-Fi" Style="{StaticResource FlatButtonStyle}" Width="180" Margin="0,0,10,10" Click="BtnRestartWifi_Click"/>
+                <Button Content="Διαχείριση Windows Firewall" Style="{StaticResource FlatButtonStyle}" Width="220" Margin="0,0,10,10" Click="BtnOpenFirewall_Click"/>
+                <Button Content="Πίνακας Δρομολόγησης" Style="{StaticResource FlatButtonStyle}" Width="200" Margin="0,0,10,10" Click="BtnRoutingTable_Click"/>
+            </WrapPanel>
+            <TextBlock x:Name="TxtNetworkOutput" Style="{StaticResource SubTextStyle}" TextWrapping="Wrap" FontFamily="Consolas" Margin="0,0,0,16" MaxHeight="200"/>
+
+            <!-- Κανόνες Firewall -->
+            <Border Style="{StaticResource CardStyle}">
+                <StackPanel>
+                    <Grid Margin="0,0,0,10">
+                        <Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions>
+                        <TextBox x:Name="TxtFirewallSearch" Grid.Column="0" Margin="0,0,10,0" VerticalContentAlignment="Center"
+                                 Background="{DynamicResource MainBgBrush}" Foreground="{DynamicResource TextBrush}" TextChanged="TxtFirewallSearch_TextChanged"/>
+                        <Button Grid.Column="1" Content="Φόρτωση Κανόνων" Style="{StaticResource AccentButtonStyle}" Width="180" Click="BtnLoadFirewallRules_Click"/>
+                    </Grid>
+                    <TextBlock x:Name="TxtFirewallStatus" Text="Πληκτρολογήστε για αναζήτηση (μετά τη φόρτωση κανόνων)." Style="{StaticResource SubTextStyle}" Margin="0,0,0,8"/>
+                    <ItemsControl x:Name="ListFirewallRules">
+                        <ItemsControl.ItemTemplate>
+                            <DataTemplate>
+                                <Grid Margin="0,0,0,6">
+                                    <Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions>
+                                    <TextBlock Grid.Column="0" Foreground="{DynamicResource TextBrush}" TextTrimming="CharacterEllipsis">
+                                        <Run Text="{Binding Rule.DisplayName, Mode=OneWay}"/>
+                                        <Run Text=" ("/><Run Text="{Binding Rule.Direction, Mode=OneWay}"/><Run Text="/"/><Run Text="{Binding Rule.Action, Mode=OneWay}"/><Run Text=")"/>
+                                    </TextBlock>
+                                    <ToggleButton Grid.Column="1" IsChecked="{Binding IsEnabled}" Style="{StaticResource ToggleSwitchStyle}" Click="ToggleFirewallRule_Click" Tag="{Binding}"/>
+                                </Grid>
+                            </DataTemplate>
+                        </ItemsControl.ItemTemplate>
+                    </ItemsControl>
+                </StackPanel>
+            </Border>
+
+            <!-- Εργαλεία Πολιτικής Firewall -->
+            <Border Style="{StaticResource CardStyle}" Margin="0,16,0,0">
+                <StackPanel>
+                    <TextBlock Text="Εργαλεία Πολιτικής Firewall" Style="{StaticResource CardTitleStyle}" Margin="0,0,0,10"/>
+                    <StackPanel Orientation="Horizontal" Margin="0,0,0,8">
+                        <Button Content="Εξαγωγή Πολιτικής (.wfw)" Style="{StaticResource FlatButtonStyle}" Width="220" Margin="0,0,10,0" Click="BtnExportFirewallPolicy_Click"/>
+                        <Button Content="Εισαγωγή Πολιτικής (.wfw)" Style="{StaticResource FlatButtonStyle}" Width="220" Margin="0,0,10,0" Click="BtnImportFirewallPolicy_Click"/>
+                        <Button Content="Επαναφορά Προεπιλογών" Background="#FFD12424" Style="{StaticResource FlatButtonStyle}" Width="200" Click="BtnResetFirewall_Click"/>
+                    </StackPanel>
+                    <TextBlock x:Name="TxtFirewallToolsStatus" Style="{StaticResource SubTextStyle}"/>
+                </StackPanel>
+            </Border>
+
+            <!-- Hosts editor -->
+            <Border Style="{StaticResource CardStyle}" Margin="0,16,0,0">
+                <StackPanel>
+                    <TextBlock Text="Επεξεργαστής Αρχείου Hosts" Style="{StaticResource CardTitleStyle}" Margin="0,0,0,10"/>
+                    <TextBox x:Name="TxtHostsContent" Height="180" AcceptsReturn="True" VerticalScrollBarVisibility="Auto" FontFamily="Consolas"
+                             Background="{DynamicResource MainBgBrush}" Foreground="{DynamicResource TextBrush}" Margin="0,0,0,10"/>
+                    <StackPanel Orientation="Horizontal">
+                        <Button Content="Φόρτωση" Style="{StaticResource FlatButtonStyle}" Width="130" Margin="0,0,10,0" Click="BtnHostsLoad_Click"/>
+                        <Button Content="Αποθήκευση" Style="{StaticResource AccentButtonStyle}" Width="130" Margin="0,0,10,0" Click="BtnHostsSave_Click"/>
+                        <Button Content="Επαναφορά Προεπιλογών" Style="{StaticResource FlatButtonStyle}" Width="200" Margin="0,0,10,0" Click="BtnHostsReset_Click"/>
+                        <Button Content="Άνοιγμα με Σημειωματάριο" Style="{StaticResource FlatButtonStyle}" Width="200" Click="BtnHostsNotepad_Click"/>
+                    </StackPanel>
+                </StackPanel>
+            </Border>
+
+            <!-- Windows Defender -->
+            <Border Style="{StaticResource CardStyle}" Margin="0,16,0,0">
+                <StackPanel>
+                    <TextBlock Text="Windows Defender - Γρήγορη Σάρωση" Style="{StaticResource CardTitleStyle}" Margin="0,0,0,10"/>
+                    <Button Content="Έναρξη Γρήγορης Σάρωσης" Style="{StaticResource AccentButtonStyle}" Width="220" HorizontalAlignment="Left" Click="BtnQuickScan_Click"/>
+                    <TextBlock Text="Ανοίγει το Windows Security app όπου εμφανίζεται η ζωντανή πρόοδος της σάρωσης." Style="{StaticResource SubTextStyle}" Margin="0,8,0,0"/>
+                </StackPanel>
+            </Border>
+
+        </StackPanel>
+    </ScrollViewer>
+</UserControl>
