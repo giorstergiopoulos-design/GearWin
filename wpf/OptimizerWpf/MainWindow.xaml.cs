@@ -131,6 +131,7 @@ public partial class MainWindow : Window
             "Network" => new NetworkView(),
             "Bloatware" => new BloatwareView(),
             "Tweaks" => new TweaksView(),
+            "Advanced" => new AdvancedView(),
             _ => new PlaceholderView(label)
         };
     }

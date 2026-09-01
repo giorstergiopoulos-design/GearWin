@@ -1,0 +1,118 @@
+<UserControl x:Class="OptimizerWpf.Views.AdvancedView"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             mc:Ignorable="d">
+    <!-- Προηγμένα Εργαλεία - port του $tabAdvancedTools (~15001-15621). Βλ. AdvancedToolsService.cs. -->
+    <ScrollViewer VerticalScrollBarVisibility="Auto">
+        <StackPanel Margin="0,8,0,24">
+
+            <Border Style="{StaticResource CardStyle}">
+                <StackPanel>
+                    <TextBlock Text="Συντήρηση &amp; Διάγνωση Συστήματος" Style="{StaticResource CardTitleStyle}" Margin="0,0,0,10"/>
+                    <WrapPanel>
+                        <Button Content="Πλήρης Συντήρηση (Temp+SFC+DISM)" Style="{StaticResource FlatButtonStyle}" Width="240" Margin="0,0,10,10" Click="BtnFullMaintenance_Click"/>
+                        <Button Content="Ενεργοποίηση Προνομίων Συστήματος" Style="{StaticResource FlatButtonStyle}" Width="240" Margin="0,0,10,10" Click="BtnEnablePrivileges_Click"/>
+                        <Button Content="Επαναφορά Δικτύου &amp; Winsock" Style="{StaticResource FlatButtonStyle}" Width="240" Margin="0,0,10,10" Click="BtnNetworkReset_Click"/>
+                        <Button Content="Καθαρισμός Event Logs" Style="{StaticResource FlatButtonStyle}" Width="240" Margin="0,0,10,10" Click="BtnClearEventLogs_Click"/>
+                        <Button Content="Βελτιστοποίηση Μνήμης (GC)" Style="{StaticResource FlatButtonStyle}" Width="240" Margin="0,0,10,10" Click="BtnGc_Click"/>
+                        <Button Content="Deep Diagnostics Report" Style="{StaticResource FlatButtonStyle}" Width="240" Margin="0,0,10,10" Click="BtnDeepDiagnostics_Click"/>
+                        <Button Content="Διαχείριση Οδηγών" Style="{StaticResource FlatButtonStyle}" Width="240" Margin="0,0,10,10" Click="BtnDeviceManager_Click"/>
+                        <Button Content="Επιδιόρθωση Windows Update" Style="{StaticResource FlatButtonStyle}" Width="240" Margin="0,0,10,10" Click="BtnWuTroubleshoot_Click"/>
+                        <Button Content="Αναφορά Συστήματος" Style="{StaticResource FlatButtonStyle}" Width="240" Margin="0,0,10,10" Click="BtnSystemReport_Click"/>
+                        <Button Content="Reset Υπηρεσιών Windows Update" Style="{StaticResource FlatButtonStyle}" Width="240" Margin="0,0,10,10" Click="BtnResetWuServices_Click"/>
+                        <Button Content="Καθαρισμός Διαπιστευτηρίων Xbox" Style="{StaticResource FlatButtonStyle}" Width="240" Margin="0,0,10,10" Click="BtnCleanXbox_Click"/>
+                        <Button Content="Εγκατάσταση Group Policy Editor" Style="{StaticResource FlatButtonStyle}" Width="240" Margin="0,0,10,10" Click="BtnInstallGpedit_Click"/>
+                    </WrapPanel>
+                    <TextBlock x:Name="TxtMaintenanceStatus" Style="{StaticResource SubTextStyle}" Margin="0,4,0,0"/>
+                </StackPanel>
+            </Border>
+
+            <Border Style="{StaticResource CardStyle}" Margin="0,16,0,0">
+                <StackPanel>
+                    <TextBlock Text="Εργαλειοθήκη (Γρήγορη Πρόσβαση)" Style="{StaticResource CardTitleStyle}" Margin="0,0,0,10"/>
+                    <WrapPanel>
+                        <Button Content="Snipping Tool" Style="{StaticResource FlatButtonStyle}" Width="150" Margin="0,0,10,10" Click="BtnSnip_Click"/>
+                        <Button Content="Σημειωματάριο" Style="{StaticResource FlatButtonStyle}" Width="150" Margin="0,0,10,10" Click="BtnNotepad_Click"/>
+                        <Button Content="Αριθμομηχανή" Style="{StaticResource FlatButtonStyle}" Width="150" Margin="0,0,10,10" Click="BtnCalc_Click"/>
+                        <Button Content="Πίνακας Ελέγχου" Style="{StaticResource FlatButtonStyle}" Width="150" Margin="0,0,10,10" Click="BtnControlPanel_Click"/>
+                        <Button Content="Διαχείριση Εργασιών" Style="{StaticResource FlatButtonStyle}" Width="150" Margin="0,0,10,10" Click="BtnTaskMgr_Click"/>
+                        <Button Content="Επεξεργαστής Μητρώου" Style="{StaticResource FlatButtonStyle}" Width="150" Margin="0,0,10,10" Click="BtnRegedit_Click"/>
+                        <Button Content="Επανεκκίνηση GPU Driver" Style="{StaticResource FlatButtonStyle}" Width="180" Margin="0,0,10,10" Click="BtnGpuReset_Click"/>
+                    </WrapPanel>
+                </StackPanel>
+            </Border>
+
+            <Border Style="{StaticResource CardStyle}" Margin="0,16,0,0">
+                <StackPanel>
+                    <TextBlock Text="Πρόσθετες Λειτουργίες Windows" Style="{StaticResource CardTitleStyle}" Margin="0,0,0,10"/>
+                    <ItemsControl x:Name="ListCuratedFeatures">
+                        <ItemsControl.ItemTemplate>
+                            <DataTemplate>
+                                <Grid Margin="0,0,0,8">
+                                    <Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions>
+                                    <TextBlock Grid.Column="0" Text="{Binding DisplayName}" Foreground="{DynamicResource TextBrush}" VerticalAlignment="Center"/>
+                                    <ToggleButton Grid.Column="1" IsChecked="{Binding IsEnabled}" Style="{StaticResource ToggleSwitchStyle}" Click="ToggleCuratedFeature_Click" Tag="{Binding}"/>
+                                </Grid>
+                            </DataTemplate>
+                        </ItemsControl.ItemTemplate>
+                    </ItemsControl>
+                </StackPanel>
+            </Border>
+
+            <Border Style="{StaticResource CardStyle}" Margin="0,16,0,0">
+                <StackPanel>
+                    <Grid Margin="0,0,0,10">
+                        <Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions>
+                        <TextBox Grid.Column="0" x:Name="TxtAllFeaturesSearch" Margin="0,0,10,0" VerticalContentAlignment="Center"
+                                 Background="{DynamicResource MainBgBrush}" Foreground="{DynamicResource TextBrush}" TextChanged="TxtAllFeaturesSearch_TextChanged"/>
+                        <Button Grid.Column="1" Content="Ανανέωση Λίστας" Style="{StaticResource AccentButtonStyle}" Width="160" Click="BtnRefreshAllFeatures_Click"/>
+                    </Grid>
+                    <TextBlock Text="Όλες οι Πρόσθετες Λειτουργίες Windows - αναζητήσιμη λίστα (εξαιρεί τις 6 παραπάνω)." Style="{StaticResource SubTextStyle}" Margin="0,0,0,8"/>
+                    <Border Background="{DynamicResource MainBgBrush}" CornerRadius="6" MaxHeight="280" Padding="4">
+                        <ScrollViewer VerticalScrollBarVisibility="Auto">
+                            <ItemsControl x:Name="ListAllFeatures">
+                                <ItemsControl.ItemTemplate>
+                                    <DataTemplate>
+                                        <Grid Margin="6,4">
+                                            <Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions>
+                                            <TextBlock Grid.Column="0" Text="{Binding FeatureName}" Foreground="{DynamicResource TextBrush}"/>
+                                            <ToggleButton Grid.Column="1" IsChecked="{Binding IsEnabled}" Style="{StaticResource ToggleSwitchStyle}" Click="ToggleAllFeature_Click" Tag="{Binding}"/>
+                                        </Grid>
+                                    </DataTemplate>
+                                </ItemsControl.ItemTemplate>
+                            </ItemsControl>
+                        </ScrollViewer>
+                    </Border>
+                </StackPanel>
+            </Border>
+
+            <Border Style="{StaticResource CardStyle}" Margin="0,16,0,0">
+                <StackPanel>
+                    <Grid Margin="0,0,0,10">
+                        <Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions>
+                        <TextBlock Grid.Column="0" Text="Διαχείριση Συσκευών-Φαντασμάτων" Style="{StaticResource CardTitleStyle}"/>
+                        <Button Grid.Column="1" Content="Σάρωση" Style="{StaticResource AccentButtonStyle}" Width="140" Click="BtnScanGhostDevices_Click"/>
+                    </Grid>
+                    <TextBlock x:Name="TxtGhostStatus" Style="{StaticResource SubTextStyle}" Margin="0,0,0,8"/>
+                    <ItemsControl x:Name="ListGhostDevices">
+                        <ItemsControl.ItemTemplate>
+                            <DataTemplate>
+                                <Grid Margin="0,0,0,6">
+                                    <Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions>
+                                    <StackPanel Grid.Column="0">
+                                        <TextBlock Text="{Binding FriendlyName}" Foreground="{DynamicResource TextBrush}"/>
+                                        <TextBlock Text="{Binding Class}" Style="{StaticResource SubTextStyle}"/>
+                                    </StackPanel>
+                                    <Button Grid.Column="1" Content="Αφαίρεση" Style="{StaticResource FlatButtonStyle}" Click="BtnRemoveGhostDevice_Click" Tag="{Binding}"/>
+                                </Grid>
+                            </DataTemplate>
+                        </ItemsControl.ItemTemplate>
+                    </ItemsControl>
+                </StackPanel>
+            </Border>
+
+        </StackPanel>
+    </ScrollViewer>
+</UserControl>
