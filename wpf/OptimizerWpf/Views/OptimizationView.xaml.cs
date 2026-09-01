@@ -74,6 +74,13 @@ namespace OptimizerWpf.Views
             SetBusy(false);
         }
 
+        private void BtnCheckMsStore_Click(object sender, RoutedEventArgs e)
+        {
+            StatusService.SetBusy("Ενεργοποίηση σάρωσης ενημερώσεων Microsoft Store...");
+            WingetService.TriggerMsStoreUpdateScanAndOpen();
+            StatusService.SetIdle("Έτοιμο για χρήση");
+        }
+
         private void ChkSelectAll_Click(object sender, RoutedEventArgs e)
         {
             var selectAll = ChkSelectAll.IsChecked == true;

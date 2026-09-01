@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.ComponentModel;
 using System.Diagnostics;
 using System.Linq;
+using System.Management;
 using System.Text.Json;
 using System.Text.RegularExpressions;
 using System.Threading;
@@ -73,6 +74,38 @@ namespace OptimizerWpf.Services
             }
 
             return results;
+        }
+
+        // Port του $global:btnCheckMsStore του ps1 (~11240): το "store updates" CLI ΔΕΝ πιάνει πάντα
+        // ΟΛΕΣ τις εκκρεμείς ενημερώσεις Metro/UWP εφαρμογών (επιβεβαιωμένο, τεκμηριωμένο όριο -
+        // παραμένει "Preview" tool). Αυτό ενεργοποιεί ΠΡΑΓΜΑΤΙΚΗ σάρωση μέσω του επίσημου
+        // MDM_EnterpriseModernAppManagement_AppManagement01 CIM provider (το ΙΔΙΟ μηχανισμό που
+        // χρησιμοποιεί το ίδιο το Store όταν ο χρήστης πατά "Check for updates" εκεί) και ανοίγει τη
+        // σελίδα Downloads & Updates του Store για επιβεβαίωση/εγκατάσταση - η σάρωση ΔΕΝ επιστρέφει
+        // λίστα (μόνο ενεργοποιεί σάρωση στο παρασκήνιο), τα αποτελέσματα εμφανίζονται ΜΕΣΑ στο Store.
+        public static void TriggerMsStoreUpdateScanAndOpen()
+        {
+            try
+            {
+                using var searcher = new ManagementObjectSearcher(@"root\cimv2\mdm\dmmap",
+                    "SELECT * FROM MDM_EnterpriseModernAppManagement_AppManagement01");
+                foreach (ManagementObject obj in searcher.Get())
+                {
+                    obj.InvokeMethod("UpdateScanMethod", null);
+                    break;
+                }
+            }
+            catch
+            {
+                // Ίδια ανοχή με το ps1 original - αν ο MDM provider δεν είναι διαθέσιμος σε αυτό το
+                // build Windows, απλά παραλείπεται το ενεργό trigger, το Store ανοίγει ούτως ή άλλως.
+            }
+
+            try
+            {
+                Process.Start(new ProcessStartInfo("ms-windows-store://downloadsandupdates") { UseShellExecute = true });
+            }
+            catch { }
         }
 
         public static async Task<bool> UpgradeAsync(string id, string source)
