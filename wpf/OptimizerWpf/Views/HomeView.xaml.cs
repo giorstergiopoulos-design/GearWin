@@ -52,6 +52,7 @@ namespace OptimizerWpf.Views
             _ = UpdateDiskIconAsync();
             _ = RefreshHealthScoreAsync();
             _ = RefreshCpuTemperatureAsync();
+            _ = RefreshGpuTemperatureAsync();
             _ = LoadGpuNameAsync();
 
             // ΔΙΟΡΘΩΣΗ ("ελάφρυνση εφαρμογής"): κάθε επιστροφή στην Αρχική δημιουργεί ΝΕΟ HomeView
@@ -91,7 +92,7 @@ namespace OptimizerWpf.Views
         // επαναλαμβανόμενο timer (ίδιο σκεπτικό "ελάφρυνση εφαρμογής" με τον δίσκο παραπάνω).
         private async Task RefreshCpuTemperatureAsync()
         {
-            var temp = await Task.Run(HardwareSensorService.GetCpuTemperatureCelsius);
+            var temp = await Task.Run(SensorService.GetCpuTemperatureCelsius);
             TxtCpuTemp.Text = temp.HasValue ? $"{temp}°C" : "—";
         }
 
@@ -164,8 +165,15 @@ namespace OptimizerWpf.Views
             // εδώ, όχι στο γρήγορο 1s tick, αφού ΚΑΝΕΝΑ από τα δύο δεν αλλάζει ζωντανά.
             var model = await Task.Run(() => DriveTypeService.GetDiskModel(drive));
             TxtDriveModel.Text = model ?? "";
-            var diskTemp = await Task.Run(() => HardwareSensorService.GetDiskTemperatureCelsius(drive));
+            var diskTemp = await Task.Run(() => SensorService.GetDiskTemperatureCelsius(model));
             TxtDiskTemp.Text = diskTemp.HasValue ? $"{diskTemp}°C" : "—";
+        }
+
+        // Δεν αλλάζει σε δευτερόλεπτα σαν το ποσοστό χρήσης - αρκεί μία φορά στην εκκίνηση.
+        private async Task RefreshGpuTemperatureAsync()
+        {
+            var temp = await Task.Run(SensorService.GetGpuTemperatureCelsius);
+            TxtGpuTemp.Text = temp.HasValue ? $"{temp}°C" : "—";
         }
 
         // Live κάθε 1s - CPU/RAM/GPU αλλάζουν πραγματικά μέσα σε δευτερόλεπτα.

@@ -4,21 +4,30 @@ using System.Management;
 
 namespace OptimizerWpf.Services
 {
-    // GPU (ρητό αίτημα χρήστη: 4ο πλακίδιο απόδοσης με θερμοκρασία + ποσοστό χρήσης). ΣΗΜΕΙΩΣΗ
-    // ΕΙΛΙΚΡΙΝΕΙΑΣ: τα Windows ΔΕΝ εκθέτουν καμία καθολική πηγή θερμοκρασίας GPU χωρίς εξάρτηση σε
-    // vendor SDK (NVIDIA NVML/AMD ADL) - εκτός εμβέλειας εδώ, η θερμοκρασία GPU θα δείχνει πάντα "—"
-    // στο tile, ΟΧΙ ψευδή τιμή. Το ΠΟΣΟΣΤΟ ΧΡΗΣΗΣ όμως ΕΙΝΑΙ αξιόπιστα διαθέσιμο μέσω της
+    // GPU (ρητό αίτημα χρήστη: 4ο πλακίδιο απόδοσης με θερμοκρασία + ποσοστό χρήσης). Το όνομα
+    // έρχεται από WMI (Win32_VideoController) εδώ. Η ΘΕΡΜΟΚΡΑΣΙΑ δεν διεκπεραιώνεται από αυτή την
+    // κλάση πλέον - καμία WMI κλάση δεν την εκθέτει χωρίς vendor SDK (NVIDIA NVML/AMD ADL),
+    // επιβεβαιωμένο με έρευνα (βλ. HANDOFF.md) - βλ. αντ' αυτού Services/SensorService.cs
+    // (LibreHardwareMonitorLib). Το ΠΟΣΟΣΤΟ ΧΡΗΣΗΣ όμως ΕΙΝΑΙ αξιόπιστα διαθέσιμο μέσω της
     // ενσωματωμένης κατηγορίας μετρητών "GPU Engine" (Windows 10+, καμία vendor εξάρτηση) - η ΙΔΙΑ
     // πηγή δεδομένων που δείχνει το tab Απόδοση > GPU του Task Manager.
     public static class GpuInfoService
     {
+        // ΔΙΟΡΘΩΣΗ (ρητό αίτημα χρήστη: "να δείχνει και τον ενσωματωμένο σε CPU αν υπάρχει") - πολλά
+        // συστήματα έχουν ΚΑΙ ενσωματωμένη (iGPU, π.χ. AMD Radeon Graphics μέσα σε APU/Intel UHD)
+        // ΚΑΙ διακριτή (dGPU) κάρτα γραφικών - `Win32_VideoController` τις επιστρέφει ΟΛΕΣ, οπότε
+        // εδώ ενώνονται όλα τα ονόματα αντί να κρατηθεί μόνο το πρώτο (που ΔΕΝ είναι εγγυημένα η
+        // "κύρια" κάρτα - η σειρά επιστροφής της WMI δεν είναι αξιόπιστη ένδειξη προτεραιότητας).
         public static string GetName()
         {
             try
             {
                 using var searcher = new ManagementObjectSearcher("SELECT Name FROM Win32_VideoController");
-                var name = searcher.Get().Cast<ManagementBaseObject>().FirstOrDefault()?["Name"]?.ToString();
-                return string.IsNullOrWhiteSpace(name) ? "GPU" : name.Trim();
+                var names = searcher.Get().Cast<ManagementBaseObject>()
+                    .Select(o => o["Name"]?.ToString())
+                    .Where(n => !string.IsNullOrWhiteSpace(n))
+                    .ToList();
+                return names.Count == 0 ? "GPU" : string.Join(" + ", names);
             }
             catch
             {

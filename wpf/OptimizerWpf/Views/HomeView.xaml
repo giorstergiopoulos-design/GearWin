@@ -50,14 +50,14 @@
                         <TextBlock x:Name="TxtCpuPercent" Text="--%" FontSize="22" FontWeight="Bold" Foreground="#FF2196F3" HorizontalAlignment="Center" Margin="0,4,0,6"/>
                         <ProgressBar x:Name="BarCpu" Height="6" Width="120" Minimum="0" Maximum="100" Foreground="#FF2196F3"/>
                         <StackPanel Orientation="Horizontal" HorizontalAlignment="Center" Margin="0,6,0,0">
-                            <TextBlock Text="🌡" FontSize="11" Margin="0,0,4,0"/>
-                            <TextBlock x:Name="TxtCpuTemp" Text="—" Style="{StaticResource SubTextStyle}"/>
+                            <TextBlock Text="🌡" FontSize="16" Margin="0,0,5,0"/>
+                            <TextBlock x:Name="TxtCpuTemp" Text="—" Style="{StaticResource TempValueStyle}"/>
                         </StackPanel>
                     </StackPanel>
                 </Border>
 
                 <!-- RAM -->
-                <Border Grid.Column="2" Style="{StaticResource CardStyle}">
+                <Border Grid.Column="4" Style="{StaticResource CardStyle}">
                     <StackPanel HorizontalAlignment="Center">
                         <Border Width="48" Height="48" CornerRadius="24" Margin="0,0,0,8">
                             <Border.Background>
@@ -80,7 +80,7 @@
                      εικονίδιο/χρώμα αλλάζει ανάλογα με τον τύπο (HDD/SSD/USB) μέσω του
                      UpdateDiskIconAsync στο code-behind, το οποίο τραβάει ΚΑΙ τη μάρκα/περιγραφή
                      (TxtDriveModel, ρητό αίτημα χρήστη) ΚΑΙ τη θερμοκρασία (αν υπάρχει). -->
-                <Border Grid.Column="4" Style="{StaticResource CardStyle}">
+                <Border Grid.Column="6" Style="{StaticResource CardStyle}">
                     <Grid>
                         <StackPanel HorizontalAlignment="Center">
                             <Border x:Name="BorderDiskIcon" Width="48" Height="48" CornerRadius="24" Margin="0,0,0,8">
@@ -93,8 +93,8 @@
                             <TextBlock x:Name="TxtDiskDetail" Text="-- GB ελεύθερα από -- GB" Style="{StaticResource SubTextStyle}" HorizontalAlignment="Center" TextWrapping="Wrap" TextAlignment="Center" Margin="0,6,0,0"/>
                             <TextBlock x:Name="TxtDriveModel" Text="" Style="{StaticResource SubTextStyle}" HorizontalAlignment="Center" TextWrapping="Wrap" TextAlignment="Center" FontSize="10"/>
                             <StackPanel Orientation="Horizontal" HorizontalAlignment="Center" Margin="0,4,0,0">
-                                <TextBlock Text="🌡" FontSize="11" Margin="0,0,4,0"/>
-                                <TextBlock x:Name="TxtDiskTemp" Text="—" Style="{StaticResource SubTextStyle}"/>
+                                <TextBlock Text="🌡" FontSize="16" Margin="0,0,5,0"/>
+                                <TextBlock x:Name="TxtDiskTemp" Text="—" Style="{StaticResource TempValueStyle}"/>
                             </StackPanel>
                         </StackPanel>
                         <Button x:Name="BtnDrivePrev" Content="&#x2039;" FontSize="18" FontWeight="Bold" Width="24" Height="36"
@@ -105,9 +105,11 @@
                 </Border>
 
                 <!-- GPU (νέο, ρητό αίτημα χρήστη) - όνομα/χρήση μέσω GpuInfoService (ενσωματωμένη
-                     κατηγορία μετρητών "GPU Engine", καμία vendor εξάρτηση). Η θερμοκρασία GPU ΔΕΝ
-                     είναι διαθέσιμη χωρίς NVIDIA/AMD SDK - δείχνει πάντα "—", βλ. GpuInfoService.cs. -->
-                <Border Grid.Column="6" Style="{StaticResource CardStyle}">
+                     κατηγορία μετρητών "GPU Engine", καμία vendor εξάρτηση), θερμοκρασία μέσω
+                     SensorService (LibreHardwareMonitorLib - βλ. HANDOFF.md) - δείχνει "—" αν το
+                     hardware/driver δεν την εκθέτει, ΠΟΤΕ ψευδή τιμή. Σειρά πλακιδίων CPU/GPU/RAM/
+                     Disk (ρητό αίτημα χρήστη) - Grid.Column="2", όχι πλέον τελευταίο. -->
+                <Border Grid.Column="2" Style="{StaticResource CardStyle}">
                     <StackPanel HorizontalAlignment="Center">
                         <Border Width="48" Height="48" CornerRadius="24" Margin="0,0,0,8">
                             <Border.Background>
@@ -124,8 +126,8 @@
                         <ProgressBar x:Name="BarGpu" Height="6" Width="120" Minimum="0" Maximum="100" Foreground="#FF9C27B0"/>
                         <TextBlock x:Name="TxtGpuName" Text="" Style="{StaticResource SubTextStyle}" HorizontalAlignment="Center" TextWrapping="Wrap" TextAlignment="Center" FontSize="10" Margin="0,6,0,0"/>
                         <StackPanel Orientation="Horizontal" HorizontalAlignment="Center" Margin="0,4,0,0">
-                            <TextBlock Text="🌡" FontSize="11" Margin="0,0,4,0"/>
-                            <TextBlock x:Name="TxtGpuTemp" Text="—" Style="{StaticResource SubTextStyle}"/>
+                            <TextBlock Text="🌡" FontSize="16" Margin="0,0,5,0"/>
+                            <TextBlock x:Name="TxtGpuTemp" Text="—" Style="{StaticResource TempValueStyle}"/>
                         </StackPanel>
                     </StackPanel>
                 </Border>

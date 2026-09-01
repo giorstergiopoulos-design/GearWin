@@ -12,6 +12,14 @@
   <ItemGroup>
     <PackageReference Include="System.Diagnostics.PerformanceCounter" Version="10.0.11" />
     <PackageReference Include="System.Management" Version="10.0.11" />
+    <!-- Θερμοκρασίες CPU/GPU/Δίσκου (ρητό αίτημα χρήστη, μετά από έρευνα - βλ. HANDOFF.md): καμία
+         WMI κλάση δεν είναι αξιόπιστη σε όλο το hardware (επιβεβαιώθηκε ζωντανά - το
+         MSFT_PhysicalDisk.GetStorageReliabilityCounter επέστρεψε τίποτα για NVMe δίσκο σε αυτό το
+         μηχάνημα, καμία WMI λύση δεν υπάρχει καθόλου για GPU χωρίς vendor SDK). Το LibreHardwareMonitorLib
+         είναι το καθιερωμένο, ανοιχτού κώδικα (MIT) εργαλείο που όλη η βιομηχανία χρησιμοποιεί γι'
+         αυτό ακριβώς - διαβάζει αισθητήρες απευθείας (χρειάζεται Administrator, το οποίο η εφαρμογή
+         ήδη απαιτεί από το app.manifest). -->
+    <PackageReference Include="LibreHardwareMonitorLib" Version="0.9.4" />
   </ItemGroup>
 
 </Project>

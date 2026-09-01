@@ -138,6 +138,16 @@
         <Setter Property="TextWrapping" Value="Wrap"/>
     </Style>
 
+    <!-- Τιμή θερμοκρασίας στα πλακίδια απόδοσης (ρητό αίτημα χρήστη: "τα εικονίδια... δεν είναι
+         ευδιακριτα στο dark mode") - το SubTextStyle είναι σκόπιμα χαμηλής αντίθεσης (δευτερεύον
+         κείμενο), ακατάλληλο για μια τιμή που ο χρήστης θέλει να διαβάζει εύκολα. Πλήρες TextBrush
+         (όχι dim SubText) + μεγαλύτερο/έντονο μέγεθος. -->
+    <Style x:Key="TempValueStyle" TargetType="TextBlock">
+        <Setter Property="FontSize" Value="13"/>
+        <Setter Property="FontWeight" Value="SemiBold"/>
+        <Setter Property="Foreground" Value="{DynamicResource TextBrush}"/>
+    </Style>
+
     <!-- Tab strip pill button - ToggleButton so exactly one can read as "checked"/selected via the
          RadioButton-style GroupName trick (ToggleButton doesn't support grouping natively, so
          MainWindow.xaml.cs unchecks the others manually on click - see TabButton_Click). -->
