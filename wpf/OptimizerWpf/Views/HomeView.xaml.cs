@@ -3,8 +3,11 @@ using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Runtime.InteropServices;
+using System.Threading.Tasks;
 using System.Windows.Controls;
+using System.Windows.Media;
 using System.Windows.Threading;
+using OptimizerWpf.Services;
 
 namespace OptimizerWpf.Views
 {
@@ -28,6 +31,7 @@ namespace OptimizerWpf.Views
             _refreshTimer.Start();
 
             RefreshMetrics();
+            _ = RefreshHealthScoreAsync();
         }
 
         private void TryInitCpuCounter()
@@ -93,13 +97,82 @@ namespace OptimizerWpf.Views
             }
         }
 
-        private void BtnRefreshHealth_Click(object sender, System.Windows.RoutedEventArgs e)
+        private async void BtnRefreshHealth_Click(object sender, System.Windows.RoutedEventArgs e) => await RefreshHealthScoreAsync();
+
+        private async void BtnFixAllHealth_Click(object sender, System.Windows.RoutedEventArgs e)
         {
-            // Health Score calculation (port of Get-SystemHealthScore) is not wired up yet in this
-            // first slice - placeholder until the next increment.
-            TxtHealthIssues.Text = "Ο υπολογισμός Βαθμολογίας Υγείας δεν έχει μεταφερθεί ακόμα.";
+            // Port of the "Διόρθωση Όλων" button in Optimizer.ps1 (only the safe, reversible fixes -
+            // startup apps/pending restart are surfaced but never touched automatically, same as the
+            // WinForms version).
+            var result = await Task.Run(HealthScoreService.Compute);
+            var fixedSomething = false;
+
+            foreach (var issue in result.Issues)
+            {
+                switch (issue.FixType)
+                {
+                    case "Storage":
+                        try
+                        {
+                            var temp = Environment.GetEnvironmentVariable("TEMP");
+                            if (!string.IsNullOrEmpty(temp))
+                            {
+                                foreach (var f in Directory.EnumerateFileSystemEntries(temp))
+                                {
+                                    try { if (Directory.Exists(f)) Directory.Delete(f, true); else File.Delete(f); } catch { }
+                                }
+                            }
+                            fixedSomething = true;
+                        }
+                        catch { }
+                        break;
+                    case "Defender":
+                        // Toggling Defender real-time protection needs elevation + the Defender
+                        // PowerShell/WMI provider - not wired up in this slice yet.
+                        break;
+                }
+            }
+
+            if (fixedSomething)
+            {
+                TxtHealthLabel.Text = "Ολοκληρώθηκαν οι διαθέσιμες αυτόματες διορθώσεις.";
+            }
+            await RefreshHealthScoreAsync();
+        }
+
+        private async Task RefreshHealthScoreAsync()
+        {
+            TxtHealthLabel.Text = "Υπολογισμός...";
+            // HealthScoreService.Compute() does several WMI queries (Defender status, AV product,
+            // restore points) which can take a noticeable moment - runs off the UI thread so the
+            // window stays responsive while it's working (see the async-UI rule this project follows).
+            var result = await Task.Run(HealthScoreService.Compute);
+
+            TxtHealthScore.Text = result.Score.ToString();
+            var scoreColor = result.Score >= 80
+                ? new SolidColorBrush(Color.FromRgb(90, 200, 120))
+                : result.Score >= 50
+                    ? new SolidColorBrush(Color.FromRgb(230, 170, 60))
+                    : new SolidColorBrush(Color.FromRgb(220, 80, 80));
+
+            TxtHealthScore.Foreground = scoreColor;
+            TxtHealthLabel.Foreground = scoreColor;
+            TxtHealthLabel.Text = result.Score >= 80 ? "Καλή Κατάσταση" : result.Score >= 50 ? "Μέτρια Κατάσταση" : "Χρειάζεται Προσοχή";
+
+            if (result.Issues.Count == 0)
+            {
+                ListHealthIssues.ItemsSource = new[] { new HealthIssueRow("Δεν εντοπίστηκαν προβλήματα - το σύστημά σας λειτουργεί καλά!", scoreColor) };
+            }
+            else
+            {
+                ListHealthIssues.ItemsSource = result.Issues.Select(i => new HealthIssueRow(i.Title, scoreColor)).ToList();
+            }
         }
     }
+
+    // Bindable row for the ItemsControl in HomeView.xaml (Title + the dot color, matching the
+    // score-colored dot per issue that Optimizer.ps1 draws next to each issue label).
+    public record HealthIssueRow(string Title, Brush DotColor);
 
     internal static class NativeMethods
     {

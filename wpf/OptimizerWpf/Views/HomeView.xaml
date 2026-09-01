@@ -84,12 +84,23 @@
                         <TextBlock x:Name="TxtHealthLabel" Text="Έλεγχος..." FontStyle="Italic" Foreground="#FF4CAF50" HorizontalAlignment="Center"/>
                     </StackPanel>
 
-                    <Border Grid.Row="1" Grid.Column="1" Background="{DynamicResource MainBgBrush}" CornerRadius="6" MinHeight="90" Padding="10">
-                        <TextBlock x:Name="TxtHealthIssues" Text="Δεν έχουν εντοπιστεί ζητήματα." Style="{StaticResource SubTextStyle}"/>
+                    <Border Grid.Row="1" Grid.Column="1" Background="{DynamicResource MainBgBrush}" CornerRadius="6" MinHeight="90" MaxHeight="140" Padding="10">
+                        <ScrollViewer VerticalScrollBarVisibility="Auto">
+                            <ItemsControl x:Name="ListHealthIssues">
+                                <ItemsControl.ItemTemplate>
+                                    <DataTemplate>
+                                        <StackPanel Orientation="Horizontal" Margin="0,0,0,8">
+                                            <Ellipse Width="8" Height="8" Fill="{Binding DotColor}" Margin="0,4,8,0" VerticalAlignment="Top"/>
+                                            <TextBlock Text="{Binding Title}" Style="{StaticResource SubTextStyle}" Foreground="{DynamicResource TextBrush}" Width="720"/>
+                                        </StackPanel>
+                                    </DataTemplate>
+                                </ItemsControl.ItemTemplate>
+                            </ItemsControl>
+                        </ScrollViewer>
                     </Border>
 
                     <StackPanel Grid.Row="2" Grid.Column="1" Orientation="Horizontal" Margin="0,10,0,0">
-                        <Button Content="Διόρθωση Όλων" Style="{StaticResource AccentButtonStyle}" Width="150" Margin="0,0,10,0"/>
+                        <Button Content="Διόρθωση Όλων" Style="{StaticResource AccentButtonStyle}" Width="150" Margin="0,0,10,0" Click="BtnFixAllHealth_Click"/>
                         <Button Content="Ανανέωση" Style="{StaticResource FlatButtonStyle}" Width="150" Click="BtnRefreshHealth_Click"/>
                     </StackPanel>
                 </Grid>

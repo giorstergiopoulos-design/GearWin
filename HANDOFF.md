@@ -252,9 +252,19 @@ SDK μέσω `winget install Microsoft.DotNet.SDK.8` (με ρητή επιβεβ
   baseline-capture-and-multiply Set-CanvasScale συστήματος, άρα ΔΟΜΙΚΑ αδύνατο να επαναληφθεί το bug
   της λάθος τοποθετημένης λωρίδας καρτελών στη μεγιστοποίηση.
 - `Views/HomeView.xaml(.cs)`: πλήρως χτισμένη καρτέλα Αρχική (κάρτες CPU/RAM/Disk + Βαθμολογία
-  Υγείας + Ανάλυση Δίσκου). CPU (`PerformanceCounter`) και RAM (`GlobalMemoryStatusEx` P/Invoke)
-  είναι ΖΩΝΤΑΝΑ δεδομένα, ανανεώνονται κάθε 1 δευτ. μέσω `DispatcherTimer`. Δίσκος/Βαθμολογία Υγείας/
-  Ανάλυση Δίσκου είναι ΑΚΟΜΑ static/placeholder - επόμενο βήμα.
+  Υγείας + Ανάλυση Δίσκου). CPU (`PerformanceCounter`), RAM (`GlobalMemoryStatusEx` P/Invoke) και
+  Δίσκος (`DriveInfo`) είναι ΖΩΝΤΑΝΑ δεδομένα, ανανεώνονται κάθε 1 δευτ. μέσω `DispatcherTimer`.
+  Ανάλυση Δίσκου (ανά κατηγορία) είναι ΑΚΟΜΑ static/placeholder - επόμενο βήμα.
+- `Services/HealthScoreService.cs`: πλήρης C# port του `Get-SystemHealthScore` (ίδιοι έλεγχοι/
+  βαθμολογία: χώρος δίσκου συστήματος, εκκρεμής επανεκκίνηση [με το ΙΔΙΟ v2.8.2 fix - χωρίς
+  PendingFileRenameOperations], Defender+άλλο AV μέσω WMI, πλήθος εφαρμογών εκκίνησης, ηλικία
+  τελευταίου Σημείου Επαναφοράς μέσω WMI `SystemRestore`). Τρέχει μέσω `Task.Run` (ΟΧΙ στο UI thread -
+  οι WMI ερωτήσεις μπορεί να αργήσουν αισθητά) και ενημερώνει το `ItemsControl` της κάρτας Βαθμολογίας
+  Υγείας στο HomeView όταν ολοκληρωθεί. ΣΗΜΕΙΩΣΗ: η εφαρμογή δεν ζητάει ακόμα elevation (το
+  Optimizer.ps1 τρέχει ΠΑΝΤΑ ως Administrator) - κάποιοι έλεγχοι WMI (π.χ. Defender status) μπορεί να
+  αποτύχουν σιωπηλά χωρίς αυτό· η elevation δεν έχει προστεθεί ακόμα στο WPF project.
+  "Διόρθωση Όλων" κάνει προς το παρόν μόνο τον καθαρισμό temp αρχείων (Storage fix) - η ενεργοποίηση
+  Defender/δημιουργία Σημείου Επαναφοράς δεν έχουν μεταφερθεί ακόμα.
 - `Views/PlaceholderView.xaml(.cs)`: γενικό stand-in για τις 7 καρτέλες που δεν έχουν μεταφερθεί ακόμα
   (Βελτιστοποίηση/Υγεία/Δίκτυο/Επιπλέον Ρυθμίσεις/Bloat/Προηγμένα/Σύστημα) - δείχνει ξεκάθαρα ποια
   καρτέλα λείπει, ώστε το app shell να είναι ΗΔΗ πλήρες/buildable ενώ το περιεχόμενο προστίθεται
