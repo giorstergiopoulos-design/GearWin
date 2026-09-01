@@ -126,6 +126,7 @@ public partial class MainWindow : Window
         {
             "Home" => new HomeView(),
             "Optimization" => new OptimizationView(),
+            "Health" => new HealthView(),
             _ => new PlaceholderView(label)
         };
     }

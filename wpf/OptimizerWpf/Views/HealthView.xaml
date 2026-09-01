@@ -1,0 +1,85 @@
+<UserControl x:Class="OptimizerWpf.Views.HealthView"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             mc:Ignorable="d">
+    <!--
+        Υγεία & Συντήρηση - port του Optimizer.ps1's $tabHealth (~13300-13792): Registry Cleaner
+        (σκόπιμα στενός/ασφαλής - μόνο χαμένοι απεγκαταστάτες + παρωχημένο MuiCache, .reg backup πριν
+        από κάθε διαγραφή), Καθαρισμός Cache Περιηγητών (μόνο browsers που πραγματικά ανιχνεύτηκαν),
+        WinRE status/ενεργοποίηση. Βλ. HealthCleanupService.cs.
+    -->
+    <ScrollViewer VerticalScrollBarVisibility="Auto">
+        <StackPanel Margin="0,8,0,24">
+
+            <!-- Registry Cleaner -->
+            <Border Style="{StaticResource CardStyle}">
+                <StackPanel>
+                    <TextBlock Text="Καθαρισμός Μητρώου (Registry Cleaner)" Style="{StaticResource CardTitleStyle}" Margin="0,0,0,4"/>
+                    <TextBlock Text="Εντοπίζει ΜΟΝΟ χαμένους απεγκαταστάτες προγραμμάτων και παρωχημένα cached ονόματα αρχείων (MuiCache) - σκόπιμα στενός, ασφαλής έλεγχος. Αυτόματο αντίγραφο ασφαλείας (.reg) πριν από κάθε διαγραφή."
+                               Style="{StaticResource SubTextStyle}" Margin="0,0,0,10" TextWrapping="Wrap"/>
+                    <StackPanel Orientation="Horizontal" Margin="0,0,0,10">
+                        <Button x:Name="BtnRegCleanScan" Content="Σάρωση Μητρώου" Style="{StaticResource AccentButtonStyle}" Width="220" Margin="0,0,10,0" Click="BtnRegCleanScan_Click"/>
+                        <Button x:Name="BtnRegCleanDelete" Content="Διαγραφή Επιλεγμένων" Style="{StaticResource FlatButtonStyle}" Width="220" Click="BtnRegCleanDelete_Click"/>
+                    </StackPanel>
+                    <TextBlock x:Name="TxtRegCleanStatus" Text="Πατήστε 'Σάρωση Μητρώου' για έναρξη." Style="{StaticResource SubTextStyle}" Margin="0,0,0,8"/>
+                    <Border Background="{DynamicResource MainBgBrush}" CornerRadius="6" MinHeight="60" MaxHeight="240" Padding="4">
+                        <ScrollViewer VerticalScrollBarVisibility="Auto">
+                            <ItemsControl x:Name="ListRegFindings">
+                                <ItemsControl.ItemTemplate>
+                                    <DataTemplate>
+                                        <StackPanel Orientation="Horizontal" Margin="6,4">
+                                            <CheckBox IsChecked="{Binding IsSelected}" VerticalAlignment="Center" Margin="0,0,8,0"/>
+                                            <StackPanel>
+                                                <TextBlock Text="{Binding Finding.Display}" Foreground="{DynamicResource TextBrush}"/>
+                                                <TextBlock Text="{Binding Finding.Category}" Style="{StaticResource SubTextStyle}" FontSize="10"/>
+                                            </StackPanel>
+                                        </StackPanel>
+                                    </DataTemplate>
+                                </ItemsControl.ItemTemplate>
+                            </ItemsControl>
+                        </ScrollViewer>
+                    </Border>
+                </StackPanel>
+            </Border>
+
+            <!-- Browser Cache -->
+            <Border Style="{StaticResource CardStyle}" Margin="0,16,0,0">
+                <StackPanel>
+                    <TextBlock Text="Καθαρισμός Cache Περιηγητών" Style="{StaticResource CardTitleStyle}" Margin="0,0,0,4"/>
+                    <TextBlock Text="Διαγράφει ΜΟΝΟ τα προσωρινά αρχεία cache (όχι ιστορικό/κωδικούς/σελιδοδείκτες) - κλείστε πρώτα τον περιηγητή για καλύτερο αποτέλεσμα. Εμφανίζονται μόνο οι περιηγητές που εντοπίστηκαν σε αυτόν τον υπολογιστή."
+                               Style="{StaticResource SubTextStyle}" Margin="0,0,0,10" TextWrapping="Wrap"/>
+                    <ItemsControl x:Name="ListBrowsers">
+                        <ItemsControl.ItemsPanel>
+                            <ItemsPanelTemplate>
+                                <WrapPanel/>
+                            </ItemsPanelTemplate>
+                        </ItemsControl.ItemsPanel>
+                        <ItemsControl.ItemTemplate>
+                            <DataTemplate>
+                                <Button Content="{Binding Label}" Style="{StaticResource FlatButtonStyle}" Width="220" Margin="0,0,10,10"
+                                        Click="BtnClearBrowserCache_Click" Tag="{Binding}"/>
+                            </DataTemplate>
+                        </ItemsControl.ItemTemplate>
+                    </ItemsControl>
+                    <TextBlock x:Name="TxtBrowserCacheStatus" Text="" Style="{StaticResource SubTextStyle}"/>
+                </StackPanel>
+            </Border>
+
+            <!-- WinRE -->
+            <Border Style="{StaticResource CardStyle}" Margin="0,16,0,0">
+                <StackPanel>
+                    <TextBlock Text="Περιβάλλον Ανάκτησης Windows (WinRE)" Style="{StaticResource CardTitleStyle}" Margin="0,0,0,4"/>
+                    <TextBlock Text="Το WinRE χρειάζεται για επιδιόρθωση εκκίνησης, επαναφορά συστήματος και ανάκτηση." Style="{StaticResource SubTextStyle}" Margin="0,0,0,10" TextWrapping="Wrap"/>
+                    <TextBlock x:Name="TxtWinREStatus" Text="Κατάσταση: Άγνωστη" FontWeight="Bold" Foreground="{DynamicResource TextBrush}" Margin="0,0,0,10"/>
+                    <StackPanel Orientation="Horizontal">
+                        <Button Content="Ανανέωση Κατάστασης" Style="{StaticResource FlatButtonStyle}" Width="200" Margin="0,0,10,0" Click="BtnWinRERefresh_Click"/>
+                        <Button Content="Ενεργοποίηση WinRE" Style="{StaticResource AccentButtonStyle}" Width="200" Click="BtnWinREEnable_Click"/>
+                    </StackPanel>
+                </StackPanel>
+            </Border>
+
+        </StackPanel>
+    </ScrollViewer>
+</UserControl>
