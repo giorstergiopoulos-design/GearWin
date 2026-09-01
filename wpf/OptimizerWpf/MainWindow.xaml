@@ -4,6 +4,7 @@
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:local="clr-namespace:OptimizerWpf"
+        xmlns:views="clr-namespace:OptimizerWpf.Views"
         mc:Ignorable="d"
         Title="Windows 11 Maintenance &amp; Optimizer Tool (WPF Preview)"
         Height="800" Width="1280" MinHeight="600" MinWidth="1000"
@@ -29,7 +30,11 @@
         </Grid.RowDefinitions>
 
         <!-- ===== Κλασικό μενού (Εργαλεία/Προβολή/Ρυθμίσεις/Βοήθεια) - ρητό αίτημα χρήστη -
-             αντιστοιχεί στο $mainMenu (MainMenu) του Optimizer.ps1. Το "Προβολή" εναλλάσσει
+             αντιστοιχεί στο $mainMenu (MainMenu) του Optimizer.ps1. Γεμίζει πλέον ΕΞ ΟΛΟΚΛΗΡΟΥ από
+             κώδικα (βλ. PopulateClassicMenu στο .xaml.cs) από το κοινό ClassicMenuModel.Groups - ΟΧΙ
+             πια χειρόγραφα MenuItem εδώ, ώστε το ΙΔΙΟ μοντέλο να τροφοδοτεί ΚΑΙ το πλευρικό μενού
+             (SidebarNav) χωρίς κίνδυνο απόκλισης μεταξύ των δύο (ρητό αίτημα χρήστη: "το πλευρικό
+             μενού έχει ουσιαστικά το περιεχόμενο του κλασικού μενού"). Το "Προβολή" εναλλάσσει
              πραγματικά καρτέλες (πλήρως λειτουργικό) - τα υπόλοιπα ανοίγουν προσωρινό μήνυμα, αφού
              τα πραγματικά τους παράθυρα (Βοήθεια/Ιστορικό/ViVeTool/UWP Manager/Ρυθμίσεις Εμφάνισης)
              δεν έχουν μεταφερθεί ακόμα στο WPF - βλ. HANDOFF.md. -->
@@ -37,29 +42,7 @@
              κρυφτεί/εμφανιστεί με Ctrl+M - βλ. Window_PreviewKeyDown στο code-behind. Η ύπαρξή του
              ως togglable στοιχείο (όχι απλά πάντα-ορατό) εξυπηρετεί και το μελλοντικό "Windows
              Classic" skin, όπου θα είναι μέρος του χαρακτηριστικού κλασικού παραθύρου. -->
-        <Menu x:Name="ClassicMenu" Grid.Row="0" Background="{DynamicResource TabBgBrush}" Foreground="{DynamicResource TextBrush}">
-            <MenuItem Header="🛠️ Εργαλεία">
-                <MenuItem Header="Κρυφές Λειτουργίες (ViVeTool)..." Click="MenuNotPorted_Click"/>
-                <MenuItem Header="Διαχείριση UWP Εφαρμογών..." Click="MenuNotPorted_Click"/>
-            </MenuItem>
-            <MenuItem Header="👁️ Προβολή">
-                <MenuItem Header="Αρχική" Tag="Home" Click="MenuViewTab_Click" InputGestureText="Ctrl+1"/>
-                <MenuItem Header="Βελτιστοποίηση" Tag="Optimization" Click="MenuViewTab_Click" InputGestureText="Ctrl+2"/>
-                <MenuItem Header="Υγεία &amp; Συντήρηση" Tag="Health" Click="MenuViewTab_Click" InputGestureText="Ctrl+3"/>
-                <MenuItem Header="Δίκτυο &amp; Ασφάλεια" Tag="Network" Click="MenuViewTab_Click" InputGestureText="Ctrl+4"/>
-                <MenuItem Header="Επιπλέον Ρυθμίσεις" Tag="Tweaks" Click="MenuViewTab_Click" InputGestureText="Ctrl+5"/>
-                <MenuItem Header="Εφαρμογές &amp; Bloat" Tag="Bloatware" Click="MenuViewTab_Click" InputGestureText="Ctrl+6"/>
-                <MenuItem Header="Προηγμένα Εργαλεία" Tag="Advanced" Click="MenuViewTab_Click" InputGestureText="Ctrl+7"/>
-                <MenuItem Header="Σύστημα" Tag="System" Click="MenuViewTab_Click" InputGestureText="Ctrl+8"/>
-            </MenuItem>
-            <MenuItem Header="⚙️ Ρυθμίσεις">
-                <MenuItem Header="Εμφάνιση Εφαρμογής..." Click="MenuNotPorted_Click"/>
-            </MenuItem>
-            <MenuItem Header="❓ Βοήθεια">
-                <MenuItem Header="Ιστορικό Εκδόσεων" Click="MenuNotPorted_Click"/>
-                <MenuItem Header="Οδηγίες &amp; Πληροφορίες" Click="MenuNotPorted_Click"/>
-            </MenuItem>
-        </Menu>
+        <Menu x:Name="ClassicMenu" Grid.Row="0" Background="{DynamicResource TabBgBrush}" Foreground="{DynamicResource TextBrush}"/>
 
         <!-- ===== Title bar ===== -->
         <Grid Grid.Row="1" Margin="24,16,24,8">
@@ -89,7 +72,8 @@
 
             <StackPanel Grid.Column="2" Orientation="Horizontal" VerticalAlignment="Center">
                 <Button x:Name="BtnLanguage" Content="&#x1F310;" Width="36" Height="36" Margin="0,0,8,0" Style="{StaticResource FlatButtonStyle}"/>
-                <Button x:Name="BtnHamburger" Content="&#x2261;" Width="36" Height="36" Margin="0,0,8,0" Style="{StaticResource FlatButtonStyle}"/>
+                <!-- Άνοιγμα/κλείσιμο του πλευρικού μενού (ρητό αίτημα χρήστη) - βλ. BtnHamburger_Click. -->
+                <Button x:Name="BtnHamburger" Content="&#x2261;" Width="36" Height="36" Margin="0,0,8,0" Style="{StaticResource FlatButtonStyle}" Click="BtnHamburger_Click"/>
                 <!-- Θέμα (θέση διπλα στο Light/Dark Mode, ρητό αίτημα χρήστη): τετράγωνο κουμπί με
                      εικονίδιο παλέτας (σαν τη Ζωγραφική των Windows) - το πάτημα ανοίγει popup με όλα
                      τα 21 θέματα (ίδια λίστα με το $themeNamesList στο Optimizer.ps1). Ξεχωριστό,
@@ -171,10 +155,23 @@
         </StackPanel>
         </ScrollViewer>
 
-        <!-- ===== Content host ===== -->
-        <Border Grid.Row="3" Margin="24,0,24,12" Background="{DynamicResource MainBgBrush}">
-            <ContentControl x:Name="ContentHost"/>
-        </Border>
+        <!-- ===== Content row: πλευρικό μενού (προαιρετικό, toggle μέσω BtnHamburger) + content host =====
+             Το SidebarNav (Views/SidebarNav.xaml) αντλεί τα ΙΔΙΑ NavItems.All με το κλασικό μενού -
+             skin-agnostic σχεδιασμός, βλ. HANDOFF.md §0.4ζ. Η θέση (αριστερά/δεξιά) εναλλάσσεται με
+             το κουμπί εναλλαγής μέσα στο ίδιο το sidebar (βλ. Sidebar_PositionToggleRequested). -->
+        <Grid Grid.Row="3" Margin="24,0,24,12" x:Name="ContentRow">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition x:Name="ColA" Width="0"/>
+                <ColumnDefinition x:Name="ColGap" Width="0"/>
+                <ColumnDefinition x:Name="ColB" Width="*"/>
+            </Grid.ColumnDefinitions>
+            <views:SidebarNav x:Name="Sidebar" Grid.Column="0" Visibility="Collapsed"
+                               LeafClicked="Sidebar_LeafClicked"
+                               PositionToggleRequested="Sidebar_PositionToggleRequested"/>
+            <Border x:Name="ContentHostBorder" Grid.Column="2" Background="{DynamicResource MainBgBrush}">
+                <ContentControl x:Name="ContentHost"/>
+            </Border>
+        </Grid>
 
         <!-- ===== Status bar ===== -->
         <!-- Κυκλικό εικονίδιο δραστηριότητας (ρητό αίτημα χρήστη: "δεν έβαλες το κυκλικό εικονίδιο"

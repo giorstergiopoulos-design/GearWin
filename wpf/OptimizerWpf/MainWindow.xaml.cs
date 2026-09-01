@@ -24,6 +24,9 @@ public partial class MainWindow : Window
         // it here guarantees the full object graph already exists when the event fires.
         TabHome.IsChecked = true;
 
+        PopulateClassicMenu();
+        ApplySidebarLayout();
+
         ListThemes.ItemsSource = ThemeCatalog.All;
         ListThemes.SelectedItem = ThemeManager.CurrentPair;
 
@@ -105,6 +108,11 @@ public partial class MainWindow : Window
     {
         if (sender is not RadioButton rb || rb.Tag is not string tag) return;
         ShowTabContent(tag, GetTabLabel(rb) ?? tag);
+        // TabStrip.Checked είναι ο "κόμβος" όπου καταλήγει ΚΑΘΕ πλοήγηση (κλασικό μενού, Ctrl+1..8,
+        // πλευρικό μενού - όλα ελέγχουν εδώ ένα RadioButton αντί να ξέρουν το ένα για το άλλο) -
+        // οπότε είναι το σωστό σημείο να ενημερωθεί ΚΑΙ το πλευρικό μενού ώστε να παραμένει πάντα σε
+        // συμφωνία με το ποια καρτέλα είναι πραγματικά ενεργή.
+        Sidebar?.SetActiveTag(tag);
     }
 
     // Tab pill Content is now an icon+text StackPanel (ρητό αίτημα χρήστη: εικονίδια στις καρτέλες),
@@ -127,24 +135,105 @@ public partial class MainWindow : Window
         };
     }
 
-    private void MenuViewTab_Click(object sender, RoutedEventArgs e)
+    // Γεμίζει ΟΛΟΚΛΗΡΟ το κλασικό μενού (4 ομάδες: Εργαλεία/Προβολή/Ρυθμίσεις/Βοήθεια) από το κοινό
+    // ClassicMenuModel.Groups αντί για χειρόγραφα MenuItem στο XAML (βλ. ClassicMenuModel.cs) - το
+    // ΙΔΙΟ μοντέλο τροφοδοτεί και το πλευρικό μενού (SidebarNav), ώστε τα δύο να μην αποκλίνουν ποτέ.
+    private void PopulateClassicMenu()
     {
-        if (sender is not MenuItem mi || mi.Tag is not string tag) return;
-        // Also checks the matching tab-strip pill so both navigation paths (menu and tab strip)
-        // always agree on which tab is "active", rather than only updating the content host.
+        foreach (var group in ClassicMenuModel.Groups)
+        {
+            var groupItem = new MenuItem { Header = $"{group.Icon} {group.Header}" };
+            foreach (var leaf in group.Items)
+            {
+                var mi = new MenuItem
+                {
+                    Header = BuildLeafHeader(leaf),
+                    Tag = leaf,
+                    InputGestureText = leaf.Shortcut ?? "",
+                };
+                mi.Click += (_, _) => HandleLeafClick(leaf);
+                groupItem.Items.Add(mi);
+            }
+            ClassicMenu.Items.Add(groupItem);
+        }
+    }
+
+    private static object BuildLeafHeader(MenuLeaf leaf)
+    {
+        if (string.IsNullOrEmpty(leaf.Icon)) return leaf.Label;
+        return new StackPanel
+        {
+            Orientation = Orientation.Horizontal,
+            Children =
+            {
+                new TextBlock { Text = leaf.Icon, Margin = new Thickness(0, 0, 6, 0) },
+                new TextBlock { Text = leaf.Label },
+            },
+        };
+    }
+
+    // Κοινή δρομολόγηση για ΚΑΘΕ leaf είτε κλασικού μενού είτε πλευρικού μενού: είτε πλοήγηση σε
+    // καρτέλα, είτε "δεν έχει μεταφερθεί ακόμα" μήνυμα - ίδια σημασιολογία με το πρώην
+    // MenuViewTab_Click/MenuNotPorted_Click, τώρα ενοποιημένη σε ένα σημείο.
+    private void HandleLeafClick(MenuLeaf leaf)
+    {
+        if (leaf.Action.NavigateTag != null) SelectTab(leaf.Action.NavigateTag);
+        else if (leaf.Action.NotPortedLabel != null) ShowNotPorted(leaf.Action.NotPortedLabel);
+    }
+
+    private void Sidebar_LeafClicked(MenuLeaf leaf) => HandleLeafClick(leaf);
+
+    // Κοινή δρομολόγηση: βρίσκει το αντίστοιχο RadioButton στη λωρίδα καρτελών και το τσεκάρει - το
+    // TabButton_Checked αναλαμβάνει από εκεί (ShowTabContent + ενημέρωση πλευρικού μενού), οπότε
+    // κλασικό μενού/πλευρικό μενού/Ctrl+1..8 ΔΕΝ χρειάζεται να ξέρουν τίποτα το ένα για το άλλο.
+    private void SelectTab(string tag)
+    {
         foreach (var child in TabStrip.Children)
         {
             if (child is RadioButton rb && rb.Tag as string == tag) { rb.IsChecked = true; return; }
         }
-        ShowTabContent(tag, mi.Header?.ToString() ?? tag);
     }
 
-    // Classic menu items whose real windows (Βοήθεια/Ιστορικό/ViVeTool/UWP Manager/Ρυθμίσεις
-    // Εμφάνισης) haven't been ported to WPF yet - honest placeholder instead of pretending they
-    // work, per the staged migration plan (see HANDOFF.md).
-    private void MenuNotPorted_Click(object sender, RoutedEventArgs e)
+    private bool _sidebarVisible;
+    private bool _sidebarExpanded = true;
+    private bool _sidebarOnRight;
+
+    private void BtnHamburger_Click(object sender, RoutedEventArgs e)
     {
-        var label = (sender as MenuItem)?.Header?.ToString()?.TrimEnd('.') ?? "Αυτή η λειτουργία";
+        _sidebarVisible = !_sidebarVisible;
+        ApplySidebarLayout();
+    }
+
+    // Ρητό αίτημα χρήστη: το πλευρικό μενού πρέπει να μπορεί να εναλλάσσεται αριστερά/δεξιά - το
+    // κουμπί ⇄ μέσα στο ίδιο το SidebarNav ζητάει την εναλλαγή, το MainWindow (owner του layout)
+    // αποφασίζει τι σημαίνει αυτό σε στήλες του Grid.
+    private void Sidebar_PositionToggleRequested()
+    {
+        _sidebarOnRight = !_sidebarOnRight;
+        ApplySidebarLayout();
+    }
+
+    private void ApplySidebarLayout()
+    {
+        var sidebarCol = _sidebarOnRight ? 2 : 0;
+        var contentCol = _sidebarOnRight ? 0 : 2;
+        Grid.SetColumn(Sidebar, sidebarCol);
+        Grid.SetColumn(ContentHostBorder, contentCol);
+
+        var sidebarWidth = _sidebarVisible ? new GridLength(_sidebarExpanded ? 236 : 72) : new GridLength(0);
+        var gapWidth = _sidebarVisible ? new GridLength(12) : new GridLength(0);
+        ColA.Width = _sidebarOnRight ? new GridLength(1, GridUnitType.Star) : sidebarWidth;
+        ColB.Width = _sidebarOnRight ? sidebarWidth : new GridLength(1, GridUnitType.Star);
+        ColGap.Width = gapWidth;
+
+        Sidebar.Visibility = _sidebarVisible ? Visibility.Visible : Visibility.Collapsed;
+    }
+
+    // Στοιχεία μενού των οποίων τα πραγματικά παράθυρα (Βοήθεια/Ιστορικό/ViVeTool/UWP Manager/
+    // Ρυθμίσεις Εμφάνισης) δεν έχουν μεταφερθεί ακόμα στο WPF - ειλικρινές placeholder αντί να
+    // προσποιείται ότι λειτουργούν, σύμφωνα με το σταδιακό πλάνο μετάβασης (βλ. HANDOFF.md).
+    private void ShowNotPorted(string label)
+    {
         MessageBox.Show($"«{label}» δεν έχει μεταφερθεί ακόμα από το Optimizer.ps1 σε αυτό το WPF preview.",
             "Δεν έχει υλοποιηθεί ακόμα", MessageBoxButton.OK, MessageBoxImage.Information);
     }
