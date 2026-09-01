@@ -16,6 +16,29 @@ namespace OptimizerWpf.Services
     // MSFT_PhysicalDisk via the storage subsystem's association classes.
     public static class DriveTypeService
     {
+        // Fallback όταν το WMI δεν καταφέρνει να προσδιορίσει τον τύπο (ρητό αίτημα χρήστη: "από την
+        // ονομασία των δίσκων μπορείς να καταλάβεις τι είδος είναι") - εκτίμηση βάσει γνωστών μοτίβων
+        // ονομασίας μοντέλου δίσκου. ΣΗΜΕΙΩΣΗ ΕΙΛΙΚΡΙΝΕΙΑΣ: αυτό είναι ΕΚΤΙΜΗΣΗ, όχι σίγουρη ανίχνευση
+        // (π.χ. το "WD Blue" καλύπτει ΚΑΙ HDD ΚΑΙ SSD/NVMe ανάλογα με το μοντέλο - το "SN" πρόθεμα
+        // διακρίνει τα NVMe μοντέλα της σειράς) - χρησιμοποιείται ΜΟΝΟ όταν η πραγματική ανίχνευση
+        // μέσω WMI αποτύχει εντελώς.
+        public static PhysicalDriveKind GuessFromModelName(string? model)
+        {
+            if (string.IsNullOrWhiteSpace(model)) return PhysicalDriveKind.Unknown;
+            var m = model.ToUpperInvariant();
+
+            if (m.Contains("NVME") || m.Contains("SSD") || System.Text.RegularExpressions.Regex.IsMatch(m, @"\bSN\d{3}\b") ||
+                m.Contains("EVO") || m.Contains("970") || m.Contains("980") || m.Contains("990") ||
+                m.Contains("CRUCIAL P") || m.Contains("KINGSTON NV") || m.Contains("KINGSTON KC") || m.Contains("KINGSTON A2000"))
+                return PhysicalDriveKind.Ssd;
+
+            if (m.Contains("BARRACUDA") || m.Contains("IRONWOLF") || m.Contains("SKYHAWK") ||
+                System.Text.RegularExpressions.Regex.IsMatch(m, @"\bWD\d{2,}E[A-Z]{3}\b") || m.Contains("TOSHIBA DT") || m.Contains("TOSHIBA P3"))
+                return PhysicalDriveKind.Hdd;
+
+            return PhysicalDriveKind.Unknown;
+        }
+
         public static PhysicalDriveKind Detect(string driveLetter)
         {
             try
@@ -38,13 +61,20 @@ namespace OptimizerWpf.Services
                 var partition = partitionSearcher.Get().Cast<ManagementBaseObject>().FirstOrDefault();
                 if (partition == null) return PhysicalDriveKind.Unknown;
 
+                // ΔΙΟΡΘΩΣΗ (χρήστης ανέφερε: "όλα τα εικονίδια δίσκου δείχνουν ερωτηματικό") - το
+                // MSFT_Partition.ObjectId περιέχει ΗΔΗ ενσωματωμένα διπλά εισαγωγικά μέσα στην ίδια
+                // του τη μορφή (π.χ. `WSP_Partition.ObjectId="{guid}:PR:..."`). Το EscapeObjectId
+                // κάνει escape ΑΚΡΙΒΩΣ αυτά τα εσωτερικά " σε \" (σωστό για ενσωμάτωση μέσα σε
+                // ΔΙΠΛΑ εισαγωγικά) - αλλά το query τα τύλιγε σε ΜΟΝΑ εισαγωγικά, αναντιστοιχία που
+                // έκανε το WQL parser να αποτυγχάνει με "Invalid property" σε ΚΑΘΕ δίσκο, όχι
+                // περιστασιακά - επιβεβαιώθηκε ζωντανά αναπαράγοντας το ίδιο query.
                 using var diskSearcher = new ManagementObjectSearcher(scope,
-                    new ObjectQuery($"ASSOCIATORS OF {{MSFT_Partition.ObjectId='{EscapeObjectId(partition["ObjectId"].ToString()!)}'}} WHERE AssocClass=MSFT_DiskToPartition"));
+                    new ObjectQuery($"ASSOCIATORS OF {{MSFT_Partition.ObjectId=\"{EscapeObjectId(partition["ObjectId"].ToString()!)}\"}} WHERE AssocClass=MSFT_DiskToPartition"));
                 var disk = diskSearcher.Get().Cast<ManagementBaseObject>().FirstOrDefault();
                 if (disk == null) return PhysicalDriveKind.Unknown;
 
                 using var physicalDiskSearcher = new ManagementObjectSearcher(scope,
-                    new ObjectQuery($"ASSOCIATORS OF {{MSFT_Disk.ObjectId='{EscapeObjectId(disk["ObjectId"].ToString()!)}'}} WHERE AssocClass=MSFT_PhysicalDiskToDisk"));
+                    new ObjectQuery($"ASSOCIATORS OF {{MSFT_Disk.ObjectId=\"{EscapeObjectId(disk["ObjectId"].ToString()!)}\"}} WHERE AssocClass=MSFT_PhysicalDiskToDisk"));
                 var physicalDisk = physicalDiskSearcher.Get().Cast<ManagementBaseObject>().FirstOrDefault();
                 if (physicalDisk == null) return PhysicalDriveKind.Unknown;
 

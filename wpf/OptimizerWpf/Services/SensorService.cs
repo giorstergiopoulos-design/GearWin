@@ -1,6 +1,7 @@
 using System;
 using System.Linq;
 using LibreHardwareMonitor.Hardware;
+using Microsoft.Win32;
 
 namespace OptimizerWpf.Services
 {
@@ -65,6 +66,23 @@ namespace OptimizerWpf.Services
         // ονόματα (Intel ΚΑΙ AMD) με τη σειρά.
         private static readonly string[] CpuPackageNames = { "Package", "Tctl", "Tdie", "CPU Die", "Core Average", "Core Max" };
         private static readonly string[] GpuCoreNames = { "GPU Core", "Core", "Hot Spot", "Junction" };
+
+        // ΔΙΟΡΘΩΣΗ (χρήστης ανέφερε: "CPU temp δεν φαίνεται, η Gigabyte έχει εφαρμογή που τη μετράει") -
+        // επιβεβαιώθηκε ζωντανά ότι το Memory Integrity/VBS/HVCI είναι ενεργό σε αυτό το μηχάνημα
+        // (SecurityServicesRunning=2, ίδιο registry key με το ήδη υπάρχον Gaming Mode toggle). Το VBS
+        // μπλοκάρει ΑΚΡΙΒΩΣ την απευθείας MSR/IO port πρόσβαση που χρειάζεται το LibreHardwareMonitorLib
+        // (ο κύριος, τεκμηριωμένος λόγος που εργαλεία σαν αυτό αποτυγχάνουν σιωπηλά σε πολλά σύγχρονα
+        // Windows 11 συστήματα με VBS - ανεξάρτητα από elevation). Vendor εργαλεία (Gigabyte SIV/Control
+        // Center κ.λπ.) συχνά έχουν το ΔΙΚΟ ΤΟΥΣ signed driver με διαφορετικό, εγκεκριμένο μονοπάτι.
+        public static bool IsHvciActive()
+        {
+            try
+            {
+                using var key = Registry.LocalMachine.OpenSubKey(@"SYSTEM\CurrentControlSet\Control\DeviceGuard\Scenarios\HypervisorEnforcedCodeIntegrity");
+                return Convert.ToInt32(key?.GetValue("Enabled") ?? 0) == 1;
+            }
+            catch { return false; }
+        }
 
         public static int? GetCpuTemperatureCelsius() => GetTemperature(HardwareType.Cpu, CpuPackageNames);
 

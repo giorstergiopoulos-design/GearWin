@@ -94,7 +94,30 @@ namespace OptimizerWpf.Views
         private async Task RefreshCpuTemperatureAsync()
         {
             var temp = await Task.Run(SensorService.GetCpuTemperatureCelsius);
-            TxtCpuTemp.Text = temp.HasValue ? $"{temp}°C" : "—";
+            SetTempText(TxtCpuTemp, temp);
+        }
+
+        // ΔΙΟΡΘΩΣΗ (χρήστης ανέφερε: "CPU temp δεν φαίνεται, η Gigabyte έχει εφαρμογή που τη μετράει")
+        // - όταν η θερμοκρασία δεν βρέθηκε ΚΑΙ το VBS/Memory Integrity είναι ενεργό (ο κύριος λόγος
+        // που το LibreHardwareMonitorLib αποτυγχάνει σιωπηλά σε πολλά Windows 11 - βλ.
+        // SensorService.IsHvciActive), δείχνει 🔒 με επεξηγηματικό tooltip αντί για απλό "—" - ώστε ο
+        // χρήστης να καταλαβαίνει ΓΙΑΤΙ, όχι απλά ότι λείπει.
+        private static void SetTempText(System.Windows.Controls.TextBlock target, int? temp)
+        {
+            if (temp.HasValue)
+            {
+                target.Text = $"{temp}°C";
+                target.ToolTip = null;
+                return;
+            }
+            if (SensorService.IsHvciActive())
+            {
+                target.Text = "🔒";
+                target.ToolTip = "Δεν είναι διαθέσιμη - η Ακεραιότητα Μνήμης (Core Isolation/VBS) είναι ενεργή και μπλοκάρει την απευθείας πρόσβαση σε αισθητήρες υλικού. Δοκιμάστε το εργαλείο του κατασκευαστή της μητρικής/κάρτας γραφικών, ή απενεργοποιήστε προσωρινά το VBS από τις Ρυθμίσεις Windows (Ασφάλεια Windows > Ασφάλεια Συσκευής > Απομόνωση Πυρήνα).";
+                return;
+            }
+            target.Text = "—";
+            target.ToolTip = "Δεν βρέθηκε διαθέσιμος αισθητήρας θερμοκρασίας για αυτό το hardware.";
         }
 
         // ΔΙΟΡΘΩΣΗ (ρητό αίτημα χρήστη): αντί για ComboBox, τα δύο βελάκια στο πλακίδιο του δίσκου
@@ -136,7 +159,18 @@ namespace OptimizerWpf.Views
             if (drive == null) return;
 
             StatusService.SetBusy($"Ανίχνευση τύπου δίσκου για {drive}...");
+            var model = await Task.Run(() => DriveTypeService.GetDiskModel(drive));
             var kind = await Task.Run(() => DriveTypeService.Detect(drive));
+            var isGuess = false;
+            // ΔΙΟΡΘΩΣΗ (χρήστης ανέφερε: "από την ονομασία των δίσκων μπορείς να καταλάβεις τι
+            // είδος είναι") - αν η πραγματική ανίχνευση WMI αποτύχει εντελώς, δοκιμάζεται εκτίμηση
+            // βάσει γνωστών μοτίβων στο όνομα μοντέλου (π.χ. "SN580" -> NVMe) ως δεύτερη γραμμή
+            // άμυνας - ΣΗΜΕΙΩΣΗ ΕΙΛΙΚΡΙΝΕΙΑΣ: επισημαίνεται ρητά ως "εκτίμηση", όχι σίγουρη ανίχνευση.
+            if (kind == PhysicalDriveKind.Unknown)
+            {
+                var guessed = DriveTypeService.GuessFromModelName(model);
+                if (guessed != PhysicalDriveKind.Unknown) { kind = guessed; isGuess = true; }
+            }
             StatusService.SetIdle("Έτοιμο για χρήση");
             // ΔΙΟΡΘΩΣΗ (χρήστης ανέφερε: "ζήτησα διαφορετικά εικονίδια για κάθε είδος δίσκου όταν
             // γίνεται η εναλλαγή") - το "Unknown" (ανίχνευση τύπου απέτυχε) χρησιμοποιούσε ΤΟ ΙΔΙΟ
@@ -152,7 +186,7 @@ namespace OptimizerWpf.Views
             };
 
             TxtDiskIcon.Text = glyph;
-            TxtDriveKind.Text = label;
+            TxtDriveKind.Text = isGuess ? $"{label} (εκτίμηση)" : label;
             BorderDiskIcon.Background = new RadialGradientBrush
             {
                 GradientOrigin = new System.Windows.Point(0.3, 0.3),
@@ -169,23 +203,22 @@ namespace OptimizerWpf.Views
 
             // Μάρκα/περιγραφή δίσκου + θερμοκρασία (ρητό αίτημα χρήστη) - μαζί με το είδος δίσκου
             // εδώ, όχι στο γρήγορο 1s tick, αφού ΚΑΝΕΝΑ από τα δύο δεν αλλάζει ζωντανά.
-            var model = await Task.Run(() => DriveTypeService.GetDiskModel(drive));
             TxtDriveModel.Text = model ?? "";
             var diskTemp = await Task.Run(() => SensorService.GetDiskTemperatureCelsius(model));
-            TxtDiskTemp.Text = diskTemp.HasValue ? $"{diskTemp}°C" : "—";
+            SetTempText(TxtDiskTemp, diskTemp);
         }
 
         // Δεν αλλάζει σε δευτερόλεπτα σαν το ποσοστό χρήσης - αρκεί μία φορά στην εκκίνηση.
         private async Task RefreshGpuTemperatureAsync()
         {
             var temp = await Task.Run(SensorService.GetGpuTemperatureCelsius);
-            TxtGpuTemp.Text = temp.HasValue ? $"{temp}°C" : "—";
+            SetTempText(TxtGpuTemp, temp);
         }
 
         private async Task RefreshRamTemperatureAsync()
         {
             var temp = await Task.Run(SensorService.GetRamTemperatureCelsius);
-            TxtRamTemp.Text = temp.HasValue ? $"{temp}°C" : "—";
+            SetTempText(TxtRamTemp, temp);
         }
 
         // Live κάθε 1s - CPU/RAM/GPU αλλάζουν πραγματικά μέσα σε δευτερόλεπτα.
