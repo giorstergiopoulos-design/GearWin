@@ -1,0 +1,92 @@
+<UserControl x:Class="OptimizerWpf.Views.BloatwareView"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             mc:Ignorable="d">
+    <!-- Εφαρμογές & Bloat - port του $tabBloatware (~14193-15000). Βλ. BloatwareService.cs. -->
+    <ScrollViewer VerticalScrollBarVisibility="Auto">
+        <StackPanel Margin="0,8,0,24">
+
+            <!-- Ενσωματωμένα Στοιχεία Windows -->
+            <Border Style="{StaticResource CardStyle}">
+                <StackPanel>
+                    <TextBlock Text="Ενσωματωμένα Στοιχεία Windows" Style="{StaticResource CardTitleStyle}" Margin="0,0,0,10"/>
+                    <ItemsControl x:Name="ListBuiltin">
+                        <ItemsControl.ItemTemplate>
+                            <DataTemplate>
+                                <Grid Margin="0,0,0,8">
+                                    <Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="Auto"/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions>
+                                    <TextBlock Grid.Column="0" Text="{Binding Name}" Foreground="{DynamicResource TextBrush}" VerticalAlignment="Center"/>
+                                    <Button Grid.Column="1" Content="Εγκατάσταση" Style="{StaticResource AccentButtonStyle}" Width="120" Margin="0,0,8,0" Click="BtnBuiltinInstall_Click" Tag="{Binding}"/>
+                                    <Button Grid.Column="2" Content="Αφαίρεση" Style="{StaticResource FlatButtonStyle}" Width="120" Click="BtnBuiltinRemove_Click" Tag="{Binding}"/>
+                                </Grid>
+                            </DataTemplate>
+                        </ItemsControl.ItemTemplate>
+                    </ItemsControl>
+                    <TextBlock x:Name="TxtBuiltinStatus" Style="{StaticResource SubTextStyle}" Margin="0,4,0,0"/>
+                </StackPanel>
+            </Border>
+
+            <!-- Προτεινόμενες Εφαρμογές -->
+            <Border Style="{StaticResource CardStyle}" Margin="0,16,0,0">
+                <StackPanel>
+                    <TextBlock Text="Προτεινόμενες Εφαρμογές (winget)" Style="{StaticResource CardTitleStyle}" Margin="0,0,0,10"/>
+                    <TextBlock x:Name="TxtRecommendedStatus" Style="{StaticResource SubTextStyle}" Margin="0,0,0,8"/>
+                    <ItemsControl x:Name="ListRecommended">
+                        <ItemsControl.ItemTemplate>
+                            <DataTemplate>
+                                <Grid Margin="0,0,0,8">
+                                    <Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions>
+                                    <StackPanel Grid.Column="0">
+                                        <TextBlock Text="{Binding App.Title}" Foreground="{DynamicResource TextBrush}"/>
+                                        <TextBlock Text="{Binding App.Group}" Style="{StaticResource SubTextStyle}" FontSize="10"/>
+                                    </StackPanel>
+                                    <Button Grid.Column="1" Content="{Binding ButtonLabel}" Style="{StaticResource FlatButtonStyle}" Width="130" Click="BtnRecommendedToggle_Click" Tag="{Binding}"/>
+                                </Grid>
+                            </DataTemplate>
+                        </ItemsControl.ItemTemplate>
+                    </ItemsControl>
+                </StackPanel>
+            </Border>
+
+            <!-- Διαχείριση UWP -->
+            <Border Style="{StaticResource CardStyle}" Margin="0,16,0,0">
+                <StackPanel>
+                    <TextBlock Text="Διαχείριση Εγκατεστημένων Εφαρμογών (Metro/UWP)" Style="{StaticResource CardTitleStyle}" Margin="0,0,0,10"/>
+                    <Button Content="Άνοιγμα Διαχείρισης UWP Εφαρμογών" Style="{StaticResource AccentButtonStyle}" Width="280" HorizontalAlignment="Left" Click="BtnOpenUwpManager_Click"/>
+                </StackPanel>
+            </Border>
+
+            <!-- Βαθιά Απεγκατάσταση -->
+            <Border Style="{StaticResource CardStyle}" Margin="0,16,0,0">
+                <StackPanel>
+                    <Grid Margin="0,0,0,10">
+                        <Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions>
+                        <TextBlock Grid.Column="0" Text="Βαθιά Απεγκατάσταση Εφαρμογών" Style="{StaticResource CardTitleStyle}"/>
+                        <Button Grid.Column="1" Content="Ανανέωση Λίστας" Style="{StaticResource FlatButtonStyle}" Width="150" Click="BtnRefreshInstalledApps_Click"/>
+                    </Grid>
+                    <Border Background="{DynamicResource MainBgBrush}" CornerRadius="6" MaxHeight="320" Padding="4">
+                        <ScrollViewer VerticalScrollBarVisibility="Auto">
+                            <ItemsControl x:Name="ListInstalledApps">
+                                <ItemsControl.ItemTemplate>
+                                    <DataTemplate>
+                                        <Grid Margin="6,4">
+                                            <Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions>
+                                            <StackPanel Grid.Column="0">
+                                                <TextBlock Text="{Binding App.DisplayName}" Foreground="{DynamicResource TextBrush}"/>
+                                                <TextBlock Text="{Binding App.Publisher}" Style="{StaticResource SubTextStyle}"/>
+                                            </StackPanel>
+                                            <Button Grid.Column="1" Content="Απεγκατάσταση &amp; Καθαρισμός" Style="{StaticResource FlatButtonStyle}" Click="BtnDeepUninstall_Click" Tag="{Binding}"/>
+                                        </Grid>
+                                    </DataTemplate>
+                                </ItemsControl.ItemTemplate>
+                            </ItemsControl>
+                        </ScrollViewer>
+                    </Border>
+                </StackPanel>
+            </Border>
+
+        </StackPanel>
+    </ScrollViewer>
+</UserControl>

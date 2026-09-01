@@ -129,6 +129,7 @@ public partial class MainWindow : Window
             "Health" => new HealthView(),
             "System" => new SystemView(),
             "Network" => new NetworkView(),
+            "Bloatware" => new BloatwareView(),
             _ => new PlaceholderView(label)
         };
     }
