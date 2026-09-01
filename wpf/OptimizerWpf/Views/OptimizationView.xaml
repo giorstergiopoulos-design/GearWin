@@ -1,0 +1,101 @@
+<UserControl x:Class="OptimizerWpf.Views.OptimizationView"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             mc:Ignorable="d">
+    <!--
+        Stage 2 vertical slice: the Βελτιστοποίηση (Optimization) tab. Office Mode/Gaming Mode
+        toggles switch the real Windows power plan (see PowerModeService) - the WinForms version's
+        extra registry/VBS/Explorer-restart work behind those toggles isn't ported yet (see the
+        honesty note in PowerModeService.cs). Winget Updates Manager runs a real "winget upgrade"
+        scan (see WingetService) and can upgrade selected packages.
+    -->
+    <ScrollViewer VerticalScrollBarVisibility="Auto">
+        <StackPanel Margin="0,8,0,24">
+
+            <!-- Office Mode -->
+            <Border Style="{StaticResource CardStyle}" Margin="0,0,0,16">
+                <Grid>
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="*"/>
+                        <ColumnDefinition Width="Auto"/>
+                    </Grid.ColumnDefinitions>
+                    <StackPanel Grid.Column="0">
+                        <TextBlock Text="Office Mode &amp; Προφίλ Ενέργειας" Style="{StaticResource CardTitleStyle}" Margin="0,0,0,6"/>
+                        <TextBlock Text="Ισορροπημένη λειτουργία, περιορισμός περιττών οπτικών εφέ και διαφημίσεων." Style="{StaticResource SubTextStyle}"/>
+                    </StackPanel>
+                    <ToggleButton x:Name="ToggleOfficeMode" Grid.Column="1" VerticalAlignment="Center"
+                                  Style="{StaticResource ToggleSwitchStyle}" Click="ToggleOfficeMode_Click"/>
+                </Grid>
+            </Border>
+
+            <!-- Gaming Mode -->
+            <Border Style="{StaticResource CardStyle}" Margin="0,0,0,16">
+                <Grid>
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="*"/>
+                        <ColumnDefinition Width="Auto"/>
+                    </Grid.ColumnDefinitions>
+                    <StackPanel Grid.Column="0">
+                        <TextBlock Text="Gaming Mode &amp; Ultimate Performance" Style="{StaticResource CardTitleStyle}" Margin="0,0,0,6"/>
+                        <TextBlock Text="Μέγιστες επιδόσεις CPU/GPU. (HAGS/VBS/Game DVR δεν έχουν μεταφερθεί ακόμα)." Style="{StaticResource SubTextStyle}"/>
+                    </StackPanel>
+                    <ToggleButton x:Name="ToggleGamingMode" Grid.Column="1" VerticalAlignment="Center"
+                                  Style="{StaticResource ToggleSwitchStyle}" Click="ToggleGamingMode_Click"/>
+                </Grid>
+            </Border>
+
+            <!-- Winget Updates Manager -->
+            <Border Style="{StaticResource CardStyle}">
+                <StackPanel>
+                    <TextBlock Text="Διαχειριστής Ενημερώσεων Λογισμικού" Style="{StaticResource CardTitleStyle}" Margin="0,0,0,4"/>
+                    <TextBlock x:Name="TxtWingetStatus" Text="Πατήστε 'Σάρωση' για έλεγχο διαθέσιμων ενημερώσεων." Style="{StaticResource SubTextStyle}" Margin="0,0,0,10"/>
+
+                    <Border Background="{DynamicResource MainBgBrush}" CornerRadius="6" MinHeight="120" MaxHeight="320" Padding="4">
+                        <ScrollViewer VerticalScrollBarVisibility="Auto">
+                            <ItemsControl x:Name="ListWingetUpdates">
+                                <ItemsControl.ItemTemplate>
+                                    <DataTemplate>
+                                        <Border Background="{DynamicResource CardBgBrush}" CornerRadius="4" Margin="4" Padding="10">
+                                            <StackPanel Orientation="Horizontal">
+                                                <CheckBox IsChecked="{Binding IsSelected}" VerticalAlignment="Center" Margin="0,0,10,0"/>
+                                                <StackPanel>
+                                                    <TextBlock Foreground="{DynamicResource TextBrush}" FontWeight="SemiBold">
+                                                        <Run Text="{Binding Update.Name, Mode=OneWay}"/>
+                                                        <Run Text=" [ "/>
+                                                        <Run Text="{Binding Update.Id, Mode=OneWay}"/>
+                                                        <Run Text=" ]"/>
+                                                    </TextBlock>
+                                                    <TextBlock Style="{StaticResource SubTextStyle}">
+                                                        <Run Text="Τρέχουσα Έκδοση: "/>
+                                                        <Run Text="{Binding Update.CurrentVersion, Mode=OneWay}"/>
+                                                        <Run Text=" &#x2192; Νέα Έκδοση: "/>
+                                                        <Run Text="{Binding Update.AvailableVersion, Mode=OneWay}"/>
+                                                    </TextBlock>
+                                                </StackPanel>
+                                            </StackPanel>
+                                        </Border>
+                                    </DataTemplate>
+                                </ItemsControl.ItemTemplate>
+                            </ItemsControl>
+                        </ScrollViewer>
+                    </Border>
+
+                    <Grid Margin="0,12,0,0">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*"/>
+                            <ColumnDefinition Width="Auto"/>
+                            <ColumnDefinition Width="Auto"/>
+                        </Grid.ColumnDefinitions>
+                        <CheckBox x:Name="ChkSelectAll" Grid.Column="0" Content="Επιλογή Όλων" VerticalAlignment="Center"
+                                  Foreground="{DynamicResource TextBrush}" Click="ChkSelectAll_Click"/>
+                        <Button Grid.Column="1" Content="Σάρωση" Style="{StaticResource FlatButtonStyle}" Width="130" Margin="0,0,10,0" Click="BtnScanWinget_Click"/>
+                        <Button Grid.Column="2" Content="Αναβάθμιση Επιλεγμένων" Style="{StaticResource AccentButtonStyle}" Width="180" Click="BtnUpgradeSelected_Click"/>
+                    </Grid>
+                </StackPanel>
+            </Border>
+
+        </StackPanel>
+    </ScrollViewer>
+</UserControl>

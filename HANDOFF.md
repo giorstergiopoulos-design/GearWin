@@ -265,8 +265,26 @@ SDK μέσω `winget install Microsoft.DotNet.SDK.8` (με ρητή επιβεβ
   αποτύχουν σιωπηλά χωρίς αυτό· η elevation δεν έχει προστεθεί ακόμα στο WPF project.
   "Διόρθωση Όλων" κάνει προς το παρόν μόνο τον καθαρισμό temp αρχείων (Storage fix) - η ενεργοποίηση
   Defender/δημιουργία Σημείου Επαναφοράς δεν έχουν μεταφερθεί ακόμα.
-- `Views/PlaceholderView.xaml(.cs)`: γενικό stand-in για τις 7 καρτέλες που δεν έχουν μεταφερθεί ακόμα
-  (Βελτιστοποίηση/Υγεία/Δίκτυο/Επιπλέον Ρυθμίσεις/Bloat/Προηγμένα/Σύστημα) - δείχνει ξεκάθαρα ποια
+- **21 θέματα** (`ThemeCatalog.cs`/`ThemeColors.cs`): κουμπί επιλογής θέματος (`CboTheme`) δίπλα στο
+  Light/Dark Mode στη γραμμή τίτλου, ρητό αίτημα χρήστη - όλες οι παλέτες χρωμάτων του
+  `$themeNamesList` (Get-ThemeColors) μεταφέρθηκαν αυτούσιες. Το `ThemeManager.ApplyTheme` θέτει τα
+  brush resources απευθείας (αντικατέστησε το αρχικό Dark.xaml/Light.xaml swap σύστημα - λιγότερα
+  αρχεία να συγχρονίζονται με 21 θέματα). ΣΗΜΕΙΩΣΗ: μόνο το "Windows 11 Fluent" έχει πραγματική Light
+  παραλλαγή (η μόνη που το Optimizer.ps1 έχτισε πλήρως) - τα άλλα 20 θέματα παραμένουν στη σκούρα
+  παλέτα τους ανεξάρτητα από το Light/Dark toggle.
+- `Views/OptimizationView.xaml(.cs)`: καρτέλα Βελτιστοποίηση. Office Mode/Gaming Mode αλλάζουν
+  πραγματικά το πλάνο ενέργειας Windows (`Services/PowerModeService.cs`, powercfg SCHEME_BALANCED/
+  SCHEME_MIN) - ΣΗΜΕΙΩΣΗ ΕΙΛΙΚΡΙΝΕΙΑΣ: μόνο αυτό το κομμάτι μεταφέρθηκε, ΟΧΙ τα Start menu
+  suggestions/Explorer restart (Office Mode) ή Network Throttling/HAGS/VBS toggle (Gaming Mode) του
+  WinForms. Διαχειριστής Ενημερώσεων Λογισμικού (`Services/WingetService.cs`): πραγματική σάρωση
+  `winget upgrade --include-unknown` + επιλεκτική αναβάθμιση - μεταφέρθηκε ΜΟΝΟ η ανάλυση του βασικού
+  πίνακα winget (fixed-width column parsing, ίδια λογική με το `Parse-WingetTableSection`)· η
+  ξεχωριστή κλήση `--source msstore` και η συγχώνευση pip/npm/choco/κ.λπ. (OTHERPM_JSON section) του
+  WinForms δεν έχουν μεταφερθεί ακόμα, άρα η λίστα θα δείχνει λιγότερα αποτελέσματα.
+  ΝΕΟ κοινόχρηστο `ToggleSwitchStyle` (Themes/Styles.xaml) - θα ξαναχρησιμοποιηθεί σε κάθε επόμενη
+  καρτέλα με tweak toggles.
+- `Views/PlaceholderView.xaml(.cs)`: γενικό stand-in για τις 6 καρτέλες που δεν έχουν μεταφερθεί ακόμα
+  (Υγεία/Δίκτυο/Επιπλέον Ρυθμίσεις/Bloat/Προηγμένα/Σύστημα) - δείχνει ξεκάθαρα ποια
   καρτέλα λείπει, ώστε το app shell να είναι ΗΔΗ πλήρες/buildable ενώ το περιεχόμενο προστίθεται
   σταδιακά.
 

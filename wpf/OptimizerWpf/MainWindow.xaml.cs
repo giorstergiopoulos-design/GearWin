@@ -34,6 +34,7 @@ public partial class MainWindow : Window
         ContentHost.Content = tag switch
         {
             "Home" => new HomeView(),
+            "Optimization" => new OptimizationView(),
             _ => new PlaceholderView(rb.Content?.ToString() ?? tag)
         };
     }
