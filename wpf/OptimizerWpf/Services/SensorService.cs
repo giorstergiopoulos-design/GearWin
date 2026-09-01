@@ -32,6 +32,7 @@ namespace OptimizerWpf.Services
                     IsCpuEnabled = true,
                     IsGpuEnabled = true,
                     IsStorageEnabled = true,
+                    IsMemoryEnabled = true,
                 };
                 _computer.Open();
                 return _computer;
@@ -56,12 +57,29 @@ namespace OptimizerWpf.Services
             }
         }
 
-        public static int? GetCpuTemperatureCelsius() => GetTemperature(HardwareType.Cpu, preferredNameContains: "Package");
+        // ΔΙΟΡΘΩΣΗ (χρήστης ανέφερε: "η θερμοκρασία... φαίνεται η ίδια σε CPU/GPU"): "Package" από
+        // μόνο του είναι Intel-στυλ ονομασία - στο AMD ο αντίστοιχος αισθητήρας λέγεται "Tctl/Tdie"
+        // ή "Core (Tctl/Tdie)", ΔΕΝ ταίριαζε ποτέ σε AMD σύστημα, οπότε έπεφτε σε
+        // `sensors.FirstOrDefault()` (ΟΠΟΙΟΣΔΗΠΟΤΕ αισθητήρας θερμοκρασίας βρεθεί πρώτος, μπορεί να
+        // είναι ασήμαντος - π.χ. VRM/SoC αντί για τον πυρήνα). Τώρα δοκιμάζει πολλαπλά γνωστά
+        // ονόματα (Intel ΚΑΙ AMD) με τη σειρά.
+        private static readonly string[] CpuPackageNames = { "Package", "Tctl", "Tdie", "CPU Die", "Core Average", "Core Max" };
+        private static readonly string[] GpuCoreNames = { "GPU Core", "Core", "Hot Spot", "Junction" };
+
+        public static int? GetCpuTemperatureCelsius() => GetTemperature(HardwareType.Cpu, CpuPackageNames);
 
         public static int? GetGpuTemperatureCelsius() =>
-            GetTemperature(HardwareType.GpuNvidia, null) ??
-            GetTemperature(HardwareType.GpuAmd, null) ??
-            GetTemperature(HardwareType.GpuIntel, null);
+            GetTemperature(HardwareType.GpuNvidia, GpuCoreNames) ??
+            GetTemperature(HardwareType.GpuAmd, GpuCoreNames) ??
+            GetTemperature(HardwareType.GpuIntel, GpuCoreNames);
+
+        // ΔΙΟΡΘΩΣΗ (χρήστης ανέφερε: "στη RAM δεν φαίνεται τπτ") - καμία τυπική/καθολικά προσβάσιμη
+        // πηγή θερμοκρασίας RAM υπάρχει σε commodity hardware (μόνο συγκεκριμένα SPD hub chips σε
+        // RGB RAM kits) - ΑΥΤΟ παραμένει αλήθεια, αλλά το tile δεν είχε καν ΓΡΑΜΜΗ θερμοκρασίας
+        // (ούτε καν "—"), ασυνεπές με τα άλλα 3 tiles. Τώρα δοκιμάζεται ΚΙ αυτό μέσω
+        // HardwareType.Memory (σπάνια θα βρει κάτι, αλλά αν το hardware το υποστηρίζει θα
+        // εμφανιστεί) - αλλιώς δείχνει τίμια "—" σαν τα υπόλοιπα, όχι πια τίποτα.
+        public static int? GetRamTemperatureCelsius() => GetTemperature(HardwareType.Memory, null);
 
         // Δεν υπάρχει άμεση αντιστοίχιση "γράμμα δίσκου -> LibreHardwareMonitor storage hardware" -
         // ταιριάζει με βάση το ήδη γνωστό μοντέλο δίσκου (DriveTypeService.GetDiskModel), ίδιο μοτίβο
@@ -85,8 +103,7 @@ namespace OptimizerWpf.Services
                     : null;
                 match ??= storageHw[0];
 
-                var sensor = match.Sensors.FirstOrDefault(s => s.SensorType == SensorType.Temperature && s.Value.HasValue);
-                return sensor?.Value.HasValue == true ? (int)Math.Round(sensor.Value!.Value) : null;
+                return PickTemperature(match, null);
             }
             catch
             {
@@ -94,7 +111,7 @@ namespace OptimizerWpf.Services
             }
         }
 
-        private static int? GetTemperature(HardwareType type, string? preferredNameContains)
+        private static int? GetTemperature(HardwareType type, string[]? preferredNames)
         {
             var computer = GetComputer();
             if (computer == null) return null;
@@ -103,18 +120,33 @@ namespace OptimizerWpf.Services
                 RefreshAll(computer);
                 var hw = computer.Hardware.FirstOrDefault(h => h.HardwareType == type);
                 if (hw == null) return null;
-
-                var sensors = hw.Sensors.Where(s => s.SensorType == SensorType.Temperature && s.Value.HasValue).ToList();
-                var preferred = preferredNameContains != null
-                    ? sensors.FirstOrDefault(s => s.Name.Contains(preferredNameContains, StringComparison.OrdinalIgnoreCase))
-                    : null;
-                var sensor = preferred ?? sensors.FirstOrDefault();
-                return sensor?.Value.HasValue == true ? (int)Math.Round(sensor.Value!.Value) : null;
+                return PickTemperature(hw, preferredNames);
             }
             catch
             {
                 return null;
             }
+        }
+
+        // Δοκιμάζει κάθε προτιμώμενο όνομα ΜΕ ΤΗ ΣΕΙΡΑ (πρώτο match κερδίζει) πριν καταλήξει σε
+        // "οποιοσδήποτε αισθητήρας θερμοκρασίας βρεθεί πρώτος" - αποφεύγει να πιάσει τυχαία έναν
+        // ασήμαντο αισθητήρα (π.χ. VRM/SoC) όταν το προτιμώμενο όνομα δεν ταιριάζει στη
+        // συγκεκριμένη ονοματολογία του κατασκευαστή (Intel vs AMD κ.λπ.).
+        private static int? PickTemperature(IHardware hw, string[]? preferredNames)
+        {
+            var sensors = hw.Sensors.Where(s => s.SensorType == SensorType.Temperature && s.Value.HasValue).ToList();
+            if (sensors.Count == 0) return null;
+
+            if (preferredNames != null)
+            {
+                foreach (var name in preferredNames)
+                {
+                    var match = sensors.FirstOrDefault(s => s.Name.Contains(name, StringComparison.OrdinalIgnoreCase));
+                    if (match != null) return (int)Math.Round(match.Value!.Value);
+                }
+            }
+
+            return (int)Math.Round(sensors[0].Value!.Value);
         }
     }
 }

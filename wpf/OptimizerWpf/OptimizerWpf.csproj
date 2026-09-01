@@ -19,7 +19,10 @@
          είναι το καθιερωμένο, ανοιχτού κώδικα (MIT) εργαλείο που όλη η βιομηχανία χρησιμοποιεί γι'
          αυτό ακριβώς - διαβάζει αισθητήρες απευθείας (χρειάζεται Administrator, το οποίο η εφαρμογή
          ήδη απαιτεί από το app.manifest). -->
-    <PackageReference Include="LibreHardwareMonitorLib" Version="0.9.4" />
+    <!-- ΔΙΟΡΘΩΣΗ (χρήστης ανέφερε: "στους δίσκους δεν φαίνεται τπτ") - αναβαθμίστηκε σε 0.9.6 (από
+         0.9.4): επιβεβαιωμένο από το ίδιο το project ότι πρόσφατα διορθώθηκαν ακριβώς NVMe
+         θερμοκρασία sensors (ο δίσκος σε αυτό το μηχάνημα είναι NVMe - "WD Blue SN580"). -->
+    <PackageReference Include="LibreHardwareMonitorLib" Version="0.9.6" />
   </ItemGroup>
 
 </Project>

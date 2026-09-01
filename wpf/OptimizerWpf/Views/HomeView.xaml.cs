@@ -53,6 +53,7 @@ namespace OptimizerWpf.Views
             _ = RefreshHealthScoreAsync();
             _ = RefreshCpuTemperatureAsync();
             _ = RefreshGpuTemperatureAsync();
+            _ = RefreshRamTemperatureAsync();
             _ = LoadGpuNameAsync();
 
             // ΔΙΟΡΘΩΣΗ ("ελάφρυνση εφαρμογής"): κάθε επιστροφή στην Αρχική δημιουργεί ΝΕΟ HomeView
@@ -137,12 +138,17 @@ namespace OptimizerWpf.Views
             StatusService.SetBusy($"Ανίχνευση τύπου δίσκου για {drive}...");
             var kind = await Task.Run(() => DriveTypeService.Detect(drive));
             StatusService.SetIdle("Έτοιμο για χρήση");
+            // ΔΙΟΡΘΩΣΗ (χρήστης ανέφερε: "ζήτησα διαφορετικά εικονίδια για κάθε είδος δίσκου όταν
+            // γίνεται η εναλλαγή") - το "Unknown" (ανίχνευση τύπου απέτυχε) χρησιμοποιούσε ΤΟ ΙΔΙΟ
+            // glyph+χρώμα με το HDD - αν ένας δίσκος ανιχνευόταν Unknown, η εναλλαγή σε/από αυτόν
+            // δεν έδειχνε ΚΑΜΙΑ οπτική αλλαγή, ενισχύοντας ακριβώς την εντύπωση "δεν αλλάζει τίποτα".
+            // Τώρα ξεχωριστό, ουδέτερο γκρι glyph.
             var (glyph, label, c1, c2, c3) = kind switch
             {
                 PhysicalDriveKind.Ssd => ("\U0001F5B4", "SSD", Color.FromRgb(140, 255, 210), Color.FromRgb(0, 191, 165), Color.FromRgb(0, 105, 92)),
                 PhysicalDriveKind.Hdd => ("\U0001F4BF", "HDD", Color.FromRgb(255, 213, 140), Color.FromRgb(255, 152, 0), Color.FromRgb(191, 100, 0)),
                 PhysicalDriveKind.Usb => ("\U0001F50C", "USB", Color.FromRgb(200, 170, 255), Color.FromRgb(140, 90, 220), Color.FromRgb(90, 50, 160)),
-                _ => ("\U0001F4BF", "", Color.FromRgb(255, 213, 140), Color.FromRgb(255, 152, 0), Color.FromRgb(191, 100, 0)),
+                _ => ("❓", "", Color.FromRgb(210, 210, 210), Color.FromRgb(140, 140, 140), Color.FromRgb(90, 90, 90)),
             };
 
             TxtDiskIcon.Text = glyph;
@@ -174,6 +180,12 @@ namespace OptimizerWpf.Views
         {
             var temp = await Task.Run(SensorService.GetGpuTemperatureCelsius);
             TxtGpuTemp.Text = temp.HasValue ? $"{temp}°C" : "—";
+        }
+
+        private async Task RefreshRamTemperatureAsync()
+        {
+            var temp = await Task.Run(SensorService.GetRamTemperatureCelsius);
+            TxtRamTemp.Text = temp.HasValue ? $"{temp}°C" : "—";
         }
 
         // Live κάθε 1s - CPU/RAM/GPU αλλάζουν πραγματικά μέσα σε δευτερόλεπτα.
