@@ -1,0 +1,90 @@
+<Window x:Class="OptimizerWpf.MainWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:local="clr-namespace:OptimizerWpf"
+        mc:Ignorable="d"
+        Title="Windows 11 Maintenance &amp; Optimizer Tool (WPF Preview)"
+        Height="800" Width="1280" MinHeight="600" MinWidth="1000"
+        WindowStartupLocation="CenterScreen"
+        Background="{DynamicResource MainBgBrush}">
+    <!--
+        Stage 1 of the WPF migration (see HANDOFF.md section on the migration plan). This is the
+        app shell only: title bar, tab navigation, content host, status bar. Only the Home tab is
+        fully ported so far - the rest are placeholder stubs, ported one at a time in later sessions.
+        Unlike Optimizer.ps1's canvas/letterbox/Set-CanvasScale system, resizing/maximizing here is
+        handled natively by WPF's layout engine (Grid with Star rows/columns) - there is no
+        baseline-capture-and-multiply scaling code to get wrong, which is what caused several of
+        tonight's WinForms bugs (tab strip misalignment on maximize, unscaled owner-drawn text).
+    -->
+    <Grid>
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="*"/>
+            <RowDefinition Height="Auto"/>
+        </Grid.RowDefinitions>
+
+        <!-- ===== Title bar ===== -->
+        <Grid Grid.Row="0" Margin="24,16,24,8">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="Auto"/>
+                <ColumnDefinition Width="*"/>
+                <ColumnDefinition Width="Auto"/>
+            </Grid.ColumnDefinitions>
+
+            <StackPanel Grid.Column="0" Orientation="Horizontal" VerticalAlignment="Center">
+                <Border Width="36" Height="36" CornerRadius="8" Background="{DynamicResource AccentBrush}" Margin="0,0,12,0">
+                    <TextBlock Text="&#x2699;" FontSize="18" Foreground="White" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                </Border>
+                <StackPanel VerticalAlignment="Center">
+                    <StackPanel Orientation="Horizontal">
+                        <TextBlock Text="Windows 11 Maintenance " FontSize="20" FontWeight="Bold" Foreground="{DynamicResource TextBrush}"/>
+                        <TextBlock Text="Optimizer Tool" FontSize="20" FontWeight="Bold" Foreground="{DynamicResource TextBrush}"/>
+                    </StackPanel>
+                    <TextBlock Text="v0.1 WPF Preview" FontSize="11" Foreground="{DynamicResource SubTextBrush}"/>
+                </StackPanel>
+            </StackPanel>
+
+            <TextBox x:Name="TxtSearch" Grid.Column="1" Width="260" Height="34" HorizontalAlignment="Right"
+                     Margin="0,0,16,0" VerticalContentAlignment="Center" Padding="8,0"
+                     Background="{DynamicResource CardBgBrush}" Foreground="{DynamicResource TextBrush}"
+                     BorderBrush="{DynamicResource CardBorderBrush}"/>
+
+            <StackPanel Grid.Column="2" Orientation="Horizontal" VerticalAlignment="Center">
+                <Button x:Name="BtnLanguage" Content="&#x1F310;" Width="36" Height="36" Margin="0,0,8,0" Style="{StaticResource FlatButtonStyle}"/>
+                <Button x:Name="BtnHamburger" Content="&#x2261;" Width="36" Height="36" Margin="0,0,8,0" Style="{StaticResource FlatButtonStyle}"/>
+                <Button x:Name="BtnThemeToggle" Width="120" Height="36" Style="{StaticResource FlatButtonStyle}" Click="BtnThemeToggle_Click">
+                    <TextBlock x:Name="TxtThemeToggle" Text="&#x2600; Light Mode"/>
+                </Button>
+            </StackPanel>
+        </Grid>
+
+        <!-- ===== Tab strip ===== -->
+        <StackPanel Grid.Row="1" Orientation="Horizontal" Margin="24,0,24,12" x:Name="TabStrip">
+            <RadioButton x:Name="TabHome" Content="Αρχική" Tag="Home" Style="{StaticResource TabPillStyle}" Checked="TabButton_Checked"/>
+            <RadioButton Content="Βελτιστοποίηση" Tag="Optimization" Style="{StaticResource TabPillStyle}" Checked="TabButton_Checked"/>
+            <RadioButton Content="Υγεία &amp; Συντήρηση" Tag="Health" Style="{StaticResource TabPillStyle}" Checked="TabButton_Checked"/>
+            <RadioButton Content="Δίκτυο &amp; Ασφάλεια" Tag="Network" Style="{StaticResource TabPillStyle}" Checked="TabButton_Checked"/>
+            <RadioButton Content="Επιπλέον Ρυθμίσεις" Tag="Tweaks" Style="{StaticResource TabPillStyle}" Checked="TabButton_Checked"/>
+            <RadioButton Content="Εφαρμογές &amp; Bloat" Tag="Bloatware" Style="{StaticResource TabPillStyle}" Checked="TabButton_Checked"/>
+            <RadioButton Content="Προηγμένα Εργαλεία" Tag="Advanced" Style="{StaticResource TabPillStyle}" Checked="TabButton_Checked"/>
+            <RadioButton Content="Σύστημα" Tag="System" Style="{StaticResource TabPillStyle}" Checked="TabButton_Checked"/>
+        </StackPanel>
+
+        <!-- ===== Content host ===== -->
+        <Border Grid.Row="2" Margin="24,0,24,12" Background="{DynamicResource MainBgBrush}">
+            <ContentControl x:Name="ContentHost"/>
+        </Border>
+
+        <!-- ===== Status bar ===== -->
+        <Border Grid.Row="3" Background="{DynamicResource CardBgBrush}" Height="46">
+            <Grid Margin="24,0">
+                <TextBlock x:Name="TxtStatus" Text="Κατάσταση: Έτοιμο για χρήση (WPF Preview)"
+                           VerticalAlignment="Center" HorizontalAlignment="Left"
+                           FontSize="11" FontStyle="Italic" Foreground="{DynamicResource StatusTextBrush}"/>
+            </Grid>
+        </Border>
+    </Grid>
+</Window>

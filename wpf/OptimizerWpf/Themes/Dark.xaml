@@ -1,0 +1,29 @@
+<ResourceDictionary xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+                    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+
+    <!-- Windows 11 Fluent (Dark) - matches Get-ThemeColors "Windows 11 Fluent" dark branch in Optimizer.ps1 -->
+    <Color x:Key="MainBgColor">#FF202020</Color>
+    <Color x:Key="TabBgColor">#FF282828</Color>
+    <Color x:Key="TabSelectColor">#FF323232</Color>
+    <Color x:Key="TextColor">#FFFFFFFF</Color>
+    <Color x:Key="SubTextColor">#FFB4B4B4</Color>
+    <Color x:Key="StatusTextColor">#FF0078D4</Color>
+    <Color x:Key="CardBgColor">#FF282828</Color>
+    <Color x:Key="CardBorderColor">#FF3C3C3C</Color>
+    <Color x:Key="BtnDefaultColor">#FF2D2D2D</Color>
+    <Color x:Key="BtnHoverColor">#FF3C3C3C</Color>
+    <Color x:Key="AccentColor">#FF0078D4</Color>
+
+    <SolidColorBrush x:Key="MainBgBrush" Color="{StaticResource MainBgColor}"/>
+    <SolidColorBrush x:Key="TabBgBrush" Color="{StaticResource TabBgColor}"/>
+    <SolidColorBrush x:Key="TabSelectBrush" Color="{StaticResource TabSelectColor}"/>
+    <SolidColorBrush x:Key="TextBrush" Color="{StaticResource TextColor}"/>
+    <SolidColorBrush x:Key="SubTextBrush" Color="{StaticResource SubTextColor}"/>
+    <SolidColorBrush x:Key="StatusTextBrush" Color="{StaticResource StatusTextColor}"/>
+    <SolidColorBrush x:Key="CardBgBrush" Color="{StaticResource CardBgColor}"/>
+    <SolidColorBrush x:Key="CardBorderBrush" Color="{StaticResource CardBorderColor}"/>
+    <SolidColorBrush x:Key="BtnDefaultBrush" Color="{StaticResource BtnDefaultColor}"/>
+    <SolidColorBrush x:Key="BtnHoverBrush" Color="{StaticResource BtnHoverColor}"/>
+    <SolidColorBrush x:Key="AccentBrush" Color="{StaticResource AccentColor}"/>
+
+</ResourceDictionary>
