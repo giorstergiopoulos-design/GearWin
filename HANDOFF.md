@@ -446,6 +446,44 @@ Batch διορθώσεων μετά από αναφορά χρήστη με scre
 
 `dotnet build` (0/0) + πραγματική εκτέλεση (χωρίς crash) επιβεβαιώθηκαν πριν το commit.
 
+## 0.4δ WPF: πλήρες Office/Gaming Mode + winget msstore/other-package-manager merge (2 από τα deferred items ολοκληρώθηκαν)
+
+Ολοκλήρωση 2 από τα ρητά καταγεγραμμένα deferred items (§0.4β/§0.4γ):
+
+**1. Πλήρες Office Mode / Gaming Mode** (`Services/PowerModeService.cs`, πλήρης port του
+`Set-OfficeMode`/`Disable-OfficeMode`/`Set-GamingMode`/`Disable-GamingMode`, ~10855-10946): πέρα από
+το powercfg plan-switch που υπήρχε ήδη, τώρα εφαρμόζονται ΚΑΙ όλα τα registry tweaks (οπτικά εφέ,
+SmartScreen, Start menu suggestions/tips για Office Mode· Game Mode/Game DVR, Network Throttling,
+HAGS, Win32PrioritySeparation, προσωρινή απενεργοποίηση VBS/HVCI για Gaming Mode) ΚΑΙ η επανεκκίνηση
+Explorer στην απενεργοποίηση - ίδια ακριβώς registry keys/τιμές με το ps1 original. `SetRegSafe`
+(C# helper, `Microsoft.Win32.Registry`) καταπίνει σφάλματα ανά key ακριβώς όπως το `Set-RegSafe` του
+ps1 (ένα αποτυχημένο HKLM key λόγω έλλειψης elevation δεν σταματάει τα υπόλοιπα). Το status bar
+(`StatusService`) ενημερώνεται τώρα γύρω από κάθε toggle. ΣΗΜΕΙΩΣΗ ΕΙΛΙΚΡΙΝΕΙΑΣ (αμετάβλητη): η
+εφαρμογή δεν ζητάει elevation - τα HKLM keys θα αποτύχουν σιωπηλά χωρίς Administrator, όπως θα
+συνέβαινε και στο ps1 αν δεν έτρεχε πάντα elevated.
+
+**2. Winget msstore + 10 άλλοι package managers** (`Services/WingetService.cs`, πλήρης port του
+`Complete-WingetListLoad`/`Get-UpgradeCommandForSource`, ~11112-11760): το `WingetUpdate` record
+απέκτησε πεδίο `Source`. Η σάρωση τώρα καλεί ΚΑΙ το επίσημο Microsoft Store CLI (`store updates` -
+ίδιο parsing με box-drawing `│` separator ή whitespace, ίδιο header-detection) ΚΑΙ τους 10 άλλους
+providers (pip/npm[+global]/pnpm[+global]/chocolatey/scoop/gem/cargo/dotnet/psmodule/composer) -
+καθένας best-effort (`Get-Command`-equivalent: αν το `Process.Start` πετάξει `Win32Exception`
+σημαίνει "δεν είναι εγκατεστημένο", αγνοείται σιωπηλά, ΔΕΝ σταματάει τους υπόλοιπους). Συγχώνευση με
+αφαίρεση διπλότυπων ίδια με το ps1 (`HashSet` από Id για winget/msstore, `"$Source:$Id"` για τους
+άλλους providers). Το `psmodule` provider καλεί εσωτερικά `powershell.exe` (η αναζήτηση εκδόσεων στο
+PSGallery είναι εγγενώς PowerShell tooling, ίδιο σκεπτικό με το γιατί το antίστοιχο upgrade command
+ήδη περνούσε από PowerShell). `GetUpgradeCommandForSource` προστέθηκε επίσης - η "Αναβάθμιση
+Επιλεγμένων" τώρα δρομολογεί τη ΣΩΣΤΗ εντολή αναβάθμισης ανά provider (π.χ. `pip install --upgrade`,
+`npm update`, `choco upgrade`), όχι πάντα `winget upgrade`. Η κάρτα κάθε αναβάθμισης στο UI δείχνει
+πλέον και το Source (π.χ. "· npm"). ΠΡΟΣΟΧΗ: η σάρωση τρέχει έως 12 εξωτερικές διεργασίες
+διαδοχικά (κάθε μία με ανεξάρτητο timeout 20-60s ώστε μία κολλημένη να μην μπλοκάρει τις υπόλοιπες) -
+μπορεί να διαρκέσει αισθητά περισσότερο από πριν σε συστήματα με πολλούς εγκατεστημένους package
+managers· δεν δοκιμάστηκε ζωντανά με πραγματικά εγκατεστημένα pip/npm/κ.λπ. (μόνο `dotnet build` +
+εκκίνηση εφαρμογής χωρίς crash) - ο χρήστης πρέπει να το δοκιμάσει με "Σάρωση" στην καρτέλα
+Βελτιστοποίηση για πλήρη επιβεβαίωση.
+
+`dotnet build` (0/0) + πραγματική εκτέλεση (χωρίς crash) επιβεβαιώθηκαν πριν το commit.
+
 ## 0. Σχέδιο Αρχιτεκτονικής: Driver Updater πολλαπλών πηγών (για v2.2.0 — ΔΕΝ έχει υλοποιηθεί ακόμα)
 
 Ο χρήστης έδωσε ρητή, λεπτομερή κατεύθυνση αρχιτεκτονικής (βλ. πλήρη συζήτηση στο ίδιο session) για το πώς πρέπει να ξαναχτιστεί ο μηχανισμός Driver Updates (τρέχον v2.1.1: μόνο SDI/SDIO, βλ. καρτέλα Βελτιστοποίηση). Σύνοψη της κατεύθυνσης — **να ακολουθηθεί όταν ξεκινήσει η πραγματική υλοποίηση**, μην ξαναρωτήσεις τον χρήστη τα βασικά:

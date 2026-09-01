@@ -5,10 +5,9 @@
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
              mc:Ignorable="d">
     <!--
-        Stage 2 vertical slice: the Βελτιστοποίηση (Optimization) tab. Office Mode/Gaming Mode
-        toggles switch the real Windows power plan (see PowerModeService) - the WinForms version's
-        extra registry/VBS/Explorer-restart work behind those toggles isn't ported yet (see the
-        honesty note in PowerModeService.cs). Winget Updates Manager runs a real "winget upgrade"
+        Βελτιστοποίηση (Optimization) tab. Office Mode/Gaming Mode toggles are now a full port of
+        Optimizer.ps1's Set-OfficeMode/Set-GamingMode (power plan + registry tweaks + Explorer restart
+        on disable) - see PowerModeService.cs. Winget Updates Manager runs a real "winget upgrade"
         scan (see WingetService) and can upgrade selected packages.
     -->
     <ScrollViewer VerticalScrollBarVisibility="Auto">
@@ -39,7 +38,7 @@
                     </Grid.ColumnDefinitions>
                     <StackPanel Grid.Column="0">
                         <TextBlock Text="Gaming Mode &amp; Ultimate Performance" Style="{StaticResource CardTitleStyle}" Margin="0,0,0,6"/>
-                        <TextBlock Text="Μέγιστες επιδόσεις CPU/GPU. (HAGS/VBS/Game DVR δεν έχουν μεταφερθεί ακόμα)." Style="{StaticResource SubTextStyle}"/>
+                        <TextBlock Text="Μέγιστες επιδόσεις CPU/GPU, HAGS, Game DVR, Network Throttling off (VBS απενεργοποιείται προσωρινά)." Style="{StaticResource SubTextStyle}"/>
                     </StackPanel>
                     <ToggleButton x:Name="ToggleGamingMode" Grid.Column="1" VerticalAlignment="Center"
                                   Style="{StaticResource ToggleSwitchStyle}" Click="ToggleGamingMode_Click"/>
@@ -78,6 +77,8 @@
                                                         <Run Text="{Binding Update.CurrentVersion, Mode=OneWay}"/>
                                                         <Run Text=" &#x2192; Νέα Έκδοση: "/>
                                                         <Run Text="{Binding Update.AvailableVersion, Mode=OneWay}"/>
+                                                        <Run Text=" &#x00B7; "/>
+                                                        <Run Text="{Binding Update.Source, Mode=OneWay}" FontStyle="Italic"/>
                                                     </TextBlock>
                                                 </StackPanel>
                                             </StackPanel>

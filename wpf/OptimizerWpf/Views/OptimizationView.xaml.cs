@@ -19,13 +19,26 @@ namespace OptimizerWpf.Views
             ListWingetUpdates.ItemsSource = _updates;
         }
 
+        // Πλέον καλεί το ΠΛΗΡΕΣ Office/Gaming Mode (Set-OfficeMode/Disable-OfficeMode κ.λπ. του
+        // Optimizer.ps1) αντί για μόνο powercfg - βλ. PowerModeService.cs. Επανεκκίνηση Explorer
+        // (Απενεργοποίηση και των δύο modes) προκαλεί σύντομο "τρεμόπαιγμα" της επιφάνειας εργασίας -
+        // αναμενόμενο, ίδιο με το WinForms original.
         private void ToggleOfficeMode_Click(object sender, RoutedEventArgs e)
         {
-            // Turning either mode off (or Office Mode on) both mean "back to Balanced" in this
-            // increment - see the honesty note in PowerModeService about what's not ported yet.
             var isOn = ToggleOfficeMode.IsChecked == true;
             if (isOn && ToggleGamingMode.IsChecked == true) ToggleGamingMode.IsChecked = false;
-            PowerModeService.SetBalancedPlan();
+            if (isOn)
+            {
+                StatusService.SetBusy("Ενεργοποίηση Office Mode...");
+                PowerModeService.SetOfficeMode();
+                StatusService.SetIdle("Το Office Mode ενεργοποιήθηκε επιτυχώς");
+            }
+            else
+            {
+                StatusService.SetBusy("Απενεργοποίηση Office Mode & επανεκκίνηση Explorer...");
+                PowerModeService.DisableOfficeMode();
+                StatusService.SetIdle("Το Office Mode απενεργοποιήθηκε & ο Explorer επανεκκινήθηκε");
+            }
         }
 
         private void ToggleGamingMode_Click(object sender, RoutedEventArgs e)
@@ -34,11 +47,15 @@ namespace OptimizerWpf.Views
             if (isOn)
             {
                 if (ToggleOfficeMode.IsChecked == true) ToggleOfficeMode.IsChecked = false;
-                PowerModeService.SetHighPerformancePlan();
+                StatusService.SetBusy("Ενεργοποίηση Gaming Mode...");
+                PowerModeService.SetGamingMode();
+                StatusService.SetIdle("Το Gaming Mode ενεργοποιήθηκε (συνιστάται επανεκκίνηση)");
             }
             else
             {
-                PowerModeService.SetBalancedPlan();
+                StatusService.SetBusy("Απενεργοποίηση Gaming Mode & επανεκκίνηση Explorer...");
+                PowerModeService.DisableGamingMode();
+                StatusService.SetIdle("Το Gaming Mode απενεργοποιήθηκε (χρειάζεται επανεκκίνηση PC για πλήρη επαναφορά VBS)");
             }
         }
 
@@ -80,7 +97,7 @@ namespace OptimizerWpf.Views
             foreach (var row in selected)
             {
                 TxtWingetStatus.Text = $"Αναβάθμιση {row.Update.Name}... ({succeeded.Count + failed.Count + 1}/{selected.Count})";
-                var ok = await WingetService.UpgradeAsync(row.Update.Id);
+                var ok = await WingetService.UpgradeAsync(row.Update.Id, row.Update.Source);
                 if (ok) { succeeded.Add(row.Update.Name); _updates.Remove(row); }
                 else { failed.Add(row.Update.Name); }
             }
