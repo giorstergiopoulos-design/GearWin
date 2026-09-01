@@ -5,30 +5,31 @@
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
              mc:Ignorable="d">
     <!--
-        Αυτόνομο, skin-agnostic πλευρικό μενού (ρητό αίτημα χρήστη): έχει ΤΟ ΙΔΙΟ περιεχόμενο με το
-        κλασικό μενού (Εργαλεία/Προβολή/Ρυθμίσεις/Βοήθεια, αντλημένο από το κοινό
-        ClassicMenuModel.Groups - βλ. ClassicMenuModel.cs) - όχι δική του, ξεχωριστή
-        κατηγοριοποίηση. Το περιεχόμενο χτίζεται στο code-behind (BuildItems) αντί για XAML
-        DataTemplate, ώστε κάθε leaf να γίνει είτε RadioButton (αν αντιστοιχεί σε καρτέλα - μέρος
-        της ομάδας "MainTabs"-like ενεργού highlight) είτε απλό Button (αν είναι "δεν έχει
-        μεταφερθεί ακόμα" ενέργεια σαν το Εργαλεία/Ρυθμίσεις/Βοήθεια), χωρίς την πολυπλοκότητα ενός
-        DataTemplateSelector. Καθαρά presentation + events (LeafClicked/PositionToggleRequested) - η
-        θέση (αριστερά/δεξιά, μέσω Grid.Column στο MainWindow) αποφασίζεται πάντα από τον owner.
-        Το ShowOnlyNavigationGroup (default false) υπάρχει ήδη έτοιμο για το μελλοντικό PC
-        Manager-equivalent skin, όπου το πλευρικό μενού θα δείχνει ΜΟΝΟ τις καρτέλες (χωρίς Εργαλεία/
-        Ρυθμίσεις/Βοήθεια) - το ΙΔΙΟ αυτό control θα μπορεί να το εξυπηρετήσει χωρίς αλλαγές.
+        Port ΤΟΥ ΠΡΑΓΜΑΤΙΚΟΥ μοντέρνου πλευρικού μενού του Optimizer.ps1 (Add-SidebarItem, βλ.
+        SidebarShortcuts.cs) - ΕΠΙΠΕΔΗ λίστα 6 τετραγωνισμένων pills (μεγάλο εικονίδιο + πλήρης
+        ετικέτα 2 γραμμών από κάτω), ΧΩΡΙΣ ομάδες/submenus, ΧΩΡΙΣ τις καρτέλες (αυτές έχουν ήδη τη
+        δική τους οριζόντια λωρίδα - ρητή διόρθωση χρήστη: "δεν θέλω τα submenus"/"άφησες τις
+        καρτέλες μέσα"). Καθαρά presentation + 1 event (ShortcutClicked) - το MainWindow αποφασίζει
+        τι σημαίνει κάθε κλικ (προς το παρόν πάντα "δεν έχει μεταφερθεί ακόμα", αφού κανένα από τα 6
+        δευτερεύοντα παράθυρα δεν έχει χτιστεί ακόμα στο WPF).
     -->
-    <Border x:Name="RootBorder" Background="{DynamicResource CardBgBrush}" BorderBrush="{DynamicResource CardBorderBrush}"
-            BorderThickness="1" CornerRadius="8" Padding="8" Width="240">
-        <DockPanel>
-            <Button x:Name="BtnFlip" DockPanel.Dock="Top" HorizontalAlignment="Right" Width="26" Height="26"
-                    Margin="0,0,0,8" Style="{StaticResource FlatButtonStyle}" Padding="0" Click="BtnFlip_Click"
-                    ToolTip="Εναλλαγή αριστερά/δεξιά">
-                <TextBlock Text="&#x21C4;" FontSize="12"/>
-            </Button>
-            <ScrollViewer VerticalScrollBarVisibility="Auto">
-                <StackPanel x:Name="ItemsHost"/>
-            </ScrollViewer>
-        </DockPanel>
+    <Border Background="{DynamicResource CardBgBrush}" BorderBrush="{DynamicResource CardBorderBrush}"
+            BorderThickness="1" CornerRadius="8" Padding="6">
+        <ScrollViewer VerticalScrollBarVisibility="Auto">
+            <ItemsControl x:Name="ListItems">
+                <ItemsControl.ItemTemplate>
+                    <DataTemplate>
+                        <Button Click="Shortcut_Click" Tag="{Binding}" Style="{StaticResource FlatButtonStyle}"
+                                Width="92" Height="96" Margin="0,0,0,6" Padding="0">
+                            <StackPanel HorizontalAlignment="Center" VerticalAlignment="Center">
+                                <TextBlock Text="{Binding Icon}" FontSize="28" HorizontalAlignment="Center" Margin="0,0,0,8"/>
+                                <TextBlock Text="{Binding Label}" TextWrapping="Wrap" TextAlignment="Center"
+                                           FontSize="11" Foreground="{DynamicResource TextBrush}" Width="80"/>
+                            </StackPanel>
+                        </Button>
+                    </DataTemplate>
+                </ItemsControl.ItemTemplate>
+            </ItemsControl>
+        </ScrollViewer>
     </Border>
 </UserControl>

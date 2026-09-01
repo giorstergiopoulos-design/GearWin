@@ -156,19 +156,18 @@
         </ScrollViewer>
 
         <!-- ===== Content row: πλευρικό μενού (προαιρετικό, toggle μέσω BtnHamburger) + content host =====
-             Το SidebarNav (Views/SidebarNav.xaml) αντλεί τα ΙΔΙΑ NavItems.All με το κλασικό μενού -
-             skin-agnostic σχεδιασμός, βλ. HANDOFF.md §0.4ζ. Η θέση (αριστερά/δεξιά) εναλλάσσεται με
-             το κουμπί εναλλαγής μέσα στο ίδιο το sidebar (βλ. Sidebar_PositionToggleRequested). -->
+             Το SidebarNav (Views/SidebarNav.xaml) είναι port του πραγματικού μοντέρνου πλευρικού
+             μενού του ps1 (Add-SidebarItem) - 6 επίπεδες συντομεύσεις προς δευτερεύοντα παράθυρα,
+             ΟΧΙ οι καρτέλες (αυτές έχουν ήδη τη δική τους λωρίδα). -->
         <Grid Grid.Row="3" Margin="24,0,24,12" x:Name="ContentRow">
             <Grid.ColumnDefinitions>
                 <ColumnDefinition x:Name="ColA" Width="0"/>
                 <ColumnDefinition x:Name="ColGap" Width="0"/>
-                <ColumnDefinition x:Name="ColB" Width="*"/>
+                <ColumnDefinition Width="*"/>
             </Grid.ColumnDefinitions>
             <views:SidebarNav x:Name="Sidebar" Grid.Column="0" Visibility="Collapsed"
-                               LeafClicked="Sidebar_LeafClicked"
-                               PositionToggleRequested="Sidebar_PositionToggleRequested"/>
-            <Border x:Name="ContentHostBorder" Grid.Column="2" Background="{DynamicResource MainBgBrush}">
+                               ShortcutClicked="Sidebar_ShortcutClicked"/>
+            <Border Grid.Column="2" Background="{DynamicResource MainBgBrush}">
                 <ContentControl x:Name="ContentHost"/>
             </Border>
         </Grid>

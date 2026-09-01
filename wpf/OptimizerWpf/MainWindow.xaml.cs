@@ -108,11 +108,6 @@ public partial class MainWindow : Window
     {
         if (sender is not RadioButton rb || rb.Tag is not string tag) return;
         ShowTabContent(tag, GetTabLabel(rb) ?? tag);
-        // TabStrip.Checked είναι ο "κόμβος" όπου καταλήγει ΚΑΘΕ πλοήγηση (κλασικό μενού, Ctrl+1..8,
-        // πλευρικό μενού - όλα ελέγχουν εδώ ένα RadioButton αντί να ξέρουν το ένα για το άλλο) -
-        // οπότε είναι το σωστό σημείο να ενημερωθεί ΚΑΙ το πλευρικό μενού ώστε να παραμένει πάντα σε
-        // συμφωνία με το ποια καρτέλα είναι πραγματικά ενεργή.
-        Sidebar?.SetActiveTag(tag);
     }
 
     // Tab pill Content is now an icon+text StackPanel (ρητό αίτημα χρήστη: εικονίδια στις καρτέλες),
@@ -181,11 +176,9 @@ public partial class MainWindow : Window
         else if (leaf.Action.NotPortedLabel != null) ShowNotPorted(leaf.Action.NotPortedLabel);
     }
 
-    private void Sidebar_LeafClicked(MenuLeaf leaf) => HandleLeafClick(leaf);
-
     // Κοινή δρομολόγηση: βρίσκει το αντίστοιχο RadioButton στη λωρίδα καρτελών και το τσεκάρει - το
-    // TabButton_Checked αναλαμβάνει από εκεί (ShowTabContent + ενημέρωση πλευρικού μενού), οπότε
-    // κλασικό μενού/πλευρικό μενού/Ctrl+1..8 ΔΕΝ χρειάζεται να ξέρουν τίποτα το ένα για το άλλο.
+    // TabButton_Checked αναλαμβάνει από εκεί (ShowTabContent), οπότε το κλασικό μενού/Ctrl+1..8 ΔΕΝ
+    // χρειάζεται να ξέρουν τίποτα το ένα για το άλλο.
     private void SelectTab(string tag)
     {
         foreach (var child in TabStrip.Children)
@@ -194,9 +187,12 @@ public partial class MainWindow : Window
         }
     }
 
+    // Το πλευρικό μενού (SidebarNav) είναι ΜΟΝΟ 6 συντομεύσεις προς δευτερεύοντα παράθυρα (βλ.
+    // SidebarShortcuts.cs) - κανένα από αυτά δεν έχει μεταφερθεί ακόμα στο WPF, οπότε κάθε κλικ
+    // δείχνει το ίδιο ειλικρινές "δεν έχει υλοποιηθεί ακόμα" μήνυμα με το κλασικό μενού.
+    private void Sidebar_ShortcutClicked(SidebarShortcut shortcut) => ShowNotPorted(shortcut.NotPortedLabel);
+
     private bool _sidebarVisible;
-    private bool _sidebarExpanded = true;
-    private bool _sidebarOnRight;
 
     private void BtnHamburger_Click(object sender, RoutedEventArgs e)
     {
@@ -204,28 +200,10 @@ public partial class MainWindow : Window
         ApplySidebarLayout();
     }
 
-    // Ρητό αίτημα χρήστη: το πλευρικό μενού πρέπει να μπορεί να εναλλάσσεται αριστερά/δεξιά - το
-    // κουμπί ⇄ μέσα στο ίδιο το SidebarNav ζητάει την εναλλαγή, το MainWindow (owner του layout)
-    // αποφασίζει τι σημαίνει αυτό σε στήλες του Grid.
-    private void Sidebar_PositionToggleRequested()
-    {
-        _sidebarOnRight = !_sidebarOnRight;
-        ApplySidebarLayout();
-    }
-
     private void ApplySidebarLayout()
     {
-        var sidebarCol = _sidebarOnRight ? 2 : 0;
-        var contentCol = _sidebarOnRight ? 0 : 2;
-        Grid.SetColumn(Sidebar, sidebarCol);
-        Grid.SetColumn(ContentHostBorder, contentCol);
-
-        var sidebarWidth = _sidebarVisible ? new GridLength(_sidebarExpanded ? 236 : 72) : new GridLength(0);
-        var gapWidth = _sidebarVisible ? new GridLength(12) : new GridLength(0);
-        ColA.Width = _sidebarOnRight ? new GridLength(1, GridUnitType.Star) : sidebarWidth;
-        ColB.Width = _sidebarOnRight ? sidebarWidth : new GridLength(1, GridUnitType.Star);
-        ColGap.Width = gapWidth;
-
+        ColA.Width = _sidebarVisible ? GridLength.Auto : new GridLength(0);
+        ColGap.Width = _sidebarVisible ? new GridLength(12) : new GridLength(0);
         Sidebar.Visibility = _sidebarVisible ? Visibility.Visible : Visibility.Collapsed;
     }
 
