@@ -91,7 +91,9 @@ namespace OptimizerWpf.Views
             var drive = CurrentDrive;
             if (drive == null) return;
 
+            StatusService.SetBusy($"Ανίχνευση τύπου δίσκου για {drive}...");
             var kind = await Task.Run(() => DriveTypeService.Detect(drive));
+            StatusService.SetIdle("Έτοιμο για χρήση");
             var (glyph, label, c1, c2, c3) = kind switch
             {
                 PhysicalDriveKind.Ssd => ("\U0001F5B4", "SSD", Color.FromRgb(140, 255, 210), Color.FromRgb(0, 191, 165), Color.FromRgb(0, 105, 92)),
@@ -218,9 +220,11 @@ namespace OptimizerWpf.Views
             if (CurrentDrive is not string driveName) return;
 
             TxtDiskAnalysisStatus.Text = $"Ανάλυση σε εξέλιξη για {driveName} - μπορεί να διαρκέσει λίγα λεπτά ανάλογα με το πλήθος αρχείων...";
+            StatusService.SetBusy($"Ανάλυση χώρου δίσκου {driveName}...");
             ListDiskCategories.ItemsSource = null;
 
             var result = await DiskAnalysisService.AnalyzeAsync(driveName);
+            StatusService.SetIdle("Έτοιμο για χρήση");
 
             TxtDiskAnalysisStatus.Text = $"Σύνολο χρησιμοποιημένου χώρου: {result.TotalUsedGb:0.0} GB";
             var maxGb = Math.Max(0.01, result.Categories.Max(c => c.SizeGb));
@@ -237,10 +241,12 @@ namespace OptimizerWpf.Views
         private async Task RefreshHealthScoreAsync()
         {
             TxtHealthLabel.Text = "Υπολογισμός...";
+            StatusService.SetBusy("Υπολογισμός βαθμολογίας υγείας συστήματος...");
             // HealthScoreService.Compute() does several WMI queries (Defender status, AV product,
             // restore points) which can take a noticeable moment - runs off the UI thread so the
             // window stays responsive while it's working (see the async-UI rule this project follows).
             var result = await Task.Run(HealthScoreService.Compute);
+            StatusService.SetIdle("Έτοιμο για χρήση");
 
             TxtHealthScore.Text = result.Score.ToString();
             var scoreColor = result.Score >= 80

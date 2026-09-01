@@ -1,6 +1,121 @@
 <ResourceDictionary xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
                     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
 
+    <!-- Κλασικό μενού - ΔΙΟΡΘΩΣΗ (χρήστης ανέφερε με screenshot: άσπρο/ανοιχτόχρωμο φόντο στο dark
+         mode): το native Menu/MenuItem submenu Popup στο WPF κρατάει ΠΑΝΤΑ το δικό του προεπιλεγμένο
+         (ανοιχτόχρωμο) φόντο ό,τι DynamicResource κι αν έχει το Foreground - ακριβώς το ίδιο πρόβλημα
+         που είχε λυθεί νωρίτερα για το ComboBox του theme picker (βλ. MainWindow.xaml). Λύση εδώ:
+         πλήρες retemplate και για τα δύο "ρόλους" (TopLevelHeader = τα "Εργαλεία/Προβολή/..." πάνω
+         στη γραμμή menu, SubmenuItem = οι επιλογές μέσα στο dropdown) με ρητό CardBgBrush στο Popup
+         και TextBrush/SubTextBrush παντού, ώστε να ακολουθεί σωστά και τα 21 θέματα + light/dark. Το
+         SubmenuItem template δείχνει πλέον ΚΑΙ το InputGestureText (Ctrl+1 κ.λπ.) σε ξεχωριστή στήλη
+         δεξιά - πριν υπήρχε μόνο ως ιδιότητα χωρίς οπτική αναπαράσταση στο default template. -->
+    <Style TargetType="MenuItem">
+        <Setter Property="Foreground" Value="{DynamicResource TextBrush}"/>
+        <Style.Triggers>
+            <Trigger Property="Role" Value="TopLevelHeader">
+                <Setter Property="Template">
+                    <Setter.Value>
+                        <ControlTemplate TargetType="MenuItem">
+                            <Grid>
+                                <Border x:Name="Bg" Background="Transparent" CornerRadius="4" Padding="10,6">
+                                    <ContentPresenter ContentSource="Header" RecognizesAccessKey="True" VerticalAlignment="Center"/>
+                                </Border>
+                                <Popup x:Name="Popup" Placement="Bottom" IsOpen="{TemplateBinding IsSubmenuOpen}"
+                                       AllowsTransparency="True" Focusable="False" PopupAnimation="Fade">
+                                    <Border Background="{DynamicResource CardBgBrush}" BorderBrush="{DynamicResource CardBorderBrush}"
+                                            BorderThickness="1" CornerRadius="6" Padding="3">
+                                        <StackPanel IsItemsHost="True"/>
+                                    </Border>
+                                </Popup>
+                            </Grid>
+                            <ControlTemplate.Triggers>
+                                <Trigger Property="IsHighlighted" Value="True">
+                                    <Setter TargetName="Bg" Property="Background" Value="{DynamicResource BtnHoverBrush}"/>
+                                </Trigger>
+                            </ControlTemplate.Triggers>
+                        </ControlTemplate>
+                    </Setter.Value>
+                </Setter>
+            </Trigger>
+            <Trigger Property="Role" Value="SubmenuItem">
+                <Setter Property="Template">
+                    <Setter.Value>
+                        <ControlTemplate TargetType="MenuItem">
+                            <Border x:Name="Bg" Background="Transparent" CornerRadius="4">
+                                <Grid Margin="4,2">
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="8"/>
+                                        <ColumnDefinition Width="*"/>
+                                        <ColumnDefinition Width="Auto"/>
+                                    </Grid.ColumnDefinitions>
+                                    <ContentPresenter Grid.Column="1" ContentSource="Header" RecognizesAccessKey="True" VerticalAlignment="Center" Margin="4,6"/>
+                                    <TextBlock Grid.Column="2" Text="{TemplateBinding InputGestureText}" Foreground="{DynamicResource SubTextBrush}"
+                                               Margin="16,6,10,6" VerticalAlignment="Center" FontSize="11"/>
+                                </Grid>
+                            </Border>
+                            <ControlTemplate.Triggers>
+                                <Trigger Property="IsHighlighted" Value="True">
+                                    <Setter TargetName="Bg" Property="Background" Value="{DynamicResource BtnHoverBrush}"/>
+                                </Trigger>
+                            </ControlTemplate.Triggers>
+                        </ControlTemplate>
+                    </Setter.Value>
+                </Setter>
+            </Trigger>
+        </Style.Triggers>
+    </Style>
+
+    <!-- Windows 11-style flat scrollbar (ρητό αίτημα χρήστη: "τα scroll bars είναι των κλασικων
+         windows και οχι των 11") - το default WPF ScrollBar template ΕΙΝΑΙ το παλιό, χοντρό,
+         γκρι στυλ με βελάκια πάνω/κάτω ανεξάρτητα από οποιοδήποτε DynamicResource θέμα εφαρμόζεται
+         αλλού· εφαρμόζεται αυτόματα ΠΑΝΤΟΥ (κάθε ScrollViewer το χρησιμοποιεί εσωτερικά μέσω
+         implicit style lookup) χωρίς να χρειάζεται retemplate του ίδιου του ScrollViewer. Λεπτή,
+         διάφανη λωρίδα + στρογγυλεμένο "thumb" - χωρίς βελάκια, όπως τα σύγχρονα scrollbars των
+         Windows 11. -->
+    <Style TargetType="{x:Type ScrollBar}">
+        <Setter Property="Background" Value="Transparent"/>
+        <Setter Property="Width" Value="12"/>
+        <Setter Property="MinWidth" Value="12"/>
+        <Setter Property="Template">
+            <Setter.Value>
+                <ControlTemplate TargetType="{x:Type ScrollBar}">
+                    <Grid Background="{TemplateBinding Background}">
+                        <Track x:Name="PART_Track" IsDirectionReversed="True" Orientation="{TemplateBinding Orientation}">
+                            <Track.Thumb>
+                                <Thumb>
+                                    <Thumb.Template>
+                                        <ControlTemplate TargetType="Thumb">
+                                            <Border Background="{DynamicResource CardBorderBrush}" CornerRadius="4" Margin="3"/>
+                                        </ControlTemplate>
+                                    </Thumb.Template>
+                                </Thumb>
+                            </Track.Thumb>
+                            <Track.DecreaseRepeatButton>
+                                <RepeatButton Command="ScrollBar.PageUpCommand" Opacity="0" Focusable="False"/>
+                            </Track.DecreaseRepeatButton>
+                            <Track.IncreaseRepeatButton>
+                                <RepeatButton Command="ScrollBar.PageDownCommand" Opacity="0" Focusable="False"/>
+                            </Track.IncreaseRepeatButton>
+                        </Track>
+                    </Grid>
+                    <ControlTemplate.Triggers>
+                        <Trigger Property="Orientation" Value="Horizontal">
+                            <Setter Property="Height" Value="12"/>
+                        </Trigger>
+                    </ControlTemplate.Triggers>
+                </ControlTemplate>
+            </Setter.Value>
+        </Setter>
+        <Style.Triggers>
+            <Trigger Property="Orientation" Value="Horizontal">
+                <Setter Property="Height" Value="12"/>
+                <Setter Property="MinHeight" Value="12"/>
+                <Setter Property="Width" Value="Auto"/>
+            </Trigger>
+        </Style.Triggers>
+    </Style>
+
     <!-- Card container: rounded border, CardBg fill - used by every metric/section card across tabs -->
     <Style x:Key="CardStyle" TargetType="Border">
         <Setter Property="Background" Value="{DynamicResource CardBgBrush}"/>
@@ -85,7 +200,13 @@
 
     <!-- Theme-aware row for the theme picker popup's ListBox (see MainWindow.xaml BtnThemePicker) -
          explicit Foreground/hover/selected backgrounds so it never depends on Windows' own system
-         colors, which is what made the previous ComboBox-based picker's text invisible. -->
+         colors, which is what made the previous ComboBox-based picker's text invisible.
+         ΔΙΟΡΘΩΣΗ (χρήστης ανέφερε: "δεν φαίνεται ποιο θέμα είναι επιλεγμένο"): η προηγούμενη εκδοχή
+         είχε μόνο μια αμυδρή αλλαγή φόντου (TabSelectBrush) στο επιλεγμένο στοιχείο, πολύ κοντινή
+         οπτικά στο hover χρώμα ώστε να ξεχωρίζει με μια ματιά. Τώρα το επιλεγμένο στοιχείο παίρνει
+         ΚΑΙ μια συμπαγή κάθετη λωρίδα AccentBrush αριστερά ΚΑΙ ένα ✓ δεξιά ΚΑΙ έντονη γραφή -
+         τρία ανεξάρτητα οπτικά στοιχεία, ώστε να είναι αδύνατο να περάσει απαρατήρητο σε
+         οποιοδήποτε από τα 21 θέματα. -->
     <Style TargetType="ListBoxItem">
         <Setter Property="Foreground" Value="{DynamicResource TextBrush}"/>
         <Setter Property="Padding" Value="10,6"/>
@@ -93,7 +214,18 @@
             <Setter.Value>
                 <ControlTemplate TargetType="ListBoxItem">
                     <Border x:Name="Bg" CornerRadius="4" Background="Transparent" Padding="{TemplateBinding Padding}">
-                        <ContentPresenter/>
+                        <Grid>
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="4"/>
+                                <ColumnDefinition Width="*"/>
+                                <ColumnDefinition Width="Auto"/>
+                            </Grid.ColumnDefinitions>
+                            <Border x:Name="AccentBar" Grid.Column="0" Width="4" CornerRadius="2" Background="Transparent" Margin="-10,-6,6,-6"/>
+                            <ContentPresenter x:Name="Content" Grid.Column="1"/>
+                            <TextBlock x:Name="Check" Grid.Column="2" Text="&#x2713;" FontWeight="Bold"
+                                       Foreground="{DynamicResource AccentBrush}" Margin="8,0,0,0"
+                                       VerticalAlignment="Center" Visibility="Collapsed"/>
+                        </Grid>
                     </Border>
                     <ControlTemplate.Triggers>
                         <Trigger Property="IsMouseOver" Value="True">
@@ -101,6 +233,9 @@
                         </Trigger>
                         <Trigger Property="IsSelected" Value="True">
                             <Setter TargetName="Bg" Property="Background" Value="{DynamicResource TabSelectBrush}"/>
+                            <Setter TargetName="AccentBar" Property="Background" Value="{DynamicResource AccentBrush}"/>
+                            <Setter TargetName="Check" Property="Visibility" Value="Visible"/>
+                            <Setter TargetName="Content" Property="TextElement.FontWeight" Value="Bold"/>
                         </Trigger>
                     </ControlTemplate.Triggers>
                 </ControlTemplate>

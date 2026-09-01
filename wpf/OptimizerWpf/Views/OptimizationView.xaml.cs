@@ -99,6 +99,8 @@ namespace OptimizerWpf.Views
             ProgressWinget.Visibility = busy ? Visibility.Visible : Visibility.Collapsed;
             BtnScanWinget.IsEnabled = !busy;
             BtnUpgradeSelected.IsEnabled = !busy;
+            if (busy) StatusService.SetBusy("Έλεγχος ενημερώσεων εφαρμογών (winget)...");
+            else StatusService.SetIdle("Έτοιμο για χρήση");
         }
     }
 

@@ -8,7 +8,8 @@
         Title="Windows 11 Maintenance &amp; Optimizer Tool (WPF Preview)"
         Height="800" Width="1280" MinHeight="600" MinWidth="1000"
         WindowStartupLocation="CenterScreen"
-        Background="{DynamicResource MainBgBrush}">
+        Background="{DynamicResource MainBgBrush}"
+        PreviewKeyDown="Window_PreviewKeyDown">
     <!--
         Stage 1 of the WPF migration (see HANDOFF.md section on the migration plan). This is the
         app shell only: title bar, tab navigation, content host, status bar. Only the Home tab is
@@ -32,7 +33,11 @@
              πραγματικά καρτέλες (πλήρως λειτουργικό) - τα υπόλοιπα ανοίγουν προσωρινό μήνυμα, αφού
              τα πραγματικά τους παράθυρα (Βοήθεια/Ιστορικό/ViVeTool/UWP Manager/Ρυθμίσεις Εμφάνισης)
              δεν έχουν μεταφερθεί ακόμα στο WPF - βλ. HANDOFF.md. -->
-        <Menu Grid.Row="0" Background="{DynamicResource TabBgBrush}" Foreground="{DynamicResource TextBrush}">
+        <!-- x:Name="ClassicMenu" + Ctrl+M (ρητό αίτημα χρήστη): το κλασικό μενού μπορεί να
+             κρυφτεί/εμφανιστεί με Ctrl+M - βλ. Window_PreviewKeyDown στο code-behind. Η ύπαρξή του
+             ως togglable στοιχείο (όχι απλά πάντα-ορατό) εξυπηρετεί και το μελλοντικό "Windows
+             Classic" skin, όπου θα είναι μέρος του χαρακτηριστικού κλασικού παραθύρου. -->
+        <Menu x:Name="ClassicMenu" Grid.Row="0" Background="{DynamicResource TabBgBrush}" Foreground="{DynamicResource TextBrush}">
             <MenuItem Header="🛠️ Εργαλεία">
                 <MenuItem Header="Κρυφές Λειτουργίες (ViVeTool)..." Click="MenuNotPorted_Click"/>
                 <MenuItem Header="Διαχείριση UWP Εφαρμογών..." Click="MenuNotPorted_Click"/>
@@ -99,12 +104,19 @@
                 <Button x:Name="BtnThemePicker" Width="36" Height="36" Margin="0,0,8,0" Style="{StaticResource FlatButtonStyle}" Click="BtnThemePicker_Click">
                     <TextBlock Text="&#x1F3A8;" FontSize="16"/>
                 </Button>
+                <!-- ΔΙΟΡΘΩΣΗ (χρήστης ανέφερε: "το ποντίκι δεν ρολάρει παρά μόνο πάνω από τη μπάρα
+                     κύλισης"): το ListBox έχει ΔΙΚΟ ΤΟΥ εσωτερικό ScrollViewer μέσα στο default
+                     template του· τυλίγοντάς το σε ΔΕΥΤΕΡΟ, χειροκίνητο ScrollViewer (όπως ήταν πριν)
+                     δημιουργούσε δύο εμφωλευμένους scroll owners - το εξωτερικό ScrollViewer έπαιρνε
+                     τα events της ρόδας μόνο πάνω από τη δική του λωρίδα (chrome), ενώ το εσωτερικό
+                     περιεχόμενο (τα ίδια τα στοιχεία της λίστας) δεν τα προωθούσε σωστά προς τα πάνω.
+                     Λύση: αφαιρέθηκε το εξωτερικό ScrollViewer - το MaxHeight/VerticalScrollBarVisibility
+                     μπαίνουν απευθείας στο ListBox, οπότε η ρόδα δουλεύει πλέον πάνω από ΟΛΗ τη λίστα. -->
                 <Popup x:Name="ThemePopup" PlacementTarget="{Binding ElementName=BtnThemePicker}" Placement="Bottom" StaysOpen="False" AllowsTransparency="True">
-                    <Border Background="{DynamicResource CardBgBrush}" BorderBrush="{DynamicResource CardBorderBrush}" BorderThickness="1" CornerRadius="8" Padding="4" MaxHeight="420">
-                        <ScrollViewer VerticalScrollBarVisibility="Auto">
-                            <ListBox x:Name="ListThemes" BorderThickness="0" Background="Transparent" Width="220"
-                                     DisplayMemberPath="DisplayName" SelectionChanged="ListThemes_SelectionChanged"/>
-                        </ScrollViewer>
+                    <Border Background="{DynamicResource CardBgBrush}" BorderBrush="{DynamicResource CardBorderBrush}" BorderThickness="1" CornerRadius="8" Padding="4">
+                        <ListBox x:Name="ListThemes" BorderThickness="0" Background="Transparent" Width="220" MaxHeight="420"
+                                 ScrollViewer.VerticalScrollBarVisibility="Auto"
+                                 DisplayMemberPath="DisplayName" SelectionChanged="ListThemes_SelectionChanged"/>
                     </Border>
                 </Popup>
                 <Button x:Name="BtnThemeToggle" Width="120" Height="36" Style="{StaticResource FlatButtonStyle}" Click="BtnThemeToggle_Click">
@@ -114,15 +126,35 @@
         </Grid>
 
         <!-- ===== Tab strip ===== -->
+        <!-- Εικονίδια στις καρτέλες (ρητό αίτημα χρήστη: "στις καρτέλες δεν έχεις ενσωματώσει
+             εικονίδια") - το WinForms nav rail είχε εικονίδιο+κείμενο ανά pill, το WPF είχε μείνει
+             μόνο κείμενο. Κάθε RadioButton.Content είναι τώρα ένα StackPanel γλυφή+κείμενο αντί για
+             απλό string - το TabPillStyle ContentPresenter τα δείχνει και τα δύο αυτόματα. -->
         <StackPanel Grid.Row="2" Orientation="Horizontal" Margin="24,0,24,12" x:Name="TabStrip">
-            <RadioButton x:Name="TabHome" Content="Αρχική" Tag="Home" Style="{StaticResource TabPillStyle}" Checked="TabButton_Checked"/>
-            <RadioButton Content="Βελτιστοποίηση" Tag="Optimization" Style="{StaticResource TabPillStyle}" Checked="TabButton_Checked"/>
-            <RadioButton Content="Υγεία &amp; Συντήρηση" Tag="Health" Style="{StaticResource TabPillStyle}" Checked="TabButton_Checked"/>
-            <RadioButton Content="Δίκτυο &amp; Ασφάλεια" Tag="Network" Style="{StaticResource TabPillStyle}" Checked="TabButton_Checked"/>
-            <RadioButton Content="Επιπλέον Ρυθμίσεις" Tag="Tweaks" Style="{StaticResource TabPillStyle}" Checked="TabButton_Checked"/>
-            <RadioButton Content="Εφαρμογές &amp; Bloat" Tag="Bloatware" Style="{StaticResource TabPillStyle}" Checked="TabButton_Checked"/>
-            <RadioButton Content="Προηγμένα Εργαλεία" Tag="Advanced" Style="{StaticResource TabPillStyle}" Checked="TabButton_Checked"/>
-            <RadioButton Content="Σύστημα" Tag="System" Style="{StaticResource TabPillStyle}" Checked="TabButton_Checked"/>
+            <RadioButton x:Name="TabHome" Tag="Home" Style="{StaticResource TabPillStyle}" Checked="TabButton_Checked">
+                <StackPanel Orientation="Horizontal"><TextBlock Text="&#x1F3E0;" Margin="0,0,6,0"/><TextBlock Text="Αρχική"/></StackPanel>
+            </RadioButton>
+            <RadioButton Tag="Optimization" Style="{StaticResource TabPillStyle}" Checked="TabButton_Checked">
+                <StackPanel Orientation="Horizontal"><TextBlock Text="&#x26A1;" Margin="0,0,6,0"/><TextBlock Text="Βελτιστοποίηση"/></StackPanel>
+            </RadioButton>
+            <RadioButton Tag="Health" Style="{StaticResource TabPillStyle}" Checked="TabButton_Checked">
+                <StackPanel Orientation="Horizontal"><TextBlock Text="&#x1FA7A;" Margin="0,0,6,0"/><TextBlock Text="Υγεία &amp; Συντήρηση"/></StackPanel>
+            </RadioButton>
+            <RadioButton Tag="Network" Style="{StaticResource TabPillStyle}" Checked="TabButton_Checked">
+                <StackPanel Orientation="Horizontal"><TextBlock Text="&#x1F310;" Margin="0,0,6,0"/><TextBlock Text="Δίκτυο &amp; Ασφάλεια"/></StackPanel>
+            </RadioButton>
+            <RadioButton Tag="Tweaks" Style="{StaticResource TabPillStyle}" Checked="TabButton_Checked">
+                <StackPanel Orientation="Horizontal"><TextBlock Text="&#x1F527;" Margin="0,0,6,0"/><TextBlock Text="Επιπλέον Ρυθμίσεις"/></StackPanel>
+            </RadioButton>
+            <RadioButton Tag="Bloatware" Style="{StaticResource TabPillStyle}" Checked="TabButton_Checked">
+                <StackPanel Orientation="Horizontal"><TextBlock Text="&#x1F9F9;" Margin="0,0,6,0"/><TextBlock Text="Εφαρμογές &amp; Bloat"/></StackPanel>
+            </RadioButton>
+            <RadioButton Tag="Advanced" Style="{StaticResource TabPillStyle}" Checked="TabButton_Checked">
+                <StackPanel Orientation="Horizontal"><TextBlock Text="&#x1F6E0;" Margin="0,0,6,0"/><TextBlock Text="Προηγμένα Εργαλεία"/></StackPanel>
+            </RadioButton>
+            <RadioButton Tag="System" Style="{StaticResource TabPillStyle}" Checked="TabButton_Checked">
+                <StackPanel Orientation="Horizontal"><TextBlock Text="&#x1F5A5;" Margin="0,0,6,0"/><TextBlock Text="Σύστημα"/></StackPanel>
+            </RadioButton>
         </StackPanel>
 
         <!-- ===== Content host ===== -->
@@ -131,11 +163,26 @@
         </Border>
 
         <!-- ===== Status bar ===== -->
+        <!-- Κυκλικό εικονίδιο δραστηριότητας (ρητό αίτημα χρήστη: "δεν έβαλες το κυκλικό εικονίδιο"
+             - αντιστοιχεί στο $global:activitySpinner της WinForms έκδοσης). Δεν είναι πλέον
+             δεκορατίβο - είναι δεμένο στο πραγματικό StatusService: οποιαδήποτε προβολή/υπηρεσία
+             καλεί StatusService.SetBusy/SetIdle (βλ. HomeView/OptimizationView code-behind) και η
+             γραμμή κατάστασης + το εικονίδιο ενημερώνονται αυτόματα - βλ. MainWindow.xaml.cs. Ο
+             δακτύλιος είναι ορατός ΜΟΝΟ όσο τρέχει κάτι στο παρασκήνιο (busy=true), κρύβεται στο idle. -->
         <Border Grid.Row="4" Background="{DynamicResource CardBgBrush}" Height="46">
             <Grid Margin="24,0">
-                <TextBlock x:Name="TxtStatus" Text="Κατάσταση: Έτοιμο για χρήση (WPF Preview)"
-                           VerticalAlignment="Center" HorizontalAlignment="Left"
-                           FontSize="11" FontStyle="Italic" Foreground="{DynamicResource StatusTextBrush}"/>
+                <StackPanel Orientation="Horizontal" VerticalAlignment="Center" HorizontalAlignment="Left">
+                    <Grid x:Name="ActivitySpinner" Width="14" Height="14" Margin="0,0,8,0" Visibility="Collapsed" RenderTransformOrigin="0.5,0.5">
+                        <Grid.RenderTransform>
+                            <RotateTransform x:Name="SpinnerRotate" Angle="0"/>
+                        </Grid.RenderTransform>
+                        <Ellipse Width="14" Height="14" StrokeThickness="2" Stroke="{DynamicResource CardBorderBrush}"/>
+                        <Path Data="M 7,0 A 7,7 0 0 1 14,7" StrokeThickness="2" Stroke="{DynamicResource AccentBrush}" StrokeStartLineCap="Round" StrokeEndLineCap="Round"/>
+                    </Grid>
+                    <TextBlock x:Name="TxtStatus" Text="Κατάσταση: Έτοιμο για χρήση (WPF Preview)"
+                               VerticalAlignment="Center"
+                               FontSize="11" FontStyle="Italic" Foreground="{DynamicResource StatusTextBrush}"/>
+                </StackPanel>
             </Grid>
         </Border>
     </Grid>
