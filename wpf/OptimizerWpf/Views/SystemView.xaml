@@ -1,0 +1,181 @@
+<UserControl x:Class="OptimizerWpf.Views.SystemView"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             mc:Ignorable="d">
+    <!-- Σύστημα - port του Optimizer.ps1's $tabSystem (~15622-16518). Βλ. SystemService.cs. -->
+    <ScrollViewer VerticalScrollBarVisibility="Auto">
+        <StackPanel Margin="0,8,0,24">
+
+            <!-- Εκκίνηση -->
+            <Border Style="{StaticResource CardStyle}">
+                <StackPanel>
+                    <Grid Margin="0,0,0,10">
+                        <Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions>
+                        <TextBlock Grid.Column="0" Text="Εφαρμογές Εκκίνησης Συστήματος" Style="{StaticResource CardTitleStyle}"/>
+                        <Button Grid.Column="1" Content="Ανανέωση" Style="{StaticResource FlatButtonStyle}" Width="120" Click="BtnRefreshStartup_Click"/>
+                    </Grid>
+                    <ItemsControl x:Name="ListStartup">
+                        <ItemsControl.ItemTemplate>
+                            <DataTemplate>
+                                <Grid Margin="0,0,0,8">
+                                    <Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions>
+                                    <StackPanel Grid.Column="0">
+                                        <TextBlock Text="{Binding Item.Name}" Foreground="{DynamicResource TextBrush}" FontWeight="SemiBold"/>
+                                        <TextBlock Text="{Binding Item.Command}" Style="{StaticResource SubTextStyle}" FontSize="10" TextTrimming="CharacterEllipsis"/>
+                                    </StackPanel>
+                                    <ToggleButton Grid.Column="1" IsChecked="{Binding IsEnabled}" Style="{StaticResource ToggleSwitchStyle}" Click="ToggleStartupItem_Click" Tag="{Binding}"/>
+                                </Grid>
+                            </DataTemplate>
+                        </ItemsControl.ItemTemplate>
+                    </ItemsControl>
+                </StackPanel>
+            </Border>
+
+            <!-- Διεργασίες -->
+            <Border Style="{StaticResource CardStyle}" Margin="0,16,0,0">
+                <StackPanel>
+                    <Grid Margin="0,0,0,10">
+                        <Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions>
+                        <TextBlock Grid.Column="0" Text="Διεργασίες Συστήματος (Top 25 κατά μνήμη)" Style="{StaticResource CardTitleStyle}"/>
+                        <Button Grid.Column="1" Content="Ανανέωση" Style="{StaticResource FlatButtonStyle}" Width="120" Click="BtnRefreshProcesses_Click"/>
+                    </Grid>
+                    <Border Background="{DynamicResource MainBgBrush}" CornerRadius="6" MaxHeight="320" Padding="4">
+                        <ScrollViewer VerticalScrollBarVisibility="Auto">
+                            <ItemsControl x:Name="ListProcesses">
+                                <ItemsControl.ItemTemplate>
+                                    <DataTemplate>
+                                        <Grid Margin="6,4">
+                                            <Grid.ColumnDefinitions>
+                                                <ColumnDefinition Width="*"/>
+                                                <ColumnDefinition Width="90"/>
+                                                <ColumnDefinition Width="80"/>
+                                            </Grid.ColumnDefinitions>
+                                            <TextBlock Grid.Column="0" Text="{Binding Name}" Foreground="{DynamicResource TextBrush}"/>
+                                            <TextBlock Grid.Column="1" Text="{Binding WorkingSetMb, StringFormat={}{0} MB}" Style="{StaticResource SubTextStyle}"/>
+                                            <Button Grid.Column="2" Content="Τερματισμός" Style="{StaticResource FlatButtonStyle}" FontSize="10" Padding="4,2"
+                                                    IsEnabled="{Binding CanKill}" Click="BtnKillProcess_Click" Tag="{Binding}"/>
+                                        </Grid>
+                                    </DataTemplate>
+                                </ItemsControl.ItemTemplate>
+                            </ItemsControl>
+                        </ScrollViewer>
+                    </Border>
+                </StackPanel>
+            </Border>
+
+            <!-- Αποθηκευτικός Χώρος -->
+            <Border Style="{StaticResource CardStyle}" Margin="0,16,0,0">
+                <StackPanel>
+                    <TextBlock Text="Αποθηκευτικός Χώρος - Διπλότυπα &amp; Μεγάλα Αρχεία" Style="{StaticResource CardTitleStyle}" Margin="0,0,0,10"/>
+                    <StackPanel Orientation="Horizontal" Margin="0,0,0,10">
+                        <Button x:Name="BtnFindDuplicates" Content="Εύρεση Διπλότυπων" Style="{StaticResource AccentButtonStyle}" Width="200" Margin="0,0,10,0" Click="BtnFindDuplicates_Click"/>
+                        <Button x:Name="BtnFindLarge" Content="Εύρεση Μεγάλων Αρχείων" Style="{StaticResource FlatButtonStyle}" Width="200" Margin="0,0,10,0" Click="BtnFindLarge_Click"/>
+                        <Button x:Name="BtnOneDrive" Content="OneDrive - Ελευθέρωση Χώρου" Style="{StaticResource FlatButtonStyle}" Width="220" Click="BtnOneDrive_Click"/>
+                    </StackPanel>
+                    <TextBlock x:Name="TxtStorageStatus" Text="Σαρώνει μόνο προσωπικούς φακέλους (Έγγραφα/Λήψεις/Επιφάνεια/Εικόνες/Βίντεο), ποτέ φακέλους συστήματος." Style="{StaticResource SubTextStyle}" Margin="0,0,0,8" TextWrapping="Wrap"/>
+                    <Border Background="{DynamicResource MainBgBrush}" CornerRadius="6" MaxHeight="280" Padding="4">
+                        <ScrollViewer VerticalScrollBarVisibility="Auto">
+                            <ItemsControl x:Name="ListStorageResults">
+                                <ItemsControl.ItemTemplate>
+                                    <DataTemplate>
+                                        <Grid Margin="6,4">
+                                            <Grid.ColumnDefinitions>
+                                                <ColumnDefinition Width="*"/>
+                                                <ColumnDefinition Width="80"/>
+                                                <ColumnDefinition Width="100"/>
+                                            </Grid.ColumnDefinitions>
+                                            <TextBlock Grid.Column="0" Text="{Binding Path}" Foreground="{DynamicResource TextBrush}" TextTrimming="CharacterEllipsis"/>
+                                            <TextBlock Grid.Column="1" Text="{Binding SizeMb, StringFormat={}{0} MB}" Style="{StaticResource SubTextStyle}"/>
+                                            <Button Grid.Column="2" Content="Κάδος Ανακύκλωσης" Style="{StaticResource FlatButtonStyle}" FontSize="10" Padding="4,2" Click="BtnRecycleFile_Click" Tag="{Binding}"/>
+                                        </Grid>
+                                    </DataTemplate>
+                                </ItemsControl.ItemTemplate>
+                            </ItemsControl>
+                        </ScrollViewer>
+                    </Border>
+                </StackPanel>
+            </Border>
+
+            <!-- Σημεία Επαναφοράς -->
+            <Border Style="{StaticResource CardStyle}" Margin="0,16,0,0">
+                <StackPanel>
+                    <TextBlock Text="Σημεία Επαναφοράς Συστήματος" Style="{StaticResource CardTitleStyle}" Margin="0,0,0,10"/>
+                    <StackPanel Orientation="Horizontal" Margin="0,0,0,10">
+                        <Button Content="Δημιουργία Νέου Σημείου" Style="{StaticResource AccentButtonStyle}" Width="220" Margin="0,0,10,0" Click="BtnCreateRestorePoint_Click"/>
+                        <Button Content="Ανανέωση" Style="{StaticResource FlatButtonStyle}" Width="150" Margin="0,0,10,0" Click="BtnRefreshRestorePoints_Click"/>
+                        <Button Content="Άνοιγμα Ρυθμίσεων Προστασίας" Style="{StaticResource FlatButtonStyle}" Width="230" Click="BtnOpenProtectionSettings_Click"/>
+                    </StackPanel>
+                    <TextBlock x:Name="TxtRestorePointsStatus" Text="" Style="{StaticResource SubTextStyle}" Margin="0,0,0,8"/>
+                    <ItemsControl x:Name="ListRestorePoints">
+                        <ItemsControl.ItemTemplate>
+                            <DataTemplate>
+                                <Grid Margin="0,0,0,8">
+                                    <Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions>
+                                    <StackPanel Grid.Column="0">
+                                        <TextBlock Text="{Binding Description}" Foreground="{DynamicResource TextBrush}" FontWeight="SemiBold"/>
+                                        <TextBlock Text="{Binding CreationTime}" Style="{StaticResource SubTextStyle}"/>
+                                    </StackPanel>
+                                    <Button Grid.Column="1" Content="Επαναφορά" Style="{StaticResource FlatButtonStyle}" Click="BtnRestoreToPoint_Click" Tag="{Binding}"/>
+                                </Grid>
+                            </DataTemplate>
+                        </ItemsControl.ItemTemplate>
+                    </ItemsControl>
+                </StackPanel>
+            </Border>
+
+            <!-- Υπηρεσίες -->
+            <Border Style="{StaticResource CardStyle}" Margin="0,16,0,0">
+                <StackPanel>
+                    <Grid Margin="0,0,0,10">
+                        <Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions>
+                        <TextBlock Grid.Column="0" Text="Βελτιστοποίηση Υπηρεσιών Συστήματος" Style="{StaticResource CardTitleStyle}"/>
+                        <Button Grid.Column="1" Content="Ανανέωση" Style="{StaticResource FlatButtonStyle}" Width="120" Click="BtnRefreshServices_Click"/>
+                    </Grid>
+                    <Border Background="{DynamicResource MainBgBrush}" CornerRadius="6" MaxHeight="320" Padding="4">
+                        <ScrollViewer VerticalScrollBarVisibility="Auto">
+                            <ItemsControl x:Name="ListServices">
+                                <ItemsControl.ItemTemplate>
+                                    <DataTemplate>
+                                        <Grid Margin="6,4">
+                                            <Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions>
+                                            <StackPanel Grid.Column="0">
+                                                <TextBlock Text="{Binding Service.DisplayName}" Foreground="{DynamicResource TextBrush}" FontWeight="SemiBold"/>
+                                                <TextBlock Text="{Binding Service.Description}" Style="{StaticResource SubTextStyle}" TextWrapping="Wrap"/>
+                                            </StackPanel>
+                                            <ToggleButton Grid.Column="1" IsChecked="{Binding IsAutomatic}" Style="{StaticResource ToggleSwitchStyle}" Click="ToggleService_Click" Tag="{Binding}"/>
+                                        </Grid>
+                                    </DataTemplate>
+                                </ItemsControl.ItemTemplate>
+                            </ItemsControl>
+                        </ScrollViewer>
+                    </Border>
+                </StackPanel>
+            </Border>
+
+            <!-- Δοκιμή Ταχύτητας Δίσκου -->
+            <Border Style="{StaticResource CardStyle}" Margin="0,16,0,0">
+                <StackPanel>
+                    <TextBlock Text="Δοκιμή Ταχύτητας Δίσκου" Style="{StaticResource CardTitleStyle}" Margin="0,0,0,10"/>
+                    <TextBlock Text="Ενδεικτική μέτρηση (256MB write/read) - όχι υποκατάστατο εξειδικευμένου εργαλείου όπως CrystalDiskMark. Η ανάγνωση μπορεί να επηρεαστεί από cache του λειτουργικού." Style="{StaticResource SubTextStyle}" Margin="0,0,0,10" TextWrapping="Wrap"/>
+                    <StackPanel Orientation="Horizontal" Margin="0,0,0,10">
+                        <ComboBox x:Name="CmbBenchmarkDrive" Width="120" Margin="0,0,10,0"/>
+                        <Button x:Name="BtnStartBenchmark" Content="Έναρξη Δοκιμής" Style="{StaticResource AccentButtonStyle}" Width="180" Click="BtnStartBenchmark_Click"/>
+                    </StackPanel>
+                    <StackPanel Orientation="Horizontal">
+                        <StackPanel Margin="0,0,40,0">
+                            <TextBlock Text="Εγγραφή (Write)" Style="{StaticResource SubTextStyle}"/>
+                            <TextBlock x:Name="TxtBenchWrite" Text="-- MB/s" FontSize="22" FontWeight="Bold" Foreground="{DynamicResource TextBrush}"/>
+                        </StackPanel>
+                        <StackPanel>
+                            <TextBlock Text="Ανάγνωση (Read)" Style="{StaticResource SubTextStyle}"/>
+                            <TextBlock x:Name="TxtBenchRead" Text="-- MB/s" FontSize="22" FontWeight="Bold" Foreground="{DynamicResource TextBrush}"/>
+                        </StackPanel>
+                    </StackPanel>
+                </StackPanel>
+            </Border>
+
+        </StackPanel>
+    </ScrollViewer>
+</UserControl>
