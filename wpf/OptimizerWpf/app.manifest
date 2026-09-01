@@ -1,0 +1,26 @@
+<?xml version="1.0" encoding="utf-8"?>
+<assembly xmlns="urn:schemas-microsoft-com:asm.v1" manifestVersion="1.0">
+  <!--
+    Optimizer.ps1 ΠΑΝΤΑ τρέχει self-elevated ως Administrator (βλ. HANDOFF.md) - το WPF preview δεν
+    ζητούσε καθόλου elevation μέχρι τώρα. ΔΙΟΡΘΩΣΗ (χρήστης εντόπισε: οι ενημερώσεις Microsoft Store
+    στο Winget Manager έλειπαν στο WPF ενώ η 2.8.2 τις έβρισκε - επιβεβαιώθηκε ζωντανά ότι το ΙΔΙΟ
+    "store updates" CLI επιστρέφει διαφορετικά αποτελέσματα ανάλογα με το επίπεδο δικαιωμάτων της
+    διεργασίας που το καλεί, ΑΚΡΙΒΩΣ όπως αρκετά άλλα σημεία της εφαρμογής - Defender/AV WMI queries,
+    HKLM registry keys του Gaming Mode, κ.λπ. - απαιτούν ήδη elevation για να λειτουργήσουν σωστά).
+    requireAdministrator εξασφαλίζει ότι κάθε εκκίνηση του .exe (είτε απευθείας είτε μέσω
+    Run_OptimizerWpf.bat) εμφανίζει το UAC prompt των Windows αυτόματα, όπως ακριβώς κάνει το ps1.
+  -->
+  <trustInfo xmlns="urn:schemas-microsoft-com:asm.v3">
+    <security>
+      <requestedPrivileges>
+        <requestedExecutionLevel level="requireAdministrator" uiAccess="false" />
+      </requestedPrivileges>
+    </security>
+  </trustInfo>
+  <application xmlns="urn:schemas-microsoft-com:asm.v3">
+    <windowsSettings>
+      <dpiAware xmlns="http://schemas.microsoft.com/SMI/2005/WindowsSettings">true</dpiAware>
+      <dpiAwareness xmlns="http://schemas.microsoft.com/SMI/2016/WindowsSettings">PerMonitorV2</dpiAwareness>
+    </windowsSettings>
+  </application>
+</assembly>
