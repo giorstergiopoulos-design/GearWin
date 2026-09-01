@@ -254,7 +254,12 @@ SDK μέσω `winget install Microsoft.DotNet.SDK.8` (με ρητή επιβεβ
 - `Views/HomeView.xaml(.cs)`: πλήρως χτισμένη καρτέλα Αρχική (κάρτες CPU/RAM/Disk + Βαθμολογία
   Υγείας + Ανάλυση Δίσκου). CPU (`PerformanceCounter`), RAM (`GlobalMemoryStatusEx` P/Invoke) και
   Δίσκος (`DriveInfo`) είναι ΖΩΝΤΑΝΑ δεδομένα, ανανεώνονται κάθε 1 δευτ. μέσω `DispatcherTimer`.
-  Ανάλυση Δίσκου (ανά κατηγορία) είναι ΑΚΟΜΑ static/placeholder - επόμενο βήμα.
+  Ανάλυση Δίσκου: ΔΙΟΡΘΩΘΗΚΕ (χρήστης ανέφερε "δεν φαίνεται να λειτουργεί") - το κουμπί "Ανάλυση" δεν
+  είχε καν Click handler σε προηγούμενο πέρασμα. `Services/DiskAnalysisService.cs` είναι πλήρης C#
+  port του category-detection script μέσα στο `Start-DiskCategoryAnalysis` (ίδιες κατηγορίες/ρίζες:
+  Games [Steam/Epic/Origin/EA/GOG/Ubisoft/Riot/Battle.net], Apps [Program Files], Photos/Videos/
+  Documents/Downloads [known folders], Windows [μόνο στον δίσκο συστήματος], Other [υπόλοιπο]) - τρέχει
+  σε background thread (`Task.Run`, αργή recursive άθροιση μεγέθους αρχείων).
 - `Services/HealthScoreService.cs`: πλήρης C# port του `Get-SystemHealthScore` (ίδιοι έλεγχοι/
   βαθμολογία: χώρος δίσκου συστήματος, εκκρεμής επανεκκίνηση [με το ΙΔΙΟ v2.8.2 fix - χωρίς
   PendingFileRenameOperations], Defender+άλλο AV μέσω WMI, πλήθος εφαρμογών εκκίνησης, ηλικία
@@ -265,13 +270,20 @@ SDK μέσω `winget install Microsoft.DotNet.SDK.8` (με ρητή επιβεβ
   αποτύχουν σιωπηλά χωρίς αυτό· η elevation δεν έχει προστεθεί ακόμα στο WPF project.
   "Διόρθωση Όλων" κάνει προς το παρόν μόνο τον καθαρισμό temp αρχείων (Storage fix) - η ενεργοποίηση
   Defender/δημιουργία Σημείου Επαναφοράς δεν έχουν μεταφερθεί ακόμα.
-- **21 θέματα** (`ThemeCatalog.cs`/`ThemeColors.cs`): κουμπί επιλογής θέματος (`CboTheme`) δίπλα στο
-  Light/Dark Mode στη γραμμή τίτλου, ρητό αίτημα χρήστη - όλες οι παλέτες χρωμάτων του
-  `$themeNamesList` (Get-ThemeColors) μεταφέρθηκαν αυτούσιες. Το `ThemeManager.ApplyTheme` θέτει τα
-  brush resources απευθείας (αντικατέστησε το αρχικό Dark.xaml/Light.xaml swap σύστημα - λιγότερα
-  αρχεία να συγχρονίζονται με 21 θέματα). ΣΗΜΕΙΩΣΗ: μόνο το "Windows 11 Fluent" έχει πραγματική Light
-  παραλλαγή (η μόνη που το Optimizer.ps1 έχτισε πλήρως) - τα άλλα 20 θέματα παραμένουν στη σκούρα
-  παλέτα τους ανεξάρτητα από το Light/Dark toggle.
+- **21 θέματα, ΚΑΘΕ ένα με πραγματική Dark ΚΑΙ Light παραλλαγή** (`ThemeCatalog.cs`/`ThemeColors.cs`/
+  `ThemePair` record): ΔΙΟΡΘΩΘΗΚΕ (χρήστης ανέφερε ρητά ότι "όλα τα θέματα είχαν light/dark variations"
+  - προηγούμενο πέρασμα είχε λανθασμένα μόνο το "Windows 11 Fluent" με Light παλέτα, λάθος υπόθεση,
+  όχι ό,τι πραγματικά υπάρχει στο Get-ThemeColors) - και τα 21×2=42 παλέτες μεταφέρθηκαν αυτούσιες από
+  τα δύο switch blocks (`$isDarkMode` true/false) του `Get-ThemeColors`. Το `ThemeManager.SelectTheme`/
+  `ToggleLightDark` πλέον διαχωρίζουν σωστά "ποιο θέμα" από "dark ή light" - toggling Light/Dark ΠΑΝΤΑ
+  αλλάζει στην αντίστοιχη παραλλαγή του ΤΡΕΧΟΝΤΟΣ θέματος, όχι μόνο του Fluent.
+  **UI**: το κουμπί επιλογής θέματος είναι πλέον τετράγωνο εικονίδιο παλέτας (🎨, `BtnThemePicker`) που
+  ανοίγει custom `Popup` με λίστα θεμάτων - ΔΙΟΡΘΩΣΗ (χρήστης ανέφερε "οι επιλογές δεν φαίνονται
+  καθόλου"): η προηγούμενη εκδοχή ήταν `ComboBox` - το popup ενός ComboBox στο WPF κρατάει ΠΑΝΤΑ λευκό
+  φόντο εκτός αν γίνει ρητό retemplate, ενώ το Foreground ήταν το θεματικό TextBrush (π.χ. λευκό σε
+  σκούρα θέματα) - λευκό σε λευκό, αόρατο. Το νέο custom `Popup`/`ListBox` ορίζει ρητά δικό του φόντο
+  (`CardBgBrush`) μέσω νέου implicit `ListBoxItem` style στο `Themes/Styles.xaml`, άρα δεν μπορεί να
+  ξανασυμβεί αυτό το συγκεκριμένο πρόβλημα.
 - `Views/OptimizationView.xaml(.cs)`: καρτέλα Βελτιστοποίηση. Office Mode/Gaming Mode αλλάζουν
   πραγματικά το πλάνο ενέργειας Windows (`Services/PowerModeService.cs`, powercfg SCHEME_BALANCED/
   SCHEME_MIN) - ΣΗΜΕΙΩΣΗ ΕΙΛΙΚΡΙΝΕΙΑΣ: μόνο αυτό το κομμάτι μεταφέρθηκε, ΟΧΙ τα Start menu

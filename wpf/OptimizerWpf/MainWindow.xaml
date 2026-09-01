@@ -55,15 +55,28 @@
             <StackPanel Grid.Column="2" Orientation="Horizontal" VerticalAlignment="Center">
                 <Button x:Name="BtnLanguage" Content="&#x1F310;" Width="36" Height="36" Margin="0,0,8,0" Style="{StaticResource FlatButtonStyle}"/>
                 <Button x:Name="BtnHamburger" Content="&#x2261;" Width="36" Height="36" Margin="0,0,8,0" Style="{StaticResource FlatButtonStyle}"/>
-                <!-- Θέμα (θέση διπλα στο Light/Dark Mode, ρητό αίτημα χρήστη): άμεση επιλογή ενός
-                     από τα 21 θέματα της εφαρμογής (ίδια λίστα με το $themeNamesList στο Optimizer.ps1) -
-                     βλ. ThemeCatalog.cs για τις παλέτες χρωμάτων και ThemeManager.ApplyTheme για την
-                     εφαρμογή τους. Ξεχωριστό, ανεξάρτητο control από το Light/Dark Mode toggle δίπλα του. -->
-                <ComboBox x:Name="CboTheme" Width="170" Height="36" Margin="0,0,8,0"
-                          DisplayMemberPath="Name"
-                          Background="{DynamicResource BtnDefaultBrush}" Foreground="{DynamicResource TextBrush}"
-                          BorderBrush="{DynamicResource CardBorderBrush}"
-                          SelectionChanged="CboTheme_SelectionChanged"/>
+                <!-- Θέμα (θέση διπλα στο Light/Dark Mode, ρητό αίτημα χρήστη): τετράγωνο κουμπί με
+                     εικονίδιο παλέτας (σαν τη Ζωγραφική των Windows) - το πάτημα ανοίγει popup με όλα
+                     τα 21 θέματα (ίδια λίστα με το $themeNamesList στο Optimizer.ps1). Ξεχωριστό,
+                     ανεξάρτητο control από το Light/Dark Mode toggle δίπλα του - βλ. ThemeCatalog.cs
+                     για τις παλέτες και ThemeManager.SelectTheme/ToggleLightDark για την εφαρμογή τους.
+                     ΔΙΟΡΘΩΣΗ (χρήστης ανέφερε: "οι επιλογές δεν φαίνονται καθόλου"): η προηγούμενη
+                     εκδοχή ήταν ένα απλό ComboBox - το popup ενός ComboBox στο WPF κρατάει ΠΑΝΤΑ λευκό
+                     φόντο εκτός αν γίνει ρητό retemplate, ενώ το Foreground είχε οριστεί στο θεματικό
+                     TextBrush (π.χ. λευκό σε σκούρα θέματα) - λευκό κείμενο πάνω σε λευκό φόντο,
+                     αόρατο. Το custom Popup παρακάτω ορίζει ρητά το δικό του φόντο (CardBgBrush), άρα
+                     δεν μπορεί να συγκρουστεί έτσι. -->
+                <Button x:Name="BtnThemePicker" Width="36" Height="36" Margin="0,0,8,0" Style="{StaticResource FlatButtonStyle}" Click="BtnThemePicker_Click">
+                    <TextBlock Text="&#x1F3A8;" FontSize="16"/>
+                </Button>
+                <Popup x:Name="ThemePopup" PlacementTarget="{Binding ElementName=BtnThemePicker}" Placement="Bottom" StaysOpen="False" AllowsTransparency="True">
+                    <Border Background="{DynamicResource CardBgBrush}" BorderBrush="{DynamicResource CardBorderBrush}" BorderThickness="1" CornerRadius="8" Padding="4" MaxHeight="420">
+                        <ScrollViewer VerticalScrollBarVisibility="Auto">
+                            <ListBox x:Name="ListThemes" BorderThickness="0" Background="Transparent" Width="220"
+                                     DisplayMemberPath="DisplayName" SelectionChanged="ListThemes_SelectionChanged"/>
+                        </ScrollViewer>
+                    </Border>
+                </Popup>
                 <Button x:Name="BtnThemeToggle" Width="120" Height="36" Style="{StaticResource FlatButtonStyle}" Click="BtnThemeToggle_Click">
                     <TextBlock x:Name="TxtThemeToggle" Text="&#x2600; Light Mode"/>
                 </Button>

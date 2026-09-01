@@ -17,4 +17,13 @@ namespace OptimizerWpf
         Color BtnDefault,
         Color BtnHover,
         Color Accent);
+
+    // A theme's Dark AND Light palette together - every theme in Get-ThemeColors has both (the
+    // function branches on $global:isDarkMode first, $currentThemeName second), so ThemeManager
+    // toggling Light/Dark should always have real data to switch to, for every theme, not just
+    // the default.
+    public record ThemePair(string DisplayName, ThemeColors Dark, ThemeColors Light)
+    {
+        public ThemeColors Get(bool isDark) => isDark ? Dark : Light;
+    }
 }

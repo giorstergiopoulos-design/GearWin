@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
@@ -140,6 +141,41 @@ namespace OptimizerWpf.Views
             await RefreshHealthScoreAsync();
         }
 
+        // Category -> bar color, matching a reasonable visually-distinct palette (Optimizer.ps1
+        // draws its own bar+legend colors per category - not ported 1:1 here, just kept distinct).
+        private static readonly Dictionary<string, Color> CategoryColors = new()
+        {
+            ["Games"] = Color.FromRgb(90, 140, 255),
+            ["Apps"] = Color.FromRgb(170, 110, 255),
+            ["Photos"] = Color.FromRgb(90, 200, 120),
+            ["Videos"] = Color.FromRgb(255, 150, 60),
+            ["Documents"] = Color.FromRgb(60, 190, 190),
+            ["Downloads"] = Color.FromRgb(230, 200, 60),
+            ["Windows"] = Color.FromRgb(220, 90, 90),
+            ["Other"] = Color.FromRgb(140, 140, 140),
+        };
+
+        private async void BtnAnalyzeDisk_Click(object sender, System.Windows.RoutedEventArgs e)
+        {
+            if (CboHomeDrive.SelectedItem is not string driveName) return;
+
+            TxtDiskAnalysisStatus.Text = $"Ανάλυση σε εξέλιξη για {driveName} - μπορεί να διαρκέσει λίγα λεπτά ανάλογα με το πλήθος αρχείων...";
+            ListDiskCategories.ItemsSource = null;
+
+            var result = await DiskAnalysisService.AnalyzeAsync(driveName);
+
+            TxtDiskAnalysisStatus.Text = $"Σύνολο χρησιμοποιημένου χώρου: {result.TotalUsedGb:0.0} GB";
+            var maxGb = Math.Max(0.01, result.Categories.Max(c => c.SizeGb));
+            ListDiskCategories.ItemsSource = result.Categories
+                .OrderByDescending(c => c.SizeGb)
+                .Select(c => new DiskCategoryRow(
+                    c.Name,
+                    $"{c.SizeGb:0.0} GB",
+                    280.0 * c.SizeGb / maxGb,
+                    new SolidColorBrush(CategoryColors.GetValueOrDefault(c.Name, Color.FromRgb(150, 150, 150)))))
+                .ToList();
+        }
+
         private async Task RefreshHealthScoreAsync()
         {
             TxtHealthLabel.Text = "Υπολογισμός...";
@@ -173,6 +209,9 @@ namespace OptimizerWpf.Views
     // Bindable row for the ItemsControl in HomeView.xaml (Title + the dot color, matching the
     // score-colored dot per issue that Optimizer.ps1 draws next to each issue label).
     public record HealthIssueRow(string Title, Brush DotColor);
+
+    // Bindable row for the Disk Analysis category list/bar chart.
+    public record DiskCategoryRow(string Name, string SizeText, double BarWidth, Brush BarColor);
 
     internal static class NativeMethods
     {

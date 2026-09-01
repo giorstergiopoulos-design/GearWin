@@ -83,6 +83,31 @@
         <Setter Property="Foreground" Value="White"/>
     </Style>
 
+    <!-- Theme-aware row for the theme picker popup's ListBox (see MainWindow.xaml BtnThemePicker) -
+         explicit Foreground/hover/selected backgrounds so it never depends on Windows' own system
+         colors, which is what made the previous ComboBox-based picker's text invisible. -->
+    <Style TargetType="ListBoxItem">
+        <Setter Property="Foreground" Value="{DynamicResource TextBrush}"/>
+        <Setter Property="Padding" Value="10,6"/>
+        <Setter Property="Template">
+            <Setter.Value>
+                <ControlTemplate TargetType="ListBoxItem">
+                    <Border x:Name="Bg" CornerRadius="4" Background="Transparent" Padding="{TemplateBinding Padding}">
+                        <ContentPresenter/>
+                    </Border>
+                    <ControlTemplate.Triggers>
+                        <Trigger Property="IsMouseOver" Value="True">
+                            <Setter TargetName="Bg" Property="Background" Value="{DynamicResource BtnHoverBrush}"/>
+                        </Trigger>
+                        <Trigger Property="IsSelected" Value="True">
+                            <Setter TargetName="Bg" Property="Background" Value="{DynamicResource TabSelectBrush}"/>
+                        </Trigger>
+                    </ControlTemplate.Triggers>
+                </ControlTemplate>
+            </Setter.Value>
+        </Setter>
+    </Style>
+
     <!-- On/off pill switch - matches the custom on/off toggles Optimizer.ps1 owner-draws throughout
          every tab (dozens of tweak rows). Shared here since it'll be reused by every ported tab, not
          just Optimization. -->
