@@ -1,0 +1,13 @@
+﻿{
+    "SkipRestorePrompt":  false,
+    "MenuMode":  "HorizontalModern",
+    "SidebarPosition":  "Right",
+    "SidebarEnabled":  true,
+    "AnimatedBackground":  true,
+    "AnimationStyle":  "Particles",
+    "DefaultTheme":  null,
+    "TransparencyLevel":  "None",
+    "AutoInstallDrivers":  false,
+    "Language":  "el",
+    "Skin":  "Classic"
+}

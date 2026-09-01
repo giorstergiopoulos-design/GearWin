@@ -1,0 +1,727 @@
+# Windows 11 Maintenance & Optimizer Tool — Project Handoff
+
+**Τρέχουσα έκδοση:** v2.8.0 Final (βλ. `$global:versionHistory["2.8.0"]` - **ΠΡΩΤΗ ζωντανή, στιγμιότυπο-επιβεβαιωμένη διόρθωση PC Manager skin**: το περιεχόμενο κάθε καρτέλας πλέον επεκτείνεται δυναμικά να γεμίζει το διαθέσιμο πλάτος όταν το rail είναι ενεργό, αντί για σταθερό πλάτος (βλ. `Update-SidebarDockLayout`, μεταβλητή `$pcMgrContentW`). Επίσης: νέο πλαίσιο στις πρώτες ρυθμίσεις της καρτέλας Επιπλέον Ρυθμίσεις (`$cardMainTweaks`), διόρθωση περιθωρίου κουμπιού "Προσθήκη Νέας Επιλογής". Προηγούμενη: v2.7.0 Final - επαλήθευση/σκλήρυνση 4 σημείων χωρίς πρόσβαση σε live Windows (SDI timeout, letterbox MinimumSize, PC Manager rail label MeasureString, glass-background crop math). Πριν: v2.6.0 Final - ανίχνευση Lenovo/HP OEM. Πριν: v2.5.0 Final - **letterbox μεγιστοποίηση/resize** (μεγάλη αλλαγή αρχιτεκτονικής - βλ. ΟΠΩΣΔΗΠΟΤΕ ενότητα 0.8 πριν αγγίξεις `$mainForm`/sidebar). §4.Α έχει την ΠΛΗΡΗ τρέχουσα λίστα εκκρεμοτήτων)
+**Αρχείο:** `Optimizer.ps1` (~18.300 γραμμές, ~2.34MB, PowerShell + WinForms, single-file GUI εφαρμογή)
+**Launcher:** `Run_Optimizer.bat` (elevation + auto-patch μηχανισμός με backup/validation) — επιβεβαιωμένο ότι δεν χρειάζεται αλλαγές για καμία προσθήκη μέχρι v2.1.1 (καμία νέα εξωτερική εξάρτηση πέρα από winget/PowerShell 5.1 built-ins)
+**Κώδικας αναφοράς:** `reference/WMT-GUI.ps1` (44.500+ γραμμές — **WPF/XAML, ΟΧΙ WinForms** — βλ. ενότητα "Κρίσιμα Τεχνικά Ευρήματα")
+
+Αυτό το έγγραφο είναι η συμπύκνωση μιας πολύ μεγάλης, πολυ-συνεδριακής συνομιλίας ανάπτυξης (από v1.0.2 έως v2.1.1). Σκοπός του είναι να επιτρέψει σε νέο Claude instance (ιδανικά μέσω Claude Code) να συνεχίσει τη δουλειά χωρίς να χρειαστεί να ξανανακαλύψει το πλαίσιο, τις αποφάσεις, και τα λάθη που έχουν ήδη γίνει και διορθωθεί.
+
+**ΝΕΟ σε v2.0.8/v2.1.0/v2.1.1** (πλήρης λεπτομέρεια στο in-app Ιστορικό Εκδόσεων): πλατύτερο mainForm (1150→1280px) με πλήρες κεντράρισμα περιεχομένου σε ΟΛΕΣ τις καρτέλες, θεματισμένα dropdown popups (`Set-ThemedComboBoxDrawing`), χειροκίνητα σχεδιασμένες σημαίες γλωσσών, staggered startup timers (WinRE/Health Score) για γρήγορη εκκίνηση, anchored/embedded πλευρικό μενού με πραγματική δέσμευση χώρου (`Update-SidebarDockLayout`, καλείται ΚΑΙ στην εκκίνηση ΚΑΙ σε live αλλαγή ρυθμίσεων) + σκληρό clamp θέσης/ύψους (ποτέ πλέον εκτός ορίων mainForm), νέο κεντραρισμένο `$global:scrollPanelHome` wrapper (Αρχική δεν ήταν ΠΟΤΕ κεντραρισμένη πριν), νέα λειτουργία **Ανάλυση Χώρου Δίσκου ανά Κατηγορία** (Αρχική, segmented bar + drilldown, συνδεδεμένη με το ήδη υπάρχον dropdown δίσκου), νέα κάρτα **Όλες οι Πρόσθετες Λειτουργίες Windows** (Προηγμένα Εργαλεία - πλήρης αναζητήσιμη λίστα, όχι μόνο τα 6 hardcoded). Όλα πλήρως μεταφρασμένα EN/FR/DE.
+
+## 0.3 Οδηγία χρήστη: ΜΕΤΑ την v2.2.0, ανάλυση μεγέθους αρχείου (έφτασε ~2MB)
+
+Ρητή οδηγία: αφού ολοκληρωθεί η v2.2.0 (ΟΧΙ πριν - δεν πρέπει να διακόψει/καθυστερήσει την τρέχουσα
+δουλειά ενσωματώσεων/διορθώσεων), να γίνει ανάλυση του `Optimizer.ps1` επειδή έχει φτάσει ~2MB μέγεθος
+αρχείου, για να εξεταστεί αν μπορεί να μειωθεί το μέγεθος ΧΩΡΙΣ να επηρεαστεί η λειτουργικότητα ("η
+εφαρμογή να λειτουργεί τέλεια"). Πιθανές κατευθύνσεις προς εξέταση τότε (ΔΕΝ έχει ξεκινήσει καμία ακόμα):
+- Έλεγχος για διπλότυπο/νεκρό κώδικα που έχει συσσωρευτεί σε τόσες πολλές παρτίδες αλλαγών.
+- Πιθανή ενοποίηση επαναλαμβανόμενων μοτίβων (π.χ. τα πολλά σχεδόν-πανομοιότυπα async scan scripts -
+  Start-X/Complete-X ζεύγη με Process+Timer polling - μπορεί να μοιράζονται περισσότερο κοινό κώδικα).
+- Σχετίζεται με το ήδη καταγεγραμμένο σημείο 0.5 παρακάτω (πιθανή μετάβαση σε modules/assets αντί για
+  ένα ενιαίο αρχείο) - ίδιο γενικό ζήτημα "βαριάς εφαρμογής", δύο σχετικές αλλά ξεχωριστές οδηγίες χρήστη.
+- ΠΡΟΣΟΧΗ: οποιαδήποτε μείωση μεγέθους ΔΕΝ πρέπει να θυσιάσει ευανάγνωστα σχόλια/τεκμηρίωση εντός του
+  κώδικα που έχουν αποδειχτεί κρίσιμα σε αυτό το project (βλ. πολλά "ΔΙΟΡΘΩΣΗ ΡΙΖΙΚΗ" σχόλια σε όλο το
+  αρχείο) - η εξοικονόμηση χώρου δεν πρέπει να έρθει σε βάρος της μελλοντικής συντηρησιμότητας.
+
+**ΑΠΟΤΕΛΕΣΜΑΤΑ ανάλυσης (v2.3.0, AST-based, μέσω `[System.Management.Automation.Language.Parser]::ParseFile`)**:
+Συνολικό μέγεθος αρχείου: 2.239.289 bytes (~2,14MB), 17.891 γραμμές. Ανάλυση byte-μεγέθους ανά μεγάλο block:
+- `$global:stringTranslations` (το μεγάλο EN/FR/DE λεξικό TT() - κυρίως μεταφράσεις του ιστορικού εκδόσεων
+  συν μεμονωμένων strings): **1.038.541 bytes (~0,99MB) = 46,4% ΤΟΥ ΣΥΝΟΛΙΚΟΥ ΑΡΧΕΙΟΥ**, 3.587 γραμμές.
+- `$global:versionHistory` (το ελληνικό κείμενο του ιστορικού - οι μεταφράσεις του είναι ΜΕΣΑ στο
+  `stringTranslations` παραπάνω, όχι εδώ): 126.454 bytes (~0,12MB) = 5,6% του αρχείου, 488 γραμμές.
+- `$global:translations` (μικρό λεξικό T() για ονομαστικά keys - μενού/καρτέλες): 6.652 bytes = 0,3%, αμελητέο.
+- **Συνδυασμένα, μεταφράσεις + ιστορικό εκδόσεων = 1.171.647 bytes (~1,12MB) = 52,3% ΤΟΥ ΣΥΝΟΛΙΚΟΥ ΑΡΧΕΙΟΥ.**
+  Ο πραγματικός κώδικας εφαρμογής/UI logic είναι μόνο ~1,02MB (47,7%).
+
+**Συμπέρασμα**: το ~52% του μεγέθους του αρχείου ΔΕΝ είναι κώδικας εφαρμογής - είναι σωρευμένο κείμενο
+ιστορικού εκδόσεων (60+ versions, ελληνικά) και οι 3 πλήρεις μεταφράσεις του (EN/FR/DE). Αυτό μεγαλώνει
+ΓΡΑΜΜΙΚΑ με κάθε νέα έκδοση/changelog bullet - είναι ο μεγαλύτερος μοχλός μελλοντικής μείωσης μεγέθους,
+ΠΟΛΥ μεγαλύτερος από οποιοδήποτε νεκρό κώδικα (το μόνο που εντοπίστηκε/αφαιρέθηκε αυτή τη φορά ήταν
+~130 γραμμές SDI-window κώδικα - αμελητέο μπροστά στο 1MB+ των μεταφράσεων).
+**ΚΑΜΙΑ ΔΟΜΙΚΗ ΑΛΛΑΓΗ ΔΕΝ έγινε σε αυτό το πέρασμα** (μόνο ανάλυση, όπως ζητήθηκε) - μόνο 3 πραγματικά
+orphaned μεταφράσεις καθαρίστηκαν (βλ. §Α παρακάτω). Πιθανές μελλοντικές κατευθύνσεις προς εξέταση
+(ΚΑΜΙΑ δεν έχει αποφασιστεί/ξεκινήσει):
+- Αρχειοθέτηση παλιών version-history entries (π.χ. πριν από 1-2 χρόνια) σε ξεχωριστό αρχείο, με το
+  in-app Ιστορικό Εκδόσεων να δείχνει μόνο πρόσφατες + link/σημείωση για το πλήρες ιστορικό. ΡΙΣΚΟ: ο
+  χρήστης ίσως θέλει να βλέπει ΟΛΟ το ιστορικό μέσα στην ίδια εφαρμογή - να ΜΗΝ γίνει χωρίς ρητή έγκριση.
+- Εξωτερικά .json/.resx resource αρχεία για τις μεταφράσεις αντί για inline hashtable - θα μείωνε το
+  μέγεθος του .ps1 αλλά θα έσπαγε το "single-file, καμία εξωτερική εξάρτηση" σχέδιο του launcher
+  (`Run_Optimizer.bat`) - ΜΕΓΑΛΗ αλλαγή αρχιτεκτονικής, σχετίζεται με το ήδη καταγεγραμμένο σημείο 0.5.
+
+## 0.6 v2.3.0: trust/stability scoring, toast notifications, καθαρισμός
+
+**Trust/stability scoring (`Complete-DriverScan`, ~γραμμή 11787)**: όταν σαρώνονται οδηγοί, το ΙΔΙΟ GPU
+μπορεί να εμφανιστεί ΚΑΙ στα αποτελέσματα Windows Update ΚΑΙ σε αυτά του amd.com/nvidia.com (2 ανεξάρτητες
+πηγές, βλ. ενότητα 0 για την αρχιτεκτονική πολλαπλών πηγών). Η λίστα `$confirmedGpuNames` συλλέγει τα
+ονόματα GPU που το AMD/NVIDIA block επιβεβαίωσε ανεξάρτητα ότι έχουν νεότερο οδηγό (μέσα στους ήδη
+υπάρχοντες `foreach` βρόχους, μετά το `if (-not $amdNewer/$nvNewer) { continue }`). Στον βρόχο του Windows
+Update, το `Test-DriverSourceOverlap` (νέα function, ~γραμμή 11764, δίπλα στο `Get-DriverClassIcon`) κάνει
+απλή σύγκριση επικάλυψης ονόματος (`-like`, ίδιο πνεύμα με το ήδη υπάρχον best-effort matching στο
+`$match`) μεταξύ του ονόματος συσκευής Windows Update και της λίστας `$confirmedGpuNames` - μόνο για
+`DriverClass -match "Display|Video"` (GPU). Όταν συμφωνούν, η ετικέτα πηγής αναβαθμίζεται από
+"✓ Πηγή: Windows Update (επίσημη)" σε "✓✓ Επιβεβαιωμένο (WU+AMD/NVIDIA)" με επεξηγηματικό tooltip.
+ΣΗΜΕΙΩΣΗ ΕΙΛΙΚΡΙΝΕΙΑΣ: η αντιστοίχιση ονόματος είναι best-effort (string overlap, όχι hardware ID) - ίδιος
+περιορισμός με το ήδη υπάρχον `$currentVer` matching, δεν είναι νέος κίνδυνος.
+
+**Toast notifications (`Show-ToastNotification`, ήδη υπήρχε πλήρως έτοιμη/δοκιμασμένη function από
+προηγούμενο πέρασμα, γραμμή ~5968, απλά χωρίς κανένα call site)**: συνδέθηκε ΤΩΡΑ σε 3 σημεία ολοκλήρωσης
+που πριν ενημέρωναν ΜΟΝΟ σιωπηλά τη γραμμή κατάστασης (καμία άλλη ένδειξη): (1) επιτυχής δημιουργία
+σημείου επαναφοράς (μέσα στο click handler του `$global:btnCreateRestorePoint`, ~γραμμή 11308), (2)
+ολοκλήρωση σάρωσης οδηγών (τέλος του `Complete-DriverScan`), (3) ολοκλήρωση ReTrim SSD (Υγεία & Συντήρηση).
+ΣΚΟΠΙΜΑ ΔΕΝ συνδέθηκε παντού (βλ. το ίδιο το σχόλιο σχεδιασμού μέσα στο `Show-ToastNotification` - "όχι
+μαζική αντικατάσταση") - σημεία που ήδη έχουν `Show-CustomMessage` modal (π.χ. Health Score Fix All,
+Registry/Storage scan completion που απαιτεί επιλογή χρήστη) ΔΕΝ πήραν toast, θα ήταν διπλή/περιττή
+ειδοποίηση. Πιθανά επόμενα σημεία (ΔΕΝ έγιναν - SFC/DISM/CHKDSK τρέχουν σε ΕΝΤΕΛΩΣ ξεχωριστή, μη-
+παρακολουθούμενη powershell.exe διεργασία μέσω `Invoke-DiagnosticCommand` - η εφαρμογή δεν έχει ΚΑΝΕΝΑ
+τρόπο να ξέρει πότε τελειώνουν, θα χρειαζόταν νέο polling μηχανισμό, εκτός πεδίου αυτού του περάσματος).
+
+**Καθαρισμός νεκρού κώδικα + orphaned μεταφράσεων**: αφαιρέθηκε το `Start-SdiDriverCheck`/
+`Find-SdioExecutable`/σχετικές μεταβλητές κατάστασης (~130 γραμμές, μηδενικά call sites - επιβεβαιώθηκε
+μέσω grep πριν την αφαίρεση). Βρέθηκαν (μέσω AST-based ανάλυσης, ΟΧΙ οπτικό grep - βλ. σημείωση παρακάτω)
+και αφαιρέθηκαν 3 orphaned μεταφράσεις (EN/FR/DE) - παλιά διατύπωση ενός Dell-σχετικού changelog bullet
+("3η 'πηγή'") που είχε αναδιατυπωθεί αργότερα στο ίδιο το `$global:versionHistory` (αφαιρέθηκε το "3η"
+όταν προστέθηκε το NVIDIA ως 4η πηγή) χωρίς να ενημερωθούν οι μεταφράσεις - το TT() πάντα επιστρέφει
+ασφαλές fallback στο ελληνικό όταν λείπει μετάφραση, άρα αυτό ΔΕΝ ήταν ορατό bug, μόνο "νεκρό βάρος".
+**ΤΕΧΝΙΚΗ ΣΗΜΕΙΩΣΗ για μελλοντικό παρόμοιο έλεγχο**: μια αρχική προσπάθεια με `.StartsWith()` σε
+StringConstantExpressionAst values απέτυχε σιωπηλά - το .NET `String.StartsWith(string)` χωρίς ρητό
+`StringComparison.Ordinal` χρησιμοποιεί culture-sensitive σύγκριση, και ο χαρακτήρας ➕ (U+2795) αποδείχτηκε
+"μηδενικού βάρους" σε αυτήν τη σύγκριση (κάθε string φαινόταν να "ξεκινάει" με αυτόν) - ΠΑΝΤΑ να περνάει
+ρητά `[System.StringComparison]::Ordinal` σε `StartsWith`/`EndsWith`/`Contains` όταν συγκρίνονται σύμβολα/
+emoji, όχι μόνο αλφαβητικό κείμενο.
+
+## 0.7 v2.4.0: διόρθωση περιθωρίων Αρχικής, glass-background επέκταση, διόρθωση SDI
+
+**Home tab περιθώρια (η πραγματική ρίζα)**: το `$global:scrollPanelHome` είχε πλάτος 1030px - ΑΚΡΙΒΩΣ ίδιο
+με το πλάτος των ίδιων των καρτών του (`$cardHealthScore`/`$cardDiskAnalysis` στο X=20 με πλάτος 1030 =>
+δεξί άκρο στο X=1050, 20px πέρα από το panel). ΟΛΕΣ οι υπόλοιπες καρτέλες (Health/Optimization/Network/
+System) ήδη χρησιμοποιούν panel πλάτους 1070px για κάρτες πλάτους 1030px (1030 + 20 αριστερά + 20 δεξιά).
+Διορθώθηκε σε 1070px (Size, Location centering formula, AutoScrollMinSize.Width 1010->1050) ώστε να
+ταιριάζει με το ήδη αποδεδειγμένο μοτίβο. Η προηγούμενη διόρθωση (v2.3.0, height 610->600) αφορούσε ΜΟΝΟ
+την κάθετη διάσταση - ΔΕΝ είχε αγγίξει αυτό το πλάτος-bug, γι' αυτό ο χρήστης ξανάστειλε το ίδιο screenshot.
+
+**Glass-background επέκταση (`Set-PanelGlassBackground`, ~γραμμή 7007)**: εφαρμόστηκε σε ΜΟΝΟ τα 5 panels
+που ήδη έχουν το αποδεδειγμένα ασφαλές SetStyle (OptimizedDoubleBuffer/AllPaintingInWmPaint/UserPaint) -
+Home/Health/Optimization/Network/System. Τεχνική: `Add_Paint` handler που κάνει χειροκίνητο
+`Graphics.DrawImage` ενός crop του `$psender.Parent.BackgroundImage` (το ήδη υπάρχον, ζωντανά
+ανανεούμενο bitmap του $content/"tab page") ΣΤΗ ΣΤΑΘΕΡΗ θέση του panel (`.Left`/`.Top`) - ΣΚΟΠΙΜΑ ΧΩΡΙΣ να
+λαμβάνει υπόψη το δικό του `AutoScrollPosition` (το background παραμένει οπτικά "σταθερό" σαν υλικό πίσω
+από το panel, ΔΕΝ κυλάει μαζί με το περιεχόμενο - αυτό αποφεύγει εντελώς τον υπολογισμό offset κύλισης).
+ΔΙΑΦΟΡΕΤΙΚΟ μηχανισμό από το ήδη αποτυχημένο v1.6.6 (καμία ρύθμιση της ιδιότητας `BackgroundImage` σε
+AutoScroll panel, κανένα `BackColor=Transparent`) - τρέχει στον κανονικό `Paint` κύκλο αντί να βασίζεται
+στον ημι-αυτόματο μηχανισμό επανασχεδίασης-σε-κύλιση της ιδιότητας `BackgroundImage`.
+**ΣΗΜΕΙΩΣΗ ΕΙΛΙΚΡΙΝΕΙΑΣ (σημαντική)**: ΔΕΝ υπήρχε δυνατότητα ζωντανής οπτικής επιβεβαίωσης σε πραγματικά
+Windows γι' αυτή τη συγκεκριμένη αλλαγή σε αυτό το πέρασμα (μόνο `ParseFile`/static analysis). Εφαρμόστηκε
+κατόπιν ρητής έγκρισης του χρήστη ("δοκίμασε τη διόρθωση") μετά από ανάλυση ρίσκου. Αν εμφανιστεί ξανά
+"φάντασμα"/artifact σε κάποιο από αυτά τα 5 panels: το πρώτο σημείο ελέγχου είναι το `Set-PanelGlassBackground`
+Paint handler - πιθανή αιτία θα ήταν κάποιο edge case στο crop math (π.χ. όταν το panel μετατοπίζεται λόγω
+docking του πλευρικού μενού EN ΩΡΑ που τρέχει ήδη το animation - το crop διαβάζει `.Left`/`.Top` ζωντανά σε
+κάθε Paint, άρα ΘΑ έπρεπε να προσαρμόζεται σωστά, αλλά αυτό ΔΕΝ δοκιμάστηκε ζωντανά).
+
+**SDI "Sum: 0" (η πραγματική ρίζα)**: το προηγούμενο επιχείρημα SDI (`-nogui -autoclose -nostamp
+-output_dir -log_dir`) ΠΟΤΕ δεν περιείχε flag που να ζητά λήψη/ενημέρωση του τοπικού index driverpacks -
+το SDI συνέκρινε πάντα ενάντια σε ΚΕΝΟ index, άρα "Sum: 0" ήταν αναμενόμενο σε ΚΑΘΕ εκτέλεση, όχι μόνο
+στην πρώτη (η προηγούμενη v2.2.5 διάγνωση "πρώτη εκτέλεση" ήταν ημιτελής). Προστέθηκε το επίσημα
+τεκμηριωμένο flag `-autoupdate` (πηγή: https://sdi-tool.org/settings/ - "starts downloading automatically"·
+επιβεβαιώθηκε ΚΑΙ μέσω WebSearch σε δεύτερη πηγή). Το flag κατεβάζει τον ΚΑΤΑΛΟΓΟ/index (μεταδεδομένα -
+ΟΧΙ τα ίδια τα αρχεία οδηγών, αυτά κατεβαίνουν ΜΟΝΟ μέσω ξεχωριστής εντολής `select`+`install` που η
+εφαρμογή ΔΕΝ καλεί ποτέ). Χρονικό όριο αυξήθηκε 25 δευτ. -> 3 λεπτά για να χωρέσει η πρώτη λήψη index (το
+SDI αποθηκεύει τον index στη ΔΙΚΗ ΤΟΥ προεπιλεγμένη τοποθεσία, ΟΧΙ στον προσωρινό μας φάκελο, άρα θα
+έπρεπε να παραμένει μόνιμα - οι επόμενες σαρώσεις αναμένεται να είναι πολύ πιο γρήγορες).
+**ΣΗΜΕΙΩΣΗ ΕΙΛΙΚΡΙΝΕΙΑΣ**: το ΑΚΡΙΒΕΣ μέγεθος/διάρκεια της λήψης index δεν επιβεβαιώθηκε ζωντανά (κανένα
+πραγματικό SDI/δίκτυο διαθέσιμο σε sandbox). Αν ΚΑΙ το νέο όριο 3 λεπτών αποδειχτεί ανεπαρκές σε αργή
+σύνδεση, το UI ήδη εξηγεί τιμίως ότι μπορεί να χρειαστεί επανάληψη - καμία σιωπηλή αποτυχία.
+
+**"Πλήρης μεγιστοποίηση"**: ΡΗΤΑ αφέθηκε fixed-size προς το παρόν, κατόπιν επιλογής του χρήστη μετά από
+ανάλυση ρίσκου (το responsive resize είχε ήδη εγκαταλειφθεί 2 φορές παλιότερα - βλ. ενότητα 0.5 παρακάτω).
+Αν ζητηθεί ξανά στο μέλλον, η επιλογή "letterbox" (μεγιστοποίηση με ΣΤΑΘΕΡΟ μέγεθος περιεχομένου
+κεντραρισμένο στο μεγαλύτερο παράθυρο, καμία αναδιάταξη) ήταν η προτεινόμενη, χαμηλού ρίσκου εναλλακτική.
+
+## 0.8 v2.5.0: letterbox μεγιστοποίηση/resize (ΔΙΑΒΑΣΕ ΠΡΙΝ ΑΓΓΙΞΕΙΣ `$mainForm`/sidebar)
+
+**Το αίτημα**: ο χρήστης ζήτησε ΕΠΑΝΕΙΛΗΜΜΕΝΑ (2 φορές στο ίδιο πέρασμα) πραγματική δυνατότητα
+resize/maximize "όπως όλα τα παράθυρα στα Windows 11". Το πλήρες responsive redesign (αναδιάταξη όλου
+του περιεχομένου) είχε ΗΔΗ εγκαταλειφθεί 2 φορές παλιότερα (v2.0.4) ως εκτός εφικτού πεδίου - βλ. ενότητα
+0.5 παρακάτω. Αντ' αυτού εφαρμόστηκε η τεχνική **"letterbox"**: το mainForm έγινε πραγματικά
+resizable/maximizable, αλλά ΟΛΟ το ήδη υπάρχον περιεχόμενο (κάθε control που ήταν μέχρι τότε άμεσο παιδί
+του `$mainForm`) μεταφέρθηκε ΑΥΤΟΥΣΙΟ, ΧΩΡΙΣ ΚΑΜΙΑ αλλαγή θέσης/μεγέθους, μέσα σε ένα νέο, ΣΤΑΘΕΡΟΥ
+μεγέθους (1280x800 - ακριβώς το πρώην `$mainForm.Size`) `$global:canvasPanel`. Το canvas απλά
+κεντράρεται μέσα στην τρέχουσα ορατή περιοχή σε κάθε αλλαγή μεγέθους (σαν βίντεο 4:3 σε οθόνη 16:9) -
+ΜΗΔΕΝΙΚΗ αναδιάταξη οποιουδήποτε ήδη υπάρχοντος στοιχείου.
+
+**Πού είναι ο κώδικας**:
+- `$global:canvasPanel` δημιουργείται και γεμίζει (σκουπίζοντας ΟΛΟΚΛΗΡΟ το `$mainForm.Controls`) στο
+  ΑΠΟΛΥΤΑ τελευταίο μπλοκ κώδικα πριν το `$mainForm.ShowDialog()` (τέλος του αρχείου) - ΠΡΕΠΕΙ να παραμείνει
+  εκεί, αφού σκουπίζει ΚΥΡΙΟΛΕΚΤΙΚΑ ό,τι έχει προστεθεί μέχρι εκείνο το σημείο. Αν προστεθεί ΝΕΟ control
+  απευθείας στο `$mainForm.Controls` (αντί στο `$global:canvasPanel.Controls`) ΜΕΤΑ από αυτό το σημείο,
+  θα καταλήξει στο εξωτερικό "letterbox" περιθώριο αντί στο πραγματικό περιεχόμενο της εφαρμογής - ΚΑΝΕ
+  `$global:canvasPanel.Controls.Add(...)` για οτιδήποτε νέο ΜΟΝΙΜΟ στοιχείο προστεθεί από εδώ και πέρα
+  (dynamically-created controls μέσα σε υπάρχουσες functions/event handlers είναι ήδη ασφαλή - προστίθενται
+  σε ήδη-υπάρχοντα panels που ΕΙΝΑΙ ήδη μέσα στο canvas, π.χ. `$rowPanel.Controls.Add(...)`).
+- `Update-CanvasLetterbox` (νέα function, ίδιο σημείο) κεντράρει το canvas σε κάθε `$mainForm.Add_Resize`.
+- `$mainForm.MinimumSize = new(1296, 839)` - αποτρέπει σμίκρυνση κάτω από το μέγεθος του canvas (το
+  mainForm ΔΕΝ έχει δικό του AutoScroll - αν γινόταν μικρότερο από το canvas, τμήματα θα ήταν απρόσιτα).
+
+**ΚΡΙΣΙΜΗ διόρθωση που χρειάστηκε παράλληλα**: ο κώδικας του πλευρικού μενού (☰) - `Get-SidebarOpenX`,
+`Get-SidebarHiddenX`, `Update-SidebarFormPosition`, `$global:sidebarSlideTimer`, `Show-Sidebar`,
+`Hide-Sidebar`, `$global:sidebarBoundsGuardTimer` (όλα γύρω από γραμμή ~7550-7750) - αναφερόταν ΠΑΝΤΟΥ
+απευθείας σε `$mainForm.Left`/`.Width`/`.ClientSize.Height/.Width`/`.PointToScreen(...)`, υποθέτοντας ότι
+αυτά ΠΑΝΤΑ αντιστοιχούν στα πραγματικά ορατά όρια της εφαρμογής - υπόθεση που έσπαγε αμέσως μόλις το
+mainForm έγινε resizable/μεγαλύτερο από το canvas (π.χ. σε μεγιστοποίηση σε μεγάλη οθόνη). **Αυτή ήταν η
+περιοχή με το ΜΕΓΑΛΥΤΕΡΟ ιστορικό επαναλαμβανόμενων, επίμονων bugs σε όλο το project** (πολλαπλά
+"ΔΙΟΡΘΩΣΗ ΡΙΖΙΚΗ"/"ΘΕΜΕΛΙΩΔΟΥΣ ΑΡΧΙΤΕΚΤΟΝΙΚΗΣ" σχόλια εκεί, v2.0.4 έως v2.2.0) - ΟΛΕΣ αυτές οι αναφορές
+εντοπίστηκαν συστηματικά (μέσω grep, ΟΧΙ οπτικού ελέγχου) και αντικαταστάθηκαν με τα ισοδύναμα του
+`$global:canvasPanel` (π.χ. `$mainForm.Left` -> `$mainForm.Left + $global:canvasPanel.Left`,
+`$mainForm.ClientSize.Width` -> `$global:canvasPanel.Width`, `PointToScreen([Point]::Empty)` ->
+`PointToScreen($global:canvasPanel.Location)`). Στην προεπιλεγμένη, μη-μεγιστοποιημένη κατάσταση
+`canvasPanel.Left=(0,0)` και μέγεθος 1280x800 ταυτίζονται ΑΚΡΙΒΩΣ με το πρώην mainForm - άρα η συμπεριφορά
+παραμένει ΑΚΡΙΒΩΣ ίδια με πριν σε αυτή την (συχνότερη) κατάσταση, και προσαρμόζεται σωστά μόνο όταν το
+παράθυρο γίνεται πραγματικά μεγαλύτερο/μετακινείται το letterbox.
+**Το `$global:sidebarEmbedPanel`** (το ΝΕΟ, embedded panel του sidebar - ΟΧΙ το παλιό `$global:sidebarForm`)
+είναι πλέον ΠΑΙΔΙ του `$global:canvasPanel` (σκουπίστηκε μαζί με όλα τα άλλα), άρα οι δικές του
+συντεταγμένες (`.Left`/`.Top`) είναι ήδη canvas-relative από μόνες τους - χρειάστηκε μόνο να αλλάξουν οι
+αναφορές `$mainForm.ClientSize.*` σε `$global:canvasPanel.*` στο `Show-Sidebar`/`Hide-Sidebar` (ΧΩΡΙΣ
+προσθήκη `.Left` offset, αφού είναι ήδη τοπικές). Το `$global:sidebarForm` (ξεχωριστό, floating Form -
+χρησιμοποιείται ΜΟΝΟ στη μη-anchored κατάσταση) παραμένει ξεχωριστό top-level Form (ΔΕΝ μπορεί να γίνει
+παιδί ενός Panel) - χρειάστηκε τον πλήρη υπολογισμό οθόνης-συντεταγμένων (mainForm.Left + canvasPanel.Left).
+
+**ΣΗΜΕΙΩΣΗ ΕΙΛΙΚΡΙΝΕΙΑΣ (πολύ σημαντική)**: ΔΕΝ υπήρχε ΚΑΜΙΑ δυνατότητα ζωντανής οπτικής επιβεβαίωσης σε
+πραγματικά Windows για αυτή τη συγκεκριμένη αλλαγή (μόνο `ParseFile`/static analysis + πολύ προσεκτική,
+συστηματική ιχνηλάτηση κάθε αναφοράς `$mainForm.Left/.Width/.Height/.ClientSize` σε όλο το αρχείο μέσω
+grep). Αν μετά από αυτό αναφερθεί ΞΑΝΑ κάποιο πρόβλημα θέσης/μεγέθους του sidebar (η ΠΙΟ πιθανή περιοχή
+για regressions, δεδομένου του ιστορικού της): **πρώτο σημείο ελέγχου είναι αυτή η ενότητα** - έλεγξε αν
+όλες οι αναφορές `$mainForm.*` σε αυτές τις 6-7 συναρτήσεις/timers έχουν πράγματι γίνει `$global:canvasPanel.*`
+όπου έπρεπε (grep για `mainForm\.ClientSize|mainForm\.Width\b|mainForm\.Height\b` θα έπρεπε να επιστρέφει
+0 αποτελέσματα σε όλο το αρχείο - αν επιστρέφει κάτι, βρέθηκε σημείο που ξέφυγε από αυτό το πέρασμα).
+Άλλες πιθανές πηγές προβλημάτων που ΔΕΝ ελέγχθηκαν ζωντανά: Z-order μετά το reparenting (σειρά διατηρήθηκε
+βάσει της σειράς στο `$mainForm.Controls` τη στιγμή του reparenting, ΜΕΤΑ από όλα τα `BringToFront()` της
+αρχικής κατασκευής - θα ΕΠΡΕΠΕ να διατηρεί το ίδιο οπτικό αποτέλεσμα, δεν επιβεβαιώθηκε).
+
+**ΔΙΟΡΘΩΣΗ v2.6.0 (MinimumSize)**: ζωντανή προσομοίωση (πραγματικό PowerShell + System.Drawing, ΟΧΙ
+θεωρητικά) του letterbox-centering μαθηματικού αποκάλυψε ότι το ΣΤΑΤΙΚΟ, μαντεμένο `MinimumSize`
+(1296x839) ρίσκαρε να είναι έστω 1px μικρότερο από το πραγματικό border+titlebar chrome ανάλογα με
+θέμα/DPI - ΑΚΟΜΑ ΚΑΙ 1px έλλειψη προκαλεί ορατή υπερχείλιση του canvas εκτός ορατής περιοχής (χωρίς
+AutoScroll στο ίδιο το mainForm, δεν υπάρχει τρόπος να προσπελαστεί). Διορθώθηκε ώστε το πραγματικό
+chrome να ΜΕΤΡΙΕΤΑΙ ζωντανά (`$mainForm.Size - $mainForm.ClientSize`, ΑΦΟΥ το FormBorderStyle έγινε ήδη
+Sizable) αντί να μαντεύεται - πιο αξιόπιστο ΓΙΑ ΤΟ ΣΥΓΚΕΚΡΙΜΕΝΟ σύστημα, ΣΥΝ επιπλέον περιθώριο ασφαλείας
+(+20/+20) από πάνω, ΣΥΝ κατώφλι (`Math.Max`) στην παλιά τιμή σε περίπτωση που η μέτρηση επιστρέψει κάτι
+μη αναμενόμενο πριν εμφανιστεί πραγματικά το παράθυρο. Ακόμα ΔΕΝ επιβεβαιώθηκε ζωντανά σε πραγματικά
+Windows (το ίδιο το session δεν έχει δυνατότητα rendering) - αλλά η μέθοδος υπολογισμού είναι πλέον
+ουσιωδώς πιο αξιόπιστη από πριν.
+
+## 0.5 Σχέδιο για v2.5.0: πιθανή μετάβαση σε WPF / πιθανή απομάκρυνση από μονολιθικό .ps1
+
+Ρητή οδηγία χρήστη (όχι ακόμα απόφαση, προς εξέταση στην ώρα της): αν μέχρι την v2.5.0 έχουν συσσωρευτεί
+πολλές δυσκολίες (οπτικές ή άλλες) που το WinForms genuinely δεν μπορεί να λύσει καθαρά — εξέτασε πλήρη
+μετάβαση σε WPF/XAML. ΣΗΜΕΙΩΣΗ: το `reference/WMT-GUI.ps1` είναι ήδη WPF (βλ. ενότητα "Κρίσιμα Τεχνικά
+Ευρήματα" παρακάτω) — μια μετάβαση θα μπορούσε ενδεχομένως να αντλήσει ΠΕΡΙΣΣΟΤΕΡΑ από εκεί απευθείας
+(layout code, όχι μόνο λογική), κάτι που ΔΕΝ είναι εφικτό τώρα με WinForms. Δεύτερο, ξεχωριστό σημείο:
+ΜΕΤΑ το πέρας όλων των ενσωματώσεων (πριν την v2.5.0), αν το ενιαίο `Optimizer.ps1` έχει γίνει πολύ
+"βαρύ" (μέγεθος/πολυπλοκότητα), εξέτασε είτε διάσπαση σε modules + assets, είτε μεταγλώττιση σε .exe
+(π.χ. μέσω ps2exe ή μεταφορά πυρήνα λογικής σε compiled .NET). Και οι δύο αποφάσεις είναι ΜΕΓΑΛΕΣ
+αρχιτεκτονικές αλλαγές - να ΜΗΝ ξεκινήσουν χωρίς ρητή επιβεβαίωση του χρήστη τη στιγμή που θα εξεταστούν,
+και σίγουρα όχι πριν ολοκληρωθεί η τρέχουσα δουλειά ενσωματώσεων.
+
+## 0. Σχέδιο Αρχιτεκτονικής: Driver Updater πολλαπλών πηγών (για v2.2.0 — ΔΕΝ έχει υλοποιηθεί ακόμα)
+
+Ο χρήστης έδωσε ρητή, λεπτομερή κατεύθυνση αρχιτεκτονικής (βλ. πλήρη συζήτηση στο ίδιο session) για το πώς πρέπει να ξαναχτιστεί ο μηχανισμός Driver Updates (τρέχον v2.1.1: μόνο SDI/SDIO, βλ. καρτέλα Βελτιστοποίηση). Σύνοψη της κατεύθυνσης — **να ακολουθηθεί όταν ξεκινήσει η πραγματική υλοποίηση**, μην ξαναρωτήσεις τον χρήστη τα βασικά:
+
+- **ΠΟΤΕ να μη φανεί το UI του SDIO στον χρήστη.** Το SDIO γίνεται ένας από πολλούς backend "providers", όχι το κέντρο της εφαρμογής. Headless/scripted εκτέλεση (SDIO υποστηρίζει ήδη command-line switches για αυτό) — ΟΧΙ SendKeys/window-hiding hacks (εύθραυστο).
+- **Provider abstraction layer**: κάθε πηγή (SDIO, Windows Update/WUA, Microsoft Update Catalog, Intel, AMD, NVIDIA, OEM databases όπως Dell/HP/Lenovo, δική μας cached database) είναι ένα ξεχωριστό `*Provider.ps1` που επιστρέφει ΤΗΝ ΙΔΙΑ δομή δεδομένων (κοινό PSCustomObject σχήμα: DeviceId/HardwareID, DeviceName, DriverVersion, CurrentVersion, Provider/Source, IsCompatible, IsSigned, IsWHQL, OS, Architecture). Το υπόλοιπο πρόγραμμα (UI, ranking, εγκατάσταση) ΔΕΝ ξέρει από πού ήρθε ο driver.
+- **Ταυτοποίηση με Hardware ID (VEN/DEV/SUBSYS/REV)**, όχι με όνομα συσκευής — ακριβέστερο matching, λιγότερα false positives.
+- **Δικό μας Trust/Stability Score** αντί να εμπιστευόμαστε τυφλά την ετικέτα "stable" κάποιου provider: WHQL/υπογεγραμμένο +, επίσημος κατασκευαστής/OEM +, ταιριάζει Hardware ID +, νεότερος από τον εγκατεστημένο +, beta/unsigned/λάθος OS/λάθος αρχιτεκτονική — μεγάλο αρνητικό (πρακτικά απόρριψη). Μόνο ό,τι περνάει το κατώφλι εμφανίζεται στον χρήστη ως "Stable"/"Recommended".
+- **Merge → Deduplicate → Compatibility filter → Stability filter → Ranking → ΔΙΚΟ ΜΑΣ UI.** Ο χρήστης βλέπει ΜΙΑ κάρτα ανά συσκευή με το καλύτερο candidate, ΠΟΤΕ 15 άσχετα αποτελέσματα.
+- **Ένας κεντρικός Installation Manager/ουρά** — ποτέ δύο installers (π.χ. SDIO + WUA) να τρέχουν ταυτόχρονα για την ίδια συσκευή (τεκμηριωμένο conflict risk με τον Windows Update orchestrator).
+- Στόχος αρχιτεκτονικής: να μπορεί να προστεθεί/αφαιρεθεί provider (π.χ. αύριο Realtek/ASUS) χωρίς να αλλάξει το UI ή ο πυρήνας του μηχανισμού.
+- Προτεινόμενη δομή αρχείων μέσα στο project (αν αποφασιστεί διάσπαση σε πολλά αρχεία αντί για ένα ενιαίο .ps1): `Providers/SDIOProvider.ps1`, `Providers/WindowsUpdateProvider.ps1`, `Providers/VendorProviders.ps1`, `Detection/HardwareDetection.ps1`, `Ranking/DriverRanking.ps1`, `Installation/DriverInstaller.ps1` — ή, αν παραμείνει single-file (τρέχουσα σύμβαση όλης της εφαρμογής), ισοδύναμος διαχωρισμός σε ξεχωριστές functions/regions μέσα στο `Optimizer.ps1`.
+- Ρητά ΕΚΤΟΣ του άμεσου πλάνου: MAS/activation-related οτιδήποτε (ήδη ΕΚΤΟΣ SCOPE γενικά, §Β παρακάτω).
+
+---
+
+## 1. Τι είναι η εφαρμογή
+
+Εξειδικευμένη εφαρμογή συντήρησης/βελτιστοποίησης Windows 11, γραμμένη εξ ολοκλήρου σε PowerShell με WinForms GUI (όχι WPF, όχι .NET compiled app — τρέχει απευθείας ως .ps1 script). Ελληνικό UI με πλήρη μετάφραση σε Αγγλικά/Γαλλικά/Γερμανικά. Φιλοσοφία: "ελαφρύνει τα Windows χωρίς να χάνουν λειτουργικότητα" — κάθε επικίνδυνη ενέργεια είναι backup-able/reversible, καμία μόνιμη διαγραφή χωρίς Κάδο Ανακύκλωσης, καμία επιθετική σάρωση (π.χ. ο Registry Cleaner είναι σκόπιμα στενός, όχι επιθετικός).
+
+### Καρτέλες (με τη σειρά)
+0. **Αρχική** (νέα, v2.0.1) — μετρητές CPU/RAM/Δίσκου με glossy εικονίδια, dropdown επιλογής δίσκου, Βαθμολογία Υγείας Συστήματος, Ανάλυση Χώρου Δίσκου ανά Κατηγορία (v2.1.1, segmented bar + drilldown) — όλα πλέον μέσα σε ένα κεντραρισμένο `$global:scrollPanelHome` wrapper
+1. **Βελτιστοποίηση** — Office/Gaming mode, Winget/MS Store/pip/npm/κ.ά. unified update manager, Driver updates (SDI), Driver backup/restore, Driver Store Cleanup (duplicate-version detection), Driver Report Export
+2. **Υγεία & Συντήρηση** — SFC/DISM/CHKDSK, Registry Cleaner (στενός scope: μόνο missing uninstallers + obsolete MuiCache), Browser Cache Cleaner, WinRE health check
+3. **Δίκτυο & Ασφάλεια** — DNS/Winsock, Firewall Rules Manager (search+toggle, ασύγχρονη φόρτωση), Firewall Policy Tools (export/import/.wfw/reset), Hosts File Editor, Windows Defender Γρήγορη Σάρωση (μετακινήθηκε εδώ από Υγεία & Συντήρηση στο v2.0.5, ρητό αίτημα χρήστη)
+4. **Επιπλέον Ρυθμίσεις** — registry tweaks με backup/restore, AI & Copilot section, Performance section (HAGS/Battery/USB/PCIe), context-menu toggles (Ανάληψη Κυριότητας/PowerShell Εδώ), Visual Effects Presets
+5. **Εφαρμογές & Bloat** — Recommended Apps κατάλογος (7 κατηγορίες, incl. Viber), bloatware removal/reinstall, Deep Uninstall
+6. **Προηγμένα Εργαλεία** — 5 κάρτες: "Συντήρηση & Διάγνωση Συστήματος" + "Εργαλειοθήκη" (incl. GPU driver soft-reset) + "Πρόσθετες Λειτουργίες Windows" (6 δημοφιλή quick-toggle: NetFx3/Sandbox/Hyper-V/WSL/Telnet/SMB1) + "Όλες οι Πρόσθετες Λειτουργίες Windows" (v2.1.1, πλήρης αναζητήσιμη λίστα μέσω DISM) + "Διαχείριση Συσκευών-Φαντασμάτων"
+7. **Σύστημα** — Startup Apps, Processes, Storage (duplicates/large files/OneDrive), Restore Points, Services-to-Manual
+
+### Μενού (3 παράλληλα συστήματα, όλα λειτουργικά ταυτόχρονα)
+- **Κλασικό** (`System.Windows.Forms.MenuItem`, παλιό MainMenu API): Εργαλεία/Προβολή/Ρυθμίσεις/Ιστορικό Ενεργειών/Βοήθεια — 5 top-level items, όλα με emoji πρόθεμα (🛠️👁️⚙️📋❓)
+- **Σύγχρονο οριζόντιο** (`$global:horizModernStrip`): 5 custom-drawn items με πραγματικά εικονίδια (PictureBox + Get-AppIcon)
+- **Πλευρικό** (`$global:sidebarForm`): ΞΕΧΩΡΙΣΤΟ Form (όχι embedded panel), 5 items, slide animation. Σε MenuMode="Sidebar" γίνεται "anchored" (`Test-SidebarShouldDock`) — τοποθετείται ΜΕΣΑ στα όρια του mainForm, κάτω από τη λωρίδα καρτελών (Y=118), με πραγματική δέσμευση χώρου στο περιεχόμενο κάθε καρτέλας (`Update-SidebarDockLayout`, βλ. v2.1.0/v2.1.1) αντί να το επικαλύπτει· σε άλλη περίπτωση παραμένει η αρχική συμπεριφορά (κολλάει έξω από το mainForm). Σκληρό clamp θέσης/ύψους (v2.1.1) εγγυάται ότι δεν βγαίνει ΠΟΤΕ εκτός των ορίων του mainForm.
+
+Toggle μεταξύ σύγχρονου/πλευρικού μέσω ρύθμισης `$global:appSettings.MenuMode` ("HorizontalModern" / "Sidebar"). Ctrl+M εναλλάσσει ΚΑΙ το κλασικό.
+
+---
+
+## 2. Κρίσιμα Τεχνικά Ευρήματα (μην τα ξαναανακαλύψεις)
+
+### Το reference code (WMT-GUI.ps1) είναι WPF, όχι WinForms
+Επιβεβαιωμένο: χρησιμοποιεί `[System.Windows.WindowState]`, XAML-based UI. Η δική μας εφαρμογή είναι WinForms. **ΔΕΝ μπορείς να αντιγράψεις UI/layout κώδικα απευθείας** — τα δύο frameworks έχουν θεμελιωδώς διαφορετικό layout σύστημα (WPF: declarative Grid/DockPanel με αναλογικό sizing· WinForms: imperative, pixel-based με Anchor/Dock). **Μπορείς όμως να αντιγράψεις PowerShell/registry/CIM λογική** (π.χ. tweaks, εντοπισμός drivers, registry paths) — αυτό είναι framework-agnostic και έχει ήδη χρησιμοποιηθεί εκτενώς (MS Store update mechanism, AI/Copilot registry paths, Services-to-Manual λίστα, Registry Cleaner logic, Viber winget ID).
+
+**Πάντα** ψάξε πρώτα στο `reference/WMT-GUI.ps1` για registry paths/CIM queries/PowerShell λογική πριν σχεδιάσεις κάτι από την αρχή — αλλά μην περιμένεις έτοιμο UI/layout κώδικα.
+
+### Μεγιστοποίηση/Resize — ΕΓΚΑΤΑΛΕΙΦΘΗΚΕ ΣΚΟΠΙΜΑ
+Έγιναν 2 πλήρεις προσπάθειες να γίνει η εφαρμογή resizable/maximizable (Anchor properties σε scrollPanels + content panels + tabStripPanel). Και οι δύο απέτυχαν να δώσουν σωστό αποτέλεσμα (tab scroll buttons παρέμεναν λάθος, περιεχόμενο δεν αναδιατασσόταν σωστά, animated background έσπαγε). **Η τρέχουσα κατάσταση (ισχύει ακόμα στο v2.0.5) έχει mainForm.FormBorderStyle="FixedSingle", MaximizeBox=$false** — σκόπιμη, τεκμηριωμένη απόφαση, όχι παράλειψη. Αν ξαναδοκιμαστεί, θα χρειαστεί είτε (α) πλήρη restructuring σε ένα κεντραρισμένο, fixed-size "container" panel μέσα σε resizable window (τεντωμένο φόντο, σταθερό περιεχόμενο - "letterboxing"), είτε (β) πραγματική μετάβαση σε framework με native layout engine.
+
+### Winget/package manager updates — γνωστό, τεκμηριωμένο πρόβλημα elevation
+Επιβεβαιωμένο από GitHub microsoft/winget-cli issues (#3418, discussion #3185): **το winget source δεν αρχικοποιείται σωστά σε elevated/Administrator context** (η εφαρμογή μας τρέχει πάντα elevated). Η εγκατάσταση μπορεί να "τερματίσει κανονικά" χωρίς να κάνει τίποτα. Διόρθωση που εφαρμόστηκε: `winget source reset --force` πριν το πρώτο install κάθε batch, `-WindowStyle Hidden` αντί για `-NoNewWindow` (WinForms process χωρίς δικό του console μπορεί να μπερδέψει ένα console tool σαν το winget.exe), και πραγματικός έλεγχος `.ExitCode` (πριν δεν γινόταν καθόλου).
+
+### PowerShell string/escaping πειθαρχία
+- Backtick `` ` `` για escape του `$` μέσα σε double-quoted strings, **ποτέ backslash** `\` (backslash δεν είναι escape character στην PowerShell — `\"` σε ένα string δεν κάνει escape, δημιουργεί ασυνεπή αριθμό backslashes πριν από quotes· έλεγχος: μονός αριθμός backslash πριν από `"` = πρόβλημα, ζυγός = ασφαλές/σκόπιμο π.χ. σε regex).
+- Single-quoted heredocs (`@'...'@`) + `.Replace()` για embedded, πολυ-γραμμικά background scripts — ποτέ `-Command "..."` με nested quotes.
+- **Μετά από ΚΑΘΕ edit**, τρέξε balance check: `python3 -c "print(open('Optimizer.ps1',encoding='utf-8').read().count('{'), ...count('}'))"`. Ένα σταθερό, ήδη γνωστό delta braces=3/brackets=5 είναι ψευδώς θετικό (StartsWith("{")/("[") literals, ANSI/regex patterns) — οτιδήποτε αλλάζει αυτό το delta σημαίνει πραγματικό πρόβλημα.
+- Επίσης έλεγχος: κλήση-πριν-τον-ορισμό (function καλείται top-level πριν οριστεί), διπλότυπα function ορίσματα, αρνητικό cumulative brace depth. Τα scripts για αυτούς τους ελέγχους έχουν χρησιμοποιηθεί δεκάδες φορές μέσα στη συνομιλία — αναδημιούργησέ τα εύκολα με regex πάνω στις γραμμές του αρχείου.
+
+### Emoji σε RichTextBox = "τετράγωνα" χωρίς per-character font switching
+Ένα RichTextBox με μία γραμματοσειρά (π.χ. Segoe UI) δεν κάνει αυτόματο font fallback για emoji (🔧➕) — εμφανίζονται ως "tofu boxes". Λύση: `SelectionStart`/`SelectionLength`/`SelectionFont` για να δοθεί "Segoe UI Emoji" ΜΟΝΟ στο emoji character, το υπόλοιπο κείμενο κρατά το κανονικό font. Δες `Add-HistLineWithEmoji` στο Show-VersionHistoryWindow.
+
+### mainForm.Top/.Height περιλαμβάνουν το Windows titlebar
+Για οτιδήποτε πρέπει να ευθυγραμμιστεί με το **εσωτερικό, ορατό client area** (π.χ. το ξεχωριστό sidebar Form), χρησιμοποίησε `$mainForm.PointToScreen([System.Drawing.Point]::Empty).Y` και `$mainForm.ClientSize.Height`, όχι `.Top`/`.Height` (αυτά περιλαμβάνουν την εξωτερική titlebar/border).
+
+### Animation timer performance
+Το `$global:bgAnimTimer` (κινούμενο φόντο) δημιουργούσε ΝΕΟ bitmap σε ολόκληρο το μέγεθος της ενεργής καρτέλας κάθε 50ms (20x/δευτ) — σοβαρό performance hit, ειδικά αν το tab content μεγαλώσει. Μειώθηκε σε 150ms interval + παύση κατά τη διάρκεια active window resize (`$global:isResizing` flag, `ResizeBegin`/`ResizeEnd` events). Οποιοδήποτε νέο, συχνό Timer πρέπει να ελέγχεται για κόστος-ανά-tick πριν οριστεί το interval.
+
+### Δύο παράλληλα translation συστήματα — ΜΗΝ τα μπερδεύεις
+- **`TT("ελληνικό κείμενο")`**: το ίδιο το ελληνικό κείμενο είναι το dictionary key. Χρησιμοποιείται για ΟΛΟ το δυναμικό/μεγάλο κείμενο (tweaks, tooltips, μηνύματα, changelog). Αλλαγή του ελληνικού κειμένου = "σπάει" την αντιστοίχιση με τις EN/FR/DE μεταφράσεις μέχρι να ενημερωθούν και αυτές.
+- **`T("KeyName")`**: σταθερά, ονομαστικά keys (μενού, tab τίτλοι, sidebar labels) σε ξεχωριστό `[ordered]@{}` dictionary ανά γλώσσα.
+- Και τα δύο έχουν safe fallback (επιστρέφουν το ελληνικό/το key αν λείπει μετάφραση) — δεν κάνουν crash, αλλά αφήνουν ασυνεπές UI.
+- Πολιτική που ακολουθήθηκε: γράφε πρώτα μόνο Ελληνικά κατά την ανάπτυξη, μαζικές μεταφράσεις σε EN/FR/DE στο τέλος κάθε "batch" δουλειάς, πριν το export.
+
+### Backup/restore μηχανισμός (χρησιμοποιήσου παντού για tweaks)
+Ενιαίο JSON backup file, μέσω `Get-TweakBackupData`/`Save-TweakBackupData`/`Backup-RegValueIfNeeded`/`Restore-BackedUpRegValue`/`Set-RegSafe`. Custom `New-ToggleSwitch` UI control (όχι CheckBox) καλεί OnScript/OffScript closures — **πάντα με `.GetNewClosure()`** όταν αναφέρονται σε loop variables (γνωστό, ξαναεμφανιζόμενο bug pattern).
+
+### Ασύγχρονες, βαριές λειτουργίες — πάντα background process + Timer polling
+Ποτέ `-Wait` σε βαριές εντολές (θα παγώνει το UI thread). Pattern: `Start-Process -WindowStyle Hidden -PassThru`, αποθήκευση του process object σε global state, `Timer.Add_Tick` κάθε ~500-800ms ελέγχει `.HasExited`. Χρησιμοποιείται για: winget scan/upgrade, driver scan, firewall rules load, registry clean scan, KLite install, storage scan.
+
+### Κείμενο μέσα σε double-quoted strings που περιέχει κυριολεκτικό `$όνομα` (π.χ. περιγραφή bug που αναφέρει μεταβλητή) ΠΡΕΠΕΙ να γίνεται escape με backtick
+Βρέθηκε πραγματικό, confirmed bug (v2.0.5): μια καταχώρηση στο `$global:versionHistory` περιέγραφε ένα παλιότερο bug αναφέροντας κυριολεκτικά το όνομα `$parent`, αλλά μέσα σε ένα κανονικό double-quoted string (`"...το $parent (η κάρτα-στόχος)..."`) — η PowerShell το interpolate-άρει ως μεταβλητή αναφορά, και αφού κανένα global `$parent` δεν υπάρχει σε εκείνο το σημείο, γινόταν silent αντικατάσταση με κενό string. Αποτέλεσμα: το Ιστορικό Εκδόσεων εμφάνιζε κενό αντί για "$parent" σε αυτή την καταχώρηση — ΚΑΝΕΝΑ parse error, το bug είναι αόρατο μέχρι να το δεις live ή να το ψάξεις ρητά. Διορθώθηκε με backtick escape (`` `$parent ``) στο ΙΔΙΟ σημείο ΚΑΙ στο αντίστοιχο TT() dictionary key (και τα δύο πρέπει να ταιριάζουν byte-for-byte μετά το interpolation, αφού και τα δύο strings evaluate στο ίδιο σημείο του script load). **Έλεγχος για μελλοντικές αλλαγές**: `grep -n '^\s\+"[^"]*\$[a-zA-Z]' Optimizer.ps1` μέσα στα line ranges του `$global:versionHistory` και `$global:stringTranslations` — οτιδήποτε ταιριάζει και ΔΕΝ έχει backtick πριν το `$` είναι πιθανό bug.
+
+### Fake τυπογραφικά εισαγωγικά (π.χ. γερμανικά „..." ή γαλλικά «...») = ΠΟΤΕ με απλά ASCII `"` χαρακτήρα
+Βρέθηκε πραγματικό, confirmed bug (v2.0.5) στην ίδια μαζική μετάφραση: γράφτηκαν γερμανικές μεταφράσεις με το σωστό ανοιγόμενο `„` (U+201E) αλλά με ΛΑΘΟΣ κλείσιμο — ένα απλό ASCII `"` (0x22) αντί για το σωστό Unicode `"` (U+201C). Το ASCII `"` έκλεινε πρόωρα το ΙΔΙΟ το PowerShell string literal, σπάζοντας το hash literal parsing με confusing, μακρινά error messages (π.χ. "Unexpected token 'Kästchen" σε άσχετη γραμμή). **Ασφαλέστερη πρακτική που υιοθετήθηκε**: απόφυγε εντελώς τα τυπογραφικά/curly quotes μέσα σε μεταφρασμένο κείμενο — χρησιμοποίησε πάντα απλά ASCII single quotes `'...'` για έμφαση λέξης/φράσης, ίδια σύμβαση με το υπόλοιπο ελληνικό κείμενο της εφαρμογής (π.χ. `'Εμφάνιση Μενού'`). Μετά από ΚΑΘΕ μαζική προσθήκη μεταφράσεων, τρέξε `[System.Management.Automation.Language.Parser]::ParseFile()` ΠΡΙΝ θεωρήσεις την αλλαγή ολοκληρωμένη — το delta braces/brackets ΔΕΝ πιάνει αυτού του είδους το σφάλμα (τα quotes δεν είναι braces/brackets), μόνο ο πραγματικός parser το πιάνει.
+
+### Duplicate-key έλεγχος στα TT() dictionaries είναι CASE-INSENSITIVE — μην ψάχνεις μόνο case-sensitive
+Βρέθηκε πραγματικό, confirmed bug (v2.1.1): προστέθηκε νέο κλειδί `"Ολοκληρώθηκε."` (κεφαλαίο Ο) ενώ ήδη υπήρχε `"ολοκληρώθηκε."` (πεζό ο) στο ΙΔΙΟ `en` dictionary — parse error "Duplicate keys". Το PowerShell hashtable literal duplicate-key check συγκρίνει keys ΧΩΡΙΣ διάκριση πεζών/κεφαλαίων, ενώ ένα απλό case-sensitive `grep`/regex ΔΕΝ θα το εντοπίσει (ακριβώς αυτό συνέβη - επιβεβαιώθηκε "0 αποτελέσματα" με case-sensitive αναζήτηση, ενώ το duplicate υπήρχε). **Έλεγχος για μελλοντικές αλλαγές**: όποτε ελέγχεις για collision πριν προσθέσεις νέο TT() key, χρησιμοποίησε case-INSENSITIVE αναζήτηση (π.χ. Grep `-i`), όχι μόνο exact-case match. Πρακτικός τρόπος εντοπισμού της ΑΚΡΙΒΟΥΣ γραμμής όταν συμβεί: το parse error message δείχνει το duplicate key string· μετά ψάξε ΧΩΡΙΣ `-i` decoy - συνήθως χρειάζεται προγραμματιστικός έλεγχος (line-by-line μέσα στο συγκεκριμένο dictionary's line range, HashSet με ordinal comparison) αφού το plain-text grep δεν αρκεί.
+
+### Sidebar: ΔΥΟ ξεχωριστοί μηχανισμοί ανάλογα με anchored/όχι (v2.1.5, θεμελιώδης αλλαγή)
+Μετά από ΤΕΣΣΕΡΙΣ διαδοχικές αποτυχημένες προσπάθειες να διορθωθεί με clamps/guards το πρόβλημα "το
+πλευρικό μενού είναι εκτός των ορίων του παραθύρου" πάνω στο παλιό μοντέλο (πάντα `$global:sidebarForm`,
+ξεχωριστό top-level Form, τοποθετημένο μέσω συντεταγμένων ΟΘΟΝΗΣ ακόμα και όταν "anchored"), η
+αρχιτεκτονική άλλαξε θεμελιωδώς: **όταν anchored/docked (`Test-SidebarShouldDock` = true), χρησιμοποιείται
+πλέον `$global:sidebarEmbedPanel` - ΠΡΑΓΜΑΤΙΚΟ child Panel του mainForm** (`$mainForm.Controls.Add(...)`),
+με συντεταγμένες σχετικές ΜΟΝΟ με το `mainForm.ClientSize` (0 ή `ClientSize.Width-140` για X, πάντα 118
+για Y) - ΚΑΝΕΝΑ σύστημα συντεταγμένων οθόνης, ΚΑΝΕΝΑ DPI/timing ρίσκο, δομικά αδύνατο να βγει εκτός ορίων.
+Το `$global:sidebarForm` (ξεχωριστό Form) παραμένει ΜΟΝΟ για τη μη-anchored ("κολλημένο έξω από το
+παράθυρο") περίπτωση - ένα child control δεν μπορεί δομικά να πετύχει αυτό το οπτικό αποτέλεσμα.
+**Add-SidebarItem** τώρα δέχεται προαιρετικό `-Parent` (προεπιλογή: `$global:sidebarForm`) - τα 5
+αντικείμενα του μενού χτίζονται ΔΙΠΛΑ, μία φορά σε κάθε container (μικρό κόστος διπλασιασμού έναντι
+πολύπλοκου reparenting). **Show-Sidebar/Hide-Sidebar** διακλαδώνονται εσωτερικά ανάλογα με
+`Test-SidebarShouldDock` - τα call sites (κουμπί ☰, startup timer, `Update-SidebarDockLayout`) ΔΕΝ
+χρειάστηκε να αλλάξουν.
+**ΕΝΗΜΕΡΩΣΗ v2.2.0**: το animation ολίσθησης (που αρχικά παραλείφθηκε σκόπιμα στην anchored περίπτωση,
+βλ. προηγούμενη πρόταση σε παλιότερες εκδόσεις αυτού του αρχείου) ΠΡΟΣΤΕΘΗΚΕ τελικά και εκεί, μέσω νέου
+`$global:sidebarEmbedSlideTimer` (15ms interval, easing `Left += diff*0.4`, στο ΙΔΙΟ `sidebarEmbedPanel`).
+Αυτό είναι ΑΣΦΑΛΕΣ (σε αντίθεση με το παλιό μοντέλο) ακριβώς επειδή το WS_CHILD clipping guarantee σημαίνει
+ότι ακόμα και οι ΕΝΔΙΑΜΕΣΕΣ θέσεις κατά το animation (πρόσκαιρα εκτός `mainForm.ClientSize.Width`) είναι
+δομικά αδύνατο να αποδοθούν εκτός των ορίων του mainForm - clip, όχι overflow. `Show-Sidebar`/`Hide-Sidebar`
+θέτουν `$global:sidebarEmbedTargetX` + `$global:sidebarEmbedClosing` και καλούν `.Start()` στον timer· το
+`Add_Tick` του timer κάνει το animate και σταματάει μόνο του όταν φτάσει (tolerance 4px), κρύβοντας το panel
+στο τέλος ΜΟΝΟ αν `$global:sidebarEmbedClosing = $true`. Ο παλιός περιοδικός "φρουρός" Timer (`sidebarBoundsGuardTimer`) παραμένει στον κώδικα αλλά είναι
+πλέον ουσιαστικά αδρανής στην anchored περίπτωση (το sidebarForm μένει Visible=false εκεί) - δεν
+αφαιρέθηκε, απλά δεν χρειάζεται πια, μηδενικό ρίσκο να τον αφήσεις.
+**Αν το πρόβλημα "εκτός ορίων" αναφερθεί ΞΑΝΑ μετά από αυτό**: σημαίνει ότι ο χρήστης δοκιμάζει είτε (α)
+την ΠΑΛΙΑ, μη-ενημερωμένη έκδοση (ζήτα restart), είτε (β) τη μη-anchored περίπτωση συγκεκριμένα (σπάνια
+δοκιμασμένη - ελέγξτε `$global:appSettings.MenuMode`), είτε (γ) υπάρχει πραγματικά νέο, διαφορετικό bug -
+ΜΗΝ ξαναδοκιμάσεις άλλο clamp πάνω στο ΠΑΛΙΟ μοντέλο, ελέγξτε πρώτα ότι το embedded panel μονοπάτι όντως
+εκτελείται (`Test-SidebarShouldDock` πρέπει να είναι `$true`).
+
+### AutoScrollMinSize είναι ΑΝΕΞΑΡΤΗΤΟ από το πραγματικό περιεχόμενο - συνηθισμένη ρίζα "ανεπιθύμητου scrollbar"
+Βρέθηκε πραγματικό, confirmed bug (v2.2.0, καρτέλα Αρχική): ο χρήστης ανέφερε επίμονα "δεν θέλω scrollbar",
+ενώ το ορατό περιεχόμενο ήταν ήδη αρκετά συμπαγές. Root cause: `AutoScrollMinSize` σε ένα AutoScroll Panel
+είναι ένα ΑΝΕΞΑΡΤΗΤΟ, hardcoded "πάτωμα" στο εικονικό μέγεθος του scrollable καμβά - αν είναι μεγαλύτερο
+από το πραγματικό περιεχόμενο, εμφανίζεται scrollbar ΑΝΕΞΑΡΤΗΤΑ από το πόσο συμπαγές γίνεται το περιεχόμενο
+(`$global:scrollPanelHome.AutoScrollMinSize` ήταν `(1010, 1010)`, ενώ το πραγματικό περιεχόμενο τέλειωνε
+γύρω στα 605-775px ανάλογα με την έκδοση). **Έλεγχος για μελλοντικές αλλαγές**: όποτε αναφέρεται
+"ανεπιθύμητο scrollbar" ΠΑΡΑ το ότι το περιεχόμενο φαίνεται να χωράει, μην ψάχνεις μόνο τα Y-coordinates
+των τελευταίων στοιχείων - έλεγξε ΠΡΩΤΑ το `AutoScrollMinSize` του συγκεκριμένου `scrollPanelX` έναντι του
+πραγματικού τέλους περιεχομένου. Έγινε πλήρες audit ΟΛΩΝ των `scrollPanel*.AutoScrollMinSize` στο αρχείο
+στο v2.2.0 (Optimization/Bloatware/System/Network/Advanced/Tweaks) - όλα επιβεβαιώθηκαν συνεπή· μόνο το
+Home ήταν λάθος. Αν προστεθεί νέο περιεχόμενο σε οποιαδήποτε καρτέλα, ΠΑΝΤΑ ενημέρωσε το αντίστοιχο
+`AutoScrollMinSize` ΜΑΖΙ με τη νέα κάρτα/γραμμή, ποτέ ξεχωριστά.
+
+### Y-coordinate overlap σε κάρτες με πολλαπλές, διαδοχικές sections (Tweaks tab pattern)
+Βρέθηκε πραγματικό, confirmed bug (v2.2.0, καρτέλα Επιπλέον Ρυθμίσεις): οι κάρτες "AI & Copilot" και
+"Απόδοση" επικάλυπταν ορατά τις προηγούμενες γραμμές ρυθμίσεων - ΟΧΙ επειδή ήταν "κενές" (αρχική, λάθος
+υπόθεση σε προγενέστερο πέρασμα, βλ. §4 σχόλιο overclaim), αλλά επειδή η Y θέση της επόμενης κάρτας ήταν
+μικρότερη από το πραγματικό ύψος (Y + Height) της προηγούμενης. Σε αρχεία με δεκάδες διαδοχικές κάρτες σε
+μία καρτέλα, ένα μεμονωμένο "μικρό" fix (π.χ. προσθήκη 1-2 γραμμών σε μια κάρτα) μπορεί να χρειαστεί να
+μετατοπίσει ΟΛΕΣ τις επόμενες κάρτες μέχρι το τέλος της καρτέλας - ΟΧΙ μόνο την επόμενη. **Έλεγχος για
+μελλοντικές αλλαγές**: μετά από οποιαδήποτε αλλαγή ύψους/θέσης κάρτας, υπολόγισε το νέο "κάτω άκρο"
+(Y+Height) και επιβεβαίωσε ότι είναι ≤ στο Y της επόμενης κάρτας, ΓΙΑ ΟΛΗ την αλυσίδα μέχρι το τέλος της
+καρτέλας, όχι μόνο το πρώτο ζευγάρι. Συνδέεται με το εύρημα §2 checklist item 7 ("Overlap check").
+
+### Apply-MenuModeSettings πρέπει να κρύβει ΚΑΙ τα δύο sidebar containers, όχι μόνο το παλιό Form
+Βρέθηκε πραγματικό, confirmed bug (v2.2.0): μετά την αρχιτεκτονική αλλαγή σε `$global:sidebarEmbedPanel`
+(βλ. προηγούμενη ενότητα), το `Apply-MenuModeSettings` ΣΥΝΕΧΙΖΕ να κρύβει μόνο το παλιό
+`$global:sidebarForm.Visible = $false` - ΠΟΤΕ το νέο embedded panel. Αποτέλεσμα: αλλαγή MenuMode εν ώρα
+λειτουργίας (π.χ. από Sidebar σε Οριζόντιο) άφηνε το embedded panel "κολλημένο" ορατό. Διορθώθηκε με
+ρητή προσθήκη `if ($global:sidebarEmbedPanel) { ...Stop() timer...; $global:sidebarEmbedPanel.Visible =
+$false }`. **Μάθημα για μελλοντικές δυαδικές αρχιτεκτονικές** (όπου ένα UI στοιχείο έχει 2 διαφορετικές
+υλοποιήσεις ανάλογα με συνθήκη, π.χ. anchored/floating): κάθε function που κάνει "global reset/hide" πρέπει
+να ελέγχεται ρητά ότι καλύπτει ΚΑΙ τα δύο μονοπάτια, όχι μόνο αυτό που υπήρχε πρώτο ιστορικά.
+
+### Driver engine: 3 νέες πηγές προστέθηκαν (AMD+NVIDIA ζωντανά επιβεβαιωμένα, Dell ΜΟΝΟ μέσω τεκμηρίωσης)
+Μετά την οδηγία του χρήστη να ενσωματωθεί πραγματικός πολυ-πηγαίος driver engine (όχι μόνο Windows
+Update), προστέθηκαν 3 νέες πηγές στο `Start-DriverScan`/`Complete-DriverScan` (ίδιο αρχείο, ~γραμμή
+11080+): **AMD (amd.com)**, **NVIDIA (nvidia.com/gfwsl.geforce.com)** και **Dell (Dell Command Update
+CLI)**. Σημαντική διαφορά μεθοδολογίας μεταξύ τους - κρατήστε τη διάκριση σε μελλοντικές αναφορές:
+- **AMD**: ζωντανά επιβεβαιωμένο σε πραγματικά δεδομένα. Βρέθηκε (μέσω Browser tool navigation σε
+  amd.com + network inspection) ότι η σελίδα οδηγών ανά μοντέλο GPU (π.χ.
+  `.../graphics/radeon-rx/radeon-rx-7000-series/amd-radeon-rx-7800-xt.html`) είναι **server-rendered,
+  ΚΑΜΙΑ κρυφή AJAX/JSON API** - το HTML περιέχει απευθείας το Release Date και το download link (η
+  έκδοση Adrenalin είναι μέσα στο ίδιο το filename, π.χ. `amd-software-adrenalin-edition-26.8.1-...exe`).
+  Το URL slug χτίζεται από το GPU name μέσω regex mapping (RX 9xxx/7xxx/6xxx/5xxx/Vega → αντίστοιχο
+  series folder) + lowercase/hyphenate του ονόματος. Η σύγκριση "νεότερη έκδοση" γίνεται με ΗΜΕΡΟΜΗΝΙΕΣ
+  (DriverDate εγκατεστημένου vs Release Date AMD), ΟΧΙ με αριθμό έκδοσης - επιβεβαιώθηκε ζωντανά ότι το
+  Windows DriverVersion (π.χ. `32.0.31041.1004`) και το AMD Adrenalin marketing version (π.χ. `26.8.1`)
+  είναι ΕΝΤΕΛΩΣ διαφορετικά συστήματα αρίθμησης - ΠΟΤΕ μην τα συγκρίνεις σαν strings/version numbers.
+  Δοκιμάστηκε end-to-end σε πραγματικό hardware αυτού του dev sandbox (AMD Radeon RX 7900 GRE) - σωστά
+  εντόπισε ότι υπήρχε νεότερος οδηγός διαθέσιμος.
+- **NVIDIA**: ΕΠΙΣΗΣ ζωντανά επιβεβαιωμένο, ίδια αυστηρότητα με το AMD. Χρησιμοποιεί το ΔΙΚΟ ΤΗΣ NVIDIA
+  δημόσιο μηχανισμό (όχι reverse-engineered guess - ίδιος μηχανισμός με το πολυετές, ευρέως
+  χρησιμοποιούμενο ανοιχτού κώδικα εργαλείο TinyNvidiaUpdateChecker, ο κώδικάς του διαβάστηκε απευθείας
+  από GitHub για επιβεβαίωση): 1) `https://www.nvidia.com/Download/API/lookupValueSearch.aspx?TypeID=3`
+  (επίσημη λίστα ΟΛΩΝ των NVIDIA προϊόντων → pfid, TypeID=4 για λίστα OS → osID, Windows 11=135), 2)
+  `https://gfwsl.geforce.com/services_toolkit/services/com/nvidia/services/AjaxDriverService.php?func=
+  DriverManualLookup&pfid=X&osID=Y&upCRD=0&dch=1` (0=Game Ready Driver, 1=DCH - το μοντέρνο πρότυπο).
+  Το GPU name πρέπει να "καθαριστεί" πριν το ταίριασμα με τη λίστα (αφαίρεση "NVIDIA " prefix, "with
+  Max-Q Design" suffix, "(OEM)", μεγέθους μνήμης, "Super"→"SUPER" - τεκμηριωμένοι κανόνες από το
+  βοηθητικό project github.com/ZenitH-AT/nvidia-data, το οποίο απλώς κρατάει cache της ίδιας επίσημης
+  NVIDIA λίστας). Δοκιμάστηκε ζωντανά με πραγματικό κλήση (GeForce RTX 3070, pfid=933) - επέστρεψε
+  πραγματική τρέχουσα έκδοση/ημερομηνία/download URL. Ίδια λογική σύγκρισης με ημερομηνίες (όχι version
+  strings) με το AMD, για τον ίδιο λόγο (NVIDIA marketing version π.χ. "616.56" ≠ Windows DriverVersion).
+- **Πλήρες end-to-end test ολόκληρου του `Start-DriverScan` background script** (όχι μόνο το κομμάτι
+  AMD/NVIDIA μεμονωμένα) έτρεξε ζωντανά σε αυτό το sandbox: εξήγαγε το heredoc σε αυτοτελές .ps1,
+  έτρεξε το ΠΛΗΡΕΣ pipeline (WU + AMD + NVIDIA + Dell μαζί), και επιβεβαιώθηκε ότι η τελική JSON έξοδος
+  έχει την ΑΚΡΙΒΩΣ αναμενόμενη δομή που διαβάζει το `Complete-DriverScan` - AmdResults σωστά γεμάτο,
+  NvidiaResults/DellResult σωστά κενά (καμία εξαίρεση/σφάλμα) αφού το sandbox δεν έχει NVIDIA GPU ή Dell
+  hardware. Αυτό είναι ο ασφαλέστερος τρόπος να δοκιμαστεί ένα τέτοιο script πριν παραδοθεί - τρέξε το
+  ΠΡΑΓΜΑΤΙΚΟ background script (όχι απλά snippets) και επιβεβαίωσε τη μορφή της τελικής JSON.
+- **Dell**: ΜΟΝΟ τεκμηρίωση + δημόσια production scripts (RMM/enterprise, π.χ.
+  github.com/ajh0912/Useful-PowerShell/Get-DellUpdates.ps1) - **ΔΕΝ δοκιμάστηκε ζωντανά** (το sandbox
+  δεν έχει Dell hardware/DCU εγκατεστημένο). Μηχανισμός: αν `Get-CimInstance Win32_ComputerSystem`
+  δείξει Dell, ελέγχεται αν υπάρχει `dcu-cli.exe` (Program Files\Dell\CommandUpdate) - αν ναι, τρέχει
+  αθόρυβα `/scan -report="<dir>"` (ΠΡΟΣΟΧΗ: τεκμηριωμένος περιορισμός - το `-report=` ΔΕΝ δέχεται
+  διαδρομή μέσα σε `C:\Windows\Temp`, το κανονικό `$env:TEMP` χρήστη είναι ασφαλές), διαβάζει το
+  `DCUApplicableUpdates.xml` που παράγεται μέσα στον φάκελο (`$xml.updates.update` με πεδία
+  name/version/date/urgency/type/category). Αν το DCU ΔΕΝ είναι εγκατεστημένο, εμφανίζεται ΜΙΑ γραμμή
+  πρότασης με κουμπί "Εγκατάσταση & Έλεγχος μέσω Dell" - ΚΑΜΙΑ αυτόματη εγκατάσταση χωρίς ρητό κλικ (ο
+  χρήστης το ζήτησε ρητά ως "confirmation πριν εγκατασταθεί", μετά την εμπειρία με το SDI). **Αν ο
+  χρήστης αναφέρει ότι η λίστα ενημερώσεων/report format δεν βγαίνει σωστά σε πραγματικό Dell PC**, αυτό
+  ΔΕΝ είναι έκπληξη - χρειάζεται το πραγματικό output (`Get-Content DCUApplicableUpdates.xml -Raw`) από
+  τον χρήστη για να διορθωθεί το parsing, ΟΧΙ ξανά-μάντεμα.
+- **HP**: σκόπιμα ΔΕΝ υλοποιήθηκε ακόμα - τα CLI flags του HP Image Assistant
+  (`/Operation:Analyze /Action:List /Silent /ReportFolder:`) βρέθηκαν μόνο σε φόρουμ/λιγότερο αυστηρά
+  τεκμηριωμένες πηγές. Επιπλέον, η ίδια η support.hp.com δεν έχει το ίδιο απλό "search by model name"
+  flow που έχει η AMD (δοκιμάστηκε ζωντανά - το HP flow είναι serial-number/account-driven, πιο
+  πολύπλοκο). Πρόσθεσέ το ΜΟΝΟ μετά από την ίδια αυστηρότητα επιβεβαίωσης (επίσημο PDF/manual +
+  τουλάχιστον ένα real-world production script που να συμφωνεί), ή αφού ο χρήστης επιβεβαιώσει ζωντανά.
+- **Lenovo**: ΕΡΕΥΝΗΘΗΚΕ ζωντανά (καλύτερο εύρημα από το αρχικό HP/Lenovo forum-only σημείωμα, αλλά ΔΕΝ
+  υλοποιήθηκε - πιο σύνθετο pattern από AMD/NVIDIA/Dell). Βρέθηκε το ανοιχτού κώδικα PowerShell module
+  `jantari/LSUClient` (288 stars, MIT, ενεργά συντηρημένο, ρητά "does not require Lenovo System Update or
+  any other external program") που αποκαλύπτει τον ΕΠΙΣΗΜΟ μηχανισμό: 1) το πρώτο 4-χαρακτήρων κομμάτι
+  του `Win32_ComputerSystem.Model` (Lenovo Machine Type code, π.χ. "20Y4") χτίζει URL
+  `https://download.lenovo.com/catalog/{MTM}_Win11.xml` (επιβεβαιώθηκε ζωντανά, 200 OK, πραγματικό XML,
+  για 3 διαφορετικά πραγματικά MTM codes: 20Y4/21CB/20XW - "_Win10.xml" επίσης δουλεύει). 2) ΣΗΜΑΝΤΙΚΗ
+  ΠΟΛΥΠΛΟΚΟΤΗΤΑ που δεν υπάρχει στο AMD/NVIDIA/Dell: αυτό το πρώτο XML είναι ΜΟΝΟ μια λίστα δεικτών
+  (`<packages><package><location>URL_ΣΕ_ΑΛΛΟ_XML</location><category>...</category></package>...)` -
+  ΚΑΘΕ πακέτο χρειάζεται ΔΕΥΤΕΡΗ, ξεχωριστή HTTP κλήση (π.χ.
+  `https://download.lenovo.com/pccbbs/mobiles/n40oi02w_2_.xml`) για να πάρεις πραγματικό όνομα/έκδοση/
+  ημερομηνία - ένα πραγματικό laptop είχε 39 πακέτα σε αυτή τη δοκιμή, άρα μια πλήρης σάρωση θα σήμαινε
+  ΔΕΚΑΔΕΣ HTTP requests, πιο αργό/εύθραυστο από τις άλλες πηγές. ΕΠΙΣΗΣ: το `[xml]$xml = $content` cast
+  ΑΠΟΤΥΓΧΑΝΕΙ αν δεν αφαιρεθεί πρώτα το UTF-8 BOM από το response string (το LSUClient το χειρίζεται
+  ρητά: `$content -replace "^$UTF8ByteOrderMark"` όπου το BOM string φτιάχνεται από τα bytes 239,187,191
+  - ΙΔΙΑ 3 bytes με το BOM του ίδιου του Optimizer.ps1, καθαρή σύμπτωση αλλά εύκολο να το θυμάσαι).
+  **Απόφαση**: αναβλήθηκε για μελλοντικό, ξεχωριστό pass με περισσότερο χρόνο (χρειάζεται προσεκτικό
+  σχεδιασμό για το πόσα/ποια από τα 39 πακέτα να ελεγχθούν πραγματικά ώστε να μη γίνει αργό, και ζωντανό
+  τεστ σε πραγματικό Lenovo μηχάνημα) - ΜΗΝ ξαναρχίσεις την έρευνα από την αρχή, όλα τα παραπάνω είναι
+  ήδη επιβεβαιωμένα.
+- Ορθόδοξη μέθοδος όποτε χρειάζεται νέα πηγή δεδομένων από εξωτερικό site χωρίς επίσημο public API: άνοιξε
+  το site με το Browser tool, δοκίμασε το πραγματικό UI flow (π.χ. product search/dropdown), και κοίταξε
+  `read_network_requests` ΚΑΙ το raw HTML (`document.body.innerHTML`) - πολλά "modern" sites είναι στην
+  πραγματικότητα server-rendered για το ΚΥΡΙΟ περιεχόμενο (χωρίς κρυφό API να σπάσει), ακόμα κι αν η
+  πλοήγηση/φίλτρα είναι JS-based.
+- Dead code που ΔΕΝ έχει καθαριστεί ακόμα (χαμηλή προτεραιότητα, δεν επηρεάζει συμπεριφορά): οι
+  συναρτήσεις `Start-SdiDriverCheck`, `Find-SdioExecutable`, και τα globals `$global:sdiEnsureState`/
+  `$global:sdiEnsureTimer` παραμένουν ορισμένα στο αρχείο από την εποχή του SDI, αλλά ΔΕΝ καλούνται
+  πουθενά πλέον (το μοναδικό click handler του `$global:btnDriverScan` είναι `{ Start-DriverScan }`) -
+  ασφαλές, ανενεργό, αλλά θα μπορούσε να αφαιρεθεί καθαρά σε κάποιο μελλοντικό pass.
+
+### Icon συστήματα (2 ξεχωριστά, μη-αλληλοεπικαλυπτόμενα)
+- `Get-AppIcon -Type X -Color C`: γενικό, vector (GDI+ Pen/Brush draws, μερικά Segoe Fluent Icons glyph-based) 24x24 σύστημα χρησιμοποιούμενο ΠΑΝΤΟΥ (tabs, menus, sidebar). Μην το αλλάξεις γενικά — επηρεάζει όλη την εφαρμογή.
+- `Get-GlossyHardwareIcon -Type (CPU|RAM|Disk) -AccentColor C`: ΝΕΟ (v2.0.2), ξεχωριστό, 96x96, gradient+glossy-highlight σύστημα ΜΟΝΟ για τις 3 κάρτες της καρτέλας Αρχική.
+
+---
+
+## 3. Δομικός Έλεγχος — ΥΠΟΧΡΕΩΤΙΚΟΣ μετά από κάθε edit
+
+Αυτή η πειθαρχία απέτρεψε δεκάδες πραγματικά bugs μέσα στη συνομιλία (π.χ. δομικό λάθος στο changelog array, κλήση-πριν-τον-ορισμό στο appToolTip, invalid `.Parent` reference). Ελάχιστο σετ ελέγχων μετά από ΚΑΘΕ str_replace/write:
+
+1. **Ισορροπία**: `content.count('{')` vs `('}')`, ίδιο για `[`/`]`. Το delta πρέπει να παραμένει σταθερό (γνωστά ψευδώς θετικά: 3 braces, 5 brackets).
+2. **Αρνητικό βάθος**: cumulative `{` minus `}` ανά γραμμή δεν πρέπει ποτέ να πέσει κάτω από 0.
+3. **Κλήση-πριν-τον-ορισμό**: καμία top-level (μη-indented) κλήση συνάρτησης πριν τον `function X {` ορισμό της (deferred/scriptblock κλήσεις είναι ασφαλείς).
+4. **Διπλότυπα function ορίσματα**.
+5. **Backslash-quote**: μονός αριθμός `\` πριν από `"` σε μη-comment γραμμή = πιθανό πρόβλημα (έλεγξε αν είναι σκόπιμο regex/literal).
+6. **Μεταφράσεις**: κάθε νέο `TT("...")` string πρέπει να υπάρχει ως key και στα 3 dictionaries (en/fr/de) πριν το export — αλλιώς γίνεται fallback σε Ελληνικά (ασφαλές αλλά ασυνεπές).
+7. **Overlap check**: για νέα UI στοιχεία στην ίδια κάρτα/container, επιβεβαίωσε ότι τα rectangles (X,Y,W,H) δεν τέμνονται.
+
+---
+
+## 4. Πλήρης Λίστα Εκκρεμοτήτων (κατά προτεραιότητα σημασίας για τον χρήστη)
+
+**Ενημερώθηκε στο v2.0.5.** Τα περισσότερα στοιχεία της παλιάς λίστας (§Β "PC Manager/WMT σύγκριση") έχουν πλέον υλοποιηθεί: Health Score, Toast notifications (`Show-ToastNotification` - **v2.3.0: πλέον συνδεδεμένο σε 3 σημεία ολοκλήρωσης** - δημιουργία σημείου επαναφοράς, ολοκλήρωση σάρωσης οδηγών, ολοκλήρωση ReTrim SSD· βλ. ενότητα 0.6 παρακάτω), Defender Quick Scan, στοχευμένος browser cache cleaner, WinRE check, Driver Store Cleanup, Ghost Device Manager, Windows Optional Features toggle, Visual Effects Presets, Firewall policy tools, Hosts file editor, context-menu toggles, GPU soft-reset. Retroactive cleanup του ΠΑΛΙΟΥ changelog (🔧/➕ tagging + έγχρωμες κουκκίδες) επίσης ολοκληρώθηκε σε ΟΛΕΣ τις 60+ εκδόσεις, ΚΑΙ οι μεταφράσεις EN/FR/DE του v2.0.4 batch (που είχαν αρχικά μείνει μόνο Ελληνικά) συμπληρώθηκαν.
+
+### Α. Ρητά αιτήματα που ΔΕΝ έχουν ακόμα ενσωματωθεί
+1. ~~Global styling για ΟΛΑ τα dropdown/ComboBox και radio buttons~~ — **ΕΠΙΒΕΒΑΙΩΘΗΚΕ ΠΛΗΡΗΣ ΚΑΛΥΨΗ v2.1.5**: audit βρήκε 5 ComboBox συνολικά στο αρχείο (comboTheme/comboLang/cboBenchDrive/cmbScope/cboHomeDrive) — και οι 5 έχουν `Set-ThemedComboBoxDrawing`. 15 RadioButton συνολικά, όλα μέσα στο Show-AppearanceSettingsWindow (θεματισμένα σωστά στη δημιουργία τους, αφού το dialog φτιάχνεται φρέσκο κάθε φορά με το τρέχον θέμα - καμία ζωντανή ενημέρωση μέσα σε ήδη ανοιχτό dialog, ελάσσων/αποδεκτός περιορισμός, όχι bug).
+2. ~~Διάφανα πάνελ/κάρτες που δείχνουν το κινούμενο φόντο "από μέσα τους"~~ — **ΥΛΟΠΟΙΗΘΗΚΕ v2.4.0** μέσω `Set-PanelGlassBackground` (custom `Add_Paint` + χειροκίνητο crop, ΟΧΙ BackgroundImage σε AutoScroll panel - βλ. ενότητα 0.7) στα 5 κύρια scroll panels (Home/Health/Optimization/Network/System). **ΕΠΑΝΕΛΕΓΧΘΗΚΕ v2.6.0**: το crop math (`$srcX/$srcY/$srcW/$srcH`) δοκιμάστηκε ζωντανά (πραγματικό PowerShell + System.Drawing, ΟΧΙ θεωρητικά) σε 4 σενάρια - κανονική λειτουργία, Health tab χωρίς PC Manager rail, ΚΑΙ ένα ΤΕΧΝΗΤΟ edge-case όπου το bitmap του tab είναι μικρότερο από το panel (πιθανό race condition αν το Paint τρέξει πριν ολοκληρωθεί ένα resize) - σε ΟΛΑ τα σενάρια παράγεται έγκυρο (θετικών διαστάσεων) crop rectangle, ΚΑΙ το ήδη υπάρχον `if ($srcW -le 0 -or $srcH -le 0)` fallback καλύπτει την περίπτωση μηδενικού crop. Το `Graphics.DrawImage` με ασύμμετρα src/dest μεγέθη δεν πετάει exception, απλά κάνει stretch - ασφαλές ακόμα και στο degraded edge-case. ΣΗΜΕΙΩΣΗ ΕΙΛΙΚΡΙΝΕΙΑΣ: παραμένει ανεπιβεβαίωτο το ΤΕΛΙΚΟ οπτικό αποτέλεσμα (πραγματικό rendering) σε πραγματικά Windows - μόνο η ΛΟΓΙΚΗ/μαθηματικά έχουν πλέον επαληθευτεί ζωντανά, όχι το pixel-level αποτέλεσμα. ~~**ΑΝΟΙΧΤΟ ΘΕΜΑ (v2.5.0)**: "κόβεται από δεξιά" στο θέμα PC Manager~~ — **ΔΙΟΡΘΩΘΗΚΕ v2.8.0, με πραγματικό ζωντανό στιγμιότυπο ως απόδειξη** (v2.7.0, Αρχική, θέμα Microsoft PC Manager - ο χρήστης έστειλε screenshot με κόκκινο βέλος δείχνοντας μεγάλο κενό σκούρου φόντου ανάμεσα στις κάρτες και το δεξί άκρο του παραθύρου). Η ΠΡΑΓΜΑΤΙΚΗ ρίζα (διαφορετική από την υπόθεση DPI scaling του v2.5.0 σημειώματος): κάθε `scrollPanel*` διατηρούσε το ΙΔΙΟ σταθερό πλάτος (1070/1030px) ΑΝΕΞΑΡΤΗΤΑ από το θέμα - μόνο η θέση X του κεντραρίσματος άλλαζε δυναμικά με βάση το `$global:pcManagerRailOffset`. Στο θέμα PC Manager, το διαθέσιμο πλάτος περιεχομένου είναι στενότερο (μείον τα 100px της κάθετης μπάρας) αλλά το panel ΔΕΝ μίκραινε/ΔΕΝ μεγάλωνε ανάλογα - αφήνοντας ορατά μεγαλύτερο κενό δεξιά. Διορθώθηκε στο `Update-SidebarDockLayout` (~γραμμή 7311+): ΜΟΝΟ όταν `$isPCManagerSkin`, κάθε panel υπολογίζει `Size`/`Location` δυναμικά ώστε να γεμίζει `$pcMgrContentW - 2*20px` (20px συμμετρικό περιθώριο σε κάθε πλευρά, ίδιο μέγεθος με το X=20 που ήδη χρησιμοποιούν οι περισσότερες κάρτες) - στο κλασικό skin η ΠΑΛΙΑ, αμετάβλητη λογική (σταθερό πλάτος, κεντραρισμένο) παραμένει 100% ίδια. Επιβεβαιώθηκε ότι το `AutoScrollMinSize.Width` όλων των 8 panels παραμένει μικρότερο από το ΝΕΟ, φαρδύτερο πλάτος σε ΚΑΘΕ περίπτωση (καμία νέα οριζόντια μπάρα κύλισης). ΔΕΝ επιβεβαιώθηκε ΑΚΟΜΑ με νέο στιγμιότυπο μετά τη διόρθωση.
+3. **SDI (Snappy Driver Installer) πλήρης απόκρυψη + πλήρης επανασχεδιασμός σε multi-source Driver Update Engine** — ρητά εγκεκριμένο από τον χρήστη να γίνει στην v2.2.0, μαζί με το πρώτο "PC Manager" skin (βλ. #4 παρακάτω). **Πλήρες σχέδιο αρχιτεκτονικής ήδη καταγεγραμμένο στην ενότητα 0 παραπάνω** (provider abstraction, SDIO+Windows Update+Intel/AMD/NVIDIA/OEM ως ισότιμοι providers, δικό μας trust/stability score, headless SDIO) — ακολούθησε το ΑΚΡΙΒΩΣ όταν συνεχιστεί η υλοποίηση, μην ξανασχεδιάσεις από την αρχή.
+   **ΠΡΟΟΔΟΣ v2.2.0 (πρώτο βήμα)**: ανακαλύφθηκε ότι υπήρχε ΗΔΗ πλήρες, δοκιμασμένο Windows
+   Update-based pipeline (`Start-DriverScan`/`Complete-DriverScan`/`Install-DriverUpdate`, καρτέλα
+   Βελτιστοποίηση) που είχε αποσυνδεθεί από το κύριο κουμπί σε προγενέστερο πέρασμα υπέρ του SDI
+   (`Start-SdiDriverCheck`, ανοίγει το ΔΙΚΟ ΤΟΥ ξεχωριστό παράθυρο - αντίθετο με την τεκμηριωμένη αρχή
+   "ποτέ 3rd-party UI"). Το κύριο κυκλικό κουμπί "ΣΑΡΩΣΗ" ενεργοποιεί πλέον `Start-DriverScan` (Windows
+   Update, αποτελέσματα στη ΔΙΚΗ ΜΑΣ λίστα, με ετικέτα πηγής "✓ Πηγή: Windows Update (επίσημη)" σε κάθε
+   γραμμή - το πρώτο ρεαλιστικό `Provider` του τεκμηριωμένου σχεδίου).
+   **ΔΙΟΡΘΩΣΗ v2.2.0 (ΥΠΕΡΣΕΙΕΙ το προηγούμενο σημείωμα)**: αρχικά προστέθηκε ΚΑΙ ένα δεύτερο, τίμια
+   επισημασμένο κουμπί "Περισσότεροι Οδηγοί (SDI)" δίπλα στο κυκλικό - αυτό ΑΦΑΙΡΕΘΗΚΕ ΠΛΗΡΩΣ μετά από
+   ρητή, επαναλαμβανόμενη απόρριψη του χρήστη ("ΓΙΑ ΤΕΛΕΥΤΑΙΑ ΦΟΡΑ ΔΕΝ ΘΕΛΩ ΝΑ ΕΜΦΑΝΙΖΕΤΑΙ ΤΟ ΠΑΡΑΘΥΡΟ
+   SNAPPY" + ρητό "ΔΕΝ ΘΕΛΩ ΕΠΙΠΛΕΟΝ ΚΟΥΜΠΙΑ"). `Start-SdiDriverCheck`/SDIO ΔΕΝ καλείται πλέον από ΚΑΝΕΝΑ
+   σημείο του κώδικα - **ΜΗΝ το ξαναπροτείνεις ως compromise, ούτε ως "τίμια επισημασμένο" δεύτερο κουμπί,
+   ακόμα κι αν φαίνεται λογική μεσαία λύση.** Η εφαρμογή χρησιμοποιεί πλέον αποκλειστικά Windows Update ως
+   ενιαία πηγή driver δεδομένων· το αίτημα του χρήστη "όλες οι βάσεις δεδομένων μία" ερμηνεύεται προς το
+   παρόν ως ικανοποιημένο με αυτόν τον τρόπο (μία, ενιαία, ενσωματωμένη πηγή) παρά ως πολυ-πηγαία σύνθεση.
+   **ΠΡΟΟΔΟΣ v2.2.0 (πραγματική πολυ-πηγαία σύνθεση)**: κατόπιν ρητής επιβεβαίωσης του χρήστη (ζητήθηκε
+   "και τα δύο μαζί" GPU vendors + OEM, με AMD GPU ως test hardware), προστέθηκαν 3 ΝΕΕΣ αυτοματοποιημένες
+   πηγές - **AMD (amd.com, ζωντανά επιβεβαιωμένο σε πραγματικό hardware)**, **NVIDIA
+   (nvidia.com/gfwsl.geforce.com, ΕΠΙΣΗΣ ζωντανά επιβεβαιωμένο, ίδιο επίσημο μηχανισμό με το
+   TinyNvidiaUpdateChecker)** και **Dell (Dell Command Update CLI, μόνο μέσω τεκμηρίωσης - ΔΕΝ
+   δοκιμάστηκε ζωντανά, χρειάζεται επιβεβαίωση από τον χρήστη σε πραγματικό Dell PC)**. Πλήρεις τεχνικές
+   λεπτομέρειες, URL patterns, XML/JSON report formats, και η μεθοδολογία ζωντανής επιβεβαίωσης μέσω
+   Browser tool καταγράφονται στην ενότητα 2 ("Driver engine: 3 νέες πηγές προστέθηκαν"). Τώρα υπάρχουν 4
+   αυτοματοποιημένες πηγές συνολικά (Windows Update + AMD + NVIDIA + Dell), άρα το trust/stability
+   scoring σύστημα (βλ. παρακάτω) έχει πλέον νόημα να χτιστεί αν ζητηθεί.
+   **ΕΝΗΜΕΡΩΣΗ (v2.3.0-v2.4.0)**: το trust/stability scoring σύστημα υλοποιήθηκε ΤΕΛΙΚΑ στην v2.3.0
+   (`Test-DriverSourceOverlap`, βλ. ενότητα 0.6) - όταν το ΙΔΙΟ GPU επιβεβαιώνεται ανεξάρτητα ΚΑΙ από
+   Windows Update ΚΑΙ από AMD/NVIDIA, η ενημέρωση επισημαίνεται "Επιβεβαιωμένο" αντί για απλή "πιθανή".
+   Η headless ενσωμάτωση SDI ΕΠΙΣΗΣ υλοποιήθηκε τελικά (v2.2.5, μετά από νέο ρητό αίτημα χρήστη -
+   "ΓΡΑΨΕ ΚΩΔΙΚΑ ΓΙΑ ΤΗΝ ΕΝΣΩΜΑΤΩΣΗ ΤΟΥ SNAPPY ORIGIN ΧΩΡΙΣ ΠΑΡΑΘΥΡΙΚΟ ΠΕΡΙΒΑΛΛΟΝ" - διαφορετικό από την
+   ΠΑΛΙΟΤΕΡΗ, ρητά απορριφθείσα ιδέα ενός δεύτερου ΟΡΑΤΟΥ κουμπιού/παραθύρου SDI), με το "Sum: 0" bug
+   (καμία λήψη index) διορθωμένο στην v2.4.0 μέσω του `-autoupdate` flag.
+   **Τι ΠΡΑΓΜΑΤΙΚΑ δεν έχει γίνει ακόμα**: Intel GPU provider - **διερευνήθηκε ζωντανά (v2.5.0)** μέσω
+   Browser tool (intel.com/download-center) και WebSearch· βρέθηκε ότι το intel.com download center
+   χρησιμοποιεί ένα βαρύ, client-side rendered Coveo enterprise-search widget (`ws=idsa-suggested`,
+   `entepriseSearch` hub) ΧΩΡΙΣ κανένα καθαρό, ανά-μοντέλο endpoint σύγκρισης έκδοσης (ΑΝΤΙΘΕΤΑ με το
+   απλό per-model HTML page του AMD ή το τεκμηριωμένο AJAX endpoint της NVIDIA) - ο επίσημος μηχανισμός
+   ενημέρωσης της Intel είναι το ξεχωριστό, proprietary "Intel Driver & Support Assistant" desktop client,
+   χωρίς δημόσιο API. ΔΕΝ υλοποιήθηκε provider (θα παραβίαζε τον κανόνα "ίδια αυστηρότητα επιβεβαίωσης
+   με AMD/NVIDIA πριν υλοποιηθεί, όχι μάντεμα ενός endpoint").
+   **Lenovo - διερευνήθηκε ζωντανά (v2.5.0)** μέσω WebFetch στο επίσημο `docs.lenovocdrt.com` (Lenovo CDRT
+   docs site). Ευρήματα: το **System Update** (`tvsu.exe`, winget id επιβεβαιωμένο: `Lenovo.SystemUpdate`
+   - βλ. winstall.app/apps/Lenovo.SystemUpdate) **ΔΕΝ υποστηρίζει ενέργεια SCAN καθόλου** (μόνο DOWNLOAD/
+   LIST/INSTALL) - το LIST ανοίγει ΔΙΚΟ ΤΟΥ παράθυρο επιλογής, αντίθετο με τον ήδη καθιερωμένο κανόνα
+   "ΠΟΤΕ 3rd-party UI" αυτού του project (ο ίδιος λόγος που το SDI χρειάστηκε headless επανασχεδιασμό).
+   Η ΜΟΝΗ ενέργεια SCAN βρίσκεται σε ΔΙΑΦΟΡΕΤΙΚΟ, ξεχωριστό εργαλείο - το **Thin Installer**
+   (`ThinInstaller.exe /CM -search R -action SCAN -packagetypes 2,3 -repository <path>`, καθαρά exit
+   codes: 10000=καμία ενημέρωση, 10001=βρέθηκαν - πολύ πιο απλό από το XML parsing του Dell) - ΑΛΛΑ αυτό
+   είναι ένα φορητό (portable, "δεν χρειάζεται εγκατάσταση") εργαλείο enterprise IT deployment, ΟΧΙ κάτι
+   προεγκατεστημένο σε τυπικό καταναλωτικό Lenovo PC (αντίθετα με το Dell Command Update, που ΕΙΝΑΙ συχνά
+   ήδη εκεί ή εύκολα winget-εγκαταστάσιμο ως το ΙΔΙΟ εργαλείο που κάνει scan) - ΚΑΙ το `-repository`
+   όρισμα χρειάζεται ρητό path (τοπικό/UNC/URL) που ΔΕΝ επιβεβαιώθηκε αν έχει ασφαλές, επίσημο δημόσιο
+   default. Εναλλακτικά βρέθηκε το **LSUClient** PowerShell module (community/3rd-party, PowerShell
+   Gallery, `Install-Module LSUClient` + `Get-LSUpdate`) - καθαρή, δημοφιλής λύση αλλά εισάγει ΝΕΑ
+   εξωτερική εξάρτηση (εγκατάσταση 3rd-party module) που ΔΕΝ ταιριάζει στη μέχρι τώρα φιλοσοφία "μόνο ήδη-
+   εγκατεστημένα, επίσημα εργαλεία κατασκευαστή, ΠΟΤΕ σιωπηλή προσθήκη νέας εξάρτησης χωρίς ρητή έγκριση".
+   **ΣΥΜΠΕΡΑΣΜΑ**: ΔΕΝ υπάρχει (ακόμα) καθαρός, ασφαλής, headless μηχανισμός SCAN για Lenovo με το ΙΔΙΟ
+   επίπεδο εμπιστοσύνης του Dell - ΔΕΝ υλοποιήθηκε provider. Αν ζητηθεί ξανά ρητά: η πιο ρεαλιστική
+   επιλογή θα ήταν "εντοπίστηκε Lenovo PC - πρόταση εγκατάστασης Lenovo Vantage" (ίδιο UX μοτίβο με το
+   Dell "not installed" branch, χωρίς κουμπί σάρωσης αφού καμία ασφαλής σιωπηλή μέθοδο δεν βρέθηκε).
+   **HP** - ΔΕΝ διερευνήθηκε ακόμα καθόλου (χρειάζεται την ίδια έρευνα με WebFetch/Browser σε επίσημη
+   τεκμηρίωση HP Image Assistant/HP Support Assistant CLI πριν οποιαδήποτε υλοποίηση).
+4. **Πλήρες "PC Manager" skin** — **ΠΡΩΤΟ βήμα ΥΛΟΠΟΙΗΘΗΚΕ v2.2.0**: νέο θέμα χρωμάτων "Microsoft PC Manager"
+   (dark+light) προστέθηκε στο `Get-ThemeColors` και στο `$themeNamesList` (ίδιο μηχανισμό με τα άλλα
+   ~20 έτοιμα θέματα - καμία νέα υποδομή, μηδενικό ρίσκο layout). Ο χρήστης έστειλε 9 πραγματικά
+   στιγμιότυπα του Microsoft PC Manager (dark mode, tabs: Home/Protection/Storage/Apps/AI Tools/
+   Settings/About) ζητώντας ρητά ένα skin που να του μοιάζει, μετά από dismissed ερώτηση (δεν απάντησε
+   τι εννοεί "skin" - έστειλε τα screenshots αντ' αυτού, ΚΑΙ ζήτησε "βρες κι άλλες φωτό από το διαδίκτυο").
+   **Μεθοδολογία χρωμάτων (σημαντικό για μελλοντικές διορθώσεις)**:
+   - LIGHT mode: βρέθηκε πραγματικό, επίσημο screenshot στο Wikimedia Commons
+     (`Microsoft_PC_Manager_homepage_UI.png`) - τα χρώματα ΔΕΝ μαντεύτηκαν, δειγματίστηκαν με ΑΚΡΙΒΕΙΑ
+     pixel μέσω canvas στο Browser tool (`ctx.getImageData`): Accent = ΑΚΡΙΒΩΣ rgb(0,95,184) (κουμπί
+     "Boost"), MainBg = rgb(253,254,255), TabBg (πλευρική μπάρα) = rgb(230,243,253) (ελαφρύ γαλάζιο
+     tint, ΟΧΙ καθαρό λευκό - εύκολο να το ξεχάσεις).
+   - DARK mode: ΔΕΝ βρέθηκε αντίστοιχο ζωντανά-δειγματίσιμο (URL-fetchable) screenshot ίδιας ποιότητας -
+     τα 9 screenshots του χρήστη ήρθαν ως pasted εικόνες στη συνομιλία, ΟΧΙ ως fetchable URLs, άρα ΔΕΝ
+     ήταν δυνατό το ίδιο ακριβές canvas pixel sampling. Τα dark χρώματα βασίζονται σε προσεκτική οπτική
+     επιθεώρηση + τη σύμβαση Fluent "brighten accent for dark backgrounds" (Accent dark =
+     rgb(41,151,255), πιο ανοιχτό/ζωηρό από το light rgb(0,95,184), ίδια απόχρωση). **Αν ο χρήστης
+     αναφέρει ότι το dark mode δεν ταιριάζει οπτικά**, διόρθωσε ΜΟΝΟ τα RGB values στο `Get-ThemeColors`
+     case "Microsoft PC Manager" (dark branch, γραμμή ~4735) - μην ξανασχεδιάσεις τη λογική.
+   - `CardRadius = 10` (στρογγυλεμένες κάρτες, ήδη υπάρχουσα υποδομή - `New-RoundedRectPath`,
+     καταναλώνεται στη γραμμή ~9520), `BgStyle = "StandardDark"` και ΚΑΝΕΝΑ `ButtonStyle` (= λεπτό 1px
+     περίγραμμα σε CardBorder χρώμα, το πιο "flat" διαθέσιμο ύφος - ταιριάζει με το πραγματικό PC
+     Manager, το οποίο δεν έχει glossy/bevel/glow κουμπιά).
+   - Δοκιμάστηκε standalone (εξαγωγή του `Get-ThemeColors` σε αυτοτελές .ps1, `Add-Type
+     -AssemblyName System.Drawing`, κλήση με `$global:currentThemeName = "Microsoft PC Manager"` και
+     ΚΑΙ τα δύο `$global:isDarkMode` = true/false) - επιστρέφει σωστά και τα δύο sets χρωμάτων, καμία
+     typo/σφάλμα.
+   **ΕΝΗΜΕΡΩΣΗ - Β΄ βήμα, ΠΛΗΡΗΣ ΑΛΛΑΓΗ ΔΙΑΤΑΞΗΣ, ΥΛΟΠΟΙΗΘΗΚΕ v2.2.0**: ο χρήστης ρητά ζήτησε "ΘΕΛΩ ΠΛΗΡΗ
+   ΑΛΛΑΓΗ ΔΙΑΤΑΞΗΣ ΓΙΑ ΤΟ SKIN" μετά το πρώτο, χρωμάτων-μόνο βήμα. Προστέθηκε ΝΕΑ, πάντα-χτισμένη αλλά
+   δυναμικά ορατή/κρυφή κάθετη μπάρα εικονιδίων (`$global:pcManagerNavRail`, 76px πλάτος, `Add-CustomTabPage
+   :~7104+`) για τις 8 ΚΥΡΙΕΣ καρτέλες (Home/Optimization/Health/Network/Tweaks/Bloatware/AdvancedTools/
+   System) - αντικαθιστά ΟΠΤΙΚΑ την οριζόντια λωρίδα pills (`$tabStripPanel`) ΜΟΝΟ όταν το θέμα
+   "Microsoft PC Manager" είναι ενεργό.
+   **ΚΡΙΣΙΜΗ ΔΙΑΚΡΙΣΗ (μην τη μπερδέψεις)**: αυτό είναι ΕΝΤΕΛΩΣ ΔΙΑΦΟΡΕΤΙΚΟ component από το ΑΛΛΟ,
+   προϋπάρχον "sidebar" (`$global:sidebarForm`/`$global:sidebarEmbedPanel`, το ☰ μενού με
+   Βοήθεια/Ιστορικό/Log/ViVeTool/Ρυθμίσεις, `Add-SidebarItem`) - ΕΚΕΙΝΟ ΔΕΝ πειράχτηκε καθόλου δομικά.
+   Το ΝΕΟ rail είναι για τις 8 ΚΥΡΙΕΣ καρτέλες της εφαρμογής, ΟΧΙ για το δευτερεύον ☰ μενού.
+   **Αρχιτεκτονική/functions**:
+   - `Add-PCManagerRailItem` (`~7125`) - ίδιο βασικό πρότυπο με το `Add-SidebarItem` (icon πάνω/label
+     κάτω, hover state) αλλά στενότερο (70x60 έναντι 110x100) και με ΝΕΟ selected-state: ημιδιάφανο
+     accent-χρωματισμένο rounded pill (alpha 70/255) πίσω από το εικονίδιο - ΣΚΟΠΙΜΑ ΟΧΙ συμπαγές accent
+     φόντο (θα χρειαζόταν εγγυημένα λευκό εικονίδιο πάνω του, ρίσκο κακής αντίθεσης σε light mode).
+   - `Update-PCManagerRailVisualState` (`~7182`) - ενημερώνει χρώμα εικονιδίου/ετικέτας ανά αντικείμενο
+     ανάλογα με το αν είναι το επιλεγμένο tab (Accent/Text αν επιλεγμένο, SubText αλλιώς) - ΣΚΟΠΙΜΑ ΔΕΝ
+     καταχωρείται στα κοινόχρηστα `allIconBoxes`/`allTextLabels` arrays (εκείνα βάφουν ΕΝΙΑΙΟ χρώμα σε
+     όλη την εφαρμογή, ασύμβατο με το per-item selected/unselected χρώμα που χρειάζεται εδώ).
+   - `Select-CustomTab` (`~6871`) επεκτάθηκε με `if ($global:pcManagerRailItems) { Update-
+     PCManagerRailVisualState }` στο τέλος - το null-check είναι ΑΠΑΡΑΙΤΗΤΟ (ΟΧΙ προαιρετικό defensive
+     coding) αφού η ΠΡΩΤΗ κλήση `Select-CustomTab -Index 0` γίνεται ΠΡΙΝ οριστεί το rail (η σειρά
+     δημιουργίας στο αρχείο είναι: tabs+pills πρώτα, μετά rail) - χωρίς το guard θα έσκαγε "command not
+     found" στην εκκίνηση.
+   - `Update-SidebarDockLayout` (`~7000`) επεκτάθηκε: υπολογίζει `$isPCManagerSkin`/`$global:
+     pcManagerRailOffset` (0 ή 76), δείχνει/κρύβει rail vs `$tabStripPanel`, προσθέτει το rail offset
+     ΣΤΟ ΙΔΙΟ σημείο που ήδη πρόσθετε το `$global:sidebarDockWidth` του ΑΛΛΟΥ sidebar (content
+     Location/Size ΚΑΙ οι 8 γραμμές κεντραρίσματος `scrollPanel*`) - ίδιο μοτίβο, απλή πρόσθεση, ελάχιστο
+     νέο ρίσκο. Καλείται ΤΩΡΑ ΚΑΙ από το `Update-UITheme` (`~9484`, μετά το `$script:theme = $currTheme`)
+     ώστε η εναλλαγή θέματος ΖΩΝΤΑΝΑ (χωρίς restart) να ενημερώνει αμέσως την ορατότητα/διάταξη.
+   - **Σύγκρουση με το ΑΛΛΟ sidebar όταν MenuMode="Sidebar" ΚΑΙ θέμα PC Manager ταυτόχρονα**: και τα δύο
+     θα ήθελαν να "κατοικήσουν" στην αριστερή πλευρά - λύθηκε με αμοιβαίο αποκλεισμό (`Test-
+     SidebarShouldDock`, `~7268`, ΚΑΙ το `$global:sidebarDockActive` στο `Update-SidebarDockLayout`
+     ΠΡΕΠΕΙ να συμφωνούν ΠΑΝΤΑ - και τα δύο τώρα αποκλείουν το MenuMode-based docking όταν θέμα=PC
+     Manager, ΔΙΑΤΗΡΩΝΤΑΣ το Maximized-based docking ανεπηρέαστο, άσχετος λόγος/μηχανισμός). Το ☰ μενού
+     πέφτει πίσω στο ήδη αποδεδειγμένο floating (μη-anchored) μονοπάτι σε αυτή τη συνδυασμένη περίπτωση.
+   **Icon types ανά καρτέλα (ΠΡΕΠΕΙ να ταιριάζουν με τη σειρά του `$global:customTabs`, Home=0...System=7
+   - βλ. `~7043-7053`)**: Home=Monitor, Optimization=Optimization, Health=Health, Network=Network,
+   Tweaks=Tweak, Bloatware=Apps, AdvancedTools=AdvancedTools, System=Chip.
+   **ΕΠΑΝΕΛΕΓΧΘΗΚΕ με ακρίβεια (v2.6.0)**, πέρα από το αρχικό μολύβι/χαρτί: κάθε αντικείμενο rail είναι
+   90x68px με βήμα 74px (8 αντικείμενα × 74 = 592, τελευταίο στο Y=522 => κάτω άκρο 590) - το ύψος του
+   ίδιου του rail είναι πλέον `610 + pcManagerContentYReclaim` (βλ. ενότητα 0.8, v2.5.0 Y-reclaim) δηλ.
+   666px στο ενεργό PC Manager skin - άφθονο περιθώριο (76px) μετά το τελευταίο αντικείμενο, ΠΕΡΙΣΣΟΤΕΡΟ
+   απ' όσο πριν την v2.5.0. Η ετικέτα κειμένου (label, 90x34, Y=33 μέσα στο 68px αντικείμενο) ελέγχθηκε με
+   πραγματικό `Graphics.MeasureString` (ΟΧΙ εκτίμηση) στο ΑΚΡΙΒΕΣ πλάτος (90px) και γραμματοσειρά
+   (Segoe UI 7.5pt) για ΟΛΕΣ τις 32 μεταφράσεις ετικετών (8 καρτέλες × 4 γλώσσες, EL/EN/DE/FR) - η
+   ΧΕΙΡΟΤΕΡΗ περίπτωση (π.χ. "Υγεία & Συντήρηση", "Systemzustand & Wartung", "Réglages Supplémentaires")
+   τυλίγεται καθαρά σε 2 γραμμές με πραγματικό ύψος 27,9px - ΕΝΤΟΣ του διαθέσιμου 34px, ΚΑΜΙΑ γλώσσα/
+   καρτέλα χρειάζεται 3η γραμμή. Το εικονίδιο (Y=8, ύψος 20, κάτω άκρο 28) έχει καθαρό κενό 5px πριν την
+   ετικέτα (Y=33) - καμία επικάλυψη. **Παραμένει ανεπιβεβαίωτο ΜΟΝΟ το ΤΕΛΙΚΟ οπτικό αποτέλεσμα σε
+   πραγματικά Windows** (π.χ. πραγματικό font rendering/ClearType, hover/selected χρώματα) - η ΓΕΩΜΕΤΡΙΑ
+   πλέον είναι μαθηματικά αποκλεισμένη από το να είναι η αιτία τυχόν μελλοντικού προβλήματος κειμένου/
+   επικάλυψης σε αυτό το rail. Αν αναφερθεί πρόβλημα ξανά, είναι πιθανότερο να είναι χρώματα/κοντράστ,
+   όχι γεωμετρία.
+5. ~~Πλήρης μεγιστοποίηση/fullscreen~~ — **ΥΛΟΠΟΙΗΘΗΚΕ v2.5.0** μέσω "letterbox" τεχνικής (ΟΧΙ πλήρες responsive reflow - βλ. αναλυτικά ενότητα 0.8). Πραγματικό resize/maximize/Snap Layouts λειτουργούν, το περιεχόμενο κεντράρεται στο διαθέσιμο χώρο στο σταθερό του μέγεθος. ΔΕΝ επιβεβαιώθηκε ζωντανά.
+
+### Β. Λοιπά χαρακτηριστικά WMT που εντοπίστηκαν αλλά ΔΕΝ σχεδιάστηκαν ακόμα (χαμηλότερη προτεραιότητα)
+- ~~Windows Optional Features UI ως πλήρης, αναζητήσιμη λίστα~~ — **ΥΛΟΠΟΙΗΘΗΚΕ v2.1.1** (νέα κάρτα "Όλες οι Πρόσθετες Λειτουργίες Windows", καρτέλα Προηγμένα Εργαλεία — τα 6 hardcoded quick-toggle παραμένουν επιπλέον, δεν αντικαταστάθηκαν).
+- ~~Drive Benchmark~~ — **ΥΛΟΠΟΙΗΘΗΚΕ v2.1.1** (νέα κάρτα "Δοκιμή Ταχύτητας Δίσκου", καρτέλα Σύστημα — αυτοτελής, framework-agnostic υλοποίηση με προσωρινό αρχείο 256MB, ΟΧΙ αντιγραφή του βαρύ WPF UI του WMT).
+- **ΡΗΤΑ ΕΚΤΟΣ SCOPE**: MAS activation button (νομικά/ηθικά προβληματικό, ήδη αφαιρέθηκε μια φορά ιστορικά), Winapp2/BleachBit aggressive cleaner rules (αντίθετο με τη συντηρητική φιλοσοφία της εφαρμογής), Provider Manager Steam/GOG/Epic (άσχετο θέμα).
+
+### SDI headless: ΕΠΙΒΕΒΑΙΩΘΗΚΕ ζωντανά ότι χρειάζεται τοπική βάση driverpacks για να είναι χρήσιμο
+Ο χρήστης έστειλε το ΠΡΑΓΜΑΤΙΚΟ `log.txt` που παράγει το SDI Origin (`-nogui -autoclose -output_dir -log_dir`)
+από ζωντανό τρέξιμο. Ευρήματα (v2.2.5):
+- Το log.txt είναι ένα εκτενές (300KB+), ΤΕΧΝΙΚΟ log - ΟΧΙ καθαρή λίστα "αυτοί οι οδηγοί χρειάζονται
+  ενημέρωση". Ο ίδιος ο χρήστης το επιβεβαίωσε ως "μη χρηστική για τον χρήστη" αναφορά.
+- Περιέχει μια ενότητα `Driverpacks\n  N  drivers\unpacked.7z\n  Sum: N` - αν `Sum: 0`, το SDI δεν έχει
+  ΚΑΘΟΛΟΥ τοπική βάση δεδομένων οδηγών να συγκρίνει (η βάση κατεβαίνει ΞΕΧΩΡΙΣΤΑ, online, πιθανόν πολλά
+  GB - το SDI Origin δεν την κατεβάζει αυτόματα με ένα απλό `-nogui` τρέξιμο). Χωρίς αυτήν, ΔΕΝ μπορεί να
+  παραχθεί κανένα ουσιαστικό αποτέλεσμα.
+- **ΚΡΙΣΙΜΟ, επιβεβαιωμένο εύρημα**: το αρχείο είναι γραμμένο στην **codepage προεπιλογής συστήματος**
+  (π.χ. Windows-1253 για Ελληνικά), ΟΧΙ UTF-8 - διάβασμα με `Get-Content`/`[System.IO.File]::ReadAllText`
+  χωρίς ρητό `[System.Text.Encoding]::Default` δίνει αλλοιωμένο κείμενο (π.χ. "�������" αντί για
+  "Τυπικός ελεγκτής"). Επιβεβαιώθηκε ζωντανά η σωστή αποκωδικοποίηση.
+- Ο κώδικας (`Start-DriverScan`, ενότητα SDI) τώρα διαβάζει το log.txt με τη σωστή codepage, εξάγει το
+  `Sum: N` μέσω regex (`Driverpacks[\s\S]{0,200}?Sum:\s*(\d+)`), και εμφανίζει ΕΙΛΙΚΡΙΝΕΣ μήνυμα
+  ("δεν υπάρχει τοπική βάση οδηγών") αντί για το παραπλανητικό "βρέθηκε αναφορά" όταν Sum=0 - ΧΩΡΙΣ
+  κουμπί "Άνοιγμα Φακέλου" σε αυτή την περίπτωση (το log.txt δεν έχει πρακτική αξία να το δει ο χρήστης).
+- **Τι ΔΕΝ έχει λυθεί ακόμα**: πώς να αποκτηθεί μια χρήσιμη, πραγματική λίστα ενημερώσεων από το SDI
+  όταν ΥΠΑΡΧΕΙ τοπική βάση (Sum>0) - δεν έχει δοκιμαστεί ζωντανά ΑΚΟΜΑ αυτή η περίπτωση. Το χρονικό όριο
+  αυξήθηκε ήδη σε 10 λεπτά (v2.7.0) ώστε το `-autoupdate` (ήδη ενεργό από το v2.4.0) να προλάβει να
+  κατεβάσει ό,τι χρειάζεται - επόμενο βήμα: ο χρήστης να τρέξει σάρωση και να στείλει το ΠΡΑΓΜΑΤΙΚΟ log
+  αν προκύψει Sum>0, ώστε να χτιστεί αξιόπιστο parsing πάνω σε ΠΡΑΓΜΑΤΙΚΑ δεδομένα (όχι εικασία).
+  **ΑΠΟΡΡΙΦΘΗΚΕ ρητά (v2.8.0)**: πρόταση για custom `CheckedListBox` UI που να διαβάζει/παρουσιάζει
+  μεμονωμένους οδηγούς από το SDI log και να επιτρέπει επιλεκτική εγκατάσταση - το παράδειγμα κώδικα που
+  δόθηκε χρησιμοποιούσε ΑΝΕΠΙΒΕΒΑΙΩΤΟ flag (`-showall`, δεν υπάρχει στην επίσημη τεκμηρίωση sdi-tool.org)
+  και ΕΙΚΑΣΤΙΚΗ λογική ανάλυσης (`$line -match "Driver|Update|Missing"`, placeholder `HardwareID =
+  "PCI\VEN_..."`) - το ΠΡΑΓΜΑΤΙΚΟ log.txt από ζωντανό τρέξιμο χρήστη (v2.2.5) έχει ήδη επιβεβαιωθεί ΩΣ
+  τεχνικό log ΕΚΤΕΛΕΣΗΣ, όχι δομημένη λίστα οδηγών - χτίσιμο UI πάνω σε εικαστική ανάλυση ρισκάρει να
+  δείξει λάθος όνομα/ID οδηγού σε απόφαση που αλλάζει το σύστημα του χρήστη, μη αποδεκτό ρίσκο χωρίς
+  πραγματικά δεδομένα Sum>0 για επαλήθευση πρώτα.
+
+### PC Manager skin (v2.2.0-v2.2.5): γνωστά, ΔΙΟΡΘΩΜΕΝΑ bugs από πρώτο γύρο ζωντανών στιγμιότυπων
+Μετά την πρώτη ζωντανή δοκιμή (στιγμιότυπα χρήστη), βρέθηκαν και διορθώθηκαν:
+- Η κάθετη μπάρα εικονιδίων άφηνε ορατή ΚΑΙ την οριζόντια λωρίδα καρτελών/κουμπιά κύλισης (‹ ›) μετά από
+  αλλαγή μεγέθους παραθύρου - το `Update-SidebarDockLayout` (που ελέγχει την ορατότητα) καλούνταν ΜΟΝΟ
+  στην εκκίνηση/αλλαγή θέματος, ΟΧΙ σε κάθε `$mainForm.Add_Resize` - διορθώθηκε.
+- Τα κουμπιά κύλισης καρτελών (`$btnTabScrollLeft`/`$btnTabScrollRight`) είναι ΞΕΧΩΡΙΣΤΑ controls (παιδιά
+  του `$mainForm`, ΟΧΙ του `$tabStripPanel`) - το `.Visible=false` του tabStripPanel δεν τα κάλυπτε ΚΑΘΟΛΟΥ.
+- Οι ετικέτες της μπάρας έσπαγαν ΜΕΣΑ σε λέξη (καμία απόσταση) για μακριές ελληνικές λέξεις (π.χ.
+  "Βελτιστοποίηση") - το πλάτος (76px, βασισμένο στα ΣΥΝΤΟΜΑ αγγλικά του πραγματικού PC Manager) ήταν
+  ανεπαρκές. Αυξήθηκε σε 100px + αφιερωμένη μικρότερη γραμματοσειρά (`$fontRailLabel`, 7.5pt Regular).
+- **ΔΕΝ επιβεβαιώθηκε ακόμα ζωντανά μετά τη διόρθωση** (χρειάζεται νέο στιγμιότυπο) - αν τα ονόματα ΑΚΟΜΑ
+  δεν χωράνε καθαρά, το επόμενο βήμα είναι είτε ΠΕΡΑΙΤΕΡΩ μείωση γραμματοσειράς είτε συντομευμένα
+  ονόματα ΕΙΔΙΚΑ για τη μπάρα (π.χ. "Βελτιστ." αντί για πλήρες "Βελτιστοποίηση") - ΜΗΝ ξαναδοκιμάσεις
+  απλή αύξηση πλάτους ξανά χωρίς νέο στιγμιότυπο, το όριο πλάτους έχει ήδη κόστος στο διαθέσιμο
+  περιεχόμενο (μεγαλύτερο `pcManagerRailOffset` = στενότερο content area στις υπόλοιπες καρτέλες).
+- ~~**ΓΝΩΣΤΟ, ΜΗ διορθωμένο ακόμα**: η κάρτα Δίσκου (3η) στην καρτέλα Αρχική εμφανίστηκε κομμένη από κάθετη
+  μπάρα κύλισης~~ — **ΠΙΘΑΝΟΤΑΤΑ ΔΙΟΡΘΩΘΗΚΕ ΕΜΜΕΣΑ v2.4.0**: η ρίζα εντοπίστηκε τελικά (v2.4.0, "διόρθωση
+  περιθωρίων Αρχικής" - βλ. ενότητα 0.7) να ΜΗΝ είναι κάποια κάθετη μπάρα κύλισης, αλλά ότι το
+  `$global:scrollPanelHome.Size.Width` ήταν 1030px - ΑΚΡΙΒΩΣ ίσο με το πλάτος των ίδιων των καρτών του
+  (`$cardHealthScore`/`$cardDiskAnalysis` στο X=20, πλάτος 1030 => δεξί άκρο X=1050, 20px ΠΕΡΑ από το ίδιο
+  το panel) - ενώ ΟΛΕΣ οι υπόλοιπες καρτέλες ήδη χρησιμοποιούν panel πλάτους 1070px για το ΙΔΙΟ πλάτος
+  καρτών 1030px. Διορθώθηκε σε 1070px, ταιριάζοντας με το ήδη αποδεδειγμένο μοτίβο - οι κάρτες τώρα
+  χωράνε με συμμετρικό 20px περιθώριο και στις δύο πλευρές, ΧΩΡΙΣ ανάγκη για οποιαδήποτε μπάρα κύλισης.
+  Αυτό είναι πολύ πιθανό η ΙΔΙΑ ρίζα με το ακόμα ανοιχτό "content κόβεται από δεξιά στο PC Manager skin"
+  (§Α.2 παραπάνω) - ΔΕΝ επιβεβαιώθηκε ζωντανά ότι έχει λυθεί πλήρως, αλλά η μαθηματική υπερχείλιση των
+  20px δεν υπάρχει πια στον κώδικα. **ΕΛΕΓΧΘΗΚΑΝ ρητά, ένα-προς-ένα, ΟΛΑ τα υπόλοιπα 7 scrollPanel* (v2.5.0,
+  grep όλων των `Helper-CreateCard` calls ανά panel)** για το ΙΔΙΟ ακριβώς μοτίβο ασυμφωνίας - ΚΑΝΕΝΑ άλλο
+  instance δεν βρέθηκε: Optimization/Health/Network/System (panel=1070, κάρτες X=20 πλάτος=1030 => δεξί
+  άκρο 1050, συμμετρικό 20px περιθώριο και στις δύο πλευρές), Tweaks (panel=1070, κάρτες X=0-5 πλάτος=1030
+  => δεξί άκρο 1030-1035, ασύμμετρο αλλά ΧΩΡΙΣ υπερχείλιση), Bloatware/Advanced (panel=1030 - ΣΚΟΠΙΜΑ
+  διαφορετικό μοτίβο, κάρτες 995-1010 πλάτος, στενότερες ΓΙΑ να αφήνουν χώρο στη δική τους απαραίτητη
+  κάθετη μπάρα κύλισης λόγω πολύ ψηλότερου περιεχομένου - ήδη σωστό, όχι bug). Η Αρχική ήταν η ΜΟΝΑΔΙΚΗ
+  εξαίρεση σε όλη την εφαρμογή.
+
+### Γ. Πολιτική που έχει καθιερωθεί
+- Ιστορικό Εκδόσεων: αν ένα icon/symbol δεν είναι εγγυημένα ασφαλές να αποδοθεί σωστά, να μη χρησιμοποιείται (μόνο 🔧/➕ έχουν επαληθευτεί, ως έγχρωμες κουκκίδες πλέον, όχι font glyphs).
+- **ΚΑΝΟΝΑΣ** (v2.0.5, ρητό αίτημα χρήστη): όποτε γίνεται fix σε text-consistency πρόβλημα (π.χ. changelog tagging/μεταφράσεις), να σαρώνεται ΠΑΝΤΑ το ΠΛΗΡΕΣ κείμενο (π.χ. όλο το `$global:versionHistory`), ΟΧΙ μόνο το πρόσφατα-προστεθέν κομμάτι.
+- Κάθε νέο UI control πρέπει να ακολουθεί σωστά το ενεργό theme (BackColor/ForeColor από `$theme`/`$currTheme`) εξαρχής, ΚΑΙ να προστίθεται στο `Update-UITheme` αν ζει στην κύρια (μη-modal) φόρμα.
+- Κάθε νέο, συχνό (sub-few-second) Timer πρέπει να τρέχει τη βαριά δουλειά ασύγχρονα (persistent Runspace ή background process + polling) — ΠΟΤΕ συγχρονισμένες κλήσεις μέσα σε `Add_Tick`.
+- **ΚΑΝΟΝΑΣ** (v2.2.5, ρητό αίτημα χρήστη): οι καταχωρήσεις του Ιστορικού Εκδόσεων (`$global:versionHistory`, ΚΑΙ οι EN/FR/DE μεταφράσεις τους) πρέπει να αναφέρουν ΜΟΝΟ την προσθήκη/διόρθωση - ΠΟΤΕ φράσεις όπως "ο χρήστης ζήτησε/ανέφερε/εντόπισε", "ρητό αίτημα χρήστη". Αυτό αφορά ΑΠΟΚΛΕΙΣΤΙΚΑ το user-facing changelog - οι εσωτερικές `#` παρατηρήσεις κώδικα (που ΕΠΙΤΗΔΕΣ χρησιμοποιούν αυτή τη φρασεολογία για μελλοντική αναφορά/context) ΔΕΝ αγγίζονται. Εφαρμόστηκε αναδρομικά σε ΟΛΟ το υπάρχον `$global:versionHistory` (όχι μόνο νέες καταχωρήσεις) στο v2.2.5, σύμφωνα με τον κανόνα "πλήρους σάρωσης κειμένου" παραπάνω.
+
+---
+
+## 5. Πώς να δουλέψεις πάνω σε αυτό
+
+1. Διάβασε πρώτα ολόκληρο αυτό το αρχείο.
+2. Άνοιξε `Optimizer.ps1` και εντόπισε τα σχετικά σημεία με βάση τα functions/global vars που αναφέρονται εδώ (π.χ. `grep -n "function Show-Sidebar"`).
+3. Πριν αλλάξεις οτιδήποτε, τρέξε τους δομικούς ελέγχους της ενότητας 3 σε baseline για να ξέρεις τι είναι ήδη "γνωστό ψευδώς θετικό".
+4. Κάνε μικρές, ελεγμένες αλλαγές (str_replace-style, όχι ολικές επανεγγραφές αρχείου).
+5. Μετά από ΚΑΘΕ αλλαγή: ξανατρέξε τους ελέγχους της ενότητας 3.
+6. Πριν οποιαδήποτε παράδοση: πλήρες μαζικό pass μεταφράσεων (αν προστέθηκε νέο ελληνικό κείμενο) + version bump + changelog entry (με 🔧/➕ πρόθεμα, χωρίς meta-αναφορές τεχνικού debugging στον χρήστη) + export.
+7. Δώσε προτεραιότητα στα αιτήματα της ενότητας 4.Α πριν προχωρήσεις σε τη 4.Β (νέα, μη-ρητά ζητημένα features).
