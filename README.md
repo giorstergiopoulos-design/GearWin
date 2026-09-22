@@ -26,11 +26,12 @@
 | ❤ Υγεία Συστήματος | Έλεγχος υγείας δίσκων/μνήμης/συστήματος αρχείων, ανάλυση χώρου δίσκου ανά κατηγορία |
 | 🌐 Δίκτυο & Ασφάλεια | Διαγνωστικά δικτύου, DNS, Windows Defender, μπλοκάρισμα τηλεμετρίας, εργαλεία απορρήτου |
 | 🔧 Επιπλέον Ρυθμίσεις | Δεκάδες tweaks διεπαφής/απόδοσης/απορρήτου, με ασφαλή επαναφορά στην αρχική τιμή |
-| 🧹 Αφαίρεση Bloatware | Ασφαλής αφαίρεση προεγκατεστημένων εφαρμογών, με δυνατότητα επαναφοράς |
-| 🛠 Προηγμένα Εργαλεία | Συντήρηση συστήματος, προαιρετικές δυνατότητες Windows, custom δεξί-κλικ μενού, ενημερώσεις οδηγών |
-| 🖥 Σύστημα | Πλήρης ανάλυση υλικού/λειτουργικού ("Η Συσκευή Μου"), διαχείριση διεργασιών/δίσκων/ενημερώσεων |
+| 🧹 Εφαρμογές & Bloat | Ασφαλής αφαίρεση προεγκατεστημένων εφαρμογών/προαιρετικών λειτουργιών Windows, με δυνατότητα επαναφοράς |
+| 🛠 Προηγμένα Εργαλεία | Συντήρηση συστήματος, custom δεξί-κλικ μενού, ενημερώσεις οδηγών, συσκευές-φαντάσματα |
+| 🖥 Σύστημα | Πλήρης ανάλυση υλικού/λειτουργικού ("Η Συσκευή Μου"), διαχείριση διεργασιών/δίσκων/ενημερώσεων, εύρεση διπλότυπων/μεγάλων αρχείων |
 
-Επίσης: πλήρης υποστήριξη 4 γλωσσών (Ελληνικά/Αγγλικά/Γερμανικά/Γαλλικά), θέματα εμφάνισης
+Επίσης: πλήρης υποστήριξη 14 γλωσσών (Ελληνικά, Αγγλικά, Γερμανικά, Γαλλικά, Ισπανικά, Ιταλικά,
+Ρωσικά, Κινέζικα, Ιαπωνικά, Πορτογαλικά, Κορεατικά, Τουρκικά, Αραβικά, Χίντι), θέματα εμφάνισης
 Ανοιχτού/Σκούρου φόντου με πολλαπλά κινούμενα στυλ, οδηγός χρήσης στο πρώτο άνοιγμα, και ιστορικό
 ενεργειών για πλήρη διαφάνεια στο τι άλλαξε η εφαρμογή στο σύστημα.
 
@@ -99,11 +100,12 @@ The app is organized into 8 tabs:
 | ❤ System Health | Disk/memory/file-system health checks, disk space analysis by category |
 | 🌐 Network & Security | Network diagnostics, DNS, Windows Defender, telemetry blocking, privacy tools |
 | 🔧 Tweaks | Dozens of interface/performance/privacy tweaks, safely restorable to their original value |
-| 🧹 Bloatware Removal | Safely remove pre-installed apps, with the option to restore them |
-| 🛠 Advanced Tools | System maintenance, optional Windows features, custom right-click menus, driver updates |
-| 🖥 System | Full hardware/OS breakdown ("My Device"), process/disk/update management |
+| 🧹 Apps & Bloat | Safely remove pre-installed apps/optional Windows features, with the option to restore them |
+| 🛠 Advanced Tools | System maintenance, custom right-click menus, driver updates, ghost-device cleanup |
+| 🖥 System | Full hardware/OS breakdown ("My Device"), process/disk/update management, duplicate/large-file finder |
 
-Also: full support for 4 languages (Greek/English/German/French), Light/Dark appearance themes with
+Also: full support for 14 languages (Greek, English, German, French, Spanish, Italian, Russian,
+Chinese, Japanese, Portuguese, Korean, Turkish, Arabic, Hindi), Light/Dark appearance themes with
 multiple animated styles, a first-run tutorial, and an action log for full transparency on what the
 app changed on your system.
 
@@ -140,12 +142,14 @@ The final `GearWin-Setup-<version>.exe` lands in `installer/Output/`.
 
 ## Άδεια / License
 
-Διανέμεται δωρεάν υπό την [MIT License](installer/license_en.txt). Ορισμένες ιδέες σχεδίασης
+Διανέμεται δωρεάν υπό την [MIT License](installer/license_en.txt) (το πλήρες κείμενο της GNU GPL
+v3.0 εμπεριέχεται επίσης, για λόγους πληρότητας/συμβατότητας). Ορισμένες ιδέες σχεδίασης
 εμπνεύστηκαν από το ανοιχτού κώδικα εργαλείο
 [Windows Maintenance Tool](https://github.com/ios12checker/Windows-Maintenance-Tool), επίσης υπό
 άδεια MIT.
 
-*Distributed for free under the [MIT License](installer/license_en.txt). Some design ideas were
+*Distributed for free under the [MIT License](installer/license_en.txt) (the full text of the GNU
+GPL v3.0 is also included, for completeness/license-compatibility purposes). Some design ideas were
 inspired by the open-source [Windows Maintenance Tool](https://github.com/ios12checker/Windows-Maintenance-Tool),
 also MIT-licensed.*
 
