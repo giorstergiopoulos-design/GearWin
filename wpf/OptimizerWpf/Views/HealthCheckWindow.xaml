@@ -1,0 +1,171 @@
+<Window x:Class="OptimizerWpf.Views.HealthCheckWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:tr="clr-namespace:OptimizerWpf"
+        xmlns:views="clr-namespace:OptimizerWpf.Views"
+        mc:Ignorable="d"
+        Title="{tr:Tr HealthCheck_Title}" Height="700" Width="820" MinHeight="560" MinWidth="760"
+        WindowStartupLocation="CenterOwner" ResizeMode="CanResize" WindowStyle="SingleBorderWindow"
+        Background="{DynamicResource MainBgBrush}">
+    <!-- ΝΕΟ - ρητό αίτημα χρήστη: "θέλω αντίστοιχο γραφικό με το Health Check του PC Manager που
+         ανάλογα τι σκανάρεται εκείνη τη στιγμή να φωτίζεται" + "το 'PC status can be optimized' σε
+         δευτερεύον παράθυρο". Δύο φάσεις σε ΕΝΑ Window (Grid.Row Visibility toggle): σάρωση (κεντρικό
+         εικονίδιο + 5 "pills" γύρω του που φωτίζονται μία-μία όσο τρέχει το αντίστοιχο πραγματικό
+         scan, plus checklist με ✓) -> αποτελέσματα (κάρτες σύνοψης + "Βελτιστοποίηση Τώρα", ΙΔΙΟ
+         στυλ με το PC Manager's "PC status can be optimized"). ΚΑΘΕ αριθμός/μέγεθος στις κάρτες
+         προέρχεται από ΠΡΑΓΜΑΤΙΚΗ σάρωση (QuickCleanService/HealthCleanupService/TweakService/
+         BloatwareService/NetworkService) - καμία στατική/fabricated τιμή, ίδια αρχή ειλικρίνειας με
+         το Boot Timeline/S.M.A.R.T. αλλού στην εφαρμογή. -->
+    <!-- ΔΙΟΡΘΩΣΗ (χρήστης έστειλε screenshot: το pill "Απεγκατάσταση Εφαρμογών" κόβεται στην άκρη
+         του παραθύρου) - το NodeCanvas τοποθετεί το PillApps στο Canvas.Left="510" με ΣΤΑΘΕΡΗ θέση,
+         σχεδιασμένο υποθέτοντας σύντομο κείμενο - το πραγματικό μεταφρασμένο κείμενο ("Απεγκατάσταση
+         Εφαρμογών"/"Application Uninstall"/κ.λπ.) είναι αρκετά πιο φαρδύ, οπότε το δεξί άκρο του pill
+         (510 + πλάτος κειμένου) ξεπερνούσε το διαθέσιμο πλάτος περιεχομένου (Width 720 - 48 margin =
+         672). Μεγαλύτερο προεπιλεγμένο Width (βλ. παραπάνω) δίνει αρκετό χώρο ΧΩΡΙΣ να χρειαστεί
+         αναδιάταξη όλων των συντεταγμένων του canvas. -->
+    <Grid Margin="24">
+        <!-- ===== Φάση 1: Σάρωση ===== -->
+        <Grid x:Name="ScanPanel">
+            <Grid.RowDefinitions>
+                <RowDefinition Height="Auto"/>
+                <RowDefinition Height="Auto"/>
+                <RowDefinition Height="300"/>
+                <RowDefinition Height="*"/>
+            </Grid.RowDefinitions>
+
+            <Grid Grid.Row="0" Margin="0,0,0,14">
+                <Grid.ColumnDefinitions><ColumnDefinition Width="Auto"/><ColumnDefinition Width="*"/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions>
+                <Border Grid.Column="0" Width="40" Height="40" CornerRadius="8" Background="{DynamicResource AccentBrush}" Margin="0,0,12,0">
+                    <views:HeaderGlyphIcon Kind="Monitor" Width="20" Height="20" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                </Border>
+                <StackPanel Grid.Column="1" VerticalAlignment="Center">
+                    <TextBlock Text="{tr:Tr HealthCheck_InProgress}" FontSize="17" FontWeight="Bold" Foreground="{DynamicResource TextBrush}"/>
+                    <TextBlock x:Name="TxtCurrentStage" Style="{StaticResource SubTextStyle}"/>
+                </StackPanel>
+                <!-- ΝΕΟ - roadmap "Καμία επαναφορά progress bar σε exception" - πριν, μια εξαίρεση μέσα
+                     σε ΟΠΟΙΟΔΗΠΟΤΕ από τα 5 στάδια σάρωσης άφηνε το παράθυρο μόνιμα "κολλημένο" στη
+                     φάση σάρωσης, χωρίς καμία ένδειξη αποτυχίας πέρα από το καθολικό message box - το
+                     κουμπί "Επανάληψη" εμφανίζεται ΜΟΝΟ όταν αποτύχει κάποιο στάδιο. -->
+                <StackPanel Grid.Column="2" Orientation="Horizontal" VerticalAlignment="Center">
+                    <Button x:Name="BtnRetryScan" Content="{tr:Tr HealthCheck_Retry}" Style="{StaticResource AccentButtonStyle}"
+                            Padding="14,6" Margin="0,0,10,0" Visibility="Collapsed" Click="BtnRetryScan_Click"/>
+                    <Button Content="{tr:Tr Cancel}" Style="{StaticResource FlatButtonStyle}" Padding="14,6" Click="BtnCancel_Click"/>
+                </StackPanel>
+            </Grid>
+
+            <ProgressBar x:Name="BarScanProgress" Grid.Row="1" Height="4" Minimum="0" Maximum="5" Margin="0,0,0,10"/>
+
+            <!-- Κεντρικό εικονίδιο + 5 pills γύρω του, συνδεδεμένα με λεπτές γραμμές. -->
+            <Canvas Grid.Row="2" x:Name="NodeCanvas">
+                <Line X1="330" Y1="140" X2="150" Y2="40" Stroke="{DynamicResource CardBorderBrush}" StrokeThickness="1.5"/>
+                <Line X1="330" Y1="140" X2="510" Y2="40" Stroke="{DynamicResource CardBorderBrush}" StrokeThickness="1.5"/>
+                <Line X1="330" Y1="140" X2="70" Y2="180" Stroke="{DynamicResource CardBorderBrush}" StrokeThickness="1.5"/>
+                <Line X1="330" Y1="140" X2="590" Y2="180" Stroke="{DynamicResource CardBorderBrush}" StrokeThickness="1.5"/>
+                <Line X1="330" Y1="140" X2="330" Y2="260" Stroke="{DynamicResource CardBorderBrush}" StrokeThickness="1.5"/>
+
+                <Border Canvas.Left="290" Canvas.Top="100" Width="80" Height="80" CornerRadius="40" Background="{DynamicResource CardBgBrush}" BorderBrush="{DynamicResource AccentBrush}" BorderThickness="2">
+                    <views:HeaderGlyphIcon Kind="Monitor" Width="36" Height="36" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                </Border>
+
+                <Border x:Name="PillNetwork" Canvas.Left="80" Canvas.Top="16" Style="{StaticResource HealthCheckPillStyle}">
+                    <TextBlock Text="{tr:Tr HealthCheck_StageNetwork}" Style="{StaticResource HealthCheckPillTextStyle}"/>
+                </Border>
+                <Border x:Name="PillRestore" Canvas.Left="430" Canvas.Top="16" Style="{StaticResource HealthCheckPillStyle}">
+                    <TextBlock Text="{tr:Tr HealthCheck_StageRestore}" Style="{StaticResource HealthCheckPillTextStyle}"/>
+                </Border>
+                <Border x:Name="PillTraces" Canvas.Left="0" Canvas.Top="160" Style="{StaticResource HealthCheckPillStyle}">
+                    <TextBlock Text="{tr:Tr HealthCheck_StageTraces}" Style="{StaticResource HealthCheckPillTextStyle}"/>
+                </Border>
+                <Border x:Name="PillApps" Canvas.Left="510" Canvas.Top="160" Style="{StaticResource HealthCheckPillStyle}">
+                    <TextBlock Text="{tr:Tr HealthCheck_StageApps}" Style="{StaticResource HealthCheckPillTextStyle}"/>
+                </Border>
+                <Border x:Name="PillSpace" Canvas.Left="250" Canvas.Top="256" Style="{StaticResource HealthCheckPillStyle}">
+                    <TextBlock Text="{tr:Tr HealthCheck_StageSpace}" Style="{StaticResource HealthCheckPillTextStyle}"/>
+                </Border>
+            </Canvas>
+
+            <!-- ΔΙΟΡΘΩΣΗ (χρήστης ανέφερε: "το γραφικό του πλήρους ελέγχου υγείας κόβεται στο
+                 παράθυρο") - το προηγούμενο σταθερό Height="620" ήταν ΜΙΚΡΟΤΕΡΟ από το πραγματικό
+                 ύψος του περιεχομένου (κεφαλίδα + 300px Canvas + λίστα ελέγχου 5 σταδίων) ακόμα και
+                 στα Ελληνικά/Αγγλικά - χειρότερο σε DE/FR όπου οι μεταφρασμένες περιγραφές είναι πιο
+                 μακριές και τυλίγονται σε 2 γραμμές. Το Window's Height μεγάλωσε (βλ. παραπάνω) ΚΑΙ
+                 προστέθηκε ΕΔΩ ScrollViewer ως δίχτυ ασφαλείας - ο Grid.Row="3" είναι ήδη Height="*"
+                 (φραγμένο μέγεθος), οπότε ο ScrollViewer θα κάνει scroll ΜΟΝΟ αν χρειαστεί, ποτέ δεν
+                 θα κόψει σιωπηλά περιεχόμενο. -->
+            <ScrollViewer Grid.Row="3" Margin="0,10,0,0" VerticalScrollBarVisibility="Auto">
+                <ItemsControl x:Name="ListScanChecklist">
+                    <ItemsControl.ItemTemplate>
+                        <DataTemplate>
+                            <Grid Margin="0,6,0,6">
+                                <Grid.ColumnDefinitions><ColumnDefinition Width="Auto"/><ColumnDefinition Width="*"/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions>
+                                <Ellipse Grid.Column="0" Width="6" Height="6" Fill="{DynamicResource SubTextBrush}" Margin="4,0,12,0" VerticalAlignment="Center"/>
+                                <StackPanel Grid.Column="1">
+                                    <TextBlock Text="{Binding Title}" FontWeight="SemiBold" Foreground="{DynamicResource TextBrush}"/>
+                                    <TextBlock Text="{Binding Description}" Style="{StaticResource SubTextStyle}" FontSize="11" TextWrapping="Wrap"/>
+                                </StackPanel>
+                                <TextBlock Grid.Column="2" Text="✓" FontSize="16" FontWeight="Bold" Foreground="#FF4CAF50" VerticalAlignment="Center" Visibility="{Binding DoneVisibility}"/>
+                            </Grid>
+                        </DataTemplate>
+                    </ItemsControl.ItemTemplate>
+                </ItemsControl>
+            </ScrollViewer>
+        </Grid>
+
+        <!-- ===== Φάση 2: Αποτελέσματα ("PC status can be optimized") ===== -->
+        <Grid x:Name="ResultPanel" Visibility="Collapsed">
+            <Grid.RowDefinitions>
+                <RowDefinition Height="Auto"/>
+                <RowDefinition Height="*"/>
+                <RowDefinition Height="Auto"/>
+            </Grid.RowDefinitions>
+
+            <Grid Grid.Row="0" Margin="0,0,0,18">
+                <Grid.ColumnDefinitions><ColumnDefinition Width="Auto"/><ColumnDefinition Width="*"/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions>
+                <!-- ΝΕΟ - βλ. σχόλιο στο HealthCheckWindow.xaml.cs's _scoreResult field: πραγματική
+                     0-100 βαθμολογία υγείας (HealthScoreService, ήδη χρησιμοποιείται αλλού στην
+                     Αρχική) αντί του γενικού στατικού "!" εικονιδίου - χρώμα/αριθμός ενημερώνονται
+                     δυναμικά στο BuildResults(). -->
+                <Border x:Name="ScoreBadge" Grid.Column="0" Width="40" Height="40" CornerRadius="20" Margin="0,0,12,0">
+                    <TextBlock x:Name="TxtScoreBadge" FontSize="15" FontWeight="Bold" Foreground="White" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                </Border>
+                <StackPanel Grid.Column="1" VerticalAlignment="Center">
+                    <TextBlock x:Name="TxtResultHeadline" FontSize="16" FontWeight="Bold" Foreground="{DynamicResource TextBrush}"/>
+                    <TextBlock Text="{tr:Tr HealthCheck_ResultSubtitle}" Style="{StaticResource SubTextStyle}"/>
+                    <TextBlock x:Name="TxtScoreLine" Style="{StaticResource SubTextStyle}" FontWeight="SemiBold" Margin="0,2,0,0"/>
+                </StackPanel>
+                <StackPanel Grid.Column="2" Orientation="Horizontal" VerticalAlignment="Center">
+                    <Button x:Name="BtnExportReport" Content="{tr:Tr HealthCheck_ExportReport}" Style="{StaticResource FlatButtonStyle}" Padding="12,8" Margin="0,0,10,0" Click="BtnExportReport_Click"/>
+                    <Button x:Name="BtnOptimizeNow" Content="{tr:Tr HealthCheck_OptimizeNow}" Style="{StaticResource AccentButtonStyle}" Padding="16,8" Click="BtnOptimizeNow_Click"/>
+                </StackPanel>
+            </Grid>
+
+            <ScrollViewer Grid.Row="1" VerticalScrollBarVisibility="Auto">
+                <ItemsControl x:Name="ListResultCards">
+                    <ItemsControl.ItemsPanel>
+                        <ItemsPanelTemplate><WrapPanel/></ItemsPanelTemplate>
+                    </ItemsControl.ItemsPanel>
+                    <ItemsControl.ItemTemplate>
+                        <DataTemplate>
+                            <Border Style="{StaticResource CardStyle}" Width="300" Margin="0,0,12,12">
+                                <Grid>
+                                    <Grid.ColumnDefinitions><ColumnDefinition Width="Auto"/><ColumnDefinition Width="*"/></Grid.ColumnDefinitions>
+                                    <CheckBox Grid.Column="0" IsChecked="{Binding IsSelected, Mode=TwoWay}" IsEnabled="{Binding CanSelect}" VerticalAlignment="Top" Margin="0,2,10,0"/>
+                                    <StackPanel Grid.Column="1">
+                                        <TextBlock Text="{Binding Headline}" FontWeight="Bold" Foreground="{Binding HeadlineColor}" TextWrapping="Wrap"/>
+                                        <TextBlock Text="{Binding Description}" Style="{StaticResource SubTextStyle}" FontSize="11" TextWrapping="Wrap" Margin="0,4,0,0"/>
+                                        <Button Content="{Binding ActionLabel}" Style="{StaticResource FlatButtonStyle}" Padding="8,4" FontSize="11" HorizontalAlignment="Left" Margin="0,6,0,0"
+                                                Visibility="{Binding ActionVisibility}" Click="ResultCardAction_Click" Tag="{Binding Key}"/>
+                                    </StackPanel>
+                                </Grid>
+                            </Border>
+                        </DataTemplate>
+                    </ItemsControl.ItemTemplate>
+                </ItemsControl>
+            </ScrollViewer>
+
+            <TextBlock Grid.Row="2" x:Name="TxtOptimizeResult" Style="{StaticResource SubTextStyle}" Margin="0,10,0,0" TextWrapping="Wrap"/>
+        </Grid>
+    </Grid>
+</Window>

@@ -1,4 +1,6 @@
 using System.Collections.Generic;
+using OptimizerWpf.Services;
+using OptimizerWpf.Views;
 
 namespace OptimizerWpf
 {
@@ -13,21 +15,33 @@ namespace OptimizerWpf
     // ΣΚΟΠΙΜΑ διαφορετικές από τις αντίστοιχες ετικέτες του κλασικού μενού για τον ΙΔΙΟ προορισμό
     // (το ίδιο το ps1 έχει ξεχωριστά $sbKeys/$hmKeys σύνολα ακριβώς γι' αυτό - όχι ασυνέπεια προς
     // διόρθωση).
-    public record SidebarShortcut(string Icon, string Label, string NotPortedLabel);
+    // ΔΙΟΡΘΩΣΗ (εξονυχιστικός έλεγχος εντόπισε μετά τη μετάφραση του πλευρικού μενού): το
+    // DestinationKey (πρώην NotPortedLabel) ΠΡΕΠΕΙ να είναι σταθερό, ουδέτερο-ως-προς-γλώσσα
+    // αναγνωριστικό - βλ. ίδιο σχόλιο στο ClassicMenuModel.cs/MenuAction.
+    // ΔΙΟΡΘΩΣΗ (roadmap "Οπτικά": "emoji εμφανίζονται ως περιγράμματα") - IconKind προστέθηκε για το
+    // ίδιο διανυσματικό HeaderGlyphIcon (βλ. SidebarNav.xaml) - το Icon (emoji string) παραμένει
+    // αχρησιμοποίητο πλέον στο UI αλλά διατηρείται για να μη σπάσει τυχόν άλλη αναφορά.
+    public record SidebarShortcut(string Icon, string Label, string DestinationKey, GlyphKind IconKind);
 
     public static class SidebarShortcuts
     {
-        public static readonly IReadOnlyList<SidebarShortcut> All = new[]
+        // Property (όχι readonly field) ώστε το πλευρικό μενού να ακολουθεί την τρέχουσα γλώσσα -
+        // ρητό αίτημα χρήστη: "μετάφρασε τα όλα".
+        public static IReadOnlyList<SidebarShortcut> All => new[]
         {
             // Ρητό σπάσιμο σε 2 γραμμές στο " & " (ίδιο με το ps1's $lbl.Text -replace ' & ', "`n") -
             // προβλέψιμο αποτέλεσμα αντί να βασίζεται στο αυτόματο word-wrap του WPF, που θα
             // μπορούσε να σπάσει αλλού (π.χ. "Οδηγίες &" / "Βοήθεια").
-            new SidebarShortcut("❓", "Οδηγίες\nΒοήθεια", "Οδηγίες & Βοήθεια"),
-            new SidebarShortcut("🕘", "Ιστορικό Εκδόσεων", "Ιστορικό Εκδόσεων"),
-            new SidebarShortcut("📄", "Ιστορικό Ενεργειών", "Ιστορικό Ενεργειών"),
-            new SidebarShortcut("🧩", "Κρυφές Λειτουργίες", "Κρυφές Λειτουργίες (ViVeTool)"),
-            new SidebarShortcut("📱", "Διαχείριση UWP", "Διαχείριση UWP Εφαρμογών"),
-            new SidebarShortcut("🎨", "Ρυθμίσεις Εμφάνισης", "Ρυθμίσεις Εμφάνισης"),
+            new SidebarShortcut("❓", LanguageService.T("Sidebar_HelpLabel"), "Help_Title", GlyphKind.Question),
+            // ΔΙΟΡΘΩΣΗ (ρητό αίτημα χρήστη) - το "Ιστορικό Εκδόσεων" αντικαταστάθηκε: είναι πλέον
+            // περιττό εδώ αφού είναι ήδη προσβάσιμο ως tab μέσα στο Βοήθεια/Οδηγίες (βλ. σχόλιο στο
+            // MainWindow.xaml.cs's OpenDestination). Το Ιστορικό Πρόχειρου ήταν μέχρι τώρα προσβάσιμο
+            // ΜΟΝΟ μέσω tray icon/Win+Shift+V - πραγματικό δευτερεύον παράθυρο που άξιζε θέση εδώ.
+            new SidebarShortcut("📋", LanguageService.T("Clipboard_Title"), "Clipboard_Title", GlyphKind.Document),
+            new SidebarShortcut("📄", LanguageService.T("ActionLog_Title"), "ActionLog_Title", GlyphKind.Document),
+            new SidebarShortcut("🧩", LanguageService.T("Sidebar_ViveToolLabel"), "Vive_Title", GlyphKind.Puzzle),
+            new SidebarShortcut("📱", LanguageService.T("Sidebar_UwpManagerLabel"), "Uwp_Title", GlyphKind.Phone),
+            new SidebarShortcut("🎨", LanguageService.T("AppearanceSettingsTitle"), "AppearanceSettingsTitle", GlyphKind.Palette),
         };
     }
 }

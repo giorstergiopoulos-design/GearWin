@@ -3,27 +3,46 @@
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:tr="clr-namespace:OptimizerWpf"
+             xmlns:views="clr-namespace:OptimizerWpf.Views"
              mc:Ignorable="d">
     <!-- Προηγμένα Εργαλεία - port του $tabAdvancedTools (~15001-15621). Βλ. AdvancedToolsService.cs. -->
-    <ScrollViewer VerticalScrollBarVisibility="Auto">
+    <ScrollViewer VerticalScrollBarVisibility="Auto" PreviewMouseWheel="NestedScroll_PreviewMouseWheel">
         <StackPanel Margin="0,8,0,24">
+
+            <Grid Margin="0,0,0,12">
+                <Grid.ColumnDefinitions><ColumnDefinition Width="Auto"/><ColumnDefinition Width="*"/></Grid.ColumnDefinitions>
+                <views:HeaderGlyphIcon Grid.Column="0" Kind="Tools" Width="18" Height="18" Margin="0,2,8,0" VerticalAlignment="Top"/>
+                <TextBlock Grid.Column="1" Text="{tr:Tr Advanced_Header}" Style="{StaticResource CardTitleStyle}" FontSize="16"/>
+            </Grid>
 
             <Border Style="{StaticResource CardStyle}">
                 <StackPanel>
-                    <TextBlock Text="Συντήρηση &amp; Διάγνωση Συστήματος" Style="{StaticResource CardTitleStyle}" Margin="0,0,0,10"/>
+                    <Grid Margin="0,0,0,10">
+                        <Grid.ColumnDefinitions><ColumnDefinition Width="Auto"/><ColumnDefinition Width="*"/></Grid.ColumnDefinitions>
+                        <views:HeaderGlyphIcon Grid.Column="0" Kind="Wrench" Width="16" Height="16" Margin="0,0,8,0" VerticalAlignment="Center"/>
+                        <TextBlock Grid.Column="1" Text="{tr:Tr Advanced_Maintenance}" Style="{StaticResource CardTitleStyle}"/>
+                    </Grid>
+                    <!-- Ρητό αίτημα χρήστη: "κάνε τα στο μέγεθος των κουμπιών winget" - ενιαίο, ρητό
+                         Height (36, ίδιο με τα primary-action κουμπιά αλλού στην εφαρμογή) + κείμενο
+                         που τυλίγεται (Wrap) αντί να στριμώχνεται σε ένα πλάτος - πριν, χωρίς ρητό
+                         Height, τα κουμπιά συρρικνώνονταν γύρω από το κείμενό τους. -->
+                    <!-- Ρητό αίτημα χρήστη ("tooltips είναι παρόντα σε όλα τα παράθυρα και μενού;") -
+                         ToolTip σε ΚΑΘΕ κουμπί αυτής της κάρτας, κείμενο βασισμένο στις πραγματικές
+                         περιγραφές του Show-HelpWindow (Optimizer.ps1 ~9132-9138). -->
                     <WrapPanel>
-                        <Button Content="Πλήρης Συντήρηση (Temp+SFC+DISM)" Style="{StaticResource FlatButtonStyle}" Width="240" Margin="0,0,10,10" Click="BtnFullMaintenance_Click"/>
-                        <Button Content="Ενεργοποίηση Προνομίων Συστήματος" Style="{StaticResource FlatButtonStyle}" Width="240" Margin="0,0,10,10" Click="BtnEnablePrivileges_Click"/>
-                        <Button Content="Επαναφορά Δικτύου &amp; Winsock" Style="{StaticResource FlatButtonStyle}" Width="240" Margin="0,0,10,10" Click="BtnNetworkReset_Click"/>
-                        <Button Content="Καθαρισμός Event Logs" Style="{StaticResource FlatButtonStyle}" Width="240" Margin="0,0,10,10" Click="BtnClearEventLogs_Click"/>
-                        <Button Content="Βελτιστοποίηση Μνήμης (GC)" Style="{StaticResource FlatButtonStyle}" Width="240" Margin="0,0,10,10" Click="BtnGc_Click"/>
-                        <Button Content="Deep Diagnostics Report" Style="{StaticResource FlatButtonStyle}" Width="240" Margin="0,0,10,10" Click="BtnDeepDiagnostics_Click"/>
-                        <Button Content="Διαχείριση Οδηγών" Style="{StaticResource FlatButtonStyle}" Width="240" Margin="0,0,10,10" Click="BtnDeviceManager_Click"/>
-                        <Button Content="Επιδιόρθωση Windows Update" Style="{StaticResource FlatButtonStyle}" Width="240" Margin="0,0,10,10" Click="BtnWuTroubleshoot_Click"/>
-                        <Button Content="Αναφορά Συστήματος" Style="{StaticResource FlatButtonStyle}" Width="240" Margin="0,0,10,10" Click="BtnSystemReport_Click"/>
-                        <Button Content="Reset Υπηρεσιών Windows Update" Style="{StaticResource FlatButtonStyle}" Width="240" Margin="0,0,10,10" Click="BtnResetWuServices_Click"/>
-                        <Button Content="Καθαρισμός Διαπιστευτηρίων Xbox" Style="{StaticResource FlatButtonStyle}" Width="240" Margin="0,0,10,10" Click="BtnCleanXbox_Click"/>
-                        <Button Content="Εγκατάσταση Group Policy Editor" Style="{StaticResource FlatButtonStyle}" Width="240" Margin="0,0,10,10" Click="BtnInstallGpedit_Click"/>
+                        <Button Content="{tr:Tr Advanced_FullMaintenance}" Style="{StaticResource FlatButtonStyle}" Width="220" Height="44" Margin="0,0,10,10" Click="BtnFullMaintenance_Click" ToolTip="{tr:Tr Advanced_FullMaintenanceTip}"><Button.ContentTemplate><DataTemplate><TextBlock Text="{Binding}" TextWrapping="Wrap" TextAlignment="Center"/></DataTemplate></Button.ContentTemplate></Button>
+                        <Button Content="{tr:Tr Advanced_EnablePrivileges}" Style="{StaticResource FlatButtonStyle}" Width="220" Height="44" Margin="0,0,10,10" Click="BtnEnablePrivileges_Click" ToolTip="{tr:Tr Advanced_EnablePrivilegesTip}"><Button.ContentTemplate><DataTemplate><TextBlock Text="{Binding}" TextWrapping="Wrap" TextAlignment="Center"/></DataTemplate></Button.ContentTemplate></Button>
+                        <Button Content="{tr:Tr Advanced_NetworkReset}" Style="{StaticResource FlatButtonStyle}" Width="220" Height="44" Margin="0,0,10,10" Click="BtnNetworkReset_Click" ToolTip="{tr:Tr Advanced_NetworkResetTip}"><Button.ContentTemplate><DataTemplate><TextBlock Text="{Binding}" TextWrapping="Wrap" TextAlignment="Center"/></DataTemplate></Button.ContentTemplate></Button>
+                        <Button Content="{tr:Tr Advanced_ClearEventLogs}" Style="{StaticResource FlatButtonStyle}" Width="220" Height="44" Margin="0,0,10,10" Click="BtnClearEventLogs_Click" ToolTip="{tr:Tr Advanced_ClearEventLogsTip}"><Button.ContentTemplate><DataTemplate><TextBlock Text="{Binding}" TextWrapping="Wrap" TextAlignment="Center"/></DataTemplate></Button.ContentTemplate></Button>
+                        <Button Content="{tr:Tr Advanced_GcOptimize}" Style="{StaticResource FlatButtonStyle}" Width="220" Height="44" Margin="0,0,10,10" Click="BtnGc_Click" ToolTip="{tr:Tr Advanced_GcOptimizeTip}"><Button.ContentTemplate><DataTemplate><TextBlock Text="{Binding}" TextWrapping="Wrap" TextAlignment="Center"/></DataTemplate></Button.ContentTemplate></Button>
+                        <Button Content="Deep Diagnostics Report" Style="{StaticResource FlatButtonStyle}" Width="220" Height="44" Margin="0,0,10,10" Click="BtnDeepDiagnostics_Click" ToolTip="{tr:Tr Advanced_DeepDiagnosticsTip}"><Button.ContentTemplate><DataTemplate><TextBlock Text="{Binding}" TextWrapping="Wrap" TextAlignment="Center"/></DataTemplate></Button.ContentTemplate></Button>
+                        <Button Content="{tr:Tr Advanced_DeviceManager}" Style="{StaticResource FlatButtonStyle}" Width="220" Height="44" Margin="0,0,10,10" Click="BtnDeviceManager_Click" ToolTip="{tr:Tr Advanced_DeviceManagerTip}"><Button.ContentTemplate><DataTemplate><TextBlock Text="{Binding}" TextWrapping="Wrap" TextAlignment="Center"/></DataTemplate></Button.ContentTemplate></Button>
+                        <Button Content="{tr:Tr Advanced_WuTroubleshoot}" Style="{StaticResource FlatButtonStyle}" Width="220" Height="44" Margin="0,0,10,10" Click="BtnWuTroubleshoot_Click" ToolTip="{tr:Tr Advanced_WuTroubleshootTip}"><Button.ContentTemplate><DataTemplate><TextBlock Text="{Binding}" TextWrapping="Wrap" TextAlignment="Center"/></DataTemplate></Button.ContentTemplate></Button>
+                        <Button Content="{tr:Tr Advanced_SystemReport}" Style="{StaticResource FlatButtonStyle}" Width="220" Height="44" Margin="0,0,10,10" Click="BtnSystemReport_Click" ToolTip="{tr:Tr Advanced_SystemReportTip}"><Button.ContentTemplate><DataTemplate><TextBlock Text="{Binding}" TextWrapping="Wrap" TextAlignment="Center"/></DataTemplate></Button.ContentTemplate></Button>
+                        <Button Content="{tr:Tr Advanced_ResetWuServices}" Style="{StaticResource FlatButtonStyle}" Width="220" Height="44" Margin="0,0,10,10" Click="BtnResetWuServices_Click" ToolTip="{tr:Tr Advanced_ResetWuServicesTip}"><Button.ContentTemplate><DataTemplate><TextBlock Text="{Binding}" TextWrapping="Wrap" TextAlignment="Center"/></DataTemplate></Button.ContentTemplate></Button>
+                        <Button Content="{tr:Tr Advanced_CleanXbox}" Style="{StaticResource FlatButtonStyle}" Width="220" Height="44" Margin="0,0,10,10" Click="BtnCleanXbox_Click" ToolTip="{tr:Tr Advanced_CleanXboxTip}"><Button.ContentTemplate><DataTemplate><TextBlock Text="{Binding}" TextWrapping="Wrap" TextAlignment="Center"/></DataTemplate></Button.ContentTemplate></Button>
+                        <Button Content="{tr:Tr Advanced_InstallGpedit}" Style="{StaticResource FlatButtonStyle}" Width="220" Height="44" Margin="0,0,10,10" Click="BtnInstallGpedit_Click" ToolTip="{tr:Tr Advanced_InstallGpeditTip}"><Button.ContentTemplate><DataTemplate><TextBlock Text="{Binding}" TextWrapping="Wrap" TextAlignment="Center"/></DataTemplate></Button.ContentTemplate></Button>
                     </WrapPanel>
                     <TextBlock x:Name="TxtMaintenanceStatus" Style="{StaticResource SubTextStyle}" Margin="0,4,0,0"/>
                 </StackPanel>
@@ -31,69 +50,30 @@
 
             <Border Style="{StaticResource CardStyle}" Margin="0,16,0,0">
                 <StackPanel>
-                    <TextBlock Text="Εργαλειοθήκη (Γρήγορη Πρόσβαση)" Style="{StaticResource CardTitleStyle}" Margin="0,0,0,10"/>
+                    <Grid Margin="0,0,0,10">
+                        <Grid.ColumnDefinitions><ColumnDefinition Width="Auto"/><ColumnDefinition Width="*"/></Grid.ColumnDefinitions>
+                        <views:HeaderGlyphIcon Grid.Column="0" Kind="Tools" Width="16" Height="16" Margin="0,0,8,0" VerticalAlignment="Center"/>
+                        <TextBlock Grid.Column="1" Text="{tr:Tr Advanced_Toolbox}" Style="{StaticResource CardTitleStyle}"/>
+                    </Grid>
                     <WrapPanel>
-                        <Button Content="Snipping Tool" Style="{StaticResource FlatButtonStyle}" Width="150" Margin="0,0,10,10" Click="BtnSnip_Click"/>
-                        <Button Content="Σημειωματάριο" Style="{StaticResource FlatButtonStyle}" Width="150" Margin="0,0,10,10" Click="BtnNotepad_Click"/>
-                        <Button Content="Αριθμομηχανή" Style="{StaticResource FlatButtonStyle}" Width="150" Margin="0,0,10,10" Click="BtnCalc_Click"/>
-                        <Button Content="Πίνακας Ελέγχου" Style="{StaticResource FlatButtonStyle}" Width="150" Margin="0,0,10,10" Click="BtnControlPanel_Click"/>
-                        <Button Content="Διαχείριση Εργασιών" Style="{StaticResource FlatButtonStyle}" Width="150" Margin="0,0,10,10" Click="BtnTaskMgr_Click"/>
-                        <Button Content="Επεξεργαστής Μητρώου" Style="{StaticResource FlatButtonStyle}" Width="150" Margin="0,0,10,10" Click="BtnRegedit_Click"/>
-                        <Button Content="Επανεκκίνηση GPU Driver" Style="{StaticResource FlatButtonStyle}" Width="180" Margin="0,0,10,10" Click="BtnGpuReset_Click"/>
+                        <Button Content="Snipping Tool" Style="{StaticResource FlatButtonStyle}" Width="150" Height="44" Margin="0,0,10,10" Click="BtnSnip_Click" ToolTip="{tr:Tr Advanced_SnippingTip}"/>
+                        <Button Content="{tr:Tr Advanced_Notepad}" Style="{StaticResource FlatButtonStyle}" Width="150" Height="44" Margin="0,0,10,10" Click="BtnNotepad_Click" ToolTip="{tr:Tr Advanced_NotepadTip}"/>
+                        <Button Content="{tr:Tr Advanced_Calculator}" Style="{StaticResource FlatButtonStyle}" Width="150" Height="44" Margin="0,0,10,10" Click="BtnCalc_Click" ToolTip="{tr:Tr Advanced_CalculatorTip}"/>
+                        <Button Content="{tr:Tr Advanced_ControlPanel}" Style="{StaticResource FlatButtonStyle}" Width="150" Height="44" Margin="0,0,10,10" Click="BtnControlPanel_Click" ToolTip="{tr:Tr Advanced_ControlPanelTip}"/>
+                        <Button Content="{tr:Tr Advanced_TaskManager}" Style="{StaticResource FlatButtonStyle}" Width="150" Height="44" Margin="0,0,10,10" Click="BtnTaskMgr_Click" ToolTip="{tr:Tr Advanced_TaskManagerTip}"/>
+                        <Button Content="{tr:Tr Advanced_RegistryEditor}" Style="{StaticResource FlatButtonStyle}" Width="150" Height="44" Margin="0,0,10,10" Click="BtnRegedit_Click" ToolTip="{tr:Tr Advanced_RegistryEditorTip}"/>
+                        <Button Content="{tr:Tr Advanced_GpuReset}" Style="{StaticResource FlatButtonStyle}" Width="180" Height="44" Margin="0,0,10,10" Click="BtnGpuReset_Click" ToolTip="{tr:Tr Advanced_GpuResetTip}"/>
                     </WrapPanel>
                 </StackPanel>
             </Border>
 
             <Border Style="{StaticResource CardStyle}" Margin="0,16,0,0">
                 <StackPanel>
-                    <TextBlock Text="Πρόσθετες Λειτουργίες Windows" Style="{StaticResource CardTitleStyle}" Margin="0,0,0,10"/>
-                    <ItemsControl x:Name="ListCuratedFeatures">
-                        <ItemsControl.ItemTemplate>
-                            <DataTemplate>
-                                <Grid Margin="0,0,0,8">
-                                    <Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions>
-                                    <TextBlock Grid.Column="0" Text="{Binding DisplayName}" Foreground="{DynamicResource TextBrush}" VerticalAlignment="Center"/>
-                                    <ToggleButton Grid.Column="1" IsChecked="{Binding IsEnabled}" Style="{StaticResource ToggleSwitchStyle}" Click="ToggleCuratedFeature_Click" Tag="{Binding}"/>
-                                </Grid>
-                            </DataTemplate>
-                        </ItemsControl.ItemTemplate>
-                    </ItemsControl>
-                </StackPanel>
-            </Border>
-
-            <Border Style="{StaticResource CardStyle}" Margin="0,16,0,0">
-                <StackPanel>
                     <Grid Margin="0,0,0,10">
-                        <Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions>
-                        <TextBox Grid.Column="0" x:Name="TxtAllFeaturesSearch" Margin="0,0,10,0" VerticalContentAlignment="Center"
-                                 Background="{DynamicResource MainBgBrush}" Foreground="{DynamicResource TextBrush}" TextChanged="TxtAllFeaturesSearch_TextChanged"/>
-                        <Button Grid.Column="1" Content="Ανανέωση Λίστας" Style="{StaticResource AccentButtonStyle}" Width="160" Click="BtnRefreshAllFeatures_Click"/>
-                    </Grid>
-                    <TextBlock Text="Όλες οι Πρόσθετες Λειτουργίες Windows - αναζητήσιμη λίστα (εξαιρεί τις 6 παραπάνω)." Style="{StaticResource SubTextStyle}" Margin="0,0,0,8"/>
-                    <Border Background="{DynamicResource MainBgBrush}" CornerRadius="6" MaxHeight="280" Padding="4">
-                        <ScrollViewer VerticalScrollBarVisibility="Auto">
-                            <ItemsControl x:Name="ListAllFeatures">
-                                <ItemsControl.ItemTemplate>
-                                    <DataTemplate>
-                                        <Grid Margin="6,4">
-                                            <Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions>
-                                            <TextBlock Grid.Column="0" Text="{Binding FeatureName}" Foreground="{DynamicResource TextBrush}"/>
-                                            <ToggleButton Grid.Column="1" IsChecked="{Binding IsEnabled}" Style="{StaticResource ToggleSwitchStyle}" Click="ToggleAllFeature_Click" Tag="{Binding}"/>
-                                        </Grid>
-                                    </DataTemplate>
-                                </ItemsControl.ItemTemplate>
-                            </ItemsControl>
-                        </ScrollViewer>
-                    </Border>
-                </StackPanel>
-            </Border>
-
-            <Border Style="{StaticResource CardStyle}" Margin="0,16,0,0">
-                <StackPanel>
-                    <Grid Margin="0,0,0,10">
-                        <Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions>
-                        <TextBlock Grid.Column="0" Text="Διαχείριση Συσκευών-Φαντασμάτων" Style="{StaticResource CardTitleStyle}"/>
-                        <Button Grid.Column="1" Content="Σάρωση" Style="{StaticResource AccentButtonStyle}" Width="140" Click="BtnScanGhostDevices_Click"/>
+                        <Grid.ColumnDefinitions><ColumnDefinition Width="Auto"/><ColumnDefinition Width="*"/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions>
+                        <views:HeaderGlyphIcon Grid.Column="0" Kind="Wrench" Width="16" Height="16" Margin="0,0,8,0" VerticalAlignment="Center"/>
+                        <TextBlock Grid.Column="1" Text="{tr:Tr Advanced_GhostDevices}" Style="{StaticResource CardTitleStyle}"/>
+                        <Button Grid.Column="2" Content="{tr:Tr Scan}" Style="{StaticResource AccentButtonStyle}" Width="140" Click="BtnScanGhostDevices_Click"/>
                     </Grid>
                     <TextBlock x:Name="TxtGhostStatus" Style="{StaticResource SubTextStyle}" Margin="0,0,0,8"/>
                     <ItemsControl x:Name="ListGhostDevices">
@@ -105,11 +85,204 @@
                                         <TextBlock Text="{Binding FriendlyName}" Foreground="{DynamicResource TextBrush}"/>
                                         <TextBlock Text="{Binding Class}" Style="{StaticResource SubTextStyle}"/>
                                     </StackPanel>
-                                    <Button Grid.Column="1" Content="Αφαίρεση" Style="{StaticResource FlatButtonStyle}" Click="BtnRemoveGhostDevice_Click" Tag="{Binding}"/>
+                                    <Button Grid.Column="1" Content="{tr:Tr Remove}" Style="{StaticResource FlatButtonStyle}" Click="BtnRemoveGhostDevice_Click" Tag="{Binding}"/>
                                 </Grid>
                             </DataTemplate>
                         </ItemsControl.ItemTemplate>
                     </ItemsControl>
+                </StackPanel>
+            </Border>
+
+            <!-- ΝΕΟ - roadmap "ιστορικό συσκευών USB" (από έρευνα ανταγωνιστικών εργαλείων) - καθαρά
+                 ενημερωτικό (βλ. UsbHistoryService), καμία ενέργεια/διαγραφή εδώ. -->
+            <Border Style="{StaticResource CardStyle}" Margin="0,16,0,0">
+                <StackPanel>
+                    <Grid Margin="0,0,0,10">
+                        <Grid.ColumnDefinitions><ColumnDefinition Width="Auto"/><ColumnDefinition Width="*"/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions>
+                        <views:HeaderGlyphIcon Grid.Column="0" Kind="Disk" Width="16" Height="16" Margin="0,0,8,0" VerticalAlignment="Center"/>
+                        <TextBlock Grid.Column="1" Text="{tr:Tr UsbHistory_Title}" Style="{StaticResource CardTitleStyle}"/>
+                        <Button Grid.Column="2" Content="{tr:Tr Refresh}" Style="{StaticResource FlatButtonStyle}" Width="120" Click="BtnRefreshUsbHistory_Click"/>
+                    </Grid>
+                    <TextBlock Text="{tr:Tr UsbHistory_Desc}" Style="{StaticResource SubTextStyle}" TextWrapping="Wrap" Margin="0,0,0,8"/>
+                    <Border Background="{DynamicResource MainBgBrush}" CornerRadius="6" MaxHeight="220" Padding="4">
+                        <ScrollViewer VerticalScrollBarVisibility="Auto" PreviewMouseWheel="NestedScroll_PreviewMouseWheel">
+                            <ItemsControl x:Name="ListUsbHistory">
+                                <ItemsControl.ItemTemplate>
+                                    <DataTemplate>
+                                        <Grid Margin="6,4">
+                                            <Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions>
+                                            <TextBlock Grid.Column="0" Text="{Binding FriendlyName}" Foreground="{DynamicResource TextBrush}" TextTrimming="CharacterEllipsis"/>
+                                            <TextBlock Grid.Column="1" Text="{Binding LastConnected}" Style="{StaticResource SubTextStyle}" FontSize="11"/>
+                                        </Grid>
+                                    </DataTemplate>
+                                </ItemsControl.ItemTemplate>
+                            </ItemsControl>
+                        </ScrollViewer>
+                    </Border>
+                </StackPanel>
+            </Border>
+
+            <!-- ΝΕΟ - roadmap "WSL2 manager" - GUI wrapper γύρω από το ενσωματωμένο wsl.exe (λίστα/
+                 εκκίνηση/προεπιλογή/τερματισμός/κατάργηση διανομών), βλ. WslService.cs. Ολόκληρη η
+                 κάρτα εμφανίζεται μόνο αν το WSL είναι πραγματικά εγκατεστημένο (LoadWslAsync). -->
+            <Border x:Name="BorderWsl" Style="{StaticResource CardStyle}" Margin="0,16,0,0" Visibility="Collapsed">
+                <StackPanel>
+                    <Grid Margin="0,0,0,4">
+                        <Grid.ColumnDefinitions><ColumnDefinition Width="Auto"/><ColumnDefinition Width="*"/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions>
+                        <views:HeaderGlyphIcon Grid.Column="0" Kind="Disk" Width="16" Height="16" Margin="0,0,8,0" VerticalAlignment="Center"/>
+                        <TextBlock Grid.Column="1" Text="{tr:Tr Wsl_Title}" Style="{StaticResource CardTitleStyle}"/>
+                        <Button Grid.Column="2" Content="{tr:Tr Refresh}" Style="{StaticResource FlatButtonStyle}" Width="120" Click="BtnRefreshWsl_Click"/>
+                    </Grid>
+                    <TextBlock Text="{tr:Tr Wsl_Desc}" Style="{StaticResource SubTextStyle}" TextWrapping="Wrap" Margin="0,0,0,8"/>
+                    <Border Background="{DynamicResource MainBgBrush}" CornerRadius="6" MaxHeight="260" Padding="4" Margin="0,0,0,10">
+                        <ScrollViewer VerticalScrollBarVisibility="Auto" PreviewMouseWheel="NestedScroll_PreviewMouseWheel">
+                            <ItemsControl x:Name="ListWslDistros">
+                                <ItemsControl.ItemTemplate>
+                                    <DataTemplate>
+                                        <Border Background="{DynamicResource CardBgBrush}" CornerRadius="4" Margin="4" Padding="10">
+                                            <Grid>
+                                                <Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions>
+                                                <StackPanel Grid.Column="0">
+                                                    <TextBlock Foreground="{DynamicResource TextBrush}" FontWeight="SemiBold">
+                                                        <Run Text="{Binding Name, Mode=OneWay}"/>
+                                                        <Run Text=" " />
+                                                        <Run Text="{Binding DefaultBadge, Mode=OneWay}" Foreground="{DynamicResource AccentBrush}"/>
+                                                    </TextBlock>
+                                                    <TextBlock Style="{StaticResource SubTextStyle}">
+                                                        <Run Text="{Binding State, Mode=OneWay}"/>
+                                                        <Run Text=" &#x00B7; WSL"/>
+                                                        <Run Text="{Binding Version, Mode=OneWay}"/>
+                                                    </TextBlock>
+                                                </StackPanel>
+                                                <StackPanel Grid.Column="1" Orientation="Horizontal">
+                                                    <Button Content="{tr:Tr Wsl_OpenShellButton}" Style="{StaticResource FlatButtonStyle}" Padding="10,5" Margin="0,0,6,0" Click="BtnWslOpenShell_Click" Tag="{Binding}"/>
+                                                    <Button Content="{tr:Tr Wsl_SetDefaultButton}" Style="{StaticResource FlatButtonStyle}" Padding="10,5" Margin="0,0,6,0" Click="BtnWslSetDefault_Click" Tag="{Binding}"/>
+                                                    <Button Content="{tr:Tr Wsl_TerminateButton}" Style="{StaticResource FlatButtonStyle}" Padding="10,5" Margin="0,0,6,0" Click="BtnWslTerminate_Click" Tag="{Binding}"/>
+                                                    <Button Content="🗑" Style="{StaticResource FlatButtonStyle}" Width="36" Padding="0" Click="BtnWslUnregister_Click" Tag="{Binding}" AutomationProperties.Name="{tr:Tr Wsl_UnregisterButton}"/>
+                                                </StackPanel>
+                                            </Grid>
+                                        </Border>
+                                    </DataTemplate>
+                                </ItemsControl.ItemTemplate>
+                            </ItemsControl>
+                        </ScrollViewer>
+                    </Border>
+                    <StackPanel Orientation="Horizontal">
+                        <Button x:Name="BtnWslShutdownAll" Content="{tr:Tr Wsl_ShutdownAllButton}" Style="{StaticResource FlatButtonStyle}" Padding="12,6" Margin="0,0,10,0" Click="BtnWslShutdownAll_Click"/>
+                        <Button x:Name="BtnWslUpdate" Content="{tr:Tr Wsl_UpdateButton}" Style="{StaticResource FlatButtonStyle}" Padding="12,6" Click="BtnWslUpdate_Click"/>
+                    </StackPanel>
+                    <TextBlock x:Name="TxtWslStatus" Style="{StaticResource SubTextStyle}" TextWrapping="Wrap" Margin="0,6,0,0"/>
+                </StackPanel>
+            </Border>
+
+            <!-- ΝΕΟ - roadmap "RGB conflict detector" - βλ. σχόλιο ειλικρίνειας στο RgbConflictService.cs:
+                 ανίχνευση διεργασιών γνωστών εργαλείων RGB ελέγχου εν εξελίξει, ΟΧΙ ανίχνευση σε
+                 επίπεδο υλικού (δεν υπάρχει δημόσιο API για αυτό). -->
+            <Border Style="{StaticResource CardStyle}" Margin="0,16,0,0">
+                <StackPanel>
+                    <Grid Margin="0,0,0,4">
+                        <Grid.ColumnDefinitions><ColumnDefinition Width="Auto"/><ColumnDefinition Width="*"/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions>
+                        <views:HeaderGlyphIcon Grid.Column="0" Kind="Shield" Width="16" Height="16" Margin="0,0,8,0" VerticalAlignment="Center"/>
+                        <TextBlock Grid.Column="1" Text="{tr:Tr Rgb_Title}" Style="{StaticResource CardTitleStyle}"/>
+                        <Button Grid.Column="2" Content="{tr:Tr Rgb_CheckButton}" Style="{StaticResource AccentButtonStyle}" Width="140" Click="BtnCheckRgbConflicts_Click"/>
+                    </Grid>
+                    <TextBlock Text="{tr:Tr Rgb_Desc}" Style="{StaticResource SubTextStyle}" TextWrapping="Wrap" Margin="0,0,0,8"/>
+                    <TextBlock x:Name="TxtRgbResult" Style="{StaticResource SubTextStyle}" TextWrapping="Wrap"/>
+                </StackPanel>
+            </Border>
+
+            <!-- ΝΕΟ - roadmap "Προβολή Προγραμματισμένων Εργασιών" - μόνο εργασίες ΤΡΙΤΩΝ (όχι κάτω
+                 από \Microsoft\Windows\, εκεί είναι εκατοντάδες επίσημες εργασίες Windows - θόρυβος) -
+                 βλ. AdvancedToolsService.ScanScheduledTasksAsync. -->
+            <Border Style="{StaticResource CardStyle}" Margin="0,16,0,0">
+                <StackPanel>
+                    <Grid Margin="0,0,0,4">
+                        <Grid.ColumnDefinitions><ColumnDefinition Width="Auto"/><ColumnDefinition Width="*"/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions>
+                        <views:HeaderGlyphIcon Grid.Column="0" Kind="Clock" Width="16" Height="16" Margin="0,0,8,0" VerticalAlignment="Center"/>
+                        <TextBlock Grid.Column="1" Text="{tr:Tr Advanced_ScheduledTasks}" Style="{StaticResource CardTitleStyle}"/>
+                        <Button Grid.Column="2" Content="{tr:Tr Scan}" Style="{StaticResource AccentButtonStyle}" Width="140" Click="BtnScanScheduledTasks_Click"/>
+                    </Grid>
+                    <TextBlock Text="{tr:Tr Advanced_ScheduledTasksDesc}" Style="{StaticResource SubTextStyle}" Margin="0,0,0,8" TextWrapping="Wrap"/>
+                    <TextBlock x:Name="TxtScheduledTasksStatus" Style="{StaticResource SubTextStyle}" Margin="0,0,0,8"/>
+                    <!-- ΝΕΟ - roadmap "Virtualization σε μεγάλες λίστες" - βλ. VirtualizedListStyle.
+                         Πριν ήταν ΧΩΡΙΣ όριο ύψους (γεμίζει τη σελίδα ανεξαρτήτως πλήθους) - τώρα
+                         φραγμένη σε 320px με δικό της scroll, ίδιο μοτίβο με τις Διεργασίες/Υπηρεσίες. -->
+                    <Border Background="{DynamicResource MainBgBrush}" CornerRadius="6" MaxHeight="320" Padding="4">
+                        <ListBox x:Name="ListScheduledTasks" Style="{StaticResource VirtualizedListStyle}" PreviewMouseWheel="NestedScroll_PreviewMouseWheel">
+                            <ListBox.ItemTemplate>
+                                <DataTemplate>
+                                    <Grid Margin="6,4">
+                                        <Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions>
+                                        <StackPanel Grid.Column="0">
+                                            <TextBlock Text="{Binding Task.TaskName}" Foreground="{DynamicResource TextBrush}" FontWeight="SemiBold"/>
+                                            <TextBlock Text="{Binding Task.TaskPath}" Style="{StaticResource SubTextStyle}" FontSize="10"/>
+                                        </StackPanel>
+                                        <ToggleButton Grid.Column="1" IsChecked="{Binding IsEnabled}" Style="{StaticResource ToggleSwitchStyle}" Click="ToggleScheduledTask_Click" Tag="{Binding}"/>
+                                    </Grid>
+                                </DataTemplate>
+                            </ListBox.ItemTemplate>
+                        </ListBox>
+                    </Border>
+                </StackPanel>
+            </Border>
+
+            <!-- ΝΕΟ - roadmap "Χρονοδιάγραμμα εκκίνησης" - πραγματικός συνολικός χρόνος εκκίνησης ανά
+                 εκκίνηση (Event ID 100, Diagnostics-Performance log - το ίδιο event που τροφοδοτεί το
+                 Reliability Monitor), τελευταίες N φορές ώστε να φαίνεται τάση. -->
+            <Border Style="{StaticResource CardStyle}" Margin="0,16,0,0">
+                <StackPanel>
+                    <Grid Margin="0,0,0,4">
+                        <Grid.ColumnDefinitions><ColumnDefinition Width="Auto"/><ColumnDefinition Width="*"/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions>
+                        <views:HeaderGlyphIcon Grid.Column="0" Kind="Clock" Width="16" Height="16" Margin="0,0,8,0" VerticalAlignment="Center"/>
+                        <TextBlock Grid.Column="1" Text="{tr:Tr Advanced_BootTimeline}" Style="{StaticResource CardTitleStyle}"/>
+                        <Button Grid.Column="2" Content="{tr:Tr Refresh}" Style="{StaticResource FlatButtonStyle}" Width="120" Click="BtnRefreshBootTimeline_Click"/>
+                    </Grid>
+                    <TextBlock Text="{tr:Tr Advanced_BootTimelineDesc}" Style="{StaticResource SubTextStyle}" Margin="0,0,0,8" TextWrapping="Wrap"/>
+                    <ItemsControl x:Name="ListBootTimeline">
+                        <ItemsControl.ItemTemplate>
+                            <DataTemplate>
+                                <Grid Margin="0,0,0,4">
+                                    <Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions>
+                                    <TextBlock Grid.Column="0" Text="{Binding When}" Foreground="{DynamicResource TextBrush}"/>
+                                    <TextBlock Grid.Column="1" Text="{Binding Seconds}" Foreground="{DynamicResource AccentBrush}" FontWeight="SemiBold"/>
+                                </Grid>
+                            </DataTemplate>
+                        </ItemsControl.ItemTemplate>
+                    </ItemsControl>
+                    <TextBlock x:Name="TxtNoBootTimeline" Text="{tr:Tr Advanced_BootTimelineEmpty}" Style="{StaticResource SubTextStyle}" Visibility="Collapsed"/>
+                </StackPanel>
+            </Border>
+
+            <!-- ΝΕΟ - roadmap "Βοηθός ρύθμισης Autologon" - ρητή, έντονη προειδοποίηση ότι ο κωδικός
+                 αποθηκεύεται σε ΚΑΘΑΡΟ ΚΕΙΜΕΝΟ στο μητρώο (γνωστός, τεκμηριωμένος περιορισμός του
+                 ίδιου του μηχανισμού των Windows, όχι κάτι που μπορούμε να αποφύγουμε) - καμία
+                 απόκρυψη αυτού του ρίσκου, ίδιο πνεύμα ειλικρίνειας με το υπόλοιπο εφαρμογής. -->
+            <Border Style="{StaticResource CardStyle}" Margin="0,16,0,0">
+                <StackPanel>
+                    <Grid Margin="0,0,0,10">
+                        <Grid.ColumnDefinitions><ColumnDefinition Width="Auto"/><ColumnDefinition Width="*"/></Grid.ColumnDefinitions>
+                        <views:HeaderGlyphIcon Grid.Column="0" Kind="Lock" Width="16" Height="16" Margin="0,0,8,0" VerticalAlignment="Center"/>
+                        <TextBlock Grid.Column="1" Text="{tr:Tr Advanced_Autologon}" Style="{StaticResource CardTitleStyle}"/>
+                    </Grid>
+                    <TextBlock Text="{tr:Tr Advanced_AutologonWarning}" Style="{StaticResource SubTextStyle}" Foreground="#FFE53935" TextWrapping="Wrap" Margin="0,0,0,10"/>
+                    <TextBlock x:Name="TxtAutologonStatus" Style="{StaticResource SubTextStyle}" Margin="0,0,0,10"/>
+                    <Grid Margin="0,0,0,8">
+                        <Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="12"/><ColumnDefinition Width="*"/></Grid.ColumnDefinitions>
+                        <StackPanel Grid.Column="0">
+                            <TextBlock Text="{tr:Tr Advanced_AutologonUsername}" Style="{StaticResource SubTextStyle}" Margin="0,0,0,4"/>
+                            <TextBox x:Name="TxtAutologonUsername" Height="32" Padding="8,4" VerticalContentAlignment="Center"
+                                     Background="{DynamicResource MainBgBrush}" Foreground="{DynamicResource TextBrush}" BorderBrush="{DynamicResource CardBorderBrush}"/>
+                        </StackPanel>
+                        <StackPanel Grid.Column="2">
+                            <TextBlock Text="{tr:Tr Advanced_AutologonPassword}" Style="{StaticResource SubTextStyle}" Margin="0,0,0,4"/>
+                            <PasswordBox x:Name="PwdAutologon" Height="32" Padding="8,4" VerticalContentAlignment="Center"
+                                         Background="{DynamicResource MainBgBrush}" Foreground="{DynamicResource TextBrush}" BorderBrush="{DynamicResource CardBorderBrush}"/>
+                        </StackPanel>
+                    </Grid>
+                    <StackPanel Orientation="Horizontal">
+                        <Button Content="{tr:Tr Advanced_AutologonEnable}" Style="{StaticResource AccentButtonStyle}" Width="200" Margin="0,0,10,0" Click="BtnEnableAutologon_Click"/>
+                        <Button Content="{tr:Tr Advanced_AutologonDisable}" Style="{StaticResource FlatButtonStyle}" Width="200" Click="BtnDisableAutologon_Click"/>
+                    </StackPanel>
                 </StackPanel>
             </Border>
 

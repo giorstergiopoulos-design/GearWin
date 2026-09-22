@@ -1,0 +1,49 @@
+GearWin - Complete PC Care
+
+Complete tools for maintaining, cleaning and improving your PC.
+
+A free, open-source maintenance and optimization tool for Windows 11, built to bring everything a
+user needs to keep their PC fast, clean, secure, and under their own control into one place -
+no more hunting through dozens of separate tools or manually editing the Windows registry.
+
+The app is organized into 8 tabs:
+
+* Home - Your PC's overview at a glance: system health score (with a trend sparkline and a S.M.A.R.T.
+  disk health badge), quick maintenance actions, disk space analysis, and network connection status
+  with a live throughput graph.
+
+* Optimization - Temporary/junk file cleanup, startup management, power plans, scheduled weekly
+  maintenance, and driver updates from multiple sources (Windows Update, Microsoft Update Catalog,
+  AMD/NVIDIA/Dell/SDIO).
+
+* System Health - Disk/memory/file-system health checks (SFC/DISM/CHKDSK), a Registry Cleaner with
+  automatic backup and restore history, disk space analysis by category, and a full PC Manager-style
+  Health Check with a one-click Fix All.
+
+* Network & Security - Network diagnostics, open/listening ports, DNS settings, Windows Defender,
+  telemetry blocking, and all privacy tools in a single section.
+
+* Tweaks - Dozens of Windows interface/performance/privacy tweaks, toggled with a single click, with
+  safe restore to the original value, custom right-click menu entries, and named or file-based
+  settings profiles you can save and switch between instantly.
+
+* Bloatware Removal - Safely remove pre-installed apps you don't need, with the option to reinstall
+  them, plus one-click installs of recommended apps via winget.
+
+* Advanced Tools - Full system maintenance, optional Windows features, duplicate file finder, "ghost"
+  device cleanup, and a Windows toolbox with quick access to built-in tools.
+
+* System - Full hardware/OS breakdown ("My Device") with PDF export, startup/process/service
+  management, disk benchmark, and restore points.
+
+Extras: a system tray icon with quick actions (Quick Clean, Health Check, live CPU/RAM/network mini
+popup) and an optional always-visible desktop widget, 21 visual themes with Light/Dark modes and
+animated backgrounds, a "Windows Classic" and "Microsoft PC Manager" skin, and automatic detection of
+your Windows display language on first launch.
+
+Fully supports 14 languages (Greek, English, German, French, Spanish, Italian, Russian, Chinese,
+Japanese, Portuguese, Korean, Turkish, Arabic, Hindi), and is distributed for free under the MIT License. A few
+individual features rely on separate open-source libraries under their own licenses (see the License
+page of this setup) - full details in the app's own Help > License tab.
+
+Click "Next" to continue the installation.

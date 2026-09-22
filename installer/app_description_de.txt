@@ -1,0 +1,55 @@
+GearWin - Complete PC Care
+
+Umfassende Tools zur Wartung, Bereinigung und Verbesserung Ihres PCs.
+
+Ein kostenloses Open-Source-Wartungs- und Optimierungstool für Windows 11, das alles, was ein
+Benutzer braucht, um seinen PC schnell, sauber, sicher und unter eigener Kontrolle zu halten, an
+einem Ort vereint - ohne Dutzende einzelner Tools durchsuchen oder die Windows-Registrierung von
+Hand bearbeiten zu müssen.
+
+Die Anwendung ist in 8 Registerkarten gegliedert:
+
+* Start - Der Überblick über Ihren PC auf einen Blick: Systemzustandsbewertung (mit
+  Trendverlauf und einem S.M.A.R.T.-Festplattenzustand-Abzeichen), Schnellwartungsaktionen,
+  Speicherplatzanalyse und Netzwerkstatus mit einem Live-Durchsatzdiagramm.
+
+* Optimierung - Bereinigung temporärer/unnötiger Dateien, Autostart-Verwaltung, Energiepläne,
+  geplante wöchentliche Wartung und Treiber-Updates aus mehreren Quellen (Windows Update,
+  Microsoft Update-Katalog, AMD/NVIDIA/Dell/SDIO).
+
+* Systemzustand - Überprüfung von Laufwerken/Speicher/Dateisystem (SFC/DISM/CHKDSK), ein
+  Registry-Reiniger mit automatischer Sicherung und Wiederherstellungsverlauf,
+  Speicherplatzanalyse nach Kategorie und eine vollständige PC-Manager-artige Gesundheitsprüfung
+  mit "Alles beheben" per Klick.
+
+* Netzwerk & Sicherheit - Netzwerkdiagnose, offene/lauschende Ports, DNS-Einstellungen, Windows
+  Defender, Telemetrie-Blockierung und alle Datenschutz-Tools in einem einzigen Bereich.
+
+* Optimierungen - Dutzende Windows-Oberflächen-/Leistungs-/Datenschutzeinstellungen, mit einem
+  Klick umschaltbar, mit sicherer Wiederherstellung des ursprünglichen Werts, benutzerdefinierte
+  Kontextmenüeinträge und benannte oder dateibasierte Einstellungsprofile, die Sie speichern und
+  sofort wechseln können.
+
+* Bloatware entfernen - Entfernen Sie sicher vorinstallierte Apps, die Sie nicht benötigen, mit
+  der Möglichkeit zur Wiederherstellung, sowie Ein-Klick-Installation empfohlener Apps über winget.
+
+* Erweiterte Tools - Vollständige Systemwartung, optionale Windows-Funktionen, Duplikat-Dateisuche,
+  Bereinigung von "Geister"-Geräten und eine Windows-Toolbox mit schnellem Zugriff auf
+  integrierte Tools.
+
+* System - Vollständige Hardware-/Betriebssystemübersicht ("Mein Gerät") mit PDF-Export,
+  Autostart-/Prozess-/Dienstverwaltung, Festplatten-Benchmark und Wiederherstellungspunkte.
+
+Extras: ein Symbol im Infobereich mit Schnellaktionen (Schnellbereinigung, Gesundheitsprüfung,
+Live-Mini-Popup für CPU/RAM/Netzwerk) und ein optionales, immer sichtbares Desktop-Widget, 21
+visuelle Themen mit hellem/dunklem Modus und animierten Hintergründen, ein "Windows Classic"- und
+"Microsoft PC Manager"-Skin, sowie automatische Erkennung Ihrer Windows-Anzeigesprache beim ersten
+Start.
+
+Unterstützt vollständig 14 Sprachen (Griechisch, Englisch, Deutsch, Französisch, Spanisch,
+Italienisch, Russisch, Chinesisch, Japanisch, Portugiesisch, Koreanisch, Türkisch, Arabisch, Hindi) und wird
+kostenlos unter der MIT-Lizenz vertrieben. Einige einzelne Funktionen basieren auf separaten
+Open-Source-Bibliotheken unter ihrer eigenen Lizenz (siehe die Lizenzseite dieses Installationsassistenten)
+- vollständige Details im Reiter Hilfe > Lizenz der App selbst.
+
+Klicken Sie auf "Weiter", um die Installation fortzusetzen.

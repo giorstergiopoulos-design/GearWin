@@ -1,0 +1,64 @@
+<Window x:Class="OptimizerWpf.Views.ClipboardHistoryWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:tr="clr-namespace:OptimizerWpf"
+        mc:Ignorable="d"
+        Title="GearWin - Complete PC Care" Height="380" Width="360"
+        WindowStyle="None" ResizeMode="NoResize" ShowInTaskbar="False" Topmost="True"
+        Deactivated="Window_Deactivated" Loaded="Window_Loaded"
+        Background="{DynamicResource MainBgBrush}">
+    <!-- ΝΕΟ - roadmap "Αναζητήσιμο ιστορικό clipboard" - ίδιο μοτίβο borderless/κλείσιμο-στο-
+         Deactivated με το TrayPopupWindow, αλλά τοποθετείται κοντά στη ΘΕΣΗ ΤΟΥ ΔΡΟΜΕΑ (βλ.
+         Window_Loaded) αντί για σταθερή γωνία οθόνης - ανοίγει με global hotkey (Win+Shift+V) ενώ ο
+         χρήστης γράφει οπουδήποτε αλλού, οπότε πρέπει να εμφανιστεί εκεί κοντά, όχι σε μια γωνία. -->
+    <Border BorderBrush="{DynamicResource CardBorderBrush}" BorderThickness="1" CornerRadius="8">
+        <Grid Margin="14">
+            <Grid.RowDefinitions>
+                <RowDefinition Height="Auto"/>
+                <RowDefinition Height="Auto"/>
+                <RowDefinition Height="*"/>
+                <RowDefinition Height="Auto"/>
+                <RowDefinition Height="Auto"/>
+            </Grid.RowDefinitions>
+
+            <Grid Grid.Row="0" Margin="0,0,0,8">
+                <Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions>
+                <TextBlock Grid.Column="0" Text="{tr:Tr Clipboard_Title}" FontWeight="Bold" FontSize="13" Foreground="{DynamicResource TextBrush}"/>
+                <Button Grid.Column="1" Content="✕" Width="20" Height="20" Padding="0" Style="{StaticResource FlatButtonStyle}" FontSize="11"
+                        Click="BtnClose_Click" AutomationProperties.Name="{tr:Tr Close}"/>
+            </Grid>
+
+            <TextBox Grid.Row="1" x:Name="TxtSearch" Height="30" Padding="8,4" VerticalContentAlignment="Center" Margin="0,0,0,8"
+                     Background="{DynamicResource CardBgBrush}" Foreground="{DynamicResource TextBrush}" BorderBrush="{DynamicResource CardBorderBrush}"
+                     TextChanged="TxtSearch_TextChanged" ToolTip="{tr:Tr Bloatware_SearchAppTooltip}"/>
+
+            <Border Grid.Row="2" Background="{DynamicResource CardBgBrush}" CornerRadius="6" Padding="2">
+                <ScrollViewer VerticalScrollBarVisibility="Auto">
+                    <ItemsControl x:Name="ListHistory">
+                        <ItemsControl.ItemTemplate>
+                            <DataTemplate>
+                                <Grid Margin="4,3">
+                                    <Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions>
+                                    <Border Grid.Column="0" Background="Transparent" Cursor="Hand" MouseLeftButtonUp="ItemBorder_Click" Tag="{Binding}">
+                                        <TextBlock Text="{Binding}" TextTrimming="CharacterEllipsis" MaxHeight="34" TextWrapping="NoWrap"
+                                                   Foreground="{DynamicResource TextBrush}" FontSize="12" Padding="4"/>
+                                    </Border>
+                                    <Button Grid.Column="1" Content="✕" Width="18" Height="18" Padding="0" FontSize="9" Style="{StaticResource FlatButtonStyle}"
+                                            Click="BtnRemoveItem_Click" Tag="{Binding}"/>
+                                </Grid>
+                            </DataTemplate>
+                        </ItemsControl.ItemTemplate>
+                    </ItemsControl>
+                </ScrollViewer>
+            </Border>
+
+            <TextBlock Grid.Row="3" x:Name="TxtEmpty" Text="{tr:Tr Clipboard_Empty}" Style="{StaticResource SubTextStyle}" Margin="0,8,0,0"
+                       HorizontalAlignment="Center" Visibility="Collapsed"/>
+
+            <Button Grid.Row="4" Content="{tr:Tr Clipboard_ClearAll}" Style="{StaticResource FlatButtonStyle}" Height="30" Margin="0,8,0,0"
+                    Foreground="#FFE53935" Click="BtnClearAll_Click"/>
+        </Grid>
+    </Border>
+</Window>

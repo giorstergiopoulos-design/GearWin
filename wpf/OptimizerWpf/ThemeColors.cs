@@ -25,5 +25,13 @@ namespace OptimizerWpf
     public record ThemePair(string DisplayName, ThemeColors Dark, ThemeColors Light)
     {
         public ThemeColors Get(bool isDark) => isDark ? Dark : Light;
+
+        // ΔΙΟΡΘΩΣΗ (χρήστης ανέφερε με screenshot: το dropdown θεμάτων έδειχνε
+        // "ThemePair { DisplayName = Nordic Night, Dark = ... }" αντί για "Nordic Night") - records
+        // παράγουν αυτόματο ToString() με ΟΛΑ τα πεδία τους· κάπου στο custom ComboBox template
+        // (Themes/Styles.xaml) αυτό ξεπερνάει το DisplayMemberPath="DisplayName" για το κλειστό
+        // πλαίσιο επιλογής. Το override εδώ εγγυάται σωστή εμφάνιση ΠΑΝΤΟΥ, ανεξάρτητα από ποιο
+        // ακριβώς WPF μονοπάτι binding χρησιμοποιείται.
+        public override string ToString() => DisplayName;
     }
 }

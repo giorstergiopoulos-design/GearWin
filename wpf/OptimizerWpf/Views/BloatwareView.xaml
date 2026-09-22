@@ -3,23 +3,40 @@
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:local="clr-namespace:OptimizerWpf.Views"
+             xmlns:views="clr-namespace:OptimizerWpf.Views"
+             xmlns:tr="clr-namespace:OptimizerWpf"
              mc:Ignorable="d">
     <!-- Εφαρμογές & Bloat - port του $tabBloatware (~14193-15000). Βλ. BloatwareService.cs. -->
-    <ScrollViewer VerticalScrollBarVisibility="Auto">
+    <UserControl.Resources>
+        <local:GroupHeaderIconConverter x:Key="GroupHeaderText"/>
+        <BooleanToVisibilityConverter x:Key="BoolToVis"/>
+    </UserControl.Resources>
+    <ScrollViewer VerticalScrollBarVisibility="Auto" PreviewMouseWheel="NestedScroll_PreviewMouseWheel">
         <StackPanel Margin="0,8,0,24">
+
+            <Grid Margin="0,0,0,12">
+                <Grid.ColumnDefinitions><ColumnDefinition Width="Auto"/><ColumnDefinition Width="*"/></Grid.ColumnDefinitions>
+                <views:HeaderGlyphIcon Grid.Column="0" Kind="Package" Width="18" Height="18" Margin="0,2,8,0" VerticalAlignment="Top"/>
+                <TextBlock Grid.Column="1" Text="{tr:Tr Bloatware_Header}" Style="{StaticResource CardTitleStyle}" FontSize="16" TextWrapping="Wrap"/>
+            </Grid>
 
             <!-- Ενσωματωμένα Στοιχεία Windows -->
             <Border Style="{StaticResource CardStyle}">
                 <StackPanel>
-                    <TextBlock Text="Ενσωματωμένα Στοιχεία Windows" Style="{StaticResource CardTitleStyle}" Margin="0,0,0,10"/>
+                    <Grid Margin="0,0,0,10">
+                        <Grid.ColumnDefinitions><ColumnDefinition Width="Auto"/><ColumnDefinition Width="*"/></Grid.ColumnDefinitions>
+                        <views:HeaderGlyphIcon Grid.Column="0" Kind="Package" Width="16" Height="16" Margin="0,0,8,0" VerticalAlignment="Center"/>
+                        <TextBlock Grid.Column="1" Text="{tr:Tr Bloatware_Builtin}" Style="{StaticResource CardTitleStyle}"/>
+                    </Grid>
                     <ItemsControl x:Name="ListBuiltin">
                         <ItemsControl.ItemTemplate>
                             <DataTemplate>
                                 <Grid Margin="0,0,0,8">
                                     <Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="Auto"/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions>
                                     <TextBlock Grid.Column="0" Text="{Binding Name}" Foreground="{DynamicResource TextBrush}" VerticalAlignment="Center"/>
-                                    <Button Grid.Column="1" Content="Εγκατάσταση" Style="{StaticResource AccentButtonStyle}" Width="120" Margin="0,0,8,0" Click="BtnBuiltinInstall_Click" Tag="{Binding}"/>
-                                    <Button Grid.Column="2" Content="Αφαίρεση" Style="{StaticResource FlatButtonStyle}" Width="120" Click="BtnBuiltinRemove_Click" Tag="{Binding}"/>
+                                    <Button Grid.Column="1" Content="{tr:Tr Install}" Style="{StaticResource AccentButtonStyle}" Width="120" Margin="0,0,8,0" Click="BtnBuiltinInstall_Click" Tag="{Binding}"/>
+                                    <Button Grid.Column="2" Content="{tr:Tr Remove}" Style="{StaticResource FlatButtonStyle}" Width="120" Click="BtnBuiltinRemove_Click" Tag="{Binding}"/>
                                 </Grid>
                             </DataTemplate>
                         </ItemsControl.ItemTemplate>
@@ -28,21 +45,113 @@
                 </StackPanel>
             </Border>
 
+            <!-- Πρόσθετες Λειτουργίες Windows - ρητό αίτημα χρήστη: "η λίστα και η από κάτω λειτουργία
+                 που είναι ακριβώς το ίδιο να καταργηθεί, ενοποίησε" - πριν υπήρχαν 2 κάρτες (μια curated
+                 λίστα 6 λειτουργιών + μια "όλες εκτός από αυτές" λίστα) - ενοποιήθηκαν σε ΜΙΑ πλήρη,
+                 αναζητήσιμη λίστα. Μετακινήθηκε εδώ (ρητό αίτημα χρήστη, ήταν στην καρτέλα Προηγμένα
+                 Εργαλεία) - ίδια ουσιαστικά λειτουργία με τα "Ενσωματωμένα Στοιχεία Windows" παραπάνω
+                 (ενεργοποίηση/απενεργοποίηση προαιρετικών στοιχείων Windows), ανήκει στην ίδια καρτέλα. -->
+            <Border Style="{StaticResource CardStyle}" Margin="0,16,0,0">
+                <StackPanel>
+                    <Grid Margin="0,0,0,10">
+                        <Grid.ColumnDefinitions><ColumnDefinition Width="Auto"/><ColumnDefinition Width="*"/></Grid.ColumnDefinitions>
+                        <views:HeaderGlyphIcon Grid.Column="0" Kind="Wrench" Width="16" Height="16" Margin="0,0,8,0" VerticalAlignment="Center"/>
+                        <TextBlock Grid.Column="1" Text="{tr:Tr Advanced_OptionalFeatures}" Style="{StaticResource CardTitleStyle}"/>
+                    </Grid>
+                    <Grid Margin="0,0,0,10">
+                        <Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions>
+                        <TextBox Grid.Column="0" x:Name="TxtAllFeaturesSearch" Height="32" Padding="8,4" Margin="0,0,10,0" VerticalContentAlignment="Center"
+                                 Background="{DynamicResource MainBgBrush}" Foreground="{DynamicResource TextBrush}" BorderBrush="{DynamicResource CardBorderBrush}" TextChanged="TxtAllFeaturesSearch_TextChanged"/>
+                        <Button Grid.Column="1" Content="{tr:Tr Advanced_RefreshListBtn}" Style="{StaticResource AccentButtonStyle}" Width="160" Height="32" Click="BtnRefreshAllFeatures_Click"/>
+                    </Grid>
+                    <TextBlock Text="{tr:Tr Advanced_OptionalFeaturesDesc}" Style="{StaticResource SubTextStyle}" Margin="0,0,0,8"/>
+                    <WrapPanel x:Name="PanelPopularFeatures" Margin="0,0,0,10"/>
+                    <Border Background="{DynamicResource MainBgBrush}" CornerRadius="6" MaxHeight="320" Padding="4">
+                        <ScrollViewer VerticalScrollBarVisibility="Auto" PreviewMouseWheel="NestedScroll_PreviewMouseWheel">
+                            <ItemsControl x:Name="ListAllFeatures">
+                                <ItemsControl.ItemTemplate>
+                                    <DataTemplate>
+                                        <Grid Margin="6,4">
+                                            <Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions>
+                                            <TextBlock Grid.Column="0" Text="{Binding DisplayName}" Foreground="{DynamicResource TextBrush}"/>
+                                            <ToggleButton Grid.Column="1" IsChecked="{Binding IsEnabled}" Style="{StaticResource ToggleSwitchStyle}" Click="ToggleAllFeature_Click" Tag="{Binding}"/>
+                                        </Grid>
+                                    </DataTemplate>
+                                </ItemsControl.ItemTemplate>
+                            </ItemsControl>
+                        </ScrollViewer>
+                    </Border>
+                </StackPanel>
+            </Border>
+
             <!-- Προτεινόμενες Εφαρμογές -->
             <Border Style="{StaticResource CardStyle}" Margin="0,16,0,0">
                 <StackPanel>
-                    <TextBlock Text="Προτεινόμενες Εφαρμογές (winget)" Style="{StaticResource CardTitleStyle}" Margin="0,0,0,10"/>
+                    <Grid Margin="0,0,0,10">
+                        <Grid.ColumnDefinitions><ColumnDefinition Width="Auto"/><ColumnDefinition Width="*"/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions>
+                        <views:HeaderGlyphIcon Grid.Column="0" Kind="Phone" Width="16" Height="16" Margin="0,0,8,0" VerticalAlignment="Center"/>
+                        <TextBlock Grid.Column="1" Text="{tr:Tr Bloatware_Recommended}" Style="{StaticResource CardTitleStyle}"/>
+                        <!-- ΝΕΟ - ρητό αίτημα χρήστη: "να μην ξανασκαναρονται καθε φορα" - το
+                             CheckRecommendedInstalledAsync πλέον cache-άρει το αποτέλεσμα ανά WingetId
+                             (βλ. σχόλιο στο BloatwareView.xaml.cs), οπότε αυτό το κουμπί είναι η ρητή
+                             διέξοδος για πραγματικά φρέσκιο έλεγχο (π.χ. αν κάτι εγκαταστάθηκε/
+                             αφαιρέθηκε εκτός εφαρμογής μέσα στο ίδιο session). -->
+                        <Button Grid.Column="2" Content="{tr:Tr Bloatware_RefreshList}" Style="{StaticResource FlatButtonStyle}" Padding="10,4" Click="BtnRefreshRecommended_Click"/>
+                    </Grid>
                     <TextBlock x:Name="TxtRecommendedStatus" Style="{StaticResource SubTextStyle}" Margin="0,0,0,8"/>
+                    <!-- Πρόταση βελτίωσης που εγκρίθηκε ("κάνε τα όλα") - πεδίο αναζήτησης, η λίστα θα
+                         μεγαλώνει με τον καιρό. -->
+                    <TextBox x:Name="TxtRecommendedSearch" Height="32" Padding="8,4" VerticalContentAlignment="Center" Margin="0,0,0,8"
+                             Background="{DynamicResource MainBgBrush}" Foreground="{DynamicResource TextBrush}" BorderBrush="{DynamicResource CardBorderBrush}"
+                             TextChanged="TxtRecommendedSearch_TextChanged" ToolTip="{tr:Tr Bloatware_SearchAppTooltip}"/>
+                    <!-- Ρητό αίτημα χρήστη: "στις προτεινόμενες υπήρχε ομαδοποίηση... να είναι διακριτά
+                         τα είδη" - port του ps1's ξεχωριστούς Add-IconedLabel ανά κατηγορία (~14761-14792,
+                         Προγράμματα Περιήγησης/Συμπίεση/Πολυμέσα/Επικοινωνία/Εργαλεία/Έγγραφα/Βιβλιοθήκες) -
+                         πραγματικές επικεφαλίδες ομάδας (ItemsControl.GroupStyle) αντί για μικρό γκρι
+                         υποκείμενο κάτω από κάθε εφαρμογή. Η ομαδοποίηση γίνεται στο code-behind
+                         (ListCollectionView πάνω στο _recommended - βλ. BloatwareView.xaml.cs). -->
+                    <!-- ΝΕΟ - ρητό αίτημα χρήστη: "να εμφανίζονται σε δύο ή τρεις σειρές αν χωράνε στο
+                         παράθυρο για εξοικονόμηση χώρου, όπως περίπου στην 2.8.2" - GroupStyle.Panel
+                         (ΟΧΙ το ItemsControl.ItemsPanel - αυτό διέπει μόνο πώς στοιβάζονται οι ΟΜΑΔΕΣ
+                         μεταξύ τους, όχι τα στοιχεία ΜΕΣΑ σε κάθε ομάδα) σε WrapPanel με σταθερό πλάτος
+                         στο item template ώστε να τυλίγει σε 2-3 στήλες όταν χωράει το παράθυρο. -->
                     <ItemsControl x:Name="ListRecommended">
+                        <ItemsControl.GroupStyle>
+                            <GroupStyle>
+                                <!-- ΝΕΟ - roadmap "Μαζική επιλογή ανά κατηγορία" ("όλα τα Xbox", "όλα τα AI") -
+                                     μικρό κουμπί δίπλα σε κάθε επικεφαλίδα ομάδας που εγκαθιστά όλες τις
+                                     εφαρμογές της κατηγορίας που δεν είναι ήδη εγκατεστημένες. Tag=το όνομα
+                                     της ομάδας (CollectionViewGroup.Name) - βλ. BtnInstallGroup_Click. -->
+                                <GroupStyle.HeaderTemplate>
+                                    <DataTemplate>
+                                        <StackPanel Orientation="Horizontal" Margin="0,14,0,6">
+                                            <TextBlock Text="{Binding Name, Converter={StaticResource GroupHeaderText}}" FontWeight="Bold"
+                                                       Foreground="{DynamicResource TextBrush}" VerticalAlignment="Center"/>
+                                            <Button Content="{tr:Tr Bloatware_InstallAllInGroup}" Style="{StaticResource FlatButtonStyle}"
+                                                    FontSize="10.5" Padding="8,3" Margin="10,0,0,0" Click="BtnInstallGroup_Click" Tag="{Binding Name}"/>
+                                        </StackPanel>
+                                    </DataTemplate>
+                                </GroupStyle.HeaderTemplate>
+                                <GroupStyle.Panel>
+                                    <ItemsPanelTemplate>
+                                        <WrapPanel Orientation="Horizontal"/>
+                                    </ItemsPanelTemplate>
+                                </GroupStyle.Panel>
+                            </GroupStyle>
+                        </ItemsControl.GroupStyle>
                         <ItemsControl.ItemTemplate>
                             <DataTemplate>
-                                <Grid Margin="0,0,0,8">
-                                    <Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions>
-                                    <StackPanel Grid.Column="0">
-                                        <TextBlock Text="{Binding App.Title}" Foreground="{DynamicResource TextBrush}"/>
-                                        <TextBlock Text="{Binding App.Group}" Style="{StaticResource SubTextStyle}" FontSize="10"/>
-                                    </StackPanel>
-                                    <Button Grid.Column="1" Content="{Binding ButtonLabel}" Style="{StaticResource FlatButtonStyle}" Width="130" Click="BtnRecommendedToggle_Click" Tag="{Binding}"/>
+                                <Grid Width="360" Margin="0,0,14,10">
+                                    <Grid.ColumnDefinitions><ColumnDefinition Width="Auto"/><ColumnDefinition Width="*"/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions>
+                                    <!-- Ρητό αίτημα χρήστη: πραγματικό λογότυπο όπου είναι διαθέσιμο (ήδη
+                                         εγκατεστημένες εφαρμογές μόνο - βλ. RecommendedAppRow.Icon) - γενικό
+                                         εικονίδιο πακέτου από πίσω για τις υπόλοιπες. -->
+                                    <Grid Grid.Column="0" Width="28" Height="28" Margin="0,0,10,0">
+                                        <views:HeaderGlyphIcon Kind="Package" Width="16" Height="16" HorizontalAlignment="Center" VerticalAlignment="Center" Opacity="0.5"/>
+                                        <Image Source="{Binding Icon}" Width="24" Height="24"/>
+                                    </Grid>
+                                    <TextBlock Grid.Column="1" Text="{Binding App.Title}" Foreground="{DynamicResource TextBrush}" VerticalAlignment="Center" TextTrimming="CharacterEllipsis" Margin="0,0,6,0"/>
+                                    <Button Grid.Column="2" Content="{Binding ButtonLabel}" Style="{StaticResource FlatButtonStyle}" Width="130" Click="BtnRecommendedToggle_Click" Tag="{Binding}"/>
                                 </Grid>
                             </DataTemplate>
                         </ItemsControl.ItemTemplate>
@@ -53,8 +162,12 @@
             <!-- Διαχείριση UWP -->
             <Border Style="{StaticResource CardStyle}" Margin="0,16,0,0">
                 <StackPanel>
-                    <TextBlock Text="Διαχείριση Εγκατεστημένων Εφαρμογών (Metro/UWP)" Style="{StaticResource CardTitleStyle}" Margin="0,0,0,10"/>
-                    <Button Content="Άνοιγμα Διαχείρισης UWP Εφαρμογών" Style="{StaticResource AccentButtonStyle}" Width="280" HorizontalAlignment="Left" Click="BtnOpenUwpManager_Click"/>
+                    <Grid Margin="0,0,0,10">
+                        <Grid.ColumnDefinitions><ColumnDefinition Width="Auto"/><ColumnDefinition Width="*"/></Grid.ColumnDefinitions>
+                        <views:HeaderGlyphIcon Grid.Column="0" Kind="Tools" Width="16" Height="16" Margin="0,0,8,0" VerticalAlignment="Center"/>
+                        <TextBlock Grid.Column="1" Text="{tr:Tr Bloatware_UwpManager}" Style="{StaticResource CardTitleStyle}"/>
+                    </Grid>
+                    <Button Content="{tr:Tr Bloatware_OpenUwpManager}" Style="{StaticResource AccentButtonStyle}" Width="280" HorizontalAlignment="Left" Click="BtnOpenUwpManager_Click"/>
                 </StackPanel>
             </Border>
 
@@ -62,12 +175,16 @@
             <Border Style="{StaticResource CardStyle}" Margin="0,16,0,0">
                 <StackPanel>
                     <Grid Margin="0,0,0,10">
-                        <Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions>
-                        <TextBlock Grid.Column="0" Text="Βαθιά Απεγκατάσταση Εφαρμογών" Style="{StaticResource CardTitleStyle}"/>
-                        <Button Grid.Column="1" Content="Ανανέωση Λίστας" Style="{StaticResource FlatButtonStyle}" Width="150" Click="BtnRefreshInstalledApps_Click"/>
+                        <Grid.ColumnDefinitions><ColumnDefinition Width="Auto"/><ColumnDefinition Width="*"/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions>
+                        <views:HeaderGlyphIcon Grid.Column="0" Kind="Phone" Width="16" Height="16" Margin="0,0,8,0" VerticalAlignment="Center"/>
+                        <TextBlock Grid.Column="1" Text="{tr:Tr Bloatware_DeepUninstall}" Style="{StaticResource CardTitleStyle}"/>
+                        <Button Grid.Column="2" Content="{tr:Tr Bloatware_RefreshList}" Style="{StaticResource FlatButtonStyle}" Width="150" Height="36" Click="BtnRefreshInstalledApps_Click"/>
                     </Grid>
+                    <TextBox x:Name="TxtInstalledAppsSearch" Height="32" Padding="8,4" VerticalContentAlignment="Center" Margin="0,0,0,8"
+                             Background="{DynamicResource MainBgBrush}" Foreground="{DynamicResource TextBrush}" BorderBrush="{DynamicResource CardBorderBrush}"
+                             TextChanged="TxtInstalledAppsSearch_TextChanged" ToolTip="{tr:Tr Bloatware_SearchInstalledTooltip}"/>
                     <Border Background="{DynamicResource MainBgBrush}" CornerRadius="6" MaxHeight="320" Padding="4">
-                        <ScrollViewer VerticalScrollBarVisibility="Auto">
+                        <ScrollViewer VerticalScrollBarVisibility="Auto" PreviewMouseWheel="NestedScroll_PreviewMouseWheel">
                             <ItemsControl x:Name="ListInstalledApps">
                                 <ItemsControl.ItemTemplate>
                                     <DataTemplate>
@@ -76,8 +193,19 @@
                                             <StackPanel Grid.Column="0">
                                                 <TextBlock Text="{Binding App.DisplayName}" Foreground="{DynamicResource TextBrush}"/>
                                                 <TextBlock Text="{Binding App.Publisher}" Style="{StaticResource SubTextStyle}"/>
+                                                <!-- ΝΕΟ - roadmap "Διασταύρωση με εκκίνηση". -->
+                                                <TextBlock Text="{tr:Tr Bloatware_AlsoAtStartup}" Foreground="{DynamicResource AccentBrush}" FontSize="10.5"
+                                                           Visibility="{Binding AlsoRunsAtStartup, Converter={StaticResource BoolToVis}}" Margin="0,2,0,0"/>
                                             </StackPanel>
-                                            <Button Grid.Column="1" Content="Απεγκατάσταση &amp; Καθαρισμός" Style="{StaticResource FlatButtonStyle}" Click="BtnDeepUninstall_Click" Tag="{Binding}"/>
+                                            <!-- ΔΙΟΡΘΩΣΗ (χρήστης ανέφερε: "τα κουμπιά είναι πολύ μικρά για την
+                                                 απεγκατάσταση και καθαρισμό") - ίδιο bug-class με αλλού στην
+                                                 εφαρμογή, χωρίς ρητό Height/Width το κουμπί συρρικνωνόταν γύρω
+                                                 από το (μακρύ) κείμενό του. -->
+                                            <!-- ΔΙΟΡΘΩΣΗ (χρήστης ανέφερε: "τα κουμπιά... μόλις χωράει την
+                                                 απεγκατάσταση") - Width 190 ήταν ακόμα στενό για το μακρύ
+                                                 κείμενο "Απεγκατάσταση & Καθαρισμός" - μεγάλωσε σε 230. -->
+                                            <Button Grid.Column="1" Content="{tr:Tr Bloatware_DeepUninstallBtn}" Style="{StaticResource FlatButtonStyle}"
+                                                    Width="230" Height="36" VerticalAlignment="Center" Click="BtnDeepUninstall_Click" Tag="{Binding}"/>
                                         </Grid>
                                     </DataTemplate>
                                 </ItemsControl.ItemTemplate>

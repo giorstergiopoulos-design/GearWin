@@ -1,0 +1,72 @@
+<Window x:Class="OptimizerWpf.Views.DesktopWidgetWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:tr="clr-namespace:OptimizerWpf"
+        mc:Ignorable="d"
+        Title="GearWin - Complete PC Care" SizeToContent="Height" Width="230" MinHeight="150"
+        WindowStyle="None" AllowsTransparency="True" ResizeMode="NoResize" ShowInTaskbar="False" Topmost="True"
+        Loaded="Window_Loaded" Closing="Window_Closing"
+        Background="Transparent">
+    <!-- ΝΕΟ - roadmap "Widget επιφάνειας εργασίας" - σε αντίθεση με το ήδη υπάρχον TrayPopupWindow
+         (ανοίγει σε κλικ, κλείνει στο Deactivated), αυτό παραμένει ΠΑΝΤΑ ορατό στην επιφάνεια εργασίας
+         όσο είναι ενεργοποιημένο, μεταφέρεται με σύρσιμο (MouseLeftButtonDown -> DragMove) και θυμάται
+         τη θέση του (AppSettingsService.DesktopWidgetX/Y). Ίδιο περιεχόμενο/layout με το tray popup
+         (CPU/RAM/Δίκτυο) - AllowsTransparency="True" εδώ (σε αντίθεση με το tray popup) ώστε η
+         στρογγυλεμένη γωνία του Border να μην αφήνει τετράγωνες γκρι γωνίες ορατές πίσω της, αφού αυτό
+         το παράθυρο μένει μόνιμα στην επιφάνεια εργασίας (όχι στιγμιαίο popup). -->
+    <Border Background="{DynamicResource MainBgBrush}" BorderBrush="{DynamicResource CardBorderBrush}" BorderThickness="1" CornerRadius="10"
+            MouseLeftButtonDown="Border_MouseLeftButtonDown">
+        <Grid Margin="14">
+            <Grid.RowDefinitions>
+                <RowDefinition Height="Auto"/>
+                <RowDefinition Height="Auto"/>
+                <RowDefinition Height="Auto"/>
+                <RowDefinition Height="Auto"/>
+                <!-- ΝΕΟ - ρητό αίτημα χρήστη: "κάνε πάλι ως widget το FPS/in-game overlay που θα
+                     επεκτείνει το Widget Επιφάνειας Εργασίας" - 2 επιπλέον γραμμές (GPU, FPS) ορατές
+                     ΜΟΝΟ όσο εντοπίζεται fullscreen παιχνίδι (βλ. GameOverlayService/code-behind) -
+                     Collapsed by default ώστε το widget να παραμένει συμπαγές έξω από παιχνίδι. -->
+                <RowDefinition Height="Auto"/>
+                <RowDefinition Height="Auto"/>
+                <RowDefinition Height="Auto"/>
+            </Grid.RowDefinitions>
+
+            <Grid Grid.Row="0" Margin="0,0,0,10">
+                <Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions>
+                <TextBlock Grid.Column="0" Text="{tr:Tr Tray_PopupTitle}" FontWeight="Bold" FontSize="12" Foreground="{DynamicResource TextBrush}" TextTrimming="CharacterEllipsis"/>
+                <Button Grid.Column="1" Content="✕" Width="20" Height="20" Padding="0" Style="{StaticResource FlatButtonStyle}" FontSize="11"
+                        Click="BtnClose_Click" AutomationProperties.Name="{tr:Tr Close}"/>
+            </Grid>
+
+            <Grid Grid.Row="1" Margin="0,0,0,8">
+                <Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions>
+                <TextBlock Text="CPU" Foreground="{DynamicResource SubTextBrush}"/>
+                <TextBlock Grid.Column="1" x:Name="TxtCpu" Text="--%" FontWeight="SemiBold" Foreground="{DynamicResource TextBrush}"/>
+            </Grid>
+            <Grid Grid.Row="2" Margin="0,0,0,8">
+                <Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions>
+                <TextBlock Text="RAM" Foreground="{DynamicResource SubTextBrush}"/>
+                <TextBlock Grid.Column="1" x:Name="TxtRam" Text="--%" FontWeight="SemiBold" Foreground="{DynamicResource TextBrush}"/>
+            </Grid>
+            <Grid Grid.Row="3" x:Name="RowNetwork" Margin="0,0,0,8">
+                <Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions>
+                <TextBlock Text="{tr:Tr Tray_Network}" Foreground="{DynamicResource SubTextBrush}"/>
+                <TextBlock Grid.Column="1" x:Name="TxtNetwork" Text="..." FontWeight="SemiBold" Foreground="{DynamicResource TextBrush}"/>
+            </Grid>
+            <Grid Grid.Row="4" x:Name="RowGpu" Margin="0,0,0,8" Visibility="Collapsed">
+                <Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions>
+                <TextBlock Text="GPU" Foreground="{DynamicResource SubTextBrush}"/>
+                <TextBlock Grid.Column="1" x:Name="TxtGpu" Text="--%" FontWeight="SemiBold" Foreground="{DynamicResource TextBrush}"/>
+            </Grid>
+            <Grid Grid.Row="5" x:Name="RowFps" Margin="0,0,0,8" Visibility="Collapsed">
+                <Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions>
+                <TextBlock Text="FPS" Foreground="{DynamicResource SubTextBrush}"/>
+                <TextBlock Grid.Column="1" x:Name="TxtFps" Text="--" FontWeight="SemiBold" Foreground="{DynamicResource TextBrush}"/>
+            </Grid>
+            <TextBlock Grid.Row="6" x:Name="TxtGameName" Visibility="Collapsed" TextTrimming="CharacterEllipsis"
+                       FontSize="10.5" Foreground="{DynamicResource SubTextBrush}" Margin="0,2,0,0"/>
+        </Grid>
+    </Border>
+</Window>

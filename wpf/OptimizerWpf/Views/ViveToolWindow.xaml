@@ -1,0 +1,91 @@
+<Window x:Class="OptimizerWpf.Views.ViveToolWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:views="clr-namespace:OptimizerWpf.Views"
+        xmlns:tr="clr-namespace:OptimizerWpf"
+        mc:Ignorable="d"
+        Title="{tr:Tr Vive_Title}" Height="700" Width="760"
+        WindowStartupLocation="CenterOwner" ResizeMode="CanResizeWithGrip"
+        Background="{DynamicResource MainBgBrush}">
+    <!-- Port του Optimizer.ps1's ViVeTool integration (~17378-17709). Ρητή διόρθωση χρήστη (screenshot
+         της πραγματικής 2.8.2 έκδοσης): banner προειδοποίησης + πληροφορία build Windows, ενότητα
+         "Προσαρμοσμένο Feature ID" για προχωρημένους, Win11-style toggle διακόπτες ανά χαρακτηριστικό
+         (ΟΧΙ ζεύγος κουμπιών Ενεργοποίηση/Απενεργοποίηση). -->
+    <!-- ΔΙΟΡΘΩΣΗ (χρήστης ζήτησε: "βγάλε από τα δευτερεύοντα παράθυρα το κινούμενο φόντο") - βλ. ίδιο
+         σχόλιο στο HelpWindow.xaml. -->
+    <Grid>
+    <Grid Margin="16">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="*"/>
+            <RowDefinition Height="Auto"/>
+        </Grid.RowDefinitions>
+
+        <Border Grid.Row="0" Background="{DynamicResource CardBgBrush}" BorderBrush="{DynamicResource AccentBrush}" BorderThickness="1" CornerRadius="8" Padding="12" Margin="0,0,0,10">
+            <StackPanel>
+                <TextBlock Text="{tr:Tr Vive_Header}" FontWeight="Bold" Foreground="{DynamicResource TextBrush}" Margin="0,0,0,6"/>
+                <TextBlock TextWrapping="Wrap" Style="{StaticResource SubTextStyle}" Text="{tr:Tr Vive_Warning}"/>
+                <TextBlock x:Name="TxtBuildInfo" Margin="0,8,0,0" Foreground="{DynamicResource AccentBrush}" TextWrapping="Wrap" FontSize="11"/>
+            </StackPanel>
+        </Border>
+
+        <Border Grid.Row="1" Background="{DynamicResource CardBgBrush}" BorderBrush="{DynamicResource CardBorderBrush}" BorderThickness="1" CornerRadius="8" Padding="12" Margin="0,0,0,10">
+            <StackPanel>
+                <Grid Margin="0,0,0,8">
+                    <Grid.ColumnDefinitions><ColumnDefinition Width="Auto"/><ColumnDefinition Width="*"/></Grid.ColumnDefinitions>
+                    <views:HeaderGlyphIcon Grid.Column="0" Kind="Clock" Width="16" Height="16" Margin="0,0,8,0" VerticalAlignment="Center"/>
+                    <TextBlock Grid.Column="1" Text="{tr:Tr Vive_CustomIdHeader}" FontWeight="Bold" Foreground="{DynamicResource TextBrush}"/>
+                </Grid>
+                <TextBox x:Name="TxtCustomId" Height="32" Padding="8,4" VerticalContentAlignment="Center"
+                         Background="{DynamicResource MainBgBrush}" Foreground="{DynamicResource TextBrush}" BorderBrush="{DynamicResource CardBorderBrush}" Margin="0,0,0,8"/>
+                <StackPanel Orientation="Horizontal">
+                    <Button Content="{tr:Tr Vive_EnableId}" Style="{StaticResource AccentButtonStyle}" Width="180" Height="40" Margin="0,0,10,0" Click="BtnCustomEnable_Click"/>
+                    <Button Content="{tr:Tr Vive_DisableId}" Width="180" Height="40" Click="BtnCustomDisable_Click">
+                        <Button.Style>
+                            <Style TargetType="Button" BasedOn="{StaticResource FlatButtonStyle}">
+                                <Setter Property="Background" Value="#FFD32F2F"/>
+                                <Setter Property="Foreground" Value="White"/>
+                            </Style>
+                        </Button.Style>
+                    </Button>
+                </StackPanel>
+            </StackPanel>
+        </Border>
+
+        <Button Grid.Row="2" Content="{tr:Tr Vive_RefreshAll}" Style="{StaticResource AccentButtonStyle}" HorizontalAlignment="Stretch" Height="36" Margin="0,0,0,10" Click="BtnRefresh_Click"/>
+
+        <TextBlock Grid.Row="3" x:Name="TxtStatus" Text="" Style="{StaticResource SubTextStyle}" Margin="0,0,0,6"/>
+
+        <Border Grid.Row="4" Background="{DynamicResource CardBgBrush}" BorderBrush="{DynamicResource CardBorderBrush}" BorderThickness="1" CornerRadius="8" Padding="4">
+            <ScrollViewer VerticalScrollBarVisibility="Auto" PreviewMouseWheel="NestedScroll_PreviewMouseWheel">
+                <ItemsControl x:Name="ListFeatures">
+                    <ItemsControl.ItemTemplate>
+                        <DataTemplate>
+                            <Border Background="{DynamicResource MainBgBrush}" CornerRadius="4" Margin="4" Padding="10">
+                                <Grid>
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="*"/>
+                                        <ColumnDefinition Width="Auto"/>
+                                    </Grid.ColumnDefinitions>
+                                    <StackPanel Grid.Column="0">
+                                        <TextBlock Text="{Binding Feature.Title}" Foreground="{DynamicResource TextBrush}" FontWeight="SemiBold" ToolTip="{Binding Feature.Tooltip}" TextWrapping="Wrap"/>
+                                        <TextBlock Text="{Binding StateText}" Style="{StaticResource SubTextStyle}" FontStyle="Italic"/>
+                                    </StackPanel>
+                                    <views:Win11ToggleSwitch Grid.Column="1" VerticalAlignment="Center" Margin="10,0,0,0" Tag="{Binding}" IsChecked="{Binding IsOn}" Click="FeatureToggle_Click"/>
+                                </Grid>
+                            </Border>
+                        </DataTemplate>
+                    </ItemsControl.ItemTemplate>
+                </ItemsControl>
+            </ScrollViewer>
+        </Border>
+
+        <Button Grid.Row="5" Content="{tr:Tr Close}" Style="{StaticResource FlatButtonStyle}" Width="120" HorizontalAlignment="Right" Margin="0,12,0,0" Click="BtnClose_Click"/>
+    </Grid>
+    </Grid>
+</Window>

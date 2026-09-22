@@ -115,6 +115,35 @@ namespace OptimizerWpf.Services
             return started && exitCode == 0;
         }
 
+        // ΝΕΟ - roadmap "νεότερες δυνατότητες winget στο UI" (pin/export/import). Το "winget pin"
+        // αποτρέπει το ΙΔΙΟ το winget από το να προτείνει/εφαρμόζει μελλοντικές αναβαθμίσεις για ένα
+        // συγκεκριμένο πακέτο (χρήσιμο για εφαρμογές που ο χρήστης θέλει σκόπιμα σε παλαιότερη
+        // έκδοση, π.χ. συμβατότητα). Λειτουργεί ΜΟΝΟ για πακέτα από την πηγή winget (--id).
+        public static async Task<bool> PinAsync(string id)
+        {
+            var (_, exitCode, started) = await RunToolAsync("winget.exe", $"pin add --id \"{id}\" --accept-source-agreements", TimeSpan.FromSeconds(30));
+            return started && exitCode == 0;
+        }
+
+        // "winget export" γράφει ΟΛΑ τα εγκατεστημένα πακέτα winget (ID + έκδοση + πηγή) σε ένα JSON -
+        // μαζί με το ImportAsync παρακάτω, επιτρέπει "αντιγραφή λίστας εφαρμογών" σε νέο υπολογιστή,
+        // ίδιο πνεύμα με το ήδη υπάρχον Named Profiles/tweak export αλλά για ΕΓΚΑΤΕΣΤΗΜΕΝΕΣ εφαρμογές
+        // αντί για ρυθμίσεις.
+        public static async Task<bool> ExportAsync(string filePath)
+        {
+            var (_, exitCode, started) = await RunToolAsync("winget.exe", $"export -o \"{filePath}\" --accept-source-agreements", TimeSpan.FromSeconds(60));
+            return started && exitCode == 0;
+        }
+
+        // "winget import" εγκαθιστά/επαναφέρει όλα τα πακέτα ενός τέτοιου αρχείου - πολλαπλές
+        // εγκαταστάσεις στη σειρά, οπότε ΠΟΛΥ μεγαλύτερο timeout από τα υπόλοιπα εργαλεία εδώ.
+        public static async Task<bool> ImportAsync(string filePath)
+        {
+            var (_, exitCode, started) = await RunToolAsync("winget.exe",
+                $"import -i \"{filePath}\" --accept-package-agreements --accept-source-agreements --ignore-versions", TimeSpan.FromMinutes(20));
+            return started && exitCode == 0;
+        }
+
         // Ίδια αντιστοίχιση με το Get-UpgradeCommandForSource του ps1 - τα script-wrapper εργαλεία
         // (npm/pnpm/scoop/gem/composer) περνάνε από cmd.exe /c, ΟΧΙ απευθείας exe (Process.Start με
         // UseShellExecute=false δεν ψάχνει .cmd/.ps1 wrappers στο PATH όπως κάνει ένα πραγματικό shell).

@@ -1,0 +1,349 @@
+<Window x:Class="OptimizerWpf.Views.AppearanceSettingsWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:views="clr-namespace:OptimizerWpf.Views"
+        xmlns:tr="clr-namespace:OptimizerWpf"
+        mc:Ignorable="d"
+        Title="{tr:Tr AppearanceSettingsTitle}" Height="700" Width="640"
+        WindowStartupLocation="CenterOwner" ResizeMode="CanResizeWithGrip"
+        Background="{DynamicResource MainBgBrush}">
+    <!-- Port του Show-AppearanceSettingsWindow (Optimizer.ps1 ~8274) - ΚΑΙ οι 4 αρχικές υπο-ενότητες,
+         συμπεριλαμβανομένου του "Skins" (η "Microsoft PC Manager" εμφάνιση ήδη υπάρχει ως ΚΑΝΟΝΙΚΟ
+         θέμα στο ThemeCatalog - το Skins tab είναι μια συντόμευση που την επιλέγει + αλλάζει τη διάταξη
+         του κύριου παραθύρου, ΟΧΙ ξεχωριστό σύστημα). Θεματικό φόντο πίσω από ΟΛΟ το παράθυρο - το ίδιο
+         TabControl παραμένει αδιαφανές (TabBgBrush) για ευαναγνωσία του κειμένου, όπως τα panels του
+         ps1 original (BackColor = $currTheme.TabBg πάνω στο BackgroundImage). -->
+    <!-- ΔΙΟΡΘΩΣΗ (χρήστης ζήτησε: "βγάλε από τα δευτερεύοντα παράθυρα το κινούμενο φόντο") - το
+         γενικό, διακοσμητικό φόντο πίσω από ΟΛΟ το παράθυρο αφαιρέθηκε (βλ. ίδιο σχόλιο στο
+         HelpWindow.xaml). Το "Preview" swatch παρακάτω (80px, μέσα στην καρτέλα "Ρυθμίσεις Θεμάτων")
+         ΠΑΡΑΜΕΝΕΙ - αυτό είναι λειτουργικό (ζωντανή προεπισκόπηση του επιλεγμένου στυλ φόντου), όχι
+         διακοσμητικό. -->
+    <Grid>
+    <Grid Margin="16">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="*"/>
+            <RowDefinition Height="Auto"/>
+        </Grid.RowDefinitions>
+        <!-- ΔΙΟΡΘΩΣΗ (χρήστης ανέφερε: "τα pills είναι κομμένα στη γωνία") - το PillTabItemStyle δίνει
+             Margin="0,0,6,6" (μόνο δεξιά/κάτω) σε κάθε pill, άρα το ΠΡΩΤΟ pill (πάνω-αριστερά) δεν είχε
+             ΚΑΘΟΛΟΥ περιθώριο πάνω/αριστερά - η στρογγυλεμένη γωνία του καθόταν ακριβώς στο άκρο του
+             TabControl, οπτικά "κομμένη" από το τετράγωνο Background πίσω της. Padding στο ίδιο το
+             TabControl δίνει χώρο ΓΥΡΩ από ολόκληρη τη λωρίδα pills. -->
+        <TabControl x:Name="MainTabs" Grid.Row="0" Padding="4,4,0,0" Background="{DynamicResource TabBgBrush}" BorderThickness="0" ItemContainerStyle="{StaticResource PillTabItemStyle}">
+            <TabItem Header="{tr:Tr Appr_ThemeSettingsTab}">
+                <ScrollViewer VerticalScrollBarVisibility="Auto" PreviewMouseWheel="NestedScroll_PreviewMouseWheel">
+                <StackPanel Margin="12">
+                    <TextBlock Text="{tr:Tr Appr_AppTheme}" Style="{StaticResource CardTitleStyle}" Margin="0,0,0,8"/>
+                    <ComboBox x:Name="ComboTheme" Width="320" HorizontalAlignment="Left" DisplayMemberPath="DisplayName" SelectionChanged="ComboTheme_SelectionChanged"/>
+                    <CheckBox x:Name="ChkSetDefaultTheme" Content="{tr:Tr Appr_SetDefaultTheme}" Foreground="{DynamicResource TextBrush}" Margin="0,10,0,0"/>
+                    <Separator Margin="0,14,0,14"/>
+
+                    <CheckBox x:Name="ChkAnimatedBg" Content="{tr:Tr Appr_AnimatedBg}" Foreground="{DynamicResource TextBrush}" FontWeight="Bold"
+                              Checked="ChkAnimatedBg_Changed" Unchecked="ChkAnimatedBg_Changed" Margin="0,0,0,10"/>
+                    <TextBlock Text="{tr:Tr Appr_AnimStyle}" Style="{StaticResource SubTextStyle}" Margin="0,0,0,6"/>
+                    <Grid>
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*"/>
+                            <ColumnDefinition Width="*"/>
+                        </Grid.ColumnDefinitions>
+                        <StackPanel Grid.Column="0">
+                            <RadioButton x:Name="RadioAnimTheme" Content="{tr:Tr Appr_AnimTheme}" GroupName="AnimStyle" Foreground="{DynamicResource TextBrush}" Checked="AnimationStyle_Changed" Margin="0,0,0,8"/>
+                            <RadioButton x:Name="RadioAnimOrbit" Content="{tr:Tr Appr_AnimOrbit}" GroupName="AnimStyle" Foreground="{DynamicResource TextBrush}" Checked="AnimationStyle_Changed" Margin="0,0,0,8"/>
+                            <RadioButton x:Name="RadioAnimWaves" Content="{tr:Tr Appr_AnimWaves}" GroupName="AnimStyle" Foreground="{DynamicResource TextBrush}" Checked="AnimationStyle_Changed"/>
+                        </StackPanel>
+                        <StackPanel Grid.Column="1">
+                            <RadioButton x:Name="RadioAnimGears" Content="{tr:Tr Appr_AnimGears}" GroupName="AnimStyle" Foreground="{DynamicResource TextBrush}" Checked="AnimationStyle_Changed" Margin="0,0,0,8"/>
+                            <RadioButton x:Name="RadioAnimParticles" Content="{tr:Tr Appr_AnimParticles}" GroupName="AnimStyle" Foreground="{DynamicResource TextBrush}" Checked="AnimationStyle_Changed" Margin="0,0,0,8"/>
+                            <RadioButton x:Name="RadioAnimGridPulse" Content="{tr:Tr Appr_AnimGridPulse}" GroupName="AnimStyle" Foreground="{DynamicResource TextBrush}" Checked="AnimationStyle_Changed"/>
+                        </StackPanel>
+                    </Grid>
+                    <Border Height="80" CornerRadius="6" Margin="0,12,0,0" ClipToBounds="True">
+                        <views:ThemedBackgroundControl x:Name="Preview"/>
+                    </Border>
+
+                    <Separator Margin="0,16,0,14"/>
+                    <TextBlock Text="{tr:Tr Appr_Opacity}" Style="{StaticResource CardTitleStyle}" Margin="0,0,0,8"/>
+                    <RadioButton x:Name="RadioOpacityNone" Content="{tr:Tr Appr_OpacityNone}" GroupName="Opacity" Foreground="{DynamicResource TextBrush}" Checked="Opacity_Changed" Margin="0,0,0,6"/>
+                    <RadioButton x:Name="RadioOpacityLight" Content="{tr:Tr Appr_OpacityLight}" GroupName="Opacity" Foreground="{DynamicResource TextBrush}" Checked="Opacity_Changed" Margin="0,0,0,6"/>
+                    <RadioButton x:Name="RadioOpacityMedium" Content="{tr:Tr Appr_OpacityMedium}" GroupName="Opacity" Foreground="{DynamicResource TextBrush}" Checked="Opacity_Changed"/>
+
+                    <Separator Margin="0,16,0,14"/>
+                    <!-- ΝΕΟ - roadmap "Widget επιφάνειας εργασίας" - βλ. DesktopWidgetService/
+                         DesktopWidgetWindow. Σε αντίθεση με το tray popup (ανοίγει σε κλικ), αυτό
+                         παραμένει μόνιμα ορατό στην επιφάνεια εργασίας. -->
+                    <CheckBox x:Name="ChkDesktopWidget" Content="{tr:Tr Appr_DesktopWidget}" Foreground="{DynamicResource TextBrush}" FontWeight="Bold"
+                              Checked="ChkDesktopWidget_Changed" Unchecked="ChkDesktopWidget_Changed" Margin="0,0,0,4"/>
+                    <TextBlock Text="{tr:Tr Appr_DesktopWidgetDesc}" Style="{StaticResource SubTextStyle}" TextWrapping="Wrap"/>
+
+                    <TextBlock Text="{tr:Tr Appr_Note}"
+                               Style="{StaticResource SubTextStyle}" TextWrapping="Wrap" Margin="0,16,0,0"/>
+                    <!-- ΔΙΟΡΘΩΣΗ (χρήστης ρώτησε: "το μέγεθος των κουμπιών έχει προσαρμοστεί για όλες τις
+                         γλώσσες;") - το Content αυτού του κουμπιού αλλάζει ζωντανά ανά γλώσσα
+                         (LanguageService), αλλά το ΣΤΑΘΕΡΟ Width="140" θα έκοβε το κείμενο σε
+                         μεγαλύτερες μεταφράσεις (π.χ. Γαλλικά "Enregistrer"). MinWidth αντί για Width -
+                         το κουμπί μεγαλώνει ώστε να χωράει οποιαδήποτε γλώσσα, ποτέ clip. -->
+                    <Button x:Name="BtnSaveThemeText" Content="{tr:Tr Save}" Style="{StaticResource AccentButtonStyle}" MinWidth="140" Padding="18,8" HorizontalAlignment="Right" Margin="0,14,0,0" Click="BtnSaveTheme_Click"/>
+                </StackPanel>
+                </ScrollViewer>
+            </TabItem>
+            <!-- Ρητό αίτημα χρήστη: "τις καρτέλες Μενού/Γλώσσα κάνε τες μία, με τη γλώσσα κάτω από τις
+                 ρυθμίσεις του μενού" - οι πρώην ξεχωριστές καρτέλες Appr_MenuTab/Appr_LanguageTab
+                 ενοποιήθηκαν σε μία, ίδια σειρά ελέγχων με πριν, με τη Γλώσσα τώρα ως ενότητα ΚΑΤΩ από
+                 τις ρυθμίσεις πλευρικού μενού (ΟΧΙ ξεχωριστή καρτέλα πια). -->
+            <TabItem Header="{tr:Tr Appr_MenuTab}">
+                <ScrollViewer VerticalScrollBarVisibility="Auto" PreviewMouseWheel="NestedScroll_PreviewMouseWheel">
+                <StackPanel Margin="12">
+                    <TextBlock Text="{tr:Tr Appr_MenuMode}" Style="{StaticResource CardTitleStyle}" Margin="0,0,0,8"/>
+                    <RadioButton x:Name="RadioMenuHoriz" Content="{tr:Tr Appr_MenuHoriz}" GroupName="MenuMode" Foreground="{DynamicResource TextBrush}"
+                                 Checked="MenuMode_Changed" Margin="0,0,0,6"/>
+                    <RadioButton x:Name="RadioMenuSidebar" Content="{tr:Tr Appr_MenuSidebar}" GroupName="MenuMode" Foreground="{DynamicResource TextBrush}"
+                                 Checked="MenuMode_Changed" Margin="0,0,0,14"/>
+
+                    <CheckBox x:Name="ChkSidebarEnabled" Content="{tr:Tr Appr_SidebarEnabled}" Foreground="{DynamicResource TextBrush}"
+                              Checked="ChkSidebarEnabled_Changed" Unchecked="ChkSidebarEnabled_Changed" Margin="0,0,0,14"/>
+                    <TextBlock Text="{tr:Tr Appr_SidebarPosition}" Style="{StaticResource CardTitleStyle}" Margin="0,0,0,8"/>
+                    <RadioButton x:Name="RadioRight" Content="{tr:Tr Appr_PosRight}" GroupName="SidebarPos" Foreground="{DynamicResource TextBrush}"
+                                 Checked="SidebarPosition_Changed" Margin="0,0,0,6"/>
+                    <RadioButton x:Name="RadioLeft" Content="{tr:Tr Appr_PosLeft}" GroupName="SidebarPos" Foreground="{DynamicResource TextBrush}"
+                                 Checked="SidebarPosition_Changed"/>
+
+                    <Separator Margin="0,16,0,14"/>
+                    <TextBlock Text="{tr:Tr Appr_AppLanguage}" Style="{StaticResource CardTitleStyle}" Margin="0,0,0,8"/>
+                    <!-- ΔΙΟΡΘΩΣΗ (χρήστης ανέφερε: "στο μενού γλώσσας δεν έχει σημαίες") - τα Unicode
+                         regional-indicator emoji (π.χ. &#x1F1EC;&#x1F1F7;) ΔΕΝ σχηματίζουν πάντα ενιαία
+                         σημαία στο WPF text rendering (γνωστός περιορισμός - το ίδιο πρόβλημα που
+                         οδήγησε στο χειροκίνητα-σχεδιασμένο γρανάζι/εικονίδια νωρίτερα σε αυτή τη
+                         συνεδρία, ίδιο πνεύμα με το ps1 original's "χειροκίνητα σχεδιασμένες σημαίες
+                         γλωσσών"). Αντικαταστάθηκαν με απλά, χειροκίνητα σχεδιασμένα διανυσματικά
+                         σημαιάκια (Border+Rectangle/Path), εγγυημένα ορατά ανεξαρτήτως font fallback. -->
+                    <ComboBox x:Name="ComboLanguage" Width="220" HorizontalAlignment="Left" SelectionChanged="ComboLanguage_SelectionChanged">
+                        <!-- ΔΙΟΡΘΩΣΗ (χρήστης ανέφερε: "διόρθωσε την ελληνική σημαία") - η προηγούμενη
+                             εκδοχή ήταν απλά μπλε φόντο με λευκό σταυρό στο κέντρο (έμοιαζε με
+                             σκανδιναβική σημαία), όχι η πραγματική ελληνική: 9 οριζόντιες λωρίδες
+                             μπλε/λευκό (ξεκινούν ΚΑΙ τελειώνουν μπλε) + μπλε κανό με λευκό σταυρό στην
+                             πάνω-αριστερή γωνία (καλύπτει τις πρώτες 5 από τις 9 λωρίδες καθ' ύψος). -->
+                        <ComboBoxItem Tag="el">
+                            <StackPanel Orientation="Horizontal">
+                                <Border Width="20" Height="14" CornerRadius="2" ClipToBounds="True" Margin="0,0,8,0">
+                                    <Grid>
+                                        <Grid.RowDefinitions>
+                                            <RowDefinition/><RowDefinition/><RowDefinition/><RowDefinition/><RowDefinition/>
+                                            <RowDefinition/><RowDefinition/><RowDefinition/><RowDefinition/>
+                                        </Grid.RowDefinitions>
+                                        <Rectangle Grid.Row="0" Fill="#0D5EAF"/>
+                                        <Rectangle Grid.Row="1" Fill="White"/>
+                                        <Rectangle Grid.Row="2" Fill="#0D5EAF"/>
+                                        <Rectangle Grid.Row="3" Fill="White"/>
+                                        <Rectangle Grid.Row="4" Fill="#0D5EAF"/>
+                                        <Rectangle Grid.Row="5" Fill="White"/>
+                                        <Rectangle Grid.Row="6" Fill="#0D5EAF"/>
+                                        <Rectangle Grid.Row="7" Fill="White"/>
+                                        <Rectangle Grid.Row="8" Fill="#0D5EAF"/>
+                                        <Border Grid.Row="0" Grid.RowSpan="5" Width="8" HorizontalAlignment="Left" Background="#0D5EAF">
+                                            <Grid>
+                                                <Rectangle Fill="White" Height="1.6" VerticalAlignment="Center"/>
+                                                <Rectangle Fill="White" Width="1.6" HorizontalAlignment="Center"/>
+                                            </Grid>
+                                        </Border>
+                                    </Grid>
+                                </Border>
+                                <TextBlock Text="Ελληνικά" VerticalAlignment="Center"/>
+                            </StackPanel>
+                        </ComboBoxItem>
+                        <ComboBoxItem Tag="en">
+                            <StackPanel Orientation="Horizontal">
+                                <Border Width="20" Height="14" CornerRadius="2" ClipToBounds="True" Margin="0,0,8,0" Background="#00247D">
+                                    <Grid>
+                                        <Path Data="M0,0 L20,14 M20,0 L0,14" Stroke="White" StrokeThickness="3"/>
+                                        <Path Data="M0,0 L20,14 M20,0 L0,14" Stroke="#CF142B" StrokeThickness="1.3"/>
+                                        <Rectangle Fill="White" Height="4.6" VerticalAlignment="Center"/>
+                                        <Rectangle Fill="White" Width="4.6" HorizontalAlignment="Center"/>
+                                        <Rectangle Fill="#CF142B" Height="2.2" VerticalAlignment="Center"/>
+                                        <Rectangle Fill="#CF142B" Width="2.2" HorizontalAlignment="Center"/>
+                                    </Grid>
+                                </Border>
+                                <TextBlock Text="English" VerticalAlignment="Center"/>
+                            </StackPanel>
+                        </ComboBoxItem>
+                        <ComboBoxItem Tag="de">
+                            <StackPanel Orientation="Horizontal">
+                                <Border Width="20" Height="14" CornerRadius="2" ClipToBounds="True" Margin="0,0,8,0">
+                                    <Grid>
+                                        <Grid.RowDefinitions><RowDefinition/><RowDefinition/><RowDefinition/></Grid.RowDefinitions>
+                                        <Rectangle Grid.Row="0" Fill="#000000"/>
+                                        <Rectangle Grid.Row="1" Fill="#DD0000"/>
+                                        <Rectangle Grid.Row="2" Fill="#FFCE00"/>
+                                    </Grid>
+                                </Border>
+                                <TextBlock Text="Deutsch" VerticalAlignment="Center"/>
+                            </StackPanel>
+                        </ComboBoxItem>
+                        <ComboBoxItem Tag="fr">
+                            <StackPanel Orientation="Horizontal">
+                                <Border Width="20" Height="14" CornerRadius="2" ClipToBounds="True" Margin="0,0,8,0">
+                                    <Grid>
+                                        <Grid.ColumnDefinitions><ColumnDefinition/><ColumnDefinition/><ColumnDefinition/></Grid.ColumnDefinitions>
+                                        <Rectangle Grid.Column="0" Fill="#0055A4"/>
+                                        <Rectangle Grid.Column="1" Fill="White"/>
+                                        <Rectangle Grid.Column="2" Fill="#EF4135"/>
+                                    </Grid>
+                                </Border>
+                                <TextBlock Text="Français" VerticalAlignment="Center"/>
+                            </StackPanel>
+                        </ComboBoxItem>
+                        <ComboBoxItem Tag="es">
+                            <StackPanel Orientation="Horizontal">
+                                <Border Width="20" Height="14" CornerRadius="2" ClipToBounds="True" Margin="0,0,8,0">
+                                    <Grid>
+                                        <Grid.RowDefinitions><RowDefinition/><RowDefinition/><RowDefinition/></Grid.RowDefinitions>
+                                        <Rectangle Grid.Row="0" Fill="#AA151B"/>
+                                        <Rectangle Grid.Row="1" Fill="#F1BF00"/>
+                                        <Rectangle Grid.Row="2" Fill="#AA151B"/>
+                                    </Grid>
+                                </Border>
+                                <TextBlock Text="Español" VerticalAlignment="Center"/>
+                            </StackPanel>
+                        </ComboBoxItem>
+                        <ComboBoxItem Tag="it">
+                            <StackPanel Orientation="Horizontal">
+                                <Border Width="20" Height="14" CornerRadius="2" ClipToBounds="True" Margin="0,0,8,0">
+                                    <Grid>
+                                        <Grid.ColumnDefinitions><ColumnDefinition/><ColumnDefinition/><ColumnDefinition/></Grid.ColumnDefinitions>
+                                        <Rectangle Grid.Column="0" Fill="#008C45"/>
+                                        <Rectangle Grid.Column="1" Fill="White"/>
+                                        <Rectangle Grid.Column="2" Fill="#CD212A"/>
+                                    </Grid>
+                                </Border>
+                                <TextBlock Text="Italiano" VerticalAlignment="Center"/>
+                            </StackPanel>
+                        </ComboBoxItem>
+                        <ComboBoxItem Tag="ru">
+                            <StackPanel Orientation="Horizontal">
+                                <Border Width="20" Height="14" CornerRadius="2" ClipToBounds="True" Margin="0,0,8,0">
+                                    <Grid>
+                                        <Grid.RowDefinitions><RowDefinition/><RowDefinition/><RowDefinition/></Grid.RowDefinitions>
+                                        <Rectangle Grid.Row="0" Fill="White"/>
+                                        <Rectangle Grid.Row="1" Fill="#0039A6"/>
+                                        <Rectangle Grid.Row="2" Fill="#D52B1E"/>
+                                    </Grid>
+                                </Border>
+                                <TextBlock Text="Русский" VerticalAlignment="Center"/>
+                            </StackPanel>
+                        </ComboBoxItem>
+                        <ComboBoxItem Tag="zh">
+                            <StackPanel Orientation="Horizontal">
+                                <Border Width="20" Height="14" CornerRadius="2" ClipToBounds="True" Margin="0,0,8,0" Background="#DE2910">
+                                    <Grid>
+                                        <Polygon Points="5,1.6 5.56,3.23 7.28,3.26 5.9,4.29 6.41,5.94 5,4.95 3.59,5.94 4.1,4.29 2.72,3.26 4.44,3.23" Fill="#FFDE00"/>
+                                        <Ellipse Width="1.3" Height="1.3" Fill="#FFDE00" HorizontalAlignment="Left" VerticalAlignment="Top" Margin="9,2,0,0"/>
+                                    </Grid>
+                                </Border>
+                                <TextBlock Text="中文" VerticalAlignment="Center"/>
+                            </StackPanel>
+                        </ComboBoxItem>
+                        <ComboBoxItem Tag="ja">
+                            <StackPanel Orientation="Horizontal">
+                                <Border Width="20" Height="14" CornerRadius="2" ClipToBounds="True" Margin="0,0,8,0" Background="White">
+                                    <Grid>
+                                        <Ellipse Width="5.6" Height="5.6" Fill="#BC002D" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                                    </Grid>
+                                </Border>
+                                <TextBlock Text="日本語" VerticalAlignment="Center"/>
+                            </StackPanel>
+                        </ComboBoxItem>
+                        <ComboBoxItem Tag="pt">
+                            <StackPanel Orientation="Horizontal">
+                                <Border Width="20" Height="14" CornerRadius="2" ClipToBounds="True" Margin="0,0,8,0">
+                                    <Grid>
+                                        <Grid.ColumnDefinitions><ColumnDefinition Width="2*"/><ColumnDefinition Width="3*"/></Grid.ColumnDefinitions>
+                                        <Rectangle Grid.Column="0" Fill="#046A38"/>
+                                        <Rectangle Grid.Column="1" Fill="#DA291C"/>
+                                    </Grid>
+                                </Border>
+                                <TextBlock Text="Português" VerticalAlignment="Center"/>
+                            </StackPanel>
+                        </ComboBoxItem>
+                        <ComboBoxItem Tag="ko">
+                            <StackPanel Orientation="Horizontal">
+                                <Border Width="20" Height="14" CornerRadius="2" ClipToBounds="True" Margin="0,0,8,0" Background="White">
+                                    <Grid>
+                                        <Ellipse Width="6" Height="6" Fill="#CD2E3A" HorizontalAlignment="Center" VerticalAlignment="Center">
+                                            <Ellipse.Clip><RectangleGeometry Rect="0,0,6,3"/></Ellipse.Clip>
+                                        </Ellipse>
+                                        <Ellipse Width="6" Height="6" Fill="#0047A0" HorizontalAlignment="Center" VerticalAlignment="Center">
+                                            <Ellipse.Clip><RectangleGeometry Rect="0,3,6,3"/></Ellipse.Clip>
+                                        </Ellipse>
+                                    </Grid>
+                                </Border>
+                                <TextBlock Text="한국어" VerticalAlignment="Center"/>
+                            </StackPanel>
+                        </ComboBoxItem>
+                        <ComboBoxItem Tag="tr">
+                            <StackPanel Orientation="Horizontal">
+                                <Border Width="20" Height="14" CornerRadius="2" ClipToBounds="True" Margin="0,0,8,0" Background="#E30A17">
+                                    <Grid>
+                                        <Ellipse Width="6" Height="6" Fill="White" Margin="6,4,0,0" HorizontalAlignment="Left" VerticalAlignment="Top"/>
+                                        <Ellipse Width="4.6" Height="4.6" Fill="#E30A17" Margin="7.3,4.7,0,0" HorizontalAlignment="Left" VerticalAlignment="Top"/>
+                                        <Polygon Points="13.5,5.1 13.9,6.1 15,6.2 14.15,6.9 14.4,8 13.5,7.4 12.6,8 12.85,6.9 12,6.2 13.1,6.1" Fill="White"/>
+                                    </Grid>
+                                </Border>
+                                <TextBlock Text="Türkçe" VerticalAlignment="Center"/>
+                            </StackPanel>
+                        </ComboBoxItem>
+                        <ComboBoxItem Tag="ar">
+                            <StackPanel Orientation="Horizontal">
+                                <Border Width="20" Height="14" CornerRadius="2" ClipToBounds="True" Margin="0,0,8,0" Background="#006C35">
+                                    <Grid>
+                                        <Rectangle Width="12" Height="1.4" Fill="White" HorizontalAlignment="Center" VerticalAlignment="Bottom" Margin="0,0,0,2.4"/>
+                                        <Rectangle Width="1.4" Height="4" Fill="White" HorizontalAlignment="Right" VerticalAlignment="Bottom" Margin="0,0,2,1.2" RenderTransformOrigin="0.5,0.5">
+                                            <Rectangle.RenderTransform><RotateTransform Angle="35"/></Rectangle.RenderTransform>
+                                        </Rectangle>
+                                    </Grid>
+                                </Border>
+                                <TextBlock Text="العربية" VerticalAlignment="Center"/>
+                            </StackPanel>
+                        </ComboBoxItem>
+                        <ComboBoxItem Tag="hi">
+                            <StackPanel Orientation="Horizontal">
+                                <Border Width="20" Height="14" CornerRadius="2" ClipToBounds="True" Margin="0,0,8,0">
+                                    <Grid>
+                                        <Grid.RowDefinitions>
+                                            <RowDefinition/><RowDefinition/><RowDefinition/>
+                                        </Grid.RowDefinitions>
+                                        <Rectangle Grid.Row="0" Fill="#FF9933"/>
+                                        <Rectangle Grid.Row="1" Fill="White"/>
+                                        <Rectangle Grid.Row="2" Fill="#138808"/>
+                                        <Ellipse Grid.Row="1" Width="3" Height="3" Stroke="#000080" StrokeThickness="0.4" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                                    </Grid>
+                                </Border>
+                                <TextBlock Text="हिन्दी" VerticalAlignment="Center"/>
+                            </StackPanel>
+                        </ComboBoxItem>
+                    </ComboBox>
+                    <TextBlock x:Name="TxtLanguageNote"
+                               Style="{StaticResource SubTextStyle}" TextWrapping="Wrap" Margin="0,14,0,0"/>
+                </StackPanel>
+                </ScrollViewer>
+            </TabItem>
+            <TabItem Header="{tr:Tr Appr_SkinsTab}">
+                <StackPanel Margin="12">
+                    <TextBlock Text="{tr:Tr Appr_AppSkin}" Style="{StaticResource CardTitleStyle}" Margin="0,0,0,8"/>
+                    <!-- ΔΙΟΡΘΩΣΗ: προστέθηκε ToolTip σε ΚΑΘΕ radio (εξονυχιστικός έλεγχος εντόπισε ότι
+                         έλειπαν εντελώς) + νέα 3η επιλογή "Windows Classic" (ρητό αίτημα χρήστη). -->
+                    <RadioButton x:Name="RadioSkinClassic" Content="{tr:Tr Appr_SkinClassic}" GroupName="Skin" Foreground="{DynamicResource TextBrush}"
+                                 ToolTip="{tr:Tr Appr_SkinClassicTip}" Checked="Skin_Changed" Margin="0,0,0,6"/>
+                    <RadioButton x:Name="RadioSkinPcManager" Content="{tr:Tr Appr_SkinPcManager}" GroupName="Skin" Foreground="{DynamicResource TextBrush}"
+                                 ToolTip="{tr:Tr Appr_SkinPcManagerTip}" Checked="Skin_Changed" Margin="0,0,0,6"/>
+                    <RadioButton x:Name="RadioSkinWindowsClassic" Content="{tr:Tr Appr_SkinWindowsClassic}" GroupName="Skin" Foreground="{DynamicResource TextBrush}"
+                                 ToolTip="{tr:Tr Appr_SkinWindowsClassicTip}" Checked="Skin_Changed"/>
+                    <TextBlock Text="{tr:Tr Appr_SkinDesc}"
+                               Style="{StaticResource SubTextStyle}" TextWrapping="Wrap" Margin="0,14,0,0"/>
+                </StackPanel>
+            </TabItem>
+        </TabControl>
+        <Button x:Name="BtnCloseText" Grid.Row="1" Content="{tr:Tr Close}" Style="{StaticResource AccentButtonStyle}" MinWidth="120" Padding="18,8" HorizontalAlignment="Right" Margin="0,12,0,0" Click="BtnClose_Click"/>
+    </Grid>
+    </Grid>
+</Window>

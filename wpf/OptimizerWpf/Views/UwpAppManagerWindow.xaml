@@ -3,12 +3,17 @@
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:views="clr-namespace:OptimizerWpf.Views"
+        xmlns:tr="clr-namespace:OptimizerWpf"
         mc:Ignorable="d"
-        Title="Διαχείριση UWP Εφαρμογών" Height="640" Width="700"
+        Title="{tr:Tr Uwp_Title}" Height="640" Width="700"
         WindowStartupLocation="CenterOwner" ResizeMode="CanResizeWithGrip"
         Background="{DynamicResource MainBgBrush}">
     <!-- Port του Show-UwpAppManagerWindow (Optimizer.ps1 ~14877) - μόνο πραγματικά Store apps
          (SignatureKind=Store, όχι frameworks/resource-packages). -->
+    <!-- ΔΙΟΡΘΩΣΗ (χρήστης ζήτησε: "βγάλε από τα δευτερεύοντα παράθυρα το κινούμενο φόντο") - βλ. ίδιο
+         σχόλιο στο HelpWindow.xaml. -->
+    <Grid>
     <Grid Margin="16">
         <Grid.RowDefinitions>
             <RowDefinition Height="Auto"/>
@@ -16,23 +21,24 @@
             <RowDefinition Height="*"/>
             <RowDefinition Height="Auto"/>
         </Grid.RowDefinitions>
-        <Button Grid.Row="0" Content="Σάρωση" Style="{StaticResource AccentButtonStyle}" Width="150" HorizontalAlignment="Left" Click="BtnScan_Click"/>
-        <TextBlock Grid.Row="1" x:Name="TxtStatus" Text="Πατήστε 'Σάρωση' για λίστα εγκατεστημένων εφαρμογών Metro/UWP." Style="{StaticResource SubTextStyle}" Margin="0,10,0,10"/>
+        <Button Grid.Row="0" Content="{tr:Tr Scan}" Style="{StaticResource AccentButtonStyle}" Width="150" HorizontalAlignment="Left" Click="BtnScan_Click"/>
+        <TextBlock Grid.Row="1" x:Name="TxtStatus" Text="{tr:Tr Uwp_ScanPrompt}" Style="{StaticResource SubTextStyle}" Margin="0,10,0,10"/>
         <Border Grid.Row="2" Background="{DynamicResource CardBgBrush}" BorderBrush="{DynamicResource CardBorderBrush}" BorderThickness="1" CornerRadius="8" Padding="4">
-            <ScrollViewer VerticalScrollBarVisibility="Auto">
+            <ScrollViewer VerticalScrollBarVisibility="Auto" PreviewMouseWheel="NestedScroll_PreviewMouseWheel">
                 <ItemsControl x:Name="ListApps">
                     <ItemsControl.ItemTemplate>
                         <DataTemplate>
                             <Grid Margin="6,4">
                                 <Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions>
                                 <TextBlock Grid.Column="0" Text="{Binding Name}" Foreground="{DynamicResource TextBrush}" ToolTip="{Binding PackageFullName}"/>
-                                <Button Grid.Column="1" Content="Απεγκατάσταση" Style="{StaticResource FlatButtonStyle}" Click="BtnUninstall_Click" Tag="{Binding}"/>
+                                <Button Grid.Column="1" Content="{tr:Tr Uwp_Uninstall}" Style="{StaticResource FlatButtonStyle}" Click="BtnUninstall_Click" Tag="{Binding}"/>
                             </Grid>
                         </DataTemplate>
                     </ItemsControl.ItemTemplate>
                 </ItemsControl>
             </ScrollViewer>
         </Border>
-        <Button Grid.Row="3" Content="Κλείσιμο" Style="{StaticResource AccentButtonStyle}" Width="120" HorizontalAlignment="Right" Margin="0,12,0,0" Click="BtnClose_Click"/>
+        <Button Grid.Row="3" Content="{tr:Tr Close}" Style="{StaticResource AccentButtonStyle}" Width="120" HorizontalAlignment="Right" Margin="0,12,0,0" Click="BtnClose_Click"/>
+    </Grid>
     </Grid>
 </Window>

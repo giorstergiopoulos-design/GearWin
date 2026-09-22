@@ -1,0 +1,29 @@
+<Window x:Class="OptimizerWpf.Views.ActionLogWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:views="clr-namespace:OptimizerWpf.Views"
+        xmlns:tr="clr-namespace:OptimizerWpf"
+        mc:Ignorable="d"
+        Title="{tr:Tr ActionLog_Title}" Height="500" Width="600"
+        WindowStartupLocation="CenterOwner" ResizeMode="CanResizeWithGrip"
+        Background="{DynamicResource MainBgBrush}"
+        Closed="Window_Closed">
+    <!-- Port του Show-ActionLogWindow (Optimizer.ps1 ~9010) - διαβάζει live το ActionLogService,
+         το οποίο τροφοδοτείται αυτόματα από κάθε StatusService.SetBusy κλήση σε όλη την εφαρμογή. -->
+    <!-- ΔΙΟΡΘΩΣΗ (χρήστης ζήτησε: "βγάλε από τα δευτερεύοντα παράθυρα το κινούμενο φόντο") - βλ. ίδιο
+         σχόλιο στο HelpWindow.xaml. -->
+    <Grid>
+    <Grid Margin="16">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="*"/>
+            <RowDefinition Height="Auto"/>
+        </Grid.RowDefinitions>
+        <TextBox Grid.Row="0" x:Name="TxtLog" IsReadOnly="True" TextWrapping="Wrap" AcceptsReturn="True"
+                  VerticalScrollBarVisibility="Auto" Background="{DynamicResource CardBgBrush}" Foreground="{DynamicResource TextBrush}"
+                  BorderBrush="{DynamicResource CardBorderBrush}" Padding="8" FontFamily="Consolas"/>
+        <Button Grid.Row="1" Content="{tr:Tr Close}" Style="{StaticResource AccentButtonStyle}" Width="120" HorizontalAlignment="Right" Margin="0,12,0,0" Click="BtnClose_Click"/>
+    </Grid>
+    </Grid>
+</Window>

@@ -3,6 +3,8 @@
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:tr="clr-namespace:OptimizerWpf"
+             xmlns:views="clr-namespace:OptimizerWpf.Views"
              mc:Ignorable="d">
     <!--
         Υγεία & Συντήρηση - port του Optimizer.ps1's $tabHealth (~13300-13792): Registry Cleaner
@@ -10,22 +12,91 @@
         από κάθε διαγραφή), Καθαρισμός Cache Περιηγητών (μόνο browsers που πραγματικά ανιχνεύτηκαν),
         WinRE status/ενεργοποίηση. Βλ. HealthCleanupService.cs.
     -->
-    <ScrollViewer VerticalScrollBarVisibility="Auto">
+    <ScrollViewer VerticalScrollBarVisibility="Auto" PreviewMouseWheel="NestedScroll_PreviewMouseWheel">
         <StackPanel Margin="0,8,0,24">
+
+            <!-- Εργαλεία Υγείας & Συντήρησης Συστήματος - ρητό αίτημα χρήστη ("τα εργαλεία υγείας
+                 συντήρησης συστήματος δεν φαίνονται πουθενά") - ολόκληρη αυτή η ενότητα (port του ps1's
+                 Add-HealthToolButton, ~13302-13400) έλειπε εντελώς από το WPF port. Πρώτη κάρτα της
+                 καρτέλας, ίδια σειρά με το ps1 original (πριν το Registry Cleaner). -->
+            <Border Style="{StaticResource CardStyle}">
+                <StackPanel>
+                    <Grid Margin="0,0,0,10">
+                        <Grid.ColumnDefinitions><ColumnDefinition Width="Auto"/><ColumnDefinition Width="*"/></Grid.ColumnDefinitions>
+                        <views:HeaderGlyphIcon Grid.Column="0" Kind="Broom" Width="16" Height="16" Margin="0,0,8,0" VerticalAlignment="Center"/>
+                        <TextBlock Grid.Column="1" Text="{tr:Tr Health_Tools}" Style="{StaticResource CardTitleStyle}"/>
+                    </Grid>
+
+                    <!-- ΔΙΟΡΘΩΣΗ (χρήστης ανέφερε: "στα εργαλεία υγείας τα πλαίσια είναι κολλημένα") - τα
+                         κουμπιά δεν είχαν αναδίπλωση κειμένου (σε αντίθεση με το ίδιο μοτίβο πλατιού
+                         κουμπιού+περιγραφής στο AdvancedView), οπότε το μακρύ μεταφρασμένο κείμενο σε
+                         ορισμένες γλώσσες (π.χ. Health_DismRestoreBtn/ShortcutsBtn/WinSxsBtn) ξεχείλιζε
+                         έξω από το στρογγυλεμένο πλαίσιο του κουμπιού πάνω στην περιγραφή δίπλα του.
+                         Height 40->MinHeight 40 (επιτρέπει ανάπτυξη σε 2 γραμμές αντί για περικοπή) +
+                         ContentTemplate με TextWrapping σε ΚΑΘΕ κουμπί, ίδιο μοτίβο με το AdvancedView.
+                         Column 0 επίσης 260->280 για λίγο παραπάνω άνεση. -->
+                    <Grid Margin="0,0,0,10">
+                        <Grid.ColumnDefinitions><ColumnDefinition Width="280"/><ColumnDefinition Width="*"/></Grid.ColumnDefinitions>
+                        <Button Grid.Column="0" Content="{tr:Tr Health_SfcBtn}" Style="{StaticResource AccentButtonStyle}" MinHeight="40" Click="BtnSfc_Click"><Button.ContentTemplate><DataTemplate><TextBlock Text="{Binding}" TextWrapping="Wrap" TextAlignment="Center" Margin="4"/></DataTemplate></Button.ContentTemplate></Button>
+                        <TextBlock Grid.Column="1" Text="{tr:Tr Health_SfcDesc}" Style="{StaticResource SubTextStyle}" VerticalAlignment="Center" Margin="14,0,0,0" TextWrapping="Wrap"/>
+                    </Grid>
+                    <Grid Margin="0,0,0,10">
+                        <Grid.ColumnDefinitions><ColumnDefinition Width="280"/><ColumnDefinition Width="*"/></Grid.ColumnDefinitions>
+                        <Button Grid.Column="0" Content="DISM CheckHealth" Style="{StaticResource AccentButtonStyle}" MinHeight="40" Click="BtnDismCheckHealth_Click"><Button.ContentTemplate><DataTemplate><TextBlock Text="{Binding}" TextWrapping="Wrap" TextAlignment="Center" Margin="4"/></DataTemplate></Button.ContentTemplate></Button>
+                        <TextBlock Grid.Column="1" Text="{tr:Tr Health_DismCheckDesc}" Style="{StaticResource SubTextStyle}" VerticalAlignment="Center" Margin="14,0,0,0" TextWrapping="Wrap"/>
+                    </Grid>
+                    <Grid Margin="0,0,0,10">
+                        <Grid.ColumnDefinitions><ColumnDefinition Width="280"/><ColumnDefinition Width="*"/></Grid.ColumnDefinitions>
+                        <Button Grid.Column="0" Content="{tr:Tr Health_DismRestoreBtn}" Style="{StaticResource AccentButtonStyle}" MinHeight="40" Click="BtnDismRestoreHealth_Click"><Button.ContentTemplate><DataTemplate><TextBlock Text="{Binding}" TextWrapping="Wrap" TextAlignment="Center" Margin="4"/></DataTemplate></Button.ContentTemplate></Button>
+                        <TextBlock Grid.Column="1" Text="{tr:Tr Health_DismRestoreDesc}" Style="{StaticResource SubTextStyle}" VerticalAlignment="Center" Margin="14,0,0,0" TextWrapping="Wrap"/>
+                    </Grid>
+                    <Grid Margin="0,0,0,10">
+                        <Grid.ColumnDefinitions><ColumnDefinition Width="280"/><ColumnDefinition Width="*"/></Grid.ColumnDefinitions>
+                        <Button Grid.Column="0" Content="{tr:Tr Health_ChkdskBtn}" Style="{StaticResource AccentButtonStyle}" MinHeight="40" Click="BtnChkdsk_Click"><Button.ContentTemplate><DataTemplate><TextBlock Text="{Binding}" TextWrapping="Wrap" TextAlignment="Center" Margin="4"/></DataTemplate></Button.ContentTemplate></Button>
+                        <TextBlock Grid.Column="1" Text="{tr:Tr Health_ChkdskDesc}" Style="{StaticResource SubTextStyle}" VerticalAlignment="Center" Margin="14,0,0,0" TextWrapping="Wrap"/>
+                    </Grid>
+                    <Grid Margin="0,0,0,10">
+                        <Grid.ColumnDefinitions><ColumnDefinition Width="280"/><ColumnDefinition Width="*"/></Grid.ColumnDefinitions>
+                        <Button Grid.Column="0" Content="{tr:Tr Health_RetrimBtn}" Style="{StaticResource AccentButtonStyle}" MinHeight="40" Click="BtnRetrim_Click"><Button.ContentTemplate><DataTemplate><TextBlock Text="{Binding}" TextWrapping="Wrap" TextAlignment="Center" Margin="4"/></DataTemplate></Button.ContentTemplate></Button>
+                        <TextBlock Grid.Column="1" Text="{tr:Tr Health_RetrimDesc}" Style="{StaticResource SubTextStyle}" VerticalAlignment="Center" Margin="14,0,0,0" TextWrapping="Wrap"/>
+                    </Grid>
+                    <Grid Margin="0,0,0,10">
+                        <Grid.ColumnDefinitions><ColumnDefinition Width="280"/><ColumnDefinition Width="*"/></Grid.ColumnDefinitions>
+                        <Button Grid.Column="0" Content="{tr:Tr Health_ShortcutsBtn}" Style="{StaticResource AccentButtonStyle}" MinHeight="40" Click="BtnFixShortcuts_Click"><Button.ContentTemplate><DataTemplate><TextBlock Text="{Binding}" TextWrapping="Wrap" TextAlignment="Center" Margin="4"/></DataTemplate></Button.ContentTemplate></Button>
+                        <TextBlock Grid.Column="1" Text="{tr:Tr Health_ShortcutsDesc}" Style="{StaticResource SubTextStyle}" VerticalAlignment="Center" Margin="14,0,0,0" TextWrapping="Wrap"/>
+                    </Grid>
+                    <Grid Margin="0,0,0,10">
+                        <Grid.ColumnDefinitions><ColumnDefinition Width="280"/><ColumnDefinition Width="*"/></Grid.ColumnDefinitions>
+                        <Button Grid.Column="0" Content="{tr:Tr Health_WinSxsBtn}" Style="{StaticResource AccentButtonStyle}" MinHeight="40" Click="BtnWinSxsCleanup_Click"><Button.ContentTemplate><DataTemplate><TextBlock Text="{Binding}" TextWrapping="Wrap" TextAlignment="Center" Margin="4"/></DataTemplate></Button.ContentTemplate></Button>
+                        <TextBlock Grid.Column="1" Text="{tr:Tr Health_WinSxsDesc}" Style="{StaticResource SubTextStyle}" VerticalAlignment="Center" Margin="14,0,0,0" TextWrapping="Wrap"/>
+                    </Grid>
+                    <Grid>
+                        <Grid.ColumnDefinitions><ColumnDefinition Width="280"/><ColumnDefinition Width="*"/></Grid.ColumnDefinitions>
+                        <Button Grid.Column="0" Content="{tr:Tr Health_DotNetBtn}" Style="{StaticResource AccentButtonStyle}" MinHeight="40" Click="BtnDotNetVersion_Click"><Button.ContentTemplate><DataTemplate><TextBlock Text="{Binding}" TextWrapping="Wrap" TextAlignment="Center" Margin="4"/></DataTemplate></Button.ContentTemplate></Button>
+                        <TextBlock Grid.Column="1" Text="{tr:Tr Health_DotNetDesc}" Style="{StaticResource SubTextStyle}" VerticalAlignment="Center" Margin="14,0,0,0" TextWrapping="Wrap"/>
+                    </Grid>
+
+                    <TextBlock x:Name="TxtHealthToolsStatus" Style="{StaticResource SubTextStyle}" Margin="0,10,0,0"/>
+                </StackPanel>
+            </Border>
 
             <!-- Registry Cleaner -->
             <Border Style="{StaticResource CardStyle}">
                 <StackPanel>
-                    <TextBlock Text="Καθαρισμός Μητρώου (Registry Cleaner)" Style="{StaticResource CardTitleStyle}" Margin="0,0,0,4"/>
-                    <TextBlock Text="Εντοπίζει ΜΟΝΟ χαμένους απεγκαταστάτες προγραμμάτων και παρωχημένα cached ονόματα αρχείων (MuiCache) - σκόπιμα στενός, ασφαλής έλεγχος. Αυτόματο αντίγραφο ασφαλείας (.reg) πριν από κάθε διαγραφή."
+                    <Grid Margin="0,0,0,4">
+                        <Grid.ColumnDefinitions><ColumnDefinition Width="Auto"/><ColumnDefinition Width="*"/></Grid.ColumnDefinitions>
+                        <views:HeaderGlyphIcon Grid.Column="0" Kind="Broom" Width="16" Height="16" Margin="0,0,8,0" VerticalAlignment="Center"/>
+                        <TextBlock Grid.Column="1" Text="{tr:Tr Health_RegistryCleaner}" Style="{StaticResource CardTitleStyle}"/>
+                    </Grid>
+                    <TextBlock Text="{tr:Tr Health_RegCleanerDesc}"
                                Style="{StaticResource SubTextStyle}" Margin="0,0,0,10" TextWrapping="Wrap"/>
                     <StackPanel Orientation="Horizontal" Margin="0,0,0,10">
-                        <Button x:Name="BtnRegCleanScan" Content="Σάρωση Μητρώου" Style="{StaticResource AccentButtonStyle}" Width="220" Margin="0,0,10,0" Click="BtnRegCleanScan_Click"/>
-                        <Button x:Name="BtnRegCleanDelete" Content="Διαγραφή Επιλεγμένων" Style="{StaticResource FlatButtonStyle}" Width="220" Click="BtnRegCleanDelete_Click"/>
+                        <Button x:Name="BtnRegCleanScan" Content="{tr:Tr Health_ScanRegistry}" Style="{StaticResource AccentButtonStyle}" Width="220" Height="40" Margin="0,0,10,0" Click="BtnRegCleanScan_Click"/>
+                        <Button x:Name="BtnRegCleanDelete" Content="{tr:Tr Health_DeleteSelected}" Style="{StaticResource FlatButtonStyle}" Width="220" Height="40" Click="BtnRegCleanDelete_Click"/>
                     </StackPanel>
-                    <TextBlock x:Name="TxtRegCleanStatus" Text="Πατήστε 'Σάρωση Μητρώου' για έναρξη." Style="{StaticResource SubTextStyle}" Margin="0,0,0,8"/>
+                    <TextBlock x:Name="TxtRegCleanStatus" Text="{tr:Tr Health_RegCleanPrompt}" Style="{StaticResource SubTextStyle}" Margin="0,0,0,8"/>
                     <Border Background="{DynamicResource MainBgBrush}" CornerRadius="6" MinHeight="60" MaxHeight="240" Padding="4">
-                        <ScrollViewer VerticalScrollBarVisibility="Auto">
+                        <ScrollViewer VerticalScrollBarVisibility="Auto" PreviewMouseWheel="NestedScroll_PreviewMouseWheel">
                             <ItemsControl x:Name="ListRegFindings">
                                 <ItemsControl.ItemTemplate>
                                     <DataTemplate>
@@ -34,8 +105,52 @@
                                             <StackPanel>
                                                 <TextBlock Text="{Binding Finding.Display}" Foreground="{DynamicResource TextBrush}"/>
                                                 <TextBlock Text="{Binding Finding.Category}" Style="{StaticResource SubTextStyle}" FontSize="10"/>
+                                                <!-- ΝΕΟ - βελτίωση: εμφάνιση του πραγματικού registry path (+ValueName αν υπάρχει) πριν τη
+                                                     διαγραφή - πριν φαινόταν μόνο το φιλικό όνομα/κατηγορία, όχι η ΑΚΡΙΒΗΣ τοποθεσία στο
+                                                     registry που πρόκειται να αγγιχτεί. -->
+                                                <TextBlock Text="{Binding RegPathDisplay}" Style="{StaticResource SubTextStyle}" FontSize="10" FontFamily="Consolas" Opacity="0.75"/>
                                             </StackPanel>
                                         </StackPanel>
+                                    </DataTemplate>
+                                </ItemsControl.ItemTemplate>
+                            </ItemsControl>
+                        </ScrollViewer>
+                    </Border>
+                </StackPanel>
+            </Border>
+
+            <!-- ΝΕΟ - roadmap "Backup registry - καμία διεπαφή επαναφοράς": λίστα των αυτόματων .reg
+                 backups που παίρνει ήδη το Registry Cleaner παραπάνω πριν από κάθε διαγραφή, με κουμπί
+                 Επαναφοράς ανά αρχείο - πριν, η μόνη πρόσβαση σε αυτά ήταν χειροκίνητο διπλό-κλικ έξω
+                 από την εφαρμογή. -->
+            <Border Style="{StaticResource CardStyle}" Margin="0,16,0,0">
+                <StackPanel>
+                    <Grid Margin="0,0,0,4">
+                        <Grid.ColumnDefinitions><ColumnDefinition Width="Auto"/><ColumnDefinition Width="*"/></Grid.ColumnDefinitions>
+                        <views:HeaderGlyphIcon Grid.Column="0" Kind="Clock" Width="16" Height="16" Margin="0,0,8,0" VerticalAlignment="Center"/>
+                        <TextBlock Grid.Column="1" Text="{tr:Tr Health_RegBackupHistory}" Style="{StaticResource CardTitleStyle}"/>
+                    </Grid>
+                    <TextBlock Text="{tr:Tr Health_RegBackupHistoryDesc}"
+                               Style="{StaticResource SubTextStyle}" Margin="0,0,0,10" TextWrapping="Wrap"/>
+                    <StackPanel Orientation="Horizontal" Margin="0,0,0,10">
+                        <Button x:Name="BtnRefreshRegBackups" Content="{tr:Tr Refresh}" Style="{StaticResource FlatButtonStyle}" Width="150" Height="40" Margin="0,0,10,0" Click="BtnRefreshRegBackups_Click"/>
+                        <Button x:Name="BtnOpenRegBackupFolder" Content="{tr:Tr Health_OpenBackupFolder}" Style="{StaticResource FlatButtonStyle}" Width="220" Height="40" Click="BtnOpenRegBackupFolder_Click"/>
+                    </StackPanel>
+                    <TextBlock x:Name="TxtRegBackupStatus" Style="{StaticResource SubTextStyle}" Margin="0,0,0,8"/>
+                    <Border Background="{DynamicResource MainBgBrush}" CornerRadius="6" MinHeight="60" MaxHeight="240" Padding="4">
+                        <ScrollViewer VerticalScrollBarVisibility="Auto" PreviewMouseWheel="NestedScroll_PreviewMouseWheel">
+                            <ItemsControl x:Name="ListRegBackups">
+                                <ItemsControl.ItemTemplate>
+                                    <DataTemplate>
+                                        <Grid Margin="6,4">
+                                            <Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions>
+                                            <StackPanel Grid.Column="0">
+                                                <TextBlock Text="{Binding DisplayName}" Foreground="{DynamicResource TextBrush}" TextTrimming="CharacterEllipsis"/>
+                                                <TextBlock Text="{Binding SubText}" Style="{StaticResource SubTextStyle}" FontSize="10"/>
+                                            </StackPanel>
+                                            <Button Grid.Column="1" Content="{tr:Tr Health_RestoreBackup}" Style="{StaticResource FlatButtonStyle}" Padding="10,4" FontSize="11"
+                                                    Click="BtnRestoreRegBackup_Click" Tag="{Binding}"/>
+                                        </Grid>
                                     </DataTemplate>
                                 </ItemsControl.ItemTemplate>
                             </ItemsControl>
@@ -47,8 +162,12 @@
             <!-- Browser Cache -->
             <Border Style="{StaticResource CardStyle}" Margin="0,16,0,0">
                 <StackPanel>
-                    <TextBlock Text="Καθαρισμός Cache Περιηγητών" Style="{StaticResource CardTitleStyle}" Margin="0,0,0,4"/>
-                    <TextBlock Text="Διαγράφει ΜΟΝΟ τα προσωρινά αρχεία cache (όχι ιστορικό/κωδικούς/σελιδοδείκτες) - κλείστε πρώτα τον περιηγητή για καλύτερο αποτέλεσμα. Εμφανίζονται μόνο οι περιηγητές που εντοπίστηκαν σε αυτόν τον υπολογιστή."
+                    <Grid Margin="0,0,0,4">
+                        <Grid.ColumnDefinitions><ColumnDefinition Width="Auto"/><ColumnDefinition Width="*"/></Grid.ColumnDefinitions>
+                        <views:HeaderGlyphIcon Grid.Column="0" Kind="Broom" Width="16" Height="16" Margin="0,0,8,0" VerticalAlignment="Center"/>
+                        <TextBlock Grid.Column="1" Text="{tr:Tr Health_BrowserCache}" Style="{StaticResource CardTitleStyle}"/>
+                    </Grid>
+                    <TextBlock Text="{tr:Tr Health_BrowserCacheDesc}"
                                Style="{StaticResource SubTextStyle}" Margin="0,0,0,10" TextWrapping="Wrap"/>
                     <ItemsControl x:Name="ListBrowsers">
                         <ItemsControl.ItemsPanel>
@@ -58,8 +177,13 @@
                         </ItemsControl.ItemsPanel>
                         <ItemsControl.ItemTemplate>
                             <DataTemplate>
-                                <Button Content="{Binding Label}" Style="{StaticResource FlatButtonStyle}" Width="220" Margin="0,0,10,10"
-                                        Click="BtnClearBrowserCache_Click" Tag="{Binding}"/>
+                                <Button Style="{StaticResource FlatButtonStyle}" Width="220" Height="40" Margin="0,0,10,10"
+                                        Click="BtnClearBrowserCache_Click" Tag="{Binding}">
+                                    <StackPanel Orientation="Horizontal">
+                                        <Image Source="{Binding Icon}" Width="20" Height="20" Margin="0,0,8,0" VerticalAlignment="Center"/>
+                                        <TextBlock Text="{Binding Label}" VerticalAlignment="Center"/>
+                                    </StackPanel>
+                                </Button>
                             </DataTemplate>
                         </ItemsControl.ItemTemplate>
                     </ItemsControl>
@@ -70,13 +194,73 @@
             <!-- WinRE -->
             <Border Style="{StaticResource CardStyle}" Margin="0,16,0,0">
                 <StackPanel>
-                    <TextBlock Text="Περιβάλλον Ανάκτησης Windows (WinRE)" Style="{StaticResource CardTitleStyle}" Margin="0,0,0,4"/>
-                    <TextBlock Text="Το WinRE χρειάζεται για επιδιόρθωση εκκίνησης, επαναφορά συστήματος και ανάκτηση." Style="{StaticResource SubTextStyle}" Margin="0,0,0,10" TextWrapping="Wrap"/>
-                    <TextBlock x:Name="TxtWinREStatus" Text="Κατάσταση: Άγνωστη" FontWeight="Bold" Foreground="{DynamicResource TextBrush}" Margin="0,0,0,10"/>
+                    <Grid Margin="0,0,0,4">
+                        <Grid.ColumnDefinitions><ColumnDefinition Width="Auto"/><ColumnDefinition Width="*"/></Grid.ColumnDefinitions>
+                        <views:HeaderGlyphIcon Grid.Column="0" Kind="Shield" Width="16" Height="16" Margin="0,0,8,0" VerticalAlignment="Center"/>
+                        <TextBlock Grid.Column="1" Text="{tr:Tr Health_WinRE}" Style="{StaticResource CardTitleStyle}"/>
+                    </Grid>
+                    <TextBlock Text="{tr:Tr Health_WinREDesc}" Style="{StaticResource SubTextStyle}" Margin="0,0,0,10" TextWrapping="Wrap"/>
+                    <TextBlock x:Name="TxtWinREStatus" Text="{tr:Tr Health_WinREStatusUnknown}" FontWeight="Bold" Foreground="{DynamicResource TextBrush}" Margin="0,0,0,10"/>
                     <StackPanel Orientation="Horizontal">
-                        <Button Content="Ανανέωση Κατάστασης" Style="{StaticResource FlatButtonStyle}" Width="200" Margin="0,0,10,0" Click="BtnWinRERefresh_Click"/>
-                        <Button Content="Ενεργοποίηση WinRE" Style="{StaticResource AccentButtonStyle}" Width="200" Click="BtnWinREEnable_Click"/>
+                        <Button Content="{tr:Tr Health_RefreshStatus}" Style="{StaticResource FlatButtonStyle}" Width="200" Height="40" Margin="0,0,10,0" Click="BtnWinRERefresh_Click"/>
+                        <Button Content="{tr:Tr Health_EnableWinRE}" Style="{StaticResource AccentButtonStyle}" Width="200" Height="40" Click="BtnWinREEnable_Click"/>
                     </StackPanel>
+                </StackPanel>
+            </Border>
+
+            <!-- ΝΕΟ - roadmap "Αναφορά μπαταρίας" - powercfg /batteryreport, ανοίγει στον browser -
+                 βλ. HealthCleanupService.GenerateBatteryReportAsync. -->
+            <Border Style="{StaticResource CardStyle}" Margin="0,16,0,0">
+                <StackPanel>
+                    <Grid Margin="0,0,0,4">
+                        <Grid.ColumnDefinitions><ColumnDefinition Width="Auto"/><ColumnDefinition Width="*"/></Grid.ColumnDefinitions>
+                        <views:HeaderGlyphIcon Grid.Column="0" Kind="Battery" Width="16" Height="16" Margin="0,0,8,0" VerticalAlignment="Center"/>
+                        <TextBlock Grid.Column="1" Text="{tr:Tr Health_BatteryReport}" Style="{StaticResource CardTitleStyle}"/>
+                    </Grid>
+                    <TextBlock Text="{tr:Tr Health_BatteryReportDesc}" Style="{StaticResource SubTextStyle}" Margin="0,0,0,10" TextWrapping="Wrap"/>
+                    <Button Content="{tr:Tr Health_GenerateBatteryReport}" Style="{StaticResource FlatButtonStyle}" Width="240" Height="40" HorizontalAlignment="Left" Click="BtnBatteryReport_Click"/>
+                    <TextBlock x:Name="TxtBatteryReportStatus" Style="{StaticResource SubTextStyle}" Margin="0,8,0,0"/>
+                </StackPanel>
+            </Border>
+
+            <!-- ΝΕΟ - roadmap "Διαγνωστική αναφορά με ένα κλικ" - βλ.
+                 HealthCleanupService.GenerateDiagnosticsZipAsync. -->
+            <Border Style="{StaticResource CardStyle}" Margin="0,16,0,0">
+                <StackPanel>
+                    <Grid Margin="0,0,0,4">
+                        <Grid.ColumnDefinitions><ColumnDefinition Width="Auto"/><ColumnDefinition Width="*"/></Grid.ColumnDefinitions>
+                        <views:HeaderGlyphIcon Grid.Column="0" Kind="Document" Width="16" Height="16" Margin="0,0,8,0" VerticalAlignment="Center"/>
+                        <TextBlock Grid.Column="1" Text="{tr:Tr Health_DiagnosticsZip}" Style="{StaticResource CardTitleStyle}"/>
+                    </Grid>
+                    <TextBlock Text="{tr:Tr Health_DiagnosticsZipDesc}" Style="{StaticResource SubTextStyle}" Margin="0,0,0,10" TextWrapping="Wrap"/>
+                    <Button Content="{tr:Tr Health_GenerateDiagnosticsZip}" Style="{StaticResource FlatButtonStyle}" Width="240" Height="40" HorizontalAlignment="Left" Click="BtnDiagnosticsZip_Click"/>
+                    <TextBlock x:Name="TxtDiagnosticsZipStatus" Style="{StaticResource SubTextStyle}" Margin="0,8,0,0"/>
+                </StackPanel>
+            </Border>
+
+            <!-- ΝΕΟ - roadmap "Τάση υγείας δίσκου (S.M.A.R.T.)" - στιγμιότυπα στον χρόνο (βλ.
+                 DiskHealthHistoryService, καταγράφονται όταν φορτώνει η καρτέλα Σύστημα) ώστε να
+                 φαίνεται επιδείνωση πριν συμβεί πραγματική βλάβη, όχι μόνο η τρέχουσα στιγμή. Ρητό
+                 αίτημα χρήστη: μετακινήθηκε στο τέλος της καρτέλας (πριν ήταν πρώτη κάρτα). -->
+            <Border Style="{StaticResource CardStyle}" Margin="0,16,0,0">
+                <StackPanel>
+                    <Grid Margin="0,0,0,4">
+                        <Grid.ColumnDefinitions><ColumnDefinition Width="Auto"/><ColumnDefinition Width="*"/></Grid.ColumnDefinitions>
+                        <views:HeaderGlyphIcon Grid.Column="0" Kind="Disk" Width="16" Height="16" Margin="0,0,8,0" VerticalAlignment="Center"/>
+                        <TextBlock Grid.Column="1" Text="{tr:Tr Health_DiskTrend}" Style="{StaticResource CardTitleStyle}"/>
+                    </Grid>
+                    <TextBlock Text="{tr:Tr Health_DiskTrendDesc}" Style="{StaticResource SubTextStyle}" Margin="0,0,0,8" TextWrapping="Wrap"/>
+                    <ItemsControl x:Name="ListDiskTrend">
+                        <ItemsControl.ItemTemplate>
+                            <DataTemplate>
+                                <StackPanel Margin="0,0,0,10">
+                                    <TextBlock Text="{Binding Drive}" FontWeight="SemiBold" Foreground="{DynamicResource TextBrush}"/>
+                                    <TextBlock Text="{Binding Summary}" Style="{StaticResource SubTextStyle}" TextWrapping="Wrap" FontFamily="Consolas" FontSize="11"/>
+                                </StackPanel>
+                            </DataTemplate>
+                        </ItemsControl.ItemTemplate>
+                    </ItemsControl>
+                    <TextBlock x:Name="TxtNoDiskTrend" Text="{tr:Tr Health_DiskTrendEmpty}" Style="{StaticResource SubTextStyle}" Visibility="Collapsed"/>
                 </StackPanel>
             </Border>
 

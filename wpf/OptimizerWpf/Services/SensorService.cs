@@ -86,10 +86,129 @@ namespace OptimizerWpf.Services
 
         public static int? GetCpuTemperatureCelsius() => GetTemperature(HardwareType.Cpu, CpuPackageNames);
 
+        // ΔΙΟΡΘΩΣΗ (χρήστης ζήτησε: "ψάξε όλο το νετ για λύση για τις θερμοκρασίες" όταν είναι ενεργό
+        // το VBS/Memory Integrity) - το LibreHardwareMonitorLib χρειάζεται τον ίδιο μπλοκαρισμένο
+        // τύπο πρόσβασης (ring-0 driver) ανεξαρτήτως κατασκευαστή GPU, άρα αποτυγχάνει το ίδιο και για
+        // τις 3 κάρτες. Η NVIDIA όμως εκθέτει την ΕΠΙΣΗΜΗ, υπογεγραμμένη βιβλιοθήκη NVML
+        // (nvml.dll - εγκαθίσταται ΗΔΗ μαζί με τον driver της, καμία επιπλέον εξάρτηση) που ΔΕΝ
+        // χρειάζεται τον μπλοκαρισμένο τρόπο πρόσβασης - λειτουργεί ΚΑΙ με ενεργό VBS/HVCI (ίδια
+        // τεχνική με ανεξάρτητα HVCI-safe εργαλεία, π.χ. WRCX/SidebarMonitor). ΣΗΜΕΙΩΣΗ ΕΙΛΙΚΡΙΝΕΙΑΣ:
+        // καμία αντίστοιχη απλή, δωρεάν-για-ενσωμάτωση λύση δεν βρέθηκε για AMD/Intel - το AMD Ryzen
+        // Master Monitoring SDK (CPU) και το ADLX (AMD GPU) υπάρχουν αλλά απαιτούν bundling ενός
+        // μεγάλου, ξεχωριστού SDK κατασκευαστή + native (C++) bridge - πολύ μεγαλύτερη αλλαγή, εκτός
+        // πεδίου εδώ. Δοκιμάζεται ΠΡΩΤΑ το ήδη υπάρχον LibreHardwareMonitorLib (πιάνει AMD/Intel όταν
+        // το VBS είναι ανενεργό), μετά το NVML ως fallback ΜΟΝΟ για NVIDIA.
+        // ΕΝΗΜΕΡΩΣΗ (χρήστης ζήτησε να συνεχιστεί η έρευνα): βρέθηκε ΚΑΙ για AMD μια αντίστοιχη λύση
+        // χωρίς bundling - το atiadlxx.dll (AMD Display Library, το ΠΑΛΙΟ "ADL"/Overdrive API, ΟΧΙ το
+        // νεότερο ADLX που πράγματι θα χρειαζόταν C++ bridge) εγκαθίσταται ΗΔΗ με ΚΑΘΕ driver AMD GPU
+        // στο System32 - flat, τεκμηριωμένο C API, P/Invoke-able απευθείας όπως το NVML. Το Ryzen
+        // Master Monitoring SDK (CPU AMD) ΠΑΡΑΜΕΝΕΙ εκτός πεδίου - αυτό ΔΕΝ εγκαθίσταται αυτόματα με
+        // κανέναν οδηγό, χρειάζεται πραγματικά ξεχωριστό bundling/εγκατάσταση.
         public static int? GetGpuTemperatureCelsius() =>
             GetTemperature(HardwareType.GpuNvidia, GpuCoreNames) ??
             GetTemperature(HardwareType.GpuAmd, GpuCoreNames) ??
-            GetTemperature(HardwareType.GpuIntel, GpuCoreNames);
+            GetTemperature(HardwareType.GpuIntel, GpuCoreNames) ??
+            GetNvidiaTemperatureViaNvml() ??
+            GetAmdTemperatureViaAdl();
+
+        private static int? GetAmdTemperatureViaAdl()
+        {
+            try
+            {
+                if (Adl.ADL_Main_Control_Create(AdlAlloc, 1) != 0) return null;
+                try
+                {
+                    if (Adl.ADL_Adapter_NumberOfAdapters_Get(out var count) != 0 || count <= 0) return null;
+                    for (var i = 0; i < count; i++)
+                    {
+                        var temp = new AdlTemperature { iSize = System.Runtime.InteropServices.Marshal.SizeOf<AdlTemperature>() };
+                        if (Adl.ADL_Overdrive5_Temperature_Get(i, 0, ref temp) == 0 && temp.iTemperature > 0)
+                            return temp.iTemperature / 1000; // millidegrees -> whole °C
+                    }
+                    return null;
+                }
+                finally
+                {
+                    Adl.ADL_Main_Control_Destroy();
+                }
+            }
+            catch (DllNotFoundException)
+            {
+                return null; // Δεν υπάρχει κάρτα/driver AMD εγκατεστημένο - καμία επίδραση σε NVIDIA/Intel μηχανήματα.
+            }
+            catch
+            {
+                return null;
+            }
+        }
+
+        // ADL_MAIN_MALLOC_CALLBACK - το ADL απαιτεί ένα callback για δέσμευση μνήμης εσωτερικά·
+        // χρησιμοποιεί το ίδιο το .NET marshaling (AllocHGlobal) αντί για native malloc.
+        private delegate IntPtr AdlMainMallocCallback(int size);
+        private static readonly AdlMainMallocCallback AdlAlloc = size => System.Runtime.InteropServices.Marshal.AllocHGlobal(size);
+
+        [System.Runtime.InteropServices.StructLayout(System.Runtime.InteropServices.LayoutKind.Sequential)]
+        private struct AdlTemperature { public int iSize; public int iTemperature; }
+
+        // Ελάχιστο P/Invoke wrapper για το atiadlxx.dll (AMD Display Library) - δημόσιο, τεκμηριωμένο
+        // API, εγκαθίσταται μαζί με κάθε driver AMD GPU (Catalyst/Adrenalin).
+        private static class Adl
+        {
+            [System.Runtime.InteropServices.DllImport("atiadlxx.dll")]
+            public static extern int ADL_Main_Control_Create(AdlMainMallocCallback callback, int enumConnectedAdapters);
+
+            [System.Runtime.InteropServices.DllImport("atiadlxx.dll")]
+            public static extern int ADL_Main_Control_Destroy();
+
+            [System.Runtime.InteropServices.DllImport("atiadlxx.dll")]
+            public static extern int ADL_Adapter_NumberOfAdapters_Get(out int numAdapters);
+
+            [System.Runtime.InteropServices.DllImport("atiadlxx.dll")]
+            public static extern int ADL_Overdrive5_Temperature_Get(int adapterIndex, int thermalControllerIndex, ref AdlTemperature temperature);
+        }
+
+        private static int? GetNvidiaTemperatureViaNvml()
+        {
+            try
+            {
+                if (Nvml.nvmlInit_v2() != 0) return null;
+                try
+                {
+                    if (Nvml.nvmlDeviceGetHandleByIndex_v2(0, out var device) != 0) return null;
+                    if (Nvml.nvmlDeviceGetTemperature(device, 0 /* NVML_TEMPERATURE_GPU */, out var temp) != 0) return null;
+                    return (int)temp;
+                }
+                finally
+                {
+                    Nvml.nvmlShutdown();
+                }
+            }
+            catch (DllNotFoundException)
+            {
+                return null; // Δεν υπάρχει κάρτα NVIDIA / driver εγκατεστημένο - καμία επίδραση σε AMD/Intel μηχανήματα.
+            }
+            catch
+            {
+                return null;
+            }
+        }
+
+        // Ελάχιστο P/Invoke wrapper για το nvml.dll (NVIDIA Management Library) - δημόσια,
+        // τεκμηριωμένη επίσημη βιβλιοθήκη, εγκαθίσταται μαζί με κάθε πρόσφατο NVIDIA driver.
+        private static class Nvml
+        {
+            [System.Runtime.InteropServices.DllImport("nvml.dll")]
+            public static extern int nvmlInit_v2();
+
+            [System.Runtime.InteropServices.DllImport("nvml.dll")]
+            public static extern int nvmlDeviceGetHandleByIndex_v2(uint index, out IntPtr device);
+
+            [System.Runtime.InteropServices.DllImport("nvml.dll")]
+            public static extern int nvmlDeviceGetTemperature(IntPtr device, int sensorType, out uint temp);
+
+            [System.Runtime.InteropServices.DllImport("nvml.dll")]
+            public static extern int nvmlShutdown();
+        }
 
         // ΔΙΟΡΘΩΣΗ (χρήστης ανέφερε: "στη RAM δεν φαίνεται τπτ") - καμία τυπική/καθολικά προσβάσιμη
         // πηγή θερμοκρασίας RAM υπάρχει σε commodity hardware (μόνο συγκεκριμένα SPD hub chips σε
@@ -150,9 +269,17 @@ namespace OptimizerWpf.Services
         // "οποιοσδήποτε αισθητήρας θερμοκρασίας βρεθεί πρώτος" - αποφεύγει να πιάσει τυχαία έναν
         // ασήμαντο αισθητήρα (π.χ. VRM/SoC) όταν το προτιμώμενο όνομα δεν ταιριάζει στη
         // συγκεκριμένη ονοματολογία του κατασκευαστή (Intel vs AMD κ.λπ.).
+        // ΔΙΟΡΘΩΣΗ (χρήστης ζήτησε: "θέλω λύση για τη θερμοκρασία της CPU οπωσδήποτε") - επιβεβαιώθηκε
+        // ΖΩΝΤΑΝΑ σε αυτό το μηχάνημα (elevated test, IsHvciActive=True): η CPU temp επέστρεφε 0°C
+        // αντί για null/"—". Αιτία: με μπλοκαρισμένη MSR πρόσβαση (VBS/HVCI) το LibreHardwareMonitorLib
+        // εξακολουθεί να δημιουργεί sensor objects με "ονόματα-ταίριασμα" (π.χ. "Core Max") αλλά ΧΩΡΙΣ
+        // πραγματική τιμή από το hardware - Value.HasValue=true, Value=0 (αντί για null). Το 0°C είναι
+        // ΠΟΤΕ ρεαλιστικό για CPU/GPU/δίσκο υπό λειτουργία (ημιαγωγοί σε τάση αυτοθερμαίνονται πάντα
+        // αισθητά πάνω από 0°C) - φιλτράρεται ως "καμία πραγματική τιμή" εδώ, αντί να εμφανίζεται ένα
+        // παραπλανητικό ψεύτικο 0°C στον χρήστη.
         private static int? PickTemperature(IHardware hw, string[]? preferredNames)
         {
-            var sensors = hw.Sensors.Where(s => s.SensorType == SensorType.Temperature && s.Value.HasValue).ToList();
+            var sensors = hw.Sensors.Where(s => s.SensorType == SensorType.Temperature && s.Value.HasValue && s.Value.Value > 1).ToList();
             if (sensors.Count == 0) return null;
 
             if (preferredNames != null)

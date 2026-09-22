@@ -3,6 +3,8 @@
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:views="clr-namespace:OptimizerWpf.Views"
+             xmlns:tr="clr-namespace:OptimizerWpf"
              mc:Ignorable="d">
     <!--
         Βελτιστοποίηση (Optimization) tab. Office Mode/Gaming Mode toggles are now a full port of
@@ -10,19 +12,25 @@
         on disable) - see PowerModeService.cs. Winget Updates Manager runs a real "winget upgrade"
         scan (see WingetService) and can upgrade selected packages.
     -->
-    <ScrollViewer VerticalScrollBarVisibility="Auto">
+    <ScrollViewer VerticalScrollBarVisibility="Auto" PreviewMouseWheel="NestedScroll_PreviewMouseWheel">
         <StackPanel Margin="0,8,0,24">
 
-            <!-- Office Mode -->
-            <Border Style="{StaticResource CardStyle}" Margin="0,0,0,16">
+            <!-- Office Mode - ρητό αίτημα χρήστη: στένεψε το κενό ανάμεσα σε Office/Gaming Mode (πριν
+                 16px, ίδιο με το κενό προς την επόμενη κάρτα - τώρα 8px, ώστε τα δύο mode-toggle να
+                 διαβάζονται οπτικά ως ζευγάρι). -->
+            <Border Style="{StaticResource CardStyle}" Margin="0,0,0,8">
                 <Grid>
                     <Grid.ColumnDefinitions>
                         <ColumnDefinition Width="*"/>
                         <ColumnDefinition Width="Auto"/>
                     </Grid.ColumnDefinitions>
                     <StackPanel Grid.Column="0">
-                        <TextBlock Text="Office Mode &amp; Προφίλ Ενέργειας" Style="{StaticResource CardTitleStyle}" Margin="0,0,0,6"/>
-                        <TextBlock Text="Ισορροπημένη λειτουργία, περιορισμός περιττών οπτικών εφέ και διαφημίσεων." Style="{StaticResource SubTextStyle}"/>
+                        <Grid Margin="0,0,0,6">
+                            <Grid.ColumnDefinitions><ColumnDefinition Width="Auto"/><ColumnDefinition Width="*"/></Grid.ColumnDefinitions>
+                            <views:HeaderGlyphIcon Grid.Column="0" Kind="Gear" Width="16" Height="16" Margin="0,0,8,0" VerticalAlignment="Center"/>
+                            <TextBlock Grid.Column="1" Text="{tr:Tr Optimization_OfficeMode}" Style="{StaticResource CardTitleStyle}"/>
+                        </Grid>
+                        <TextBlock Text="{tr:Tr Opt_OfficeModeDesc}" Style="{StaticResource SubTextStyle}"/>
                     </StackPanel>
                     <ToggleButton x:Name="ToggleOfficeMode" Grid.Column="1" VerticalAlignment="Center"
                                   Style="{StaticResource ToggleSwitchStyle}" Click="ToggleOfficeMode_Click"/>
@@ -37,94 +45,47 @@
                         <ColumnDefinition Width="Auto"/>
                     </Grid.ColumnDefinitions>
                     <StackPanel Grid.Column="0">
-                        <TextBlock Text="Gaming Mode &amp; Ultimate Performance" Style="{StaticResource CardTitleStyle}" Margin="0,0,0,6"/>
-                        <TextBlock Text="Μέγιστες επιδόσεις CPU/GPU, HAGS, Game DVR, Network Throttling off (VBS απενεργοποιείται προσωρινά)." Style="{StaticResource SubTextStyle}"/>
+                        <Grid Margin="0,0,0,6">
+                            <Grid.ColumnDefinitions><ColumnDefinition Width="Auto"/><ColumnDefinition Width="*"/></Grid.ColumnDefinitions>
+                            <views:HeaderGlyphIcon Grid.Column="0" Kind="Gamepad" Width="16" Height="16" Margin="0,0,8,0" VerticalAlignment="Center"/>
+                            <TextBlock Grid.Column="1" Text="{tr:Tr Optimization_GamingMode}" Style="{StaticResource CardTitleStyle}"/>
+                        </Grid>
+                        <TextBlock Text="{tr:Tr Opt_GamingModeDesc}" Style="{StaticResource SubTextStyle}"/>
                     </StackPanel>
                     <ToggleButton x:Name="ToggleGamingMode" Grid.Column="1" VerticalAlignment="Center"
                                   Style="{StaticResource ToggleSwitchStyle}" Click="ToggleGamingMode_Click"/>
                 </Grid>
             </Border>
 
-            <!-- Winget Updates Manager -->
-            <Border Style="{StaticResource CardStyle}">
-                <StackPanel>
-                    <TextBlock Text="Διαχειριστής Ενημερώσεων Λογισμικού" Style="{StaticResource CardTitleStyle}" Margin="0,0,0,4"/>
-                    <TextBlock x:Name="TxtWingetStatus" Text="Πατήστε 'Σάρωση' για έλεγχο διαθέσιμων ενημερώσεων." Style="{StaticResource SubTextStyle}" Margin="0,0,0,6"/>
-                    <!-- ΝΕΟ (χρήστης ανέφερε: "δεν βλέπω progress bar"): ορατή μόνο όσο τρέχει σάρωση/
-                         αναβάθμιση (IsIndeterminate - το winget CLI δεν εκθέτει πραγματικό ποσοστό
-                         προόδου ανά αρχείο, μόνο τελικό exit code, οπότε ένα καθορισμένο 0-100% θα ήταν
-                         ψεύτικο· η ασαφής/κυλιόμενη ("indeterminate") μπάρα δείχνει τίμια "σε εξέλιξη"
-                         χωρίς να προσποιείται ακρίβεια που δεν υπάρχει). -->
-                    <ProgressBar x:Name="ProgressWinget" Height="6" IsIndeterminate="True" Visibility="Collapsed" Margin="0,0,0,10"/>
-
-                    <Border Background="{DynamicResource MainBgBrush}" CornerRadius="6" MinHeight="120" MaxHeight="320" Padding="4">
-                        <ScrollViewer VerticalScrollBarVisibility="Auto">
-                            <ItemsControl x:Name="ListWingetUpdates">
-                                <ItemsControl.ItemTemplate>
-                                    <DataTemplate>
-                                        <Border Background="{DynamicResource CardBgBrush}" CornerRadius="4" Margin="4" Padding="10">
-                                            <StackPanel Orientation="Horizontal">
-                                                <CheckBox IsChecked="{Binding IsSelected}" VerticalAlignment="Center" Margin="0,0,10,0"/>
-                                                <StackPanel>
-                                                    <TextBlock Foreground="{DynamicResource TextBrush}" FontWeight="SemiBold">
-                                                        <Run Text="{Binding Update.Name, Mode=OneWay}"/>
-                                                        <Run Text=" [ "/>
-                                                        <Run Text="{Binding Update.Id, Mode=OneWay}"/>
-                                                        <Run Text=" ]"/>
-                                                    </TextBlock>
-                                                    <TextBlock Style="{StaticResource SubTextStyle}">
-                                                        <Run Text="Τρέχουσα Έκδοση: "/>
-                                                        <Run Text="{Binding Update.CurrentVersion, Mode=OneWay}"/>
-                                                        <Run Text=" &#x2192; Νέα Έκδοση: "/>
-                                                        <Run Text="{Binding Update.AvailableVersion, Mode=OneWay}"/>
-                                                        <Run Text=" &#x00B7; "/>
-                                                        <Run Text="{Binding Update.Source, Mode=OneWay}" FontStyle="Italic"/>
-                                                    </TextBlock>
-                                                </StackPanel>
-                                            </StackPanel>
-                                        </Border>
-                                    </DataTemplate>
-                                </ItemsControl.ItemTemplate>
-                            </ItemsControl>
-                        </ScrollViewer>
-                    </Border>
-
-                    <Grid Margin="0,12,0,0">
-                        <Grid.ColumnDefinitions>
-                            <ColumnDefinition Width="*"/>
-                            <ColumnDefinition Width="Auto"/>
-                            <ColumnDefinition Width="Auto"/>
-                        </Grid.ColumnDefinitions>
-                        <CheckBox x:Name="ChkSelectAll" Grid.Column="0" Content="Επιλογή Όλων" VerticalAlignment="Center"
-                                  Foreground="{DynamicResource TextBrush}" Click="ChkSelectAll_Click"/>
-                        <Button x:Name="BtnScanWinget" Grid.Column="1" Content="Σάρωση" Style="{StaticResource FlatButtonStyle}" Width="130" Margin="0,0,10,0" Click="BtnScanWinget_Click"/>
-                        <Button x:Name="BtnUpgradeSelected" Grid.Column="2" Content="Αναβάθμιση Επιλεγμένων" Style="{StaticResource AccentButtonStyle}" Width="180" Click="BtnUpgradeSelected_Click"/>
-                    </Grid>
-
-                    <!-- Port του $global:btnCheckMsStore (ρητή ανάγκη - το "store updates" CLI παραπάνω
-                         δεν πιάνει πάντα ΟΛΕΣ τις ενημερώσεις Metro/UWP εφαρμογών, τεκμηριωμένο όριο -
-                         χρήστης ανέφερε "δεν φαίνονται οι ενημερώσεις των metro εφαρμογών"). Ενεργοποιεί
-                         πραγματική σάρωση μέσω των επίσημων μηχανισμών των Windows και ανοίγει το Store
-                         για επιβεβαίωση - συμπληρωματικό, όχι υποκατάστατο της λίστας παραπάνω. -->
-                    <Button x:Name="BtnCheckMsStore" Content="Έλεγχος Ενημερώσεων μέσω Microsoft Store"
-                            Style="{StaticResource FlatButtonStyle}" HorizontalAlignment="Left"
-                            Margin="0,10,0,0" Padding="14,8" Click="BtnCheckMsStore_Click"/>
-                    <TextBlock Text="Ενεργοποιεί πλήρη σάρωση ενημερώσεων μέσω των επίσημων μηχανισμών των Windows και ανοίγει το Microsoft Store για επιβεβαίωση - χρήσιμο αν κάποια ενημέρωση Metro/UWP εφαρμογής δεν εμφανίζεται στη λίστα παραπάνω."
-                            Style="{StaticResource SubTextStyle}" Margin="0,4,0,0"/>
-                </StackPanel>
-            </Border>
-
-            <!-- Ενημερώσεις Οδηγών Συσκευών - port του Optimizer.ps1's cardOpt4 (~11847). Windows
-                 Update πηγή. AMD/NVIDIA/Dell ΠΑΡΑΜΕΝΟΥΝ εκτός εμβέλειας (web scraping/vendor tools
-                 συγκεκριμένα ανά κατασκευαστή, δεν καλύπτουν τη γενική περίπτωση) - βλ. δεύτερη πηγή
-                 (Microsoft Update Catalog) παρακάτω που καλύπτει τη γενική περίπτωση αντ' αυτών. -->
+            <!-- Ενημερώσεις Οδηγών Συσκευών - ενοποιημένη λειτουργία (ρητό αίτημα χρήστη: "οι δύο
+                 ενημερώσεις οδηγών να ενσωματωθούν σε μια ενιαία λειτουργία"). Μία σάρωση ελέγχει ΚΑΙ
+                 τις δύο πηγές: το επίσημο Windows Update (port του cardOpt4, ~11847) ΚΑΙ το Microsoft
+                 Update Catalog ανά Hardware ID (βλ. HANDOFF.md §0.4ιε) - ένας ενιαίος κατάλογος
+                 αποτελεσμάτων, κάθε γραμμή επισημαίνει την πηγή της. AMD/NVIDIA/Dell ΠΑΡΑΜΕΝΟΥΝ εκτός
+                 εμβέλειας (web scraping/vendor tools συγκεκριμένα ανά κατασκευαστή, δεν καλύπτουν τη
+                 γενική περίπτωση). ΣΗΜΕΙΩΣΗ ΕΙΛΙΚΡΙΝΕΙΑΣ: δεν γίνεται αξιόπιστη αποδιπλότυπηση ανάμεσα
+                 στις δύο πηγές (διαφορετική μορφή αναγνώρισης συσκευής η καθεμία) - ενδέχεται να
+                 εμφανιστεί ενημέρωση για την ίδια συσκευή και από τις δύο πηγές. -->
+            <!-- Ρητό αίτημα χρήστη (screenshot της πραγματικής 2.8.2): μεγάλο κυκλικό κουμπί σάρωσης
+                 (port του New-DriverScanButton, ~5555) αντί για απλό ορθογώνιο κουμπί - βλ.
+                 DriverScanButton.xaml. Η λίστα αποτελεσμάτων μένει κρυφή μέχρι να υπάρξουν
+                 αποτελέσματα (καθαρή "δεν έχει σαρωθεί ακόμα" κατάσταση, όπως στο screenshot). -->
             <Border Style="{StaticResource CardStyle}" Margin="0,16,0,0">
                 <StackPanel>
-                    <TextBlock Text="Ενημερώσεις Οδηγών Συσκευών (Windows Update)" Style="{StaticResource CardTitleStyle}" Margin="0,0,0,4"/>
-                    <TextBlock x:Name="TxtDriverStatus" Text="Πατήστε 'Σάρωση' για έλεγχο ενημερώσεων οδηγών μέσω του επίσημου Windows Update." Style="{StaticResource SubTextStyle}" Margin="0,0,0,6"/>
-                    <ProgressBar x:Name="ProgressDriver" Height="6" IsIndeterminate="True" Visibility="Collapsed" Margin="0,0,0,10"/>
-                    <Border Background="{DynamicResource MainBgBrush}" CornerRadius="6" MinHeight="80" MaxHeight="280" Padding="4">
-                        <ScrollViewer VerticalScrollBarVisibility="Auto">
+                    <Grid Margin="0,0,0,4">
+                        <Grid.ColumnDefinitions><ColumnDefinition Width="Auto"/><ColumnDefinition Width="*"/></Grid.ColumnDefinitions>
+                        <views:HeaderGlyphIcon Grid.Column="0" Kind="Package" Width="16" Height="16" Margin="0,0,8,0" VerticalAlignment="Center"/>
+                        <TextBlock Grid.Column="1" Text="{tr:Tr Optimization_Drivers}" Style="{StaticResource CardTitleStyle}"/>
+                    </Grid>
+                    <TextBlock Text="{tr:Tr Opt_DriversDesc1}" Style="{StaticResource SubTextStyle}" TextWrapping="Wrap"/>
+                    <TextBlock Text="{tr:Tr Opt_DriversDesc2}" FontStyle="Italic" Style="{StaticResource SubTextStyle}" TextWrapping="Wrap" Margin="0,2,0,0"/>
+                    <TextBlock x:Name="TxtDriverStatus" Text="" Style="{StaticResource SubTextStyle}" TextWrapping="Wrap" Margin="0,8,0,0"/>
+
+                    <views:DriverScanButton x:Name="BtnScanDrivers" HorizontalAlignment="Center" Margin="0,16,0,10" Click="BtnScanDrivers_Click"/>
+                    <TextBlock Text="{tr:Tr Opt_DriversScanHint}" Style="{StaticResource SubTextStyle}" HorizontalAlignment="Center" TextAlignment="Center" Margin="0,0,0,4"/>
+
+                    <Border x:Name="BorderDriverResults" Visibility="Collapsed" Background="{DynamicResource MainBgBrush}" CornerRadius="6" MinHeight="80" MaxHeight="280" Padding="4" Margin="0,10,0,0">
+                        <ScrollViewer VerticalScrollBarVisibility="Auto" PreviewMouseWheel="NestedScroll_PreviewMouseWheel">
                             <ItemsControl x:Name="ListDriverUpdates">
                                 <ItemsControl.ItemTemplate>
                                     <DataTemplate>
@@ -135,16 +96,15 @@
                                                     <ColumnDefinition Width="Auto"/>
                                                 </Grid.ColumnDefinitions>
                                                 <StackPanel Grid.Column="0">
-                                                    <TextBlock Text="{Binding Title}" Foreground="{DynamicResource TextBrush}" FontWeight="SemiBold" TextWrapping="Wrap"/>
-                                                    <TextBlock Style="{StaticResource SubTextStyle}">
-                                                        <Run Text="{Binding Manufacturer, Mode=OneWay}"/>
-                                                        <Run Text=" &#x00B7; "/>
-                                                        <Run Text="{Binding DriverClass, Mode=OneWay}"/>
-                                                        <Run Text=" &#x00B7; "/>
-                                                        <Run Text="{Binding Date, Mode=OneWay}"/>
-                                                    </TextBlock>
+                                                    <StackPanel Orientation="Horizontal">
+                                                        <Border Background="{DynamicResource AccentBrush}" CornerRadius="3" Padding="6,1" Margin="0,0,8,0">
+                                                            <TextBlock Text="{Binding SourceBadge}" FontSize="11" Foreground="White"/>
+                                                        </Border>
+                                                        <TextBlock Text="{Binding Title}" Foreground="{DynamicResource TextBrush}" FontWeight="SemiBold" TextWrapping="Wrap"/>
+                                                    </StackPanel>
+                                                    <TextBlock Text="{Binding SubText}" Style="{StaticResource SubTextStyle}"/>
                                                 </StackPanel>
-                                                <Button Grid.Column="1" Content="Εγκατάσταση" Style="{StaticResource FlatButtonStyle}" VerticalAlignment="Center"
+                                                <Button Grid.Column="1" Content="{Binding ActionLabel}" Style="{StaticResource FlatButtonStyle}" VerticalAlignment="Center"
                                                         Click="BtnInstallDriver_Click" Tag="{Binding}" Margin="10,0,0,0"/>
                                             </Grid>
                                         </Border>
@@ -153,63 +113,26 @@
                             </ItemsControl>
                         </ScrollViewer>
                     </Border>
-                    <Button x:Name="BtnScanDrivers" Content="Σάρωση Ενημερώσεων Οδηγών" Style="{StaticResource AccentButtonStyle}" Width="260"
-                            HorizontalAlignment="Left" Margin="0,12,0,0" Click="BtnScanDrivers_Click"/>
-                </StackPanel>
-            </Border>
 
-            <!-- Ενημερώσεις Οδηγών - Microsoft Update Catalog (νέα, δεύτερη πηγή, ρητό αίτημα χρήστη
-                 μετά από αξιολόγηση του Driver_Updater.ps1 - βλ. HANDOFF.md §0.4ιε). Αναζήτηση ανά
-                 Hardware ID σε ΟΛΕΣ τις συσκευές, όχι μόνο ό,τι η WU θεωρεί επιλέξιμο. Throttled +
-                 sanity-checked - βλ. DriverService.ScanCatalogAsync. -->
-            <Border Style="{StaticResource CardStyle}" Margin="0,16,0,0">
-                <StackPanel>
-                    <TextBlock Text="Ενημερώσεις Οδηγών - Microsoft Update Catalog" Style="{StaticResource CardTitleStyle}" Margin="0,0,0,4"/>
-                    <TextBlock x:Name="TxtCatalogStatus" Text="Αναζητά ενημερώσεις ανά Hardware ID για κάθε συσκευή απευθείας στο Microsoft Update Catalog - μπορεί να διαρκέσει αρκετά λεπτά για πολλές συσκευές." Style="{StaticResource SubTextStyle}" Margin="0,0,0,6" TextWrapping="Wrap"/>
-                    <ProgressBar x:Name="ProgressCatalog" Height="6" IsIndeterminate="True" Visibility="Collapsed" Margin="0,0,0,10"/>
-                    <Border Background="{DynamicResource MainBgBrush}" CornerRadius="6" MinHeight="80" MaxHeight="280" Padding="4">
-                        <ScrollViewer VerticalScrollBarVisibility="Auto">
-                            <ItemsControl x:Name="ListCatalogUpdates">
-                                <ItemsControl.ItemTemplate>
-                                    <DataTemplate>
-                                        <Border Background="{DynamicResource CardBgBrush}" CornerRadius="4" Margin="4" Padding="10">
-                                            <Grid>
-                                                <Grid.ColumnDefinitions>
-                                                    <ColumnDefinition Width="*"/>
-                                                    <ColumnDefinition Width="Auto"/>
-                                                </Grid.ColumnDefinitions>
-                                                <StackPanel Grid.Column="0">
-                                                    <TextBlock Text="{Binding Title}" Foreground="{DynamicResource TextBrush}" FontWeight="SemiBold" TextWrapping="Wrap"/>
-                                                    <TextBlock Style="{StaticResource SubTextStyle}">
-                                                        <Run Text="{Binding DeviceName, Mode=OneWay}"/>
-                                                        <Run Text=" &#x00B7; v"/>
-                                                        <Run Text="{Binding Version, Mode=OneWay}"/>
-                                                    </TextBlock>
-                                                </StackPanel>
-                                                <Button Grid.Column="1" Content="Εγκατάσταση" Style="{StaticResource FlatButtonStyle}" VerticalAlignment="Center"
-                                                        Click="BtnInstallCatalogDriver_Click" Tag="{Binding}" Margin="10,0,0,0"/>
-                                            </Grid>
-                                        </Border>
-                                    </DataTemplate>
-                                </ItemsControl.ItemTemplate>
-                            </ItemsControl>
-                        </ScrollViewer>
-                    </Border>
-                    <Button x:Name="BtnScanCatalog" Content="Σάρωση Microsoft Update Catalog" Style="{StaticResource AccentButtonStyle}" Width="280"
-                            HorizontalAlignment="Left" Margin="0,12,0,0" Click="BtnScanCatalog_Click"/>
+                    <!-- Dell Command Update / SDIO / OEM (Lenovo/HP) - συνοπτικές, ξεχωριστές πηγές
+                         (ΟΧΙ ανά-συσκευή γραμμές σαν τα παραπάνω) - port του Complete-DriverScan's Dell/
+                         SDIO/OEM ενοτήτων. ΚΑΝΕΝΑ αυτόματο install - μόνο ανοίγει το επίσημο εργαλείο/
+                         φάκελο αναφοράς, ο χρήστης αποφασίζει μέσα σε αυτό. -->
+                    <TextBlock x:Name="TxtVendorExtra" Text="" Style="{StaticResource SubTextStyle}" TextWrapping="Wrap" Margin="0,10,0,0"/>
+                    <StackPanel x:Name="PanelVendorExtraButtons" Orientation="Horizontal" Margin="0,8,0,0"/>
                 </StackPanel>
             </Border>
 
             <!-- Αντίγραφο Ασφαλείας Οδηγών - port του cardOpt5 (~13037). DISM Export-Driver/pnputil. -->
             <Border Style="{StaticResource CardStyle}" Margin="0,16,0,0">
                 <StackPanel>
-                    <TextBlock Text="Αντίγραφο Ασφαλείας Οδηγών Συστήματος" Style="{StaticResource CardTitleStyle}" Margin="0,0,0,4"/>
-                    <TextBlock Text="Δημιουργεί αντίγραφο ασφαλείας όλων των οδηγών τρίτων κατασκευαστών σε φάκελο της επιλογής σας. Χρήσιμο πριν από επανεγκατάσταση Windows." Style="{StaticResource SubTextStyle}" Margin="0,0,0,10" TextWrapping="Wrap"/>
+                    <TextBlock Text="{tr:Tr Optimization_DriverBackup}" Style="{StaticResource CardTitleStyle}" Margin="0,0,0,4"/>
+                    <TextBlock Text="{tr:Tr Opt_DriverBackupDesc}" Style="{StaticResource SubTextStyle}" Margin="0,0,0,10" TextWrapping="Wrap"/>
                     <StackPanel Orientation="Horizontal">
-                        <Button x:Name="BtnDriverBackup" Content="Δημιουργία Αντιγράφου Ασφαλείας" Style="{StaticResource AccentButtonStyle}" Width="280" Margin="0,0,10,0" Click="BtnDriverBackup_Click"/>
-                        <Button x:Name="BtnDriverRestore" Content="Επαναφορά Οδηγών από Αντίγραφο" Style="{StaticResource FlatButtonStyle}" Width="280" Click="BtnDriverRestore_Click"/>
+                        <Button x:Name="BtnDriverBackup" Content="{tr:Tr Opt_DriverBackupBtn}" Style="{StaticResource AccentButtonStyle}" Width="280" Height="40" Margin="0,0,10,0" Click="BtnDriverBackup_Click"/>
+                        <Button x:Name="BtnDriverRestore" Content="{tr:Tr Opt_DriverRestoreBtn}" Style="{StaticResource FlatButtonStyle}" Width="280" Height="40" Click="BtnDriverRestore_Click"/>
                     </StackPanel>
-                    <TextBlock x:Name="TxtDriverBackupStatus" Text="Επιλέξτε ενέργεια." Style="{StaticResource SubTextStyle}" Margin="0,10,0,0" TextWrapping="Wrap"/>
+                    <TextBlock x:Name="TxtDriverBackupStatus" Text="{tr:Tr Opt_ChooseAction}" Style="{StaticResource SubTextStyle}" Margin="0,10,0,0" TextWrapping="Wrap"/>
                 </StackPanel>
             </Border>
 
@@ -217,11 +140,11 @@
                  ομαδοποίηση κατά OriginalFileName, μόνο παλιότερες εκδόσεις προτείνονται προς διαγραφή. -->
             <Border Style="{StaticResource CardStyle}" Margin="0,16,0,0">
                 <StackPanel>
-                    <TextBlock Text="Καθαρισμός Αποθήκης Οδηγών &amp; Αναφορά" Style="{StaticResource CardTitleStyle}" Margin="0,0,0,4"/>
-                    <TextBlock x:Name="TxtDriverStoreStatus" Text="Εντοπίζει παλιότερες, διπλότυπες εκδόσεις οδηγών τρίτων κατασκευαστών - πατήστε 'Σάρωση' για ανάλυση." Style="{StaticResource SubTextStyle}" Margin="0,0,0,6" TextWrapping="Wrap"/>
+                    <TextBlock Text="{tr:Tr Optimization_DriverStore}" Style="{StaticResource CardTitleStyle}" Margin="0,0,0,4"/>
+                    <TextBlock x:Name="TxtDriverStoreStatus" Text="{tr:Tr Opt_DriverStoreDesc}" Style="{StaticResource SubTextStyle}" Margin="0,0,0,6" TextWrapping="Wrap"/>
                     <ProgressBar x:Name="ProgressDriverStore" Height="6" IsIndeterminate="True" Visibility="Collapsed" Margin="0,0,0,10"/>
                     <Border Background="{DynamicResource MainBgBrush}" CornerRadius="6" MinHeight="80" MaxHeight="280" Padding="4">
-                        <ScrollViewer VerticalScrollBarVisibility="Auto">
+                        <ScrollViewer VerticalScrollBarVisibility="Auto" PreviewMouseWheel="NestedScroll_PreviewMouseWheel">
                             <ItemsControl x:Name="ListDriverStore">
                                 <ItemsControl.ItemTemplate>
                                     <DataTemplate>
@@ -241,7 +164,7 @@
                                                         <Run Text="{Binding Class, Mode=OneWay}"/>
                                                     </TextBlock>
                                                 </StackPanel>
-                                                <Button Grid.Column="1" Content="Διαγραφή" Style="{StaticResource FlatButtonStyle}" VerticalAlignment="Center"
+                                                <Button Grid.Column="1" Content="{tr:Tr Opt_Delete}" Style="{StaticResource FlatButtonStyle}" VerticalAlignment="Center"
                                                         Click="BtnDeleteStoreDriver_Click" Tag="{Binding}" Margin="10,0,0,0"/>
                                             </Grid>
                                         </Border>
@@ -250,9 +173,168 @@
                             </ItemsControl>
                         </ScrollViewer>
                     </Border>
-                    <Button x:Name="BtnScanDriverStore" Content="Σάρωση Αποθήκης Οδηγών" Style="{StaticResource AccentButtonStyle}" Width="240"
+                    <Button x:Name="BtnScanDriverStore" Content="{tr:Tr Opt_ScanDriverStore}" Style="{StaticResource AccentButtonStyle}" Width="240"
                             HorizontalAlignment="Left" Margin="0,12,0,0" Click="BtnScanDriverStore_Click"/>
                 </StackPanel>
+            </Border>
+
+            <!-- Ρητό αίτημα χρήστη: "τον διαχειριστή ενημερώσεων λογισμικού βάλε τον στο τέλος" -
+                 μετακινήθηκε από 3η θέση (μετά το Gaming Mode) στο τέλος της καρτέλας, μετά τις κάρτες
+                 οδηγών. -->
+            <Border Style="{StaticResource CardStyle}" Margin="0,16,0,0">
+                <StackPanel>
+                    <TextBlock Text="{tr:Tr Optimization_SoftwareUpdate}" Style="{StaticResource CardTitleStyle}" Margin="0,0,0,4"/>
+                    <TextBlock x:Name="TxtWingetStatus" Text="{tr:Tr Opt_WingetPrompt}" Style="{StaticResource SubTextStyle}" Margin="0,0,0,6"/>
+                    <!-- ΝΕΟ (χρήστης ανέφερε: "δεν βλέπω progress bar"): ορατή μόνο όσο τρέχει σάρωση/
+                         αναβάθμιση (IsIndeterminate - το winget CLI δεν εκθέτει πραγματικό ποσοστό
+                         προόδου ανά αρχείο, μόνο τελικό exit code, οπότε ένα καθορισμένο 0-100% θα ήταν
+                         ψεύτικο· η ασαφής/κυλιόμενη ("indeterminate") μπάρα δείχνει τίμια "σε εξέλιξη"
+                         χωρίς να προσποιείται ακρίβεια που δεν υπάρχει). -->
+                    <ProgressBar x:Name="ProgressWinget" Height="6" IsIndeterminate="True" Visibility="Collapsed" Margin="0,0,0,10"/>
+
+                    <Border Background="{DynamicResource MainBgBrush}" CornerRadius="6" MinHeight="120" MaxHeight="320" Padding="4">
+                        <ScrollViewer VerticalScrollBarVisibility="Auto" PreviewMouseWheel="NestedScroll_PreviewMouseWheel">
+                            <ItemsControl x:Name="ListWingetUpdates">
+                                <ItemsControl.ItemTemplate>
+                                    <DataTemplate>
+                                        <Border Background="{DynamicResource CardBgBrush}" CornerRadius="4" Margin="4" Padding="10">
+                                            <Grid>
+                                                <Grid.ColumnDefinitions><ColumnDefinition Width="Auto"/><ColumnDefinition Width="*"/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions>
+                                                <CheckBox Grid.Column="0" IsChecked="{Binding IsSelected}" VerticalAlignment="Center" Margin="0,0,10,0"/>
+                                                <StackPanel Grid.Column="1">
+                                                    <TextBlock Foreground="{DynamicResource TextBrush}" FontWeight="SemiBold">
+                                                        <Run Text="{Binding Update.Name, Mode=OneWay}"/>
+                                                        <Run Text=" [ "/>
+                                                        <Run Text="{Binding Update.Id, Mode=OneWay}"/>
+                                                        <Run Text=" ]"/>
+                                                    </TextBlock>
+                                                    <TextBlock Style="{StaticResource SubTextStyle}">
+                                                        <Run Text="{tr:Tr Opt_CurrentVersion}"/>
+                                                        <Run Text="{Binding Update.CurrentVersion, Mode=OneWay}"/>
+                                                        <Run Text=" &#x2192; "/>
+                                                        <Run Text="{tr:Tr Opt_NewVersion}"/>
+                                                        <Run Text="{Binding Update.AvailableVersion, Mode=OneWay}"/>
+                                                        <Run Text=" &#x00B7; "/>
+                                                        <Run Text="{Binding Update.Source, Mode=OneWay}" FontStyle="Italic"/>
+                                                    </TextBlock>
+                                                </StackPanel>
+                                                <!-- ΝΕΟ - roadmap "winget pin" - μόνο για πακέτα με πηγή winget (το "winget pin"
+                                                     δεν έχει νόημα/δεν λειτουργεί για msstore/pip/npm/κ.λπ. πηγές). -->
+                                                <Button Grid.Column="2" Click="BtnPinWingetApp_Click" Tag="{Binding}" VerticalAlignment="Center"
+                                                        Padding="8,4" Content="{tr:Tr Opt_PinAppButton}"
+                                                        AutomationProperties.Name="{tr:Tr Opt_PinAppButton}">
+                                                    <Button.Style>
+                                                        <Style TargetType="Button" BasedOn="{StaticResource FlatButtonStyle}">
+                                                            <Setter Property="Visibility" Value="Collapsed"/>
+                                                            <Style.Triggers>
+                                                                <DataTrigger Binding="{Binding Update.Source}" Value="winget">
+                                                                    <Setter Property="Visibility" Value="Visible"/>
+                                                                </DataTrigger>
+                                                                <DataTrigger Binding="{Binding IsPinned}" Value="True">
+                                                                    <Setter Property="Content" Value="{tr:Tr Opt_AppPinned}"/>
+                                                                    <Setter Property="IsEnabled" Value="False"/>
+                                                                </DataTrigger>
+                                                            </Style.Triggers>
+                                                        </Style>
+                                                    </Button.Style>
+                                                </Button>
+                                            </Grid>
+                                        </Border>
+                                    </DataTemplate>
+                                </ItemsControl.ItemTemplate>
+                            </ItemsControl>
+                        </ScrollViewer>
+                    </Border>
+
+                    <!-- ΔΙΟΡΘΩΣΗ (χρήστης έστειλε screenshot: "πλάτυνε λίγο το κουμπί για τις ενημερώσεις
+                         από το store και βάλε το κουμπί στην ίδια ευθεία με το σάρωση και αναβάθμιση
+                         επιλεγμένων") - το BtnCheckMsStore μετακινήθηκε ΜΕΣΑ στο ίδιο Grid με τα δύο
+                         άλλα κουμπιά (4η στήλη Auto) αντί για ξεχωριστή γραμμή από κάτω. Οι στήλες Auto
+                         αυτοπροσαρμόζονται στο περιεχόμενό τους, οπότε ΔΕΝ επανέρχεται ο παλιός κίνδυνος
+                         clipping σε μακρύτερες γλώσσες (π.χ. Γαλλικά) που είχε οδηγήσει στην αρχική
+                         απόφαση για ξεχωριστή γραμμή με auto-size Padding (βλ. ιστορικό σχόλιο πιο κάτω) -
+                         μια στήλη Auto είναι ΗΔΗ auto-size, απλά τώρα στην ίδια γραμμή. -->
+                    <!-- Ρητό αίτημα χρήστη: "αντί για ένα απλό κουμπί, με έμπνευση από το κυκλικό των
+                         οδηγών, φτιάξε ένα παρόμοιο με κινούμενο εικονίδιο αναβάθμισης εφαρμογών" - ίδιο
+                         μοτίβο με το BtnScanDrivers/DriverScanButton παραπάνω στην κάρτα Οδηγών: μεγάλο
+                         κυκλικό κουμπί σάρωσης αντί για το προηγούμενο απλό ορθογώνιο "Σάρωση". -->
+                    <views:AppUpdateScanButton x:Name="BtnScanWinget" HorizontalAlignment="Center" Margin="0,10,0,10" Click="BtnScanWinget_Click"/>
+
+                    <Grid Margin="0,0,0,0">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*"/>
+                            <ColumnDefinition Width="Auto"/>
+                            <ColumnDefinition Width="Auto"/>
+                        </Grid.ColumnDefinitions>
+                        <CheckBox x:Name="ChkSelectAll" Grid.Column="0" Content="{tr:Tr Opt_SelectAll}" VerticalAlignment="Center"
+                                  Foreground="{DynamicResource TextBrush}" Click="ChkSelectAll_Click"/>
+                        <Button x:Name="BtnUpgradeSelected" Grid.Column="1" Content="{tr:Tr Opt_UpgradeSelected}" Style="{StaticResource AccentButtonStyle}" Width="180" Margin="0,0,10,0" Click="BtnUpgradeSelected_Click"/>
+                        <!-- Port του $global:btnCheckMsStore (ρητή ανάγκη - το "store updates" CLI
+                             παραπάνω δεν πιάνει πάντα ΟΛΕΣ τις ενημερώσεις Metro/UWP εφαρμογών,
+                             τεκμηριωμένο όριο - χρήστης ανέφερε "δεν φαίνονται οι ενημερώσεις των metro
+                             εφαρμογών"). Ενεργοποιεί πραγματική σάρωση μέσω των επίσημων μηχανισμών των
+                             Windows και ανοίγει το Store για επιβεβαίωση - συμπληρωματικό, όχι
+                             υποκατάστατο της λίστας παραπάνω. Padding 24,10 (αντί για σταθερό Width)
+                             διατηρείται ώστε το κείμενο να έχει άνετο χώρο σε ΚΑΘΕ γλώσσα (π.χ. τα
+                             Γαλλικά είναι σημαντικά πιο μακριά από τα Αγγλικά). -->
+                        <Button x:Name="BtnCheckMsStore" Grid.Column="2" Content="{tr:Tr Opt_CheckMsStore}"
+                                Style="{StaticResource AccentButtonStyle}" Height="40" Padding="24,10" Click="BtnCheckMsStore_Click"/>
+                    </Grid>
+                    <TextBlock Text="{tr:Tr Opt_MsStoreDesc}"
+                            Style="{StaticResource SubTextStyle}" Margin="0,4,0,0"/>
+
+                    <!-- ΝΕΟ - roadmap "νεότερες δυνατότητες winget στο UI" - "winget export/import":
+                         αντιγραφή της λίστας εγκατεστημένων εφαρμογών (ID + έκδοση) σε νέο υπολογιστή,
+                         βλ. WingetService.ExportAsync/ImportAsync. -->
+                    <Separator Margin="0,12,0,10"/>
+                    <TextBlock Text="{tr:Tr Opt_WingetPortableTitle}" Style="{StaticResource SubTextStyle}" Margin="0,0,0,8"/>
+                    <StackPanel Orientation="Horizontal">
+                        <Button x:Name="BtnExportWingetList" Content="{tr:Tr Opt_ExportAppsListButton}" Style="{StaticResource FlatButtonStyle}" Padding="14,8" Margin="0,0,10,0" Click="BtnExportWingetList_Click"/>
+                        <Button x:Name="BtnImportWingetList" Content="{tr:Tr Opt_ImportAppsListButton}" Style="{StaticResource FlatButtonStyle}" Padding="14,8" Click="BtnImportWingetList_Click"/>
+                    </StackPanel>
+                    <TextBlock x:Name="TxtWingetPortableStatus" Style="{StaticResource SubTextStyle}" TextWrapping="Wrap" Margin="0,6,0,0"/>
+                </StackPanel>
+            </Border>
+
+            <!-- ΝΕΟ - roadmap "Προγραμματισμένη συντήρηση" - πραγματική εβδομαδιαία εργασία Task
+                 Scheduler (ΟΧΙ timer μέσα στην εφαρμογή - δεν χρειάζεται η εφαρμογή να τρέχει συνέχεια),
+                 βλ. AdvancedToolsService.SetScheduledMaintenanceAsync/RunScheduledMaintenance. -->
+            <Border Style="{StaticResource CardStyle}" Margin="0,16,0,0">
+                <Grid>
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="*"/>
+                        <ColumnDefinition Width="Auto"/>
+                    </Grid.ColumnDefinitions>
+                    <StackPanel Grid.Column="0">
+                        <StackPanel Orientation="Horizontal" Margin="0,0,0,6">
+                            <views:HeaderGlyphIcon Kind="Clock" Width="16" Height="16" Margin="0,0,8,0" VerticalAlignment="Center"/>
+                            <TextBlock Text="{tr:Tr Opt_ScheduledMaintenance}" Style="{StaticResource CardTitleStyle}"/>
+                        </StackPanel>
+                        <TextBlock Text="{tr:Tr Opt_ScheduledMaintenanceDesc}" Style="{StaticResource SubTextStyle}" TextWrapping="Wrap"/>
+                        <TextBlock x:Name="TxtScheduledMaintenanceStatus" Style="{StaticResource SubTextStyle}" Margin="0,6,0,0"/>
+                    </StackPanel>
+                    <ToggleButton x:Name="ToggleScheduledMaintenance" Grid.Column="1" VerticalAlignment="Center"
+                                  Style="{StaticResource ToggleSwitchStyle}" Click="ToggleScheduledMaintenance_Click"/>
+                </Grid>
+            </Border>
+
+            <!-- ΝΕΟ - roadmap "Αυτόματο Gaming Mode" - βλ. AutoGamingModeService. -->
+            <Border Style="{StaticResource CardStyle}" Margin="0,16,0,0">
+                <Grid>
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="*"/>
+                        <ColumnDefinition Width="Auto"/>
+                    </Grid.ColumnDefinitions>
+                    <StackPanel Grid.Column="0">
+                        <StackPanel Orientation="Horizontal" Margin="0,0,0,6">
+                            <views:HeaderGlyphIcon Kind="Gamepad" Width="16" Height="16" Margin="0,0,8,0" VerticalAlignment="Center"/>
+                            <TextBlock Text="{tr:Tr Opt_AutoGamingMode}" Style="{StaticResource CardTitleStyle}"/>
+                        </StackPanel>
+                        <TextBlock Text="{tr:Tr Opt_AutoGamingModeDesc}" Style="{StaticResource SubTextStyle}" TextWrapping="Wrap"/>
+                    </StackPanel>
+                    <ToggleButton x:Name="ToggleAutoGamingMode" Grid.Column="1" VerticalAlignment="Center"
+                                  Style="{StaticResource ToggleSwitchStyle}" Click="ToggleAutoGamingMode_Click"/>
+                </Grid>
             </Border>
 
         </StackPanel>

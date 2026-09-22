@@ -3,83 +3,199 @@
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:tr="clr-namespace:OptimizerWpf"
+             xmlns:views="clr-namespace:OptimizerWpf.Views"
              mc:Ignorable="d">
     <!-- Επιπλέον Ρυθμίσεις - port του $tabTweaks (~16519-17573), η πυκνότερη καρτέλα. Βλ. TweakService.cs. -->
     <UserControl.Resources>
         <DataTemplate x:Key="TweakRowTemplate">
             <Grid Margin="0,0,0,10">
-                <Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions>
+                <Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="Auto"/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions>
                 <StackPanel Grid.Column="0" Margin="0,0,10,0">
                     <TextBlock Text="{Binding Tweak.Label}" Foreground="{DynamicResource TextBrush}" TextWrapping="Wrap"/>
                     <TextBlock Text="{Binding Tweak.Description}" Style="{StaticResource SubTextStyle}" TextWrapping="Wrap"/>
                 </StackPanel>
-                <ToggleButton Grid.Column="1" IsChecked="{Binding IsOn}" Style="{StaticResource ToggleSwitchStyle}" Click="ToggleTweak_Click" Tag="{Binding}"/>
+                <!-- ΝΕΟ - roadmap "Καρφιτσωμένες συντομεύσεις" - καρφίτσωμα για γρήγορη πρόσβαση από την Αρχική. -->
+                <Button Grid.Column="1" Content="{Binding PinGlyph}" Style="{StaticResource FlatButtonStyle}" Width="32" Padding="0" FontSize="15"
+                        Click="BtnPinTweak_Click" Tag="{Binding}" Margin="0,0,8,0"
+                        AutomationProperties.Name="{tr:Tr Home_PinTweakAuto}"/>
+                <ToggleButton Grid.Column="2" IsChecked="{Binding IsOn}" Style="{StaticResource ToggleSwitchStyle}" Click="ToggleTweak_Click" Tag="{Binding}"/>
             </Grid>
         </DataTemplate>
     </UserControl.Resources>
-    <ScrollViewer VerticalScrollBarVisibility="Auto">
+    <ScrollViewer VerticalScrollBarVisibility="Auto" PreviewMouseWheel="NestedScroll_PreviewMouseWheel">
         <StackPanel Margin="0,8,0,24">
 
-            <Border Style="{StaticResource CardStyle}">
+            <!-- ΕΝΟΠΟΙΗΜΕΝΟ - roadmap "συγχώνευση παρόμοιων λειτουργιών σε ενιαίο πλαίσιο": τα δύο
+                 μηχανισμοί προφίλ (ονομασμένα προφίλ εντός εφαρμογής + αρχείο-βασισμένο export/import
+                 για μεταφορά σε άλλον υπολογιστή) ζουν πλέον στην ίδια κάρτα με κοινό status text,
+                 αντί για δύο ξεχωριστά, οπτικά ασύνδετα, block. Βλ. NamedProfileService +
+                 BtnExportTweakProfile_Click/BtnImportTweakProfile_Click στο code-behind. -->
+            <Border Style="{StaticResource CardStyle}" Margin="0,0,0,16">
                 <StackPanel>
-                    <TextBlock Text="Επιπλέον Ρυθμίσεις" Style="{StaticResource CardTitleStyle}" Margin="0,0,0,10"/>
+                    <TextBlock Text="{tr:Tr Tweaks_NamedProfilesTitle}" Style="{StaticResource CardTitleStyle}" Margin="0,0,0,4"/>
+                    <TextBlock Text="{tr:Tr Tweaks_NamedProfilesDesc}" Style="{StaticResource SubTextStyle}" TextWrapping="Wrap" Margin="0,0,0,10"/>
+                    <Grid Margin="0,0,0,10">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*"/><ColumnDefinition Width="Auto"/><ColumnDefinition Width="Auto"/><ColumnDefinition Width="Auto"/>
+                        </Grid.ColumnDefinitions>
+                        <ComboBox x:Name="ListNamedProfiles" Grid.Column="0" Margin="0,0,8,0"/>
+                        <Button Grid.Column="1" Content="{tr:Tr Tweaks_NamedProfileSaveAs}" Style="{StaticResource FlatButtonStyle}" Padding="12,6" Margin="0,0,8,0" Click="BtnSaveNamedProfile_Click"/>
+                        <Button Grid.Column="2" Content="{tr:Tr Tweaks_NamedProfileLoad}" Style="{StaticResource AccentButtonStyle}" Padding="12,6" Margin="0,0,8,0" Click="BtnLoadNamedProfile_Click"/>
+                        <Button Grid.Column="3" Content="🗑" Style="{StaticResource FlatButtonStyle}" Width="36" Padding="0" Click="BtnDeleteNamedProfile_Click" AutomationProperties.Name="{tr:Tr Tweaks_NamedProfileDelete}"/>
+                    </Grid>
+                    <Separator Margin="0,0,0,10"/>
+                    <TextBlock Text="{tr:Tr Tweaks_ProfilePortableCaption}" Style="{StaticResource SubTextStyle}" Margin="0,0,0,8"/>
+                    <Grid>
+                        <Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="Auto"/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions>
+                        <TextBlock Grid.Column="0" x:Name="TxtTweakProfileStatus" Style="{StaticResource SubTextStyle}" VerticalAlignment="Center" TextWrapping="Wrap"/>
+                        <Button Grid.Column="1" Content="{tr:Tr Tweaks_ExportProfile}" Style="{StaticResource FlatButtonStyle}" Padding="12,6" Margin="0,0,8,0" Click="BtnExportTweakProfile_Click"/>
+                        <Button Grid.Column="2" Content="{tr:Tr Tweaks_ImportProfile}" Style="{StaticResource FlatButtonStyle}" Padding="12,6" Click="BtnImportTweakProfile_Click"/>
+                    </Grid>
+                </StackPanel>
+            </Border>
+
+            <!-- ΝΕΟ - roadmap "Αναζήτηση μέσα στη λίστα" - η καρτέλα μεγαλώνει με κάθε έκδοση, ένα
+                 πεδίο φιλτράρει ΚΑΙ τις 4 λίστες tweaks ταυτόχρονα (Label+Description) - βλ.
+                 TxtTweaksSearch_TextChanged στο code-behind. -->
+            <TextBox x:Name="TxtTweaksSearch" Height="32" Padding="8,4" VerticalContentAlignment="Center" Margin="0,0,0,12"
+                     Background="{DynamicResource MainBgBrush}" Foreground="{DynamicResource TextBrush}" BorderBrush="{DynamicResource CardBorderBrush}"
+                     TextChanged="TxtTweaksSearch_TextChanged" ToolTip="{tr:Tr Tweaks_SearchTooltip}"/>
+
+            <Border x:Name="CardMainTweaks" Style="{StaticResource CardStyle}">
+                <StackPanel>
+                    <Grid Margin="0,0,0,10">
+                        <Grid.ColumnDefinitions><ColumnDefinition Width="Auto"/><ColumnDefinition Width="*"/></Grid.ColumnDefinitions>
+                        <views:HeaderGlyphIcon Grid.Column="0" Kind="Dial" Width="16" Height="16" Margin="0,0,8,0" VerticalAlignment="Center"/>
+                        <TextBlock Grid.Column="1" Text="{tr:Tr Tweaks_Main}" Style="{StaticResource CardTitleStyle}"/>
+                    </Grid>
                     <ItemsControl x:Name="ListMainTweaks" ItemTemplate="{StaticResource TweakRowTemplate}"/>
                 </StackPanel>
             </Border>
 
             <Border Style="{StaticResource CardStyle}" Margin="0,16,0,0">
                 <StackPanel>
-                    <TextBlock Text="AI &amp; Copilot" Style="{StaticResource CardTitleStyle}" Margin="0,0,0,10"/>
+                    <Grid Margin="0,0,0,10">
+                        <Grid.ColumnDefinitions><ColumnDefinition Width="Auto"/><ColumnDefinition Width="*"/></Grid.ColumnDefinitions>
+                        <views:HeaderGlyphIcon Grid.Column="0" Kind="Brain" Width="16" Height="16" Margin="0,0,8,0" VerticalAlignment="Center"/>
+                        <TextBlock Grid.Column="1" Text="{tr:Tr Tweaks_AiCopilot}" Style="{StaticResource CardTitleStyle}"/>
+                    </Grid>
                     <ItemsControl x:Name="ListAiTweaks" ItemTemplate="{StaticResource TweakRowTemplate}"/>
                 </StackPanel>
             </Border>
 
             <Border Style="{StaticResource CardStyle}" Margin="0,16,0,0">
                 <StackPanel>
-                    <TextBlock Text="Απόδοση" Style="{StaticResource CardTitleStyle}" Margin="0,0,0,10"/>
+                    <Grid Margin="0,0,0,10">
+                        <Grid.ColumnDefinitions><ColumnDefinition Width="Auto"/><ColumnDefinition Width="*"/></Grid.ColumnDefinitions>
+                        <views:HeaderGlyphIcon Grid.Column="0" Kind="Gamepad" Width="16" Height="16" Margin="0,0,8,0" VerticalAlignment="Center"/>
+                        <TextBlock Grid.Column="1" Text="{tr:Tr Tweaks_Performance}" Style="{StaticResource CardTitleStyle}"/>
+                    </Grid>
                     <ItemsControl x:Name="ListPerfTweaks" ItemTemplate="{StaticResource TweakRowTemplate}"/>
                 </StackPanel>
             </Border>
 
+            <!-- ΝΕΟ - ρητό αίτημα χρήστη ("ενσωμάτωσε τα... ελαφρύτερα Windows") - βλ.
+                 TweakService.LighterWindowsTweaksSimple/OpenIndexingOptions/ApplyLowResourceProfile. -->
             <Border Style="{StaticResource CardStyle}" Margin="0,16,0,0">
                 <StackPanel>
-                    <TextBlock Text="Κρυπτογράφηση Συσκευής" Style="{StaticResource CardTitleStyle}" Margin="0,0,0,6"/>
-                    <TextBlock Text="Για ασφάλεια, η εφαρμογή δεν αλλάζει ρυθμίσεις κρυπτογράφησης απευθείας - ανοίγει τις επίσημες Ρυθμίσεις Windows." Style="{StaticResource SubTextStyle}" Margin="0,0,0,10" TextWrapping="Wrap"/>
-                    <Button Content="Άνοιγμα Ρυθμίσεων Κρυπτογράφησης" Style="{StaticResource FlatButtonStyle}" Width="260" HorizontalAlignment="Left" Click="BtnDeviceEncryption_Click"/>
-                </StackPanel>
-            </Border>
-
-            <Border Style="{StaticResource CardStyle}" Margin="0,16,0,0">
-                <StackPanel>
-                    <TextBlock Text="Λοιπές Επιλογές Δεξιού Κλικ" Style="{StaticResource CardTitleStyle}" Margin="0,0,0,10"/>
-                    <Grid Margin="0,0,0,10">
-                        <Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions>
-                        <TextBlock Grid.Column="0" Text="Ιδιοκτησία στο Μενού Δεξιού Κλικ" Foreground="{DynamicResource TextBrush}" VerticalAlignment="Center"/>
-                        <ToggleButton Grid.Column="1" x:Name="ToggleTakeOwnership" Style="{StaticResource ToggleSwitchStyle}" Click="ToggleTakeOwnership_Click"/>
+                    <Grid Margin="0,0,0,6">
+                        <Grid.ColumnDefinitions><ColumnDefinition Width="Auto"/><ColumnDefinition Width="*"/></Grid.ColumnDefinitions>
+                        <views:HeaderGlyphIcon Grid.Column="0" Kind="Bolt" Width="16" Height="16" Margin="0,0,8,0" VerticalAlignment="Center"/>
+                        <TextBlock Grid.Column="1" Text="{tr:Tr Tweaks_LighterWindows}" Style="{StaticResource CardTitleStyle}"/>
                     </Grid>
-                    <Grid>
-                        <Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions>
-                        <TextBlock Grid.Column="0" Text="Άνοιγμα PowerShell εδώ" Foreground="{DynamicResource TextBrush}" VerticalAlignment="Center"/>
-                        <ToggleButton Grid.Column="1" x:Name="TogglePSHere" Style="{StaticResource ToggleSwitchStyle}" Click="TogglePSHere_Click"/>
-                    </Grid>
-                </StackPanel>
-            </Border>
-
-            <Border Style="{StaticResource CardStyle}" Margin="0,16,0,0">
-                <StackPanel>
-                    <TextBlock Text="Οπτικά Εφέ" Style="{StaticResource CardTitleStyle}" Margin="0,0,0,10"/>
+                    <TextBlock Text="{tr:Tr Tweaks_LighterWindowsDesc}" Style="{StaticResource SubTextStyle}" Margin="0,0,0,10" TextWrapping="Wrap"/>
+                    <ItemsControl x:Name="ListLighterWindows" ItemTemplate="{StaticResource TweakRowTemplate}" Margin="0,0,0,10"/>
+                    <!-- ΔΙΟΡΘΩΣΗ (χρήστης ανέφερε: "πολύ μικρά κουμπιά στο Ελαφρύτερα Windows") - ίδιο
+                         γνωστό bug-class με αλλού στην εφαρμογή (βλ. σχόλιο στο NetworkView.xaml:
+                         "χωρίς ρητό Height τα κουμπιά συρρικνώνονται γύρω από το κείμενό τους") - αυτά
+                         τα 2 κουμπιά είχαν ΜΟΝΟ Padding, χωρίς ρητό Height. ΣΚΟΠΙΜΑ ΧΩΡΙΣ ρητό Width -
+                         το κείμενο στα Γαλλικά/Γερμανικά είναι αρκετά πιο μακρύ από τα Ελληνικά/Αγγλικά
+                         (π.χ. "Appliquer le Profil à Faible Utilisation des Ressources") και ένα σταθερό
+                         Width θα το έκοβε σε αυτές τις γλώσσες - το auto-size μέσω Padding προσαρμόζεται
+                         σωστά σε ΚΑΘΕ γλώσσα. -->
                     <StackPanel Orientation="Horizontal">
-                        <Button Content="Καλύτερη Εμφάνιση" Style="{StaticResource FlatButtonStyle}" Width="180" Margin="0,0,10,0" Click="BtnVisualAppearance_Click"/>
-                        <Button Content="Καλύτερη Απόδοση" Style="{StaticResource FlatButtonStyle}" Width="180" Margin="0,0,10,0" Click="BtnVisualPerformance_Click"/>
-                        <Button Content="Ισορροπημένο" Style="{StaticResource FlatButtonStyle}" Width="180" Click="BtnVisualBalanced_Click"/>
+                        <Button Content="{tr:Tr Tweaks_OpenIndexing}" Style="{StaticResource FlatButtonStyle}" Height="40" Padding="18,8" Margin="0,0,10,0" Click="BtnOpenIndexing_Click"/>
+                        <Button Content="{tr:Tr Tweaks_LowResourceProfile}" Style="{StaticResource AccentButtonStyle}" Height="40" Padding="18,8" Click="BtnLowResourceProfile_Click"/>
                     </StackPanel>
                 </StackPanel>
             </Border>
 
-            <!-- Custom Right-Click Menu Builder -->
             <Border Style="{StaticResource CardStyle}" Margin="0,16,0,0">
                 <StackPanel>
-                    <TextBlock Text="Προσαρμοσμένες Επιλογές Δεξιού Κλικ" Style="{StaticResource CardTitleStyle}" Margin="0,0,0,10"/>
+                    <Grid Margin="0,0,0,6">
+                        <Grid.ColumnDefinitions><ColumnDefinition Width="Auto"/><ColumnDefinition Width="*"/></Grid.ColumnDefinitions>
+                        <views:HeaderGlyphIcon Grid.Column="0" Kind="Lock" Width="16" Height="16" Margin="0,0,8,0" VerticalAlignment="Center"/>
+                        <TextBlock Grid.Column="1" Text="{tr:Tr Tweaks_Encryption}" Style="{StaticResource CardTitleStyle}"/>
+                    </Grid>
+                    <TextBlock Text="{tr:Tr Tweaks_EncryptionDesc}" Style="{StaticResource SubTextStyle}" Margin="0,0,0,10" TextWrapping="Wrap"/>
+                    <StackPanel Orientation="Horizontal">
+                        <Button Content="{tr:Tr Tweaks_OpenEncryptionSettings}" Style="{StaticResource FlatButtonStyle}" Width="260" Margin="0,0,10,0" Click="BtnDeviceEncryption_Click"/>
+                        <!-- ΝΕΟ - roadmap "διαχείριση κλειδιών ανάκτησης BitLocker" - βλ. BitLockerKeyService,
+                             καθαρά ενημερωτικό. -->
+                        <Button x:Name="BtnBitLockerKeys" Content="{tr:Tr BitLocker_ShowKeysButton}" Style="{StaticResource FlatButtonStyle}" Width="260" Click="BtnBitLockerKeys_Click"/>
+                    </StackPanel>
+                    <TextBlock x:Name="TxtBitLockerStatus" Style="{StaticResource SubTextStyle}" Margin="0,8,0,0" Visibility="Collapsed"/>
+                    <ItemsControl x:Name="ListBitLockerDrives" Margin="0,4,0,0">
+                        <ItemsControl.ItemTemplate>
+                            <DataTemplate>
+                                <Border Background="{DynamicResource MainBgBrush}" CornerRadius="6" Padding="10" Margin="0,4,0,0">
+                                    <StackPanel>
+                                        <TextBlock Text="{Binding MountPoint}" FontWeight="Bold" Foreground="{DynamicResource TextBrush}"/>
+                                        <TextBlock Text="{Binding ProtectionStatus}" Style="{StaticResource SubTextStyle}"/>
+                                        <ItemsControl ItemsSource="{Binding RecoveryKeys}">
+                                            <ItemsControl.ItemTemplate>
+                                                <DataTemplate>
+                                                    <TextBox Text="{Binding Mode=OneWay}" IsReadOnly="True" Margin="0,4,0,0"
+                                                             FontFamily="Consolas" Background="{DynamicResource CardBgBrush}" Foreground="{DynamicResource TextBrush}"/>
+                                                </DataTemplate>
+                                            </ItemsControl.ItemTemplate>
+                                        </ItemsControl>
+                                    </StackPanel>
+                                </Border>
+                            </DataTemplate>
+                        </ItemsControl.ItemTemplate>
+                    </ItemsControl>
+                </StackPanel>
+            </Border>
+
+            <Border Style="{StaticResource CardStyle}" Margin="0,16,0,0">
+                <StackPanel>
+                    <Grid Margin="0,0,0,10">
+                        <Grid.ColumnDefinitions><ColumnDefinition Width="Auto"/><ColumnDefinition Width="*"/></Grid.ColumnDefinitions>
+                        <views:HeaderGlyphIcon Grid.Column="0" Kind="Palette" Width="16" Height="16" Margin="0,0,8,0" VerticalAlignment="Center"/>
+                        <TextBlock Grid.Column="1" Text="{tr:Tr Tweaks_VisualEffects}" Style="{StaticResource CardTitleStyle}"/>
+                    </Grid>
+                    <StackPanel Orientation="Horizontal">
+                        <Button Content="{tr:Tr Tweaks_VisualAppearance}" Style="{StaticResource FlatButtonStyle}" Width="180" Height="40" Margin="0,0,10,0" Click="BtnVisualAppearance_Click"/>
+                        <Button Content="{tr:Tr Tweaks_VisualPerformance}" Style="{StaticResource FlatButtonStyle}" Width="180" Height="40" Margin="0,0,10,0" Click="BtnVisualPerformance_Click"/>
+                        <Button Content="{tr:Tr Tweaks_VisualBalanced}" Style="{StaticResource FlatButtonStyle}" Width="180" Height="40" Click="BtnVisualBalanced_Click"/>
+                    </StackPanel>
+                </StackPanel>
+            </Border>
+
+            <!-- Ρητό αίτημα χρήστη: "Λοιπές & Προσαρμοσμένες Επιλογές Δεξιού Κλικ, συγχώνευσε αυτά τα
+                 δύο" - ενοποιήθηκαν σε ΜΙΑ κάρτα (πριν ήταν 2 ξεχωριστές, και οι δύο για ρυθμίσεις
+                 δεξιού κλικ). Custom Right-Click Menu Builder + οι 2 απλοί διακόπτες. -->
+            <Border Style="{StaticResource CardStyle}" Margin="0,16,0,0">
+                <StackPanel>
+                    <Grid Margin="0,0,0,10">
+                        <Grid.ColumnDefinitions><ColumnDefinition Width="Auto"/><ColumnDefinition Width="*"/></Grid.ColumnDefinitions>
+                        <views:HeaderGlyphIcon Grid.Column="0" Kind="Dial" Width="16" Height="16" Margin="0,0,8,0" VerticalAlignment="Center"/>
+                        <TextBlock Grid.Column="1" Text="{tr:Tr Tweaks_RightClick}" Style="{StaticResource CardTitleStyle}"/>
+                    </Grid>
+                    <Grid Margin="0,0,0,10">
+                        <Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions>
+                        <TextBlock Grid.Column="0" Text="{tr:Tr Tweaks_TakeOwnership}" Foreground="{DynamicResource TextBrush}" VerticalAlignment="Center"/>
+                        <ToggleButton Grid.Column="1" x:Name="ToggleTakeOwnership" Style="{StaticResource ToggleSwitchStyle}" Click="ToggleTakeOwnership_Click"/>
+                    </Grid>
+                    <Grid Margin="0,0,0,10">
+                        <Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions>
+                        <TextBlock Grid.Column="0" Text="{tr:Tr Tweaks_OpenPSHere}" Foreground="{DynamicResource TextBrush}" VerticalAlignment="Center"/>
+                        <ToggleButton Grid.Column="1" x:Name="TogglePSHere" Style="{StaticResource ToggleSwitchStyle}" Click="TogglePSHere_Click"/>
+                    </Grid>
+                    <Separator Margin="0,0,0,10"/>
+                    <TextBlock Text="{tr:Tr Tweaks_CustomOptions}" Style="{StaticResource SubTextStyle}" FontWeight="Bold" Margin="0,0,0,8"/>
                     <ItemsControl x:Name="ListCustomMenu" Margin="0,0,0,10">
                         <ItemsControl.ItemTemplate>
                             <DataTemplate>
@@ -89,12 +205,12 @@
                                         <TextBlock Text="{Binding MenuText}" Foreground="{DynamicResource TextBrush}"/>
                                         <TextBlock Text="{Binding Command}" Style="{StaticResource SubTextStyle}" TextTrimming="CharacterEllipsis"/>
                                     </StackPanel>
-                                    <Button Grid.Column="1" Content="Αφαίρεση" Style="{StaticResource FlatButtonStyle}" Click="BtnRemoveCustomMenuItem_Click" Tag="{Binding}"/>
+                                    <Button Grid.Column="1" Content="{tr:Tr Remove}" Style="{StaticResource FlatButtonStyle}" Click="BtnRemoveCustomMenuItem_Click" Tag="{Binding}"/>
                                 </Grid>
                             </DataTemplate>
                         </ItemsControl.ItemTemplate>
                     </ItemsControl>
-                    <Button Content="Προσθήκη Νέας Επιλογής" Style="{StaticResource AccentButtonStyle}" Width="220" HorizontalAlignment="Left" Click="BtnAddCustomMenuItem_Click"/>
+                    <Button Content="{tr:Tr Tweaks_AddNewOption}" Style="{StaticResource AccentButtonStyle}" Width="220" HorizontalAlignment="Left" Click="BtnAddCustomMenuItem_Click"/>
                 </StackPanel>
             </Border>
 

@@ -1,4 +1,105 @@
-# Windows 11 Maintenance & Optimizer Tool — Project Handoff
+# PC Performance & Maintenance Suite — Project Handoff
+
+## English Summary (for non-Greek-reading contributors)
+
+*Added per roadmap item "HANDOFF.md summary in English" — this section is a short orientation, not a
+translation of the document below (which stays in Greek: it is the working development log for this
+project, written and read primarily by Greek-speaking contributors/AI sessions across many long
+sessions). If you don't read Greek, start here and use README.md for everything user-facing.*
+
+**What this repository is:** a free, open-source Windows 11 maintenance/optimization tool. It shipped
+originally as a single-file PowerShell + WinForms script (`Optimizer.ps1`, kept for historical
+reference and no longer the active codebase) and has since been fully ported to a native WPF/C#
+(.NET 8) application, at `wpf/OptimizerWpf/`. That WPF app is the current, actively developed product —
+all 8 tabs described in `README.md` are implemented there.
+
+**Where things live:**
+- `wpf/OptimizerWpf/` — the app itself. `Views/*.xaml` + `*.xaml.cs` per tab/window, `Services/*.cs`
+  for the actual system logic (registry, WMI, process calls), `Services/LanguageService.cs` for the
+  4-language (el/en/de/fr) translation dictionary used by every string in the UI.
+- `wpf/OptimizerWpf.Tests/` — xUnit unit tests.
+- `installer/` — the Inno Setup script (`OptimizerWpf.iss`) and per-language license/description text
+  used to build the distributed installer (`OptimizerWpf-Setup-<version>.exe`).
+- `Optimizer.ps1` — the original PowerShell/WinForms tool. Not touched anymore; retained as historical
+  reference and as the functional spec the WPF port was built against (feature parity, then beyond).
+- `HANDOFF.md` (this file, below this section) — a long, mostly-chronological Greek-language
+  development log covering both eras (PowerShell and WPF). It records design decisions, bugs found and
+  fixed, and user feedback that shaped the app — useful for understanding *why* something is built the
+  way it is, not just *what* it does. `README.md` covers the *what* (features, install, build) in both
+  languages already.
+- Version history shown inside the app itself (Version History window) is the authoritative,
+  user-facing changelog — check `Services/LanguageService.cs`'s `VerHist_*` keys for the source text.
+
+**Conventions worth knowing before contributing:**
+- Every user-facing string goes through `LanguageService.T("Key")`, defined identically across all 4
+  language blocks in `LanguageService.cs` — a new UI string needs a new key added to all four.
+- New icons use the vector `Views/HeaderGlyphIcon.xaml` control (a `Kind` enum of glyphs), not emoji —
+  WPF's `TextBlock` does not reliably render color emoji fonts in this environment; the app switched
+  away from emoji entirely for this reason.
+- Dialogs use `ThemedMessageBox` (root `OptimizerWpf` namespace), not the native
+  `System.Windows.MessageBox` — the native one ignores the app's light/dark theme.
+- Tweaks that toggle a Windows setting are expected to detect and reflect the *real* current state on
+  load (see `SimpleTweak.DetectState` in `Services/TweakService.cs`), not assume "off" by default.
+
+## 0.1 ΤΡΕΧΩΝ ROADMAP (μετά την v4.4.2) — αλλαγές, βελτιώσεις & νέες προσθήκες
+
+*Νέο roadmap, γραμμένο από την τρέχουσα, πραγματική κατάσταση του WPF port (v4.4.2) - το παλιό §4
+("Πλήρης Λίστα Εκκρεμοτήτων") παρακάτω αφορά ΑΠΟΚΛΕΙΣΤΙΚΑ την εγκαταλελειμμένη `Optimizer.ps1`/WinForms
+εποχή και διατηρείται μόνο ως ιστορικό αρχείο - ΜΗΝ το συγχέεις με ενεργές εκκρεμότητες. ΚΑΝΕΝΑ από τα
+παρακάτω δεν έχει ξεκινήσει ακόμα εκτός αν σημειώνεται ρητά - πρόκειται για προτάσεις προς αξιολόγηση/
+έγκριση, όχι δεσμευτικό πλάνο.*
+
+### Α. Διορθώσεις / τεχνικό χρέος που εντοπίστηκε αλλά δεν καλύφθηκε πλήρως
+1. **Registry Cleaner - περισσότερες ασφαλείς κατηγορίες**: το `HealthCleanupService.ScanRegistry()`
+   καλύπτει προς το παρόν 4 κατηγορίες (MissingUninstaller, ObsoleteMuiCache, OrphanedAppPath,
+   OrphanedStartupEntry), όλες με το ΙΔΙΟ αυστηρό κριτήριο "flag μόνο αν η διαδρομή που δείχνει η
+   καταχώρηση πραγματικά δεν υπάρχει". Υποψήφιες επόμενες κατηγορίες με το ΙΔΙΟ κριτήριο: Shared DLLs
+   (`SOFTWARE\Microsoft\Windows\CurrentVersion\SharedDLLs`), ορφανά File Association ProgIDs
+   (`SOFTWARE\Classes\*`), ορφανά COM/ActiveX CLSID entries. ΚΑΘΕ νέα κατηγορία χρειάζεται το ίδιο
+   αυστηρό "Exists() πριν το flag" τεστ - καμία heuristic διαγραφή.
+2. **HealthScoreService ευρήματα - μόνο ενημερωτικά, καμία ενέργεια διόρθωσης**: η νέα κάρτα "επιπλέον
+   ευρήματα υγείας" στον Πλήρη Έλεγχο Υγείας (v4.4.1) δείχνει προβλήματα (Defender off, εκκρεμής
+   επανεκκίνηση, πολλά προγράμματα εκκίνησης, χωρίς πρόσφατο σημείο επαναφοράς) αλλά ΔΕΝ προσφέρει
+   κουμπί ενέργειας - ο χρήστης πρέπει να πάει χειροκίνητα στην αντίστοιχη καρτέλα. Θα μπορούσε να πάρει
+   το ΙΔΙΟ μοτίβο με την κάρτα "Apps" (κουμπί που πηγαίνει κατευθείαν στη σωστή καρτέλα/ρύθμιση).
+3. **Backup registry - καμία διεπαφή επαναφοράς**: κάθε διαγραφή registry παίρνει αυτόματο `.reg` backup
+   (`%LocalAppData%\OptimizerWpf\RegistryBackups\`) αλλά δεν υπάρχει ΚΑΜΙΑ οθόνη μέσα στην εφαρμογή να
+   δεις/επαναφέρεις παλιά backups - μόνο χειροκίνητο διπλό-κλικ στο .reg αρχείο απ' έξω. Μια απλή λίστα
+   "Ιστορικό Backup Registry" (Υγεία & Συντήρηση) με κουμπί "Επαναφορά" θα έκλεινε αυτό το κενό.
+
+### Β. Βελτιώσεις σε ήδη υπάρχουσες λειτουργίες
+4. **Startup impact, όχι μόνο πλήθος**: το `HealthScoreService.CheckStartupCount` μετράει ΜΟΝΟ αριθμό
+   εγγραφών Run (>15 = εύρημα) - το Task Manager δείχνει πραγματικό "impact" (Low/Medium/High) ανά
+   πρόγραμμα. Θα χρειαζόταν μέτρηση πραγματικού χρόνου εκκίνησης ανά διεργασία (Boot Timeline της
+   καρτέλας Προηγμένα Εργαλεία ήδη μετράει κάτι σχετικό - πιθανή επαναχρησιμοποίηση/σύνδεση).
+5. **Προγραμματισμένος (background) Πλήρης Έλεγχος Υγείας**: ήδη υπάρχει υποδομή background scheduling
+   (`AutoGamingModeService`) - θα μπορούσε να επεκταθεί σε προαιρετικό εβδομαδιαίο auto-scan με toast
+   ειδοποίηση αν βρεθούν σημαντικά ευρήματα, χωρίς να ανοίγει αυτόματα το παράθυρο (καθαρά ενημερωτικό,
+   καμία αυτόματη ενέργεια χωρίς επιβεβαίωση χρήστη - ίδια φιλοσοφία ασφάλειας με όλη την εφαρμογή).
+6. **Περισσότερες γλώσσες**: το `LanguageService` υποστηρίζει ήδη 4 γλώσσες (el/en/de/fr) με πλήρη
+   κάλυψη κλειδιών (επιβεβαιωμένο μέσω `LanguageServiceCompletenessTests`) - προσθήκη π.χ. Ισπανικών/
+   Ιταλικών θα ακολουθούσε το ίδιο, ήδη αποδεδειγμένο μοτίβο (νέο language block, ίδια keys, ίδιο test).
+7. **Αυτόματη ενημέρωση εφαρμογής**: προς το παρόν ο χρήστης πρέπει να κατεβάσει χειροκίνητα νέο
+   installer (βλ. αυτή τη συνομιλία) - ένας απλός "έλεγχος για ενημέρωση" (σύγκριση `<Version>` με GitHub
+   Releases API, ΧΩΡΙΣ αυτόματη λήψη/εγκατάσταση, μόνο ειδοποίηση + link) θα έκλεινε αυτό το κενό χωρίς
+   να προσθέσει ρίσκο σιωπηλής αυτο-ενημέρωσης.
+
+### Γ. Νέες προσθήκες (δεν υπάρχουν καθόλου ακόμα)
+8. **Εύρεση διπλότυπων αρχείων**: κοινό χαρακτηριστικό ανταγωνιστικών εργαλείων (CCleaner/PC Manager) -
+   σάρωση επιλεγμένου φακέλου/δίσκου, hash-based σύγκριση, χειροκίνητη επιβεβαίωση πριν διαγραφή (ΠΟΤΕ
+   αυτόματη - ίδια αρχή με όλες τις υπόλοιπες καταστροφικές ενέργειες της εφαρμογής).
+9. **Mini widget / system tray live view**: μικρό αναδυόμενο πλαίσιο από το tray icon με ζωντανό
+   CPU/RAM/δίκτυο, χωρίς να χρειάζεται άνοιγμα ολόκληρου του κύριου παραθύρου - το `NetworkTrafficService`
+   (ETW-based, v4.3.5) ήδη παρέχει τα δεδομένα δικτύου που θα χρειαζόταν.
+10. **Έλεγχος τείχους προστασίας/ανοιχτών θυρών**: επέκταση της καρτέλας Δίκτυο & Ασφάλεια με λίστα
+    ενεργών κανόνων τείχους προστασίας που επιτρέπουν εισερχόμενη κίνηση (`netsh advfirewall firewall
+    show rule`) - καθαρά ενημερωτικό, ίδιο πνεύμα ασφάλειας με τα υπόλοιπα Network εργαλεία.
+11. **Εξαγωγή/εισαγωγή ΠΛΗΡΟΥΣ προφίλ ρυθμίσεων**: υπάρχει ήδη export/import προφίλ tweaks
+    (`Tweaks_ExportProfile`/`ImportProfile`) - θα μπορούσε να επεκταθεί σε ΠΛΗΡΕΣ προφίλ εφαρμογής
+    (καρφιτσωμένες συντομεύσεις, θέμα, γλώσσα, ρυθμίσεις sidebar) για εύκολη μεταφορά σε νέο PC.
+
+---
+
 
 **Τρέχουσα έκδοση:** v2.8.0 Final (βλ. `$global:versionHistory["2.8.0"]` - **ΠΡΩΤΗ ζωντανή, στιγμιότυπο-επιβεβαιωμένη διόρθωση PC Manager skin**: το περιεχόμενο κάθε καρτέλας πλέον επεκτείνεται δυναμικά να γεμίζει το διαθέσιμο πλάτος όταν το rail είναι ενεργό, αντί για σταθερό πλάτος (βλ. `Update-SidebarDockLayout`, μεταβλητή `$pcMgrContentW`). Επίσης: νέο πλαίσιο στις πρώτες ρυθμίσεις της καρτέλας Επιπλέον Ρυθμίσεις (`$cardMainTweaks`), διόρθωση περιθωρίου κουμπιού "Προσθήκη Νέας Επιλογής". Προηγούμενη: v2.7.0 Final - επαλήθευση/σκλήρυνση 4 σημείων χωρίς πρόσβαση σε live Windows (SDI timeout, letterbox MinimumSize, PC Manager rail label MeasureString, glass-background crop math). Πριν: v2.6.0 Final - ανίχνευση Lenovo/HP OEM. Πριν: v2.5.0 Final - **letterbox μεγιστοποίηση/resize** (μεγάλη αλλαγή αρχιτεκτονικής - βλ. ΟΠΩΣΔΗΠΟΤΕ ενότητα 0.8 πριν αγγίξεις `$mainForm`/sidebar). §4.Α έχει την ΠΛΗΡΗ τρέχουσα λίστα εκκρεμοτήτων)
 **Αρχείο:** `Optimizer.ps1` (~18.300 γραμμές, ~2.34MB, PowerShell + WinForms, single-file GUI εφαρμογή)

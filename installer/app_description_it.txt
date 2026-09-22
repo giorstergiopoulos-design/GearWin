@@ -1,0 +1,55 @@
+GearWin - Complete PC Care
+
+Strumenti completi per mantenere, pulire e migliorare il tuo PC.
+
+Uno strumento di manutenzione e ottimizzazione gratuito e open-source per Windows 11, creato per
+riunire in un unico posto tutto ciò di cui un utente ha bisogno per mantenere il proprio PC veloce,
+pulito, sicuro e sotto il proprio controllo - basta cercare tra decine di strumenti separati o
+modificare manualmente il registro di Windows.
+
+L'app è organizzata in 8 schede:
+
+* Home - Panoramica del tuo PC a colpo d'occhio: punteggio di salute del sistema (con un grafico
+  di tendenza e un badge di salute del disco S.M.A.R.T.), azioni di manutenzione rapida, analisi
+  dello spazio su disco e stato della connessione di rete con un grafico del throughput in tempo
+  reale.
+
+* Ottimizzazione - Pulizia dei file temporanei/inutili, gestione dell'avvio, piani di alimentazione,
+  manutenzione settimanale programmata e aggiornamenti dei driver da più fonti (Windows Update,
+  Catalogo di Microsoft Update, AMD/NVIDIA/Dell/SDIO).
+
+* Salute del Sistema - Controlli di salute di disco/memoria/file system (SFC/DISM/CHKDSK), un
+  Registry Cleaner con backup automatico e cronologia di ripristino, analisi dello spazio su disco
+  per categoria, e un Controllo Salute completo in stile PC Manager con un pulsante "Correggi Tutto"
+  con un clic.
+
+* Rete e Sicurezza - Diagnostica di rete, porte aperte/in ascolto, impostazioni DNS, Windows
+  Defender, blocco della telemetria, e tutti gli strumenti sulla privacy in un'unica sezione.
+
+* Impostazioni Aggiuntive - Decine di ottimizzazioni di interfaccia/prestazioni/privacy di Windows,
+  attivabili con un clic, con ripristino sicuro al valore originale, voci personalizzate del menu
+  contestuale, e profili di impostazioni con nome o basati su file che puoi salvare e tra cui
+  passare istantaneamente.
+
+* Rimozione Bloatware - Rimuovi in sicurezza le app preinstallate di cui non hai bisogno, con
+  l'opzione di reinstallarle, oltre all'installazione con un clic di app consigliate tramite winget.
+
+* Strumenti Avanzati - Manutenzione completa del sistema, funzionalità opzionali di Windows,
+  ricerca di file duplicati, pulizia dei dispositivi "fantasma", e una cassetta degli attrezzi di
+  Windows con accesso rapido agli strumenti integrati.
+
+* Sistema - Dettaglio completo di hardware/SO ("Il Mio Dispositivo") con esportazione PDF, gestione
+  di avvio/processi/servizi, benchmark della velocità del disco, e punti di ripristino.
+
+Extra: un'icona nella system tray con azioni rapide (Pulizia Rapida, Controllo Salute, mini popup
+in tempo reale di CPU/RAM/rete) e un widget desktop opzionale sempre visibile, 21 temi visivi con
+modalità chiara/scura e sfondi animati, un aspetto "Windows Classic" e "Microsoft PC Manager", e il
+rilevamento automatico della lingua di visualizzazione di Windows al primo avvio.
+
+Supporta completamente 14 lingue (greco, inglese, tedesco, francese, spagnolo, italiano, russo,
+cinese, giapponese, portoghese, coreano, turco, arabo, hindi), ed è distribuito gratuitamente sotto
+Licenza MIT. Alcune funzionalità individuali si basano su librerie open-source separate con le
+proprie licenze (vedi la pagina della Licenza di questa installazione) - dettagli completi nella
+scheda Guida > Licenza dell'app stessa.
+
+Fai clic su "Avanti" per continuare l'installazione.

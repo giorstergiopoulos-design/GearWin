@@ -1,0 +1,65 @@
+<UserControl x:Class="OptimizerWpf.Views.HardwareChipIcon"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             mc:Ignorable="d" d:DesignWidth="120" d:DesignHeight="80" x:Name="Root">
+    <!-- Ρητό αίτημα χρήστη: τα εικονίδια των πλακιδίων (CPU/RAM/GPU/δίσκοι) "σαν κουμπιά παιδικά" -
+         αντικαθίστανται με ένα chip-die μοτίβο (σκούρο PCB σώμα, χρυσές ακίδες στις γωνίες/άκρες,
+         ασημί "die" πλάκα, λαμπερή ετικέτα με το ίδιο effet glow όπως στα δείγματα εικόνων που έστειλε
+         ο χρήστης) - ΕΝΑ επαναχρησιμοποιήσιμο control, παραμετροποιείται με Label/Accent ανά χρήση
+         (CPU/GPU τετράγωνο, RAM/SSD/HDD/USB/NVMe επιμήκες - το ίδιο μοτίβο, βλ. HomeView.xaml). -->
+    <Viewbox Stretch="Fill">
+        <Canvas Width="120" Height="80">
+            <!-- Σώμα PCB - σκούρο πράσινο/accent διαγώνιο gradient -->
+            <Rectangle Width="120" Height="80" RadiusX="14" RadiusY="14">
+                <Rectangle.Fill>
+                    <LinearGradientBrush StartPoint="0,0" EndPoint="1,1">
+                        <GradientStop Color="#FF0B2E1C" Offset="0"/>
+                        <GradientStop Color="#FF124A2A" Offset="1"/>
+                    </LinearGradientBrush>
+                </Rectangle.Fill>
+            </Rectangle>
+
+            <!-- Χρυσές γωνιακές ακίδες (όπως στα δείγματα) -->
+            <Path Data="M 4,4 L 18,4 L 4,18 Z" Fill="#FFD9A441"/>
+            <Path Data="M 116,4 L 102,4 L 116,18 Z" Fill="#FFD9A441"/>
+            <Path Data="M 4,76 L 18,76 L 4,62 Z" Fill="#FFD9A441"/>
+            <Path Data="M 116,76 L 102,76 L 116,62 Z" Fill="#FFD9A441"/>
+
+            <!-- Ακίδες πάνω/κάτω άκρου -->
+            <Rectangle Canvas.Left="26" Canvas.Top="-3" Width="4" Height="7" Fill="#FFD9A441"/>
+            <Rectangle Canvas.Left="40" Canvas.Top="-3" Width="4" Height="7" Fill="#FFD9A441"/>
+            <Rectangle Canvas.Left="54" Canvas.Top="-3" Width="4" Height="7" Fill="#FFD9A441"/>
+            <Rectangle Canvas.Left="68" Canvas.Top="-3" Width="4" Height="7" Fill="#FFD9A441"/>
+            <Rectangle Canvas.Left="82" Canvas.Top="-3" Width="4" Height="7" Fill="#FFD9A441"/>
+            <Rectangle Canvas.Left="26" Canvas.Top="76" Width="4" Height="7" Fill="#FFD9A441"/>
+            <Rectangle Canvas.Left="40" Canvas.Top="76" Width="4" Height="7" Fill="#FFD9A441"/>
+            <Rectangle Canvas.Left="54" Canvas.Top="76" Width="4" Height="7" Fill="#FFD9A441"/>
+            <Rectangle Canvas.Left="68" Canvas.Top="76" Width="4" Height="7" Fill="#FFD9A441"/>
+            <Rectangle Canvas.Left="82" Canvas.Top="76" Width="4" Height="7" Fill="#FFD9A441"/>
+
+            <!-- Ασημί "die" πλάκα στο κέντρο -->
+            <Rectangle Canvas.Left="16" Canvas.Top="14" Width="88" Height="52" RadiusX="8" RadiusY="8">
+                <Rectangle.Fill>
+                    <LinearGradientBrush StartPoint="0,0" EndPoint="0,1">
+                        <GradientStop Color="#FFE8EDF2" Offset="0"/>
+                        <GradientStop Color="#FFB9C2CC" Offset="0.5"/>
+                        <GradientStop Color="#FF8B95A0" Offset="1"/>
+                    </LinearGradientBrush>
+                </Rectangle.Fill>
+            </Rectangle>
+            <!-- Γυάλινη ανταύγεια πάνω στο die -->
+            <Path Data="M 20,16 L 60,16 L 40,30 L 20,30 Z" Fill="#33FFFFFF"/>
+
+            <!-- Λαμπερή ετικέτα (glow effect ίδιο πνεύμα με τα δείγματα εικόνων) -->
+            <TextBlock x:Name="TxtLabel" Canvas.Left="0" Canvas.Top="26" Width="120" Text="{Binding Label, ElementName=Root}"
+                       FontSize="26" FontWeight="Bold" HorizontalAlignment="Center" TextAlignment="Center"
+                       Foreground="{Binding Accent, ElementName=Root}">
+                <TextBlock.Effect>
+                    <DropShadowEffect ShadowDepth="0" BlurRadius="10" Opacity="0.95" Color="{Binding Accent.Color, ElementName=Root}"/>
+                </TextBlock.Effect>
+            </TextBlock>
+        </Canvas>
+    </Viewbox>
+</UserControl>

@@ -17,44 +17,49 @@ namespace OptimizerWpf.Services
     {
         public static HealthResult Compute()
         {
-            var issues = new List<HealthIssue>();
-            var score = 100;
+            var checks = new Func<(int Delta, HealthIssue? Issue)>[]
+            {
+                CheckSystemDriveSpace,
+                CheckPendingReboot,
+                CheckDefender,
+                CheckStartupCount,
+                CheckRestorePoints,
+            };
 
-            score += CheckSystemDriveSpace(issues);
-            score += CheckPendingReboot(issues);
-            score += CheckDefender(issues);
-            score += CheckStartupCount(issues);
-            score += CheckRestorePoints(issues);
+            // ΝΕΟ - βελτίωση απόδοσης: οι 5 έλεγχοι είναι πλήρως ανεξάρτητοι μεταξύ τους - κανένας δεν
+            // διαβάζει το αποτέλεσμα κάποιου άλλου. Δύο από αυτούς (Defender, Restore Points) κάνουν
+            // WMI ερωτήματα που μπορούν να πάρουν αισθητό χρόνο· τρέχοντάς τους παράλληλα αντί για
+            // σειριακά, ο συνολικός χρόνος καθορίζεται από τον ΠΙΟ αργό έλεγχο αντί από το άθροισμα
+            // όλων. AsOrdered() διατηρεί την ίδια σειρά ευρημάτων με πριν (σειριακά) για προβλέψιμη
+            // εμφάνιση, χωρίς επιπλέον κόστος αφού είναι ήδη μόνο 5 στοιχεία.
+            var results = checks.AsParallel().AsOrdered().Select(check => check()).ToList();
+
+            var score = 100 + results.Sum(r => r.Delta);
+            var issues = results.Where(r => r.Issue != null).Select(r => r.Issue!).ToList();
 
             score = Math.Max(0, Math.Min(100, score));
             return new HealthResult(score, issues);
         }
 
-        private static int CheckSystemDriveSpace(List<HealthIssue> issues)
+        private static (int Delta, HealthIssue? Issue) CheckSystemDriveSpace()
         {
             try
             {
                 var sysRoot = Path.GetPathRoot(Environment.SystemDirectory) ?? "C:\\";
                 var drive = new DriveInfo(sysRoot);
-                if (!drive.IsReady || drive.TotalSize <= 0) return 0;
+                if (!drive.IsReady || drive.TotalSize <= 0) return (0, null);
 
                 var freePct = Math.Round(100.0 * drive.TotalFreeSpace / drive.TotalSize);
                 if (freePct < 10)
-                {
-                    issues.Add(new HealthIssue("Ο δίσκος συστήματος είναι σχεδόν γεμάτος (λιγότερο από 10% ελεύθερο).", "Storage"));
-                    return -25;
-                }
+                    return (-25, new HealthIssue(LanguageService.T("HealthScore_DiskAlmostFull"), "Storage"));
                 if (freePct < 20)
-                {
-                    issues.Add(new HealthIssue("Ο ελεύθερος χώρος στον δίσκο συστήματος είναι χαμηλός (λιγότερο από 20%).", "Storage"));
-                    return -10;
-                }
+                    return (-10, new HealthIssue(LanguageService.T("HealthScore_DiskLowSpace"), "Storage"));
             }
             catch { /* drive can be unready mid-check - skip, matches the WinForms try/catch-empty pattern */ }
-            return 0;
+            return (0, null);
         }
 
-        private static int CheckPendingReboot(List<HealthIssue> issues)
+        private static (int Delta, HealthIssue? Issue) CheckPendingReboot()
         {
             // v2.8.2 root-cause fix carried over from Optimizer.ps1: PendingFileRenameOperations was
             // live-verified to be a generic delayed-file-cleanup mechanism used by dozens of unrelated
@@ -69,16 +74,13 @@ namespace OptimizerWpf.Services
                     @"SOFTWARE\Microsoft\Windows\CurrentVersion\WindowsUpdate\Auto Update\RebootRequired") != null;
 
                 if (cbsPending || wuPending)
-                {
-                    issues.Add(new HealthIssue("Εκκρεμεί επανεκκίνηση για να ολοκληρωθούν πρόσφατες ενημερώσεις.", "Restart"));
-                    return -10;
-                }
+                    return (-10, new HealthIssue(LanguageService.T("HealthScore_RebootPending"), "Restart"));
             }
             catch { }
-            return 0;
+            return (0, null);
         }
 
-        private static int CheckDefender(List<HealthIssue> issues)
+        private static (int Delta, HealthIssue? Issue) CheckDefender()
         {
             try
             {
@@ -87,10 +89,10 @@ namespace OptimizerWpf.Services
                 using var searcher = new ManagementObjectSearcher(defenderScope, new ObjectQuery("SELECT RealTimeProtectionEnabled FROM MSFT_MpComputerStatus"));
                 using var results = searcher.Get();
                 var status = results.Cast<ManagementBaseObject>().FirstOrDefault();
-                if (status == null) return 0;
+                if (status == null) return (0, null);
 
                 var realTimeOn = (bool)(status["RealTimeProtectionEnabled"] ?? true);
-                if (realTimeOn) return 0;
+                if (realTimeOn) return (0, null);
 
                 // Real-time protection is off - check whether another active AV explains it (Windows
                 // Security Center only allows one active real-time AV at a time by design).
@@ -117,19 +119,17 @@ namespace OptimizerWpf.Services
 
                 if (otherAvName != null)
                 {
-                    issues.Add(new HealthIssue(
-                        $"Η προστασία πραγματικού χρόνου του Windows Defender είναι απενεργοποιημένη επειδή είναι ενεργό άλλο antivirus: {otherAvName} (αναμενόμενη συμπεριφορά Windows - δεν χρειάζεται διόρθωση).",
+                    return (-5, new HealthIssue(
+                        $"{LanguageService.T("HealthScore_DefenderOtherAvPrefix")}{otherAvName}{LanguageService.T("HealthScore_DefenderOtherAvSuffix")}",
                         "DefenderOtherAV"));
-                    return -5;
                 }
 
-                issues.Add(new HealthIssue("Η προστασία πραγματικού χρόνου του Windows Defender είναι απενεργοποιημένη.", "Defender"));
-                return -20;
+                return (-20, new HealthIssue(LanguageService.T("HealthScore_DefenderOff"), "Defender"));
             }
-            catch { return 0; }
+            catch { return (0, null); }
         }
 
-        private static int CheckStartupCount(List<HealthIssue> issues)
+        private static (int Delta, HealthIssue? Issue) CheckStartupCount()
         {
             try
             {
@@ -146,15 +146,14 @@ namespace OptimizerWpf.Services
 
                 if (startupCount > 15)
                 {
-                    issues.Add(new HealthIssue($"Πολλές εφαρμογές εκκίνησης ({startupCount}) - επιβραδύνουν την εκκίνηση των Windows.", "Startup"));
-                    return -10;
+                    return (-10, new HealthIssue($"{LanguageService.T("HealthScore_TooManyStartupPrefix")}{startupCount}{LanguageService.T("HealthScore_TooManyStartupSuffix")}", "Startup"));
                 }
             }
             catch { }
-            return 0;
+            return (0, null);
         }
 
-        private static int CheckRestorePoints(List<HealthIssue> issues)
+        private static (int Delta, HealthIssue? Issue) CheckRestorePoints()
         {
             try
             {
@@ -170,19 +169,15 @@ namespace OptimizerWpf.Services
                 {
                     var lastRp = creationTimes.Max();
                     if ((DateTime.Now - lastRp).TotalDays > 30)
-                    {
-                        issues.Add(new HealthIssue("Δεν υπάρχει πρόσφατο Σημείο Επαναφοράς (πάνω από 30 μέρες).", "RestorePoint"));
-                        return -5;
-                    }
+                        return (-5, new HealthIssue(LanguageService.T("HealthScore_NoRecentRestorePoint"), "RestorePoint"));
                 }
                 else
                 {
-                    issues.Add(new HealthIssue("Δεν βρέθηκε κανένα Σημείο Επαναφοράς συστήματος.", "RestorePoint"));
-                    return -10;
+                    return (-10, new HealthIssue(LanguageService.T("HealthScore_NoRestorePointFound"), "RestorePoint"));
                 }
             }
             catch { }
-            return 0;
+            return (0, null);
         }
     }
 }

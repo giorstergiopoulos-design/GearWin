@@ -1,0 +1,42 @@
+<Window x:Class="OptimizerWpf.Views.TrayPopupWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:tr="clr-namespace:OptimizerWpf"
+        mc:Ignorable="d"
+        Title="GearWin - Complete PC Care" Height="180" Width="260"
+        WindowStyle="None" ResizeMode="NoResize" ShowInTaskbar="False" Topmost="True"
+        Deactivated="Window_Deactivated" Loaded="Window_Loaded"
+        Background="{DynamicResource MainBgBrush}">
+    <!-- ΝΕΟ - roadmap "Mini widget / system tray live view" - μικρό, borderless popup (χωρίς
+         Taskbar entry, πάντα από πάνω) που ανοίγει από αριστερό κλικ στο tray icon
+         (TrayIconService) - κλείνει αυτόματα μόλις χάσει το focus (π.χ. κλικ οπουδήποτε αλλού),
+         ίδιο μοτίβο UX με τα notification popups των Windows. Τοποθετείται κάτω-δεξιά της
+         διαθέσιμης οθόνης (πάνω από τη γραμμή εργασιών) στο Window_Loaded - καμία ακριβής
+         συντεταγμένη του ίδιου του tray icon δεν είναι διαθέσιμη χωρίς επιπλέον P/Invoke, αυτή η
+         θέση είναι η καθιερωμένη, απλή προσέγγιση που χρησιμοποιούν τα περισσότερα tray widgets. -->
+    <Border BorderBrush="{DynamicResource CardBorderBrush}" BorderThickness="1" CornerRadius="8">
+        <StackPanel Margin="14">
+            <TextBlock Text="{tr:Tr Tray_PopupTitle}" FontWeight="Bold" FontSize="13" Foreground="{DynamicResource TextBrush}" Margin="0,0,0,10"/>
+
+            <Grid Margin="0,0,0,8">
+                <Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions>
+                <TextBlock Text="CPU" Foreground="{DynamicResource SubTextBrush}"/>
+                <TextBlock Grid.Column="1" x:Name="TxtCpu" Text="--%" FontWeight="SemiBold" Foreground="{DynamicResource TextBrush}"/>
+            </Grid>
+            <Grid Margin="0,0,0,8">
+                <Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions>
+                <TextBlock Text="RAM" Foreground="{DynamicResource SubTextBrush}"/>
+                <TextBlock Grid.Column="1" x:Name="TxtRam" Text="--%" FontWeight="SemiBold" Foreground="{DynamicResource TextBrush}"/>
+            </Grid>
+            <Grid Margin="0,0,0,12">
+                <Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions>
+                <TextBlock Text="{tr:Tr Tray_Network}" Foreground="{DynamicResource SubTextBrush}"/>
+                <TextBlock Grid.Column="1" x:Name="TxtNetwork" Text="..." FontWeight="SemiBold" Foreground="{DynamicResource TextBrush}"/>
+            </Grid>
+
+            <Button Content="{tr:Tr Tray_OpenMain}" Style="{StaticResource FlatButtonStyle}" Height="34" Click="BtnOpenMain_Click"/>
+        </StackPanel>
+    </Border>
+</Window>

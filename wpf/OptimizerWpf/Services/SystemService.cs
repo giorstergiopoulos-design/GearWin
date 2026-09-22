@@ -53,26 +53,89 @@ namespace OptimizerWpf.Services
             return items;
         }
 
-        public static void SetStartupItemEnabled(StartupItem item, bool enabled)
+        // ΔΙΟΡΘΩΣΗ (εξονυχιστικός έλεγχος εντόπισε): void, χωρίς try/catch - ένα κλειδωμένο/απαγορευμένο
+        // HKLM κλειδί (π.χ. χωρίς αρκετά δικαιώματα σε ασυνήθιστη διαμόρφωση) θα πετούσε αδιαχείριστη
+        // εξαίρεση. Επιστρέφει τώρα bool ώστε το UI να μπορεί να ενημερώσει/επαναφέρει τον διακόπτη.
+        public static bool SetStartupItemEnabled(StartupItem item, bool enabled)
         {
-            var hive = item.Location == "HKCU" ? Registry.CurrentUser : Registry.LocalMachine;
-            using var key = hive.OpenSubKey(RunKeyPath, writable: true);
-            if (key == null) return;
-            if (enabled)
+            try
             {
-                var disabledName = DisabledPrefix + item.Name;
-                var value = key.GetValue(disabledName) as string;
-                if (value == null) return;
-                key.SetValue(item.Name, value);
-                key.DeleteValue(disabledName, throwOnMissingValue: false);
+                var hive = item.Location == "HKCU" ? Registry.CurrentUser : Registry.LocalMachine;
+                using var key = hive.OpenSubKey(RunKeyPath, writable: true);
+                if (key == null) return false;
+                if (enabled)
+                {
+                    var disabledName = DisabledPrefix + item.Name;
+                    var value = key.GetValue(disabledName) as string;
+                    if (value == null) return false;
+                    key.SetValue(item.Name, value);
+                    key.DeleteValue(disabledName, throwOnMissingValue: false);
+                }
+                else
+                {
+                    var value = key.GetValue(item.Name) as string;
+                    if (value == null) return false;
+                    key.SetValue(DisabledPrefix + item.Name, value);
+                    key.DeleteValue(item.Name, throwOnMissingValue: false);
+                }
+                return true;
+            }
+            catch
+            {
+                return false;
+            }
+        }
+
+        // ΝΕΟ - roadmap "Εκτίμηση χρόνου εκκίνησης" - "Πόσο καθυστερεί κάθε εφαρμογή εκκίνησης την
+        // είσοδο στα Windows, όχι μόνο on/off". ΣΗΜΕΙΩΣΗ ΕΙΛΙΚΡΙΝΕΙΑΣ (ίδιο πνεύμα με το Boot Timeline/
+        // S.M.A.R.T. αλλού στην εφαρμογή): καμία επίσημη Windows API εκθέτει το per-app "Startup
+        // impact" που δείχνει η Διαχείριση Εργασιών - υπολογίζεται εδώ μια ΠΑΡΑΤΗΡΟΥΜΕΝΗ εκτίμηση από
+        // την ΤΡΕΧΟΥΣΑ συνεδρία: πόσο μετά την εκκίνηση του explorer.exe (proxy για "μπήκα στα
+        // Windows") ξεκίνησε η αντίστοιχη διεργασία - ΟΧΙ εγγυημένη τιμή για την ΕΠΟΜΕΝΗ εκκίνηση,
+        // μόνο ό,τι πραγματικά καταγράφηκε τώρα. null όταν η διεργασία δεν βρέθηκε τρέχουσα.
+        public static Dictionary<string, TimeSpan?> GetStartupDelayEstimates(IReadOnlyList<StartupItem> items)
+        {
+            var result = new Dictionary<string, TimeSpan?>();
+            DateTime? explorerStart;
+            try { explorerStart = Process.GetProcessesByName("explorer").FirstOrDefault()?.StartTime; }
+            catch { explorerStart = null; }
+
+            foreach (var item in items)
+            {
+                result[item.Name] = null;
+                if (explorerStart == null) continue;
+
+                var exeName = ExtractExeName(item.Command);
+                if (exeName == null) continue;
+
+                try
+                {
+                    var proc = Process.GetProcessesByName(exeName).FirstOrDefault();
+                    if (proc == null) continue;
+                    var delta = proc.StartTime - explorerStart.Value;
+                    if (delta > TimeSpan.Zero && delta < TimeSpan.FromMinutes(5)) result[item.Name] = delta;
+                }
+                catch { /* access-denied σε process ιδιοκτησίας άλλου χρήστη, ή η διεργασία μόλις τερμάτισε */ }
+            }
+            return result;
+        }
+
+        private static string? ExtractExeName(string command)
+        {
+            if (string.IsNullOrWhiteSpace(command)) return null;
+            var trimmed = command.Trim();
+            string path;
+            if (trimmed.StartsWith("\""))
+            {
+                var end = trimmed.IndexOf('"', 1);
+                path = end > 0 ? trimmed[1..end] : trimmed.TrimStart('"');
             }
             else
             {
-                var value = key.GetValue(item.Name) as string;
-                if (value == null) return;
-                key.SetValue(DisabledPrefix + item.Name, value);
-                key.DeleteValue(item.Name, throwOnMissingValue: false);
+                path = trimmed.Split(' ')[0];
             }
+            try { return Path.GetFileNameWithoutExtension(path); }
+            catch { return null; }
         }
 
         // ===== Διεργασίες Συστήματος =====
@@ -101,6 +164,44 @@ namespace OptimizerWpf.Services
             catch { return false; }
         }
 
+        // ===== "Λειτουργία Ύπνου" Παρασκηνίου (v3.2.0) =====
+        // ΔΙΟΡΘΩΣΗ (χρήστης ζήτησε μετά από web research: "sleep mode αναστολή background apps για
+        // άμεση ελευθέρωση RAM, στυλ AVG TuneUp"). ΣΗΜΕΙΩΣΗ ΕΙΛΙΚΡΙΝΕΙΑΣ: ΔΕΝ αναστέλλει/παγώνει
+        // πραγματικά τις διεργασίες (SuspendThread ανά νήμα είναι ρίσκο - μπορεί να "παγώσει" μόνιμα
+        // ένα app αν κάτι πάει στραβά όσο είναι σε αναστολή, ή να σπάσει IPC/handles που κρατάει
+        // ανοιχτά). Αντ' αυτού καλεί το EmptyWorkingSet (psapi.dll) - ΕΠΙΣΗΜΗ, τεκμηριωμένη Win32 API
+        // που λέει στα Windows να σελιδοποιήσει (page out) τη ΜΗ ενεργά χρησιμοποιούμενη μνήμη μιας
+        // διεργασίας· η ίδια η διεργασία ΣΥΝΕΧΙΖΕΙ να τρέχει κανονικά, ανεπηρέαστη - απλά η ήδη
+        // αδρανής μνήμη της ελευθερώνεται στο σύστημα (θα την ξαναπάρει αν τη χρειαστεί). Ίδια τεχνική
+        // με αυτή που χρησιμοποιούν εργαλεία σαν το AVG TuneUp/Wise Memory Optimizer "under the hood".
+        public static Task<(int ProcessCount, double FreedMb)> FreeBackgroundMemoryAsync() => Task.Run(() =>
+        {
+            var currentPid = Environment.ProcessId;
+            var count = 0;
+            long freedBytes = 0;
+            foreach (var p in Process.GetProcesses())
+            {
+                try
+                {
+                    if (p.Id == currentPid || CriticalProcessNames.Contains(p.ProcessName)) continue;
+                    var before = SafeWorkingSet(p);
+                    if (before <= 0) continue;
+                    if (!NativeMethods.EmptyWorkingSet(p.Handle)) continue;
+                    p.Refresh();
+                    var after = SafeWorkingSet(p);
+                    if (after < before) { freedBytes += before - after; count++; }
+                }
+                catch { /* διεργασία σε άλλο επίπεδο δικαιωμάτων/ήδη τερματισμένη - αγνοείται, συνεχίζει με τις υπόλοιπες */ }
+            }
+            return (count, Math.Round(freedBytes / 1024.0 / 1024.0, 1));
+        });
+
+        private static class NativeMethods
+        {
+            [System.Runtime.InteropServices.DllImport("psapi.dll", SetLastError = true)]
+            public static extern bool EmptyWorkingSet(IntPtr hProcess);
+        }
+
         // ===== Αποθηκευτικός Χώρος - διπλότυπα/μεγάλα αρχεία, ΜΟΝΟ προσωπικοί φάκελοι =====
 
         private static IEnumerable<string> PersonalFolders()
@@ -119,37 +220,98 @@ namespace OptimizerWpf.Services
             }
         }
 
-        public static Task<IReadOnlyList<(string Path, double SizeMb)>> FindDuplicatesAsync() => Task.Run(() =>
+        public static Task<IReadOnlyList<(string Path, double SizeMb, DateTime LastWriteTime)>> FindLargeFilesAsync() => FindLargeFilesInAsync(PersonalFolders());
+
+        // ΔΙΟΡΘΩΣΗ (v3.2.0, χρήστης ζήτησε μετά από web research: "cloud cleanup για Google Drive/
+        // Dropbox, ίδιο πνεύμα με το OneDrive") - το OneDrive's "ελευθέρωση χώρου" λειτουργεί μέσω
+        // attrib.exe +U (μετατροπή σε cloud-only placeholder), μηχανισμός ΑΠΟΚΛΕΙΣΤΙΚΑ του OneDrive/
+        // NTFS (Files On-Demand) - το Google Drive και το Dropbox ΔΕΝ εκθέτουν το ίδιο απλό
+        // μηχανισμό (κάθε ένα έχει δικό του, διαφορετικό "smart sync"). Αντί να προσποιηθούμε κάτι
+        // που δεν υπάρχει, επαναχρησιμοποιούνται τα ΗΔΗ υπάρχοντα εργαλεία εύρεσης διπλότυπων/μεγάλων
+        // αρχείων, με πεδίο σάρωσης τον τοπικό φάκελο συγχρονισμού του καθενός - ο χρήστης βλέπει τι
+        // πιάνει χώρο και το διαγράφει ο ίδιος (η διαγραφή συγχρονίζεται φυσιολογικά στο cloud μετά).
+        private static Task<IReadOnlyList<(string Path, double SizeMb, DateTime LastWriteTime)>> FindDuplicatesInAsync(IEnumerable<string> roots) => Task.Run(() =>
         {
-            var files = PersonalFolders().SelectMany(SafeEnumerateFiles)
+            var files = roots.SelectMany(SafeEnumerateFiles)
                 .Select(f => new FileInfo(f))
                 .Where(fi => { try { return fi.Length is > 0 and < 500L * 1024 * 1024; } catch { return false; } })
                 .ToList();
 
             var byLength = files.GroupBy(f => f.Length).Where(g => g.Count() > 1);
-            var results = new List<(string, double)>();
+            var results = new List<(string, double, DateTime)>();
             foreach (var group in byLength)
             {
                 var byHash = group.GroupBy(f => ComputeHash(f.FullName)).Where(g => g.Key != null && g.Count() > 1);
                 foreach (var hashGroup in byHash)
                 {
-                    foreach (var f in hashGroup) results.Add((f.FullName, Math.Round(f.Length / 1024.0 / 1024.0, 2)));
+                    foreach (var f in hashGroup) results.Add((f.FullName, Math.Round(f.Length / 1024.0 / 1024.0, 2), f.LastWriteTime));
                 }
             }
-            return (IReadOnlyList<(string, double)>)results;
+            return (IReadOnlyList<(string, double, DateTime)>)results;
         });
 
-        public static Task<IReadOnlyList<(string Path, double SizeMb)>> FindLargeFilesAsync() => Task.Run(() =>
+        private static Task<IReadOnlyList<(string Path, double SizeMb, DateTime LastWriteTime)>> FindLargeFilesInAsync(IEnumerable<string> roots) => Task.Run(() =>
         {
-            var results = PersonalFolders().SelectMany(SafeEnumerateFiles)
+            var results = roots.SelectMany(SafeEnumerateFiles)
                 .Select(f => { try { return new FileInfo(f); } catch { return null; } })
                 .Where(fi => fi != null)
                 .OrderByDescending(fi => fi!.Length)
                 .Take(50)
-                .Select(fi => (fi!.FullName, Math.Round(fi.Length / 1024.0 / 1024.0, 2)))
+                .Select(fi => (fi!.FullName, Math.Round(fi.Length / 1024.0 / 1024.0, 2), fi.LastWriteTime))
                 .ToList();
-            return (IReadOnlyList<(string, double)>)results;
+            return (IReadOnlyList<(string, double, DateTime)>)results;
         });
+
+        // Επίσημα τεκμηριωμένος τρόπος εντοπισμού του τοπικού φακέλου Dropbox - το ίδιο το Dropbox
+        // γράφει info.json με το πραγματικό μονοπάτι (μπορεί να έχει μετακινηθεί από τον χρήστη).
+        public static string? FindDropboxFolder()
+        {
+            try
+            {
+                foreach (var infoPath in new[]
+                         {
+                             Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), "Dropbox", "info.json"),
+                             Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "Dropbox", "info.json"),
+                         })
+                {
+                    if (!File.Exists(infoPath)) continue;
+                    using var doc = JsonDocument.Parse(File.ReadAllText(infoPath));
+                    foreach (var account in doc.RootElement.EnumerateObject()) // "personal" / "business"
+                    {
+                        if (account.Value.TryGetProperty("path", out var pathEl))
+                        {
+                            var path = pathEl.GetString();
+                            if (!string.IsNullOrEmpty(path) && Directory.Exists(path)) return path;
+                        }
+                    }
+                }
+            }
+            catch { }
+            return null;
+        }
+
+        // ΣΗΜΕΙΩΣΗ ΕΙΛΙΚΡΙΝΕΙΑΣ: το Google Drive for Desktop δεν εκθέτει κάποιο αντίστοιχο επίσημο
+        // "info.json" - ελέγχονται οι δύο πιο συνηθισμένες περιπτώσεις: ο κλασικός φάκελος (παλιό
+        // "Backup and Sync") ή προσαρτημένος τόμος με ετικέτα "Google Drive" (τρέχουσα προεπιλογή).
+        // Αν ο χρήστης έχει αλλάξει τοποθεσία/γράμμα δίσκου, ενδέχεται να μη βρεθεί - honest fallback.
+        public static string? FindGoogleDriveFolder()
+        {
+            try
+            {
+                var classic = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.UserProfile), "Google Drive");
+                if (Directory.Exists(classic)) return classic;
+                foreach (var drive in DriveInfo.GetDrives())
+                {
+                    try { if (drive.IsReady && drive.VolumeLabel.Contains("Google Drive", StringComparison.OrdinalIgnoreCase)) return drive.RootDirectory.FullName; }
+                    catch { }
+                }
+            }
+            catch { }
+            return null;
+        }
+
+        public static Task<IReadOnlyList<(string Path, double SizeMb, DateTime LastWriteTime)>> FindDuplicatesInFolderAsync(string root) => FindDuplicatesInAsync(new[] { root });
+        public static Task<IReadOnlyList<(string Path, double SizeMb, DateTime LastWriteTime)>> FindLargeFilesInFolderAsync(string root) => FindLargeFilesInAsync(new[] { root });
 
         private static string? ComputeHash(string path)
         {
@@ -162,10 +324,31 @@ namespace OptimizerWpf.Services
             catch { return null; }
         }
 
+        // ΔΙΟΡΘΩΣΗ (εξονυχιστικός έλεγχος εντόπισε κατά τη δοκιμή του "AI"-στυλ scoring σε πραγματικό
+        // σύστημα): Directory.EnumerateFiles(root, "*", SearchOption.AllDirectories) είναι ΤΕΜΠΕΛΗΣ
+        // (lazy) - ένα UnauthorizedAccessException από απαγορευμένο/junction υποφάκελο (π.χ. "Η
+        // μουσική μου" όταν είναι reparse point με περιορισμένα δικαιώματα) πετάγεται ΜΕΣΑ στην
+        // απαρίθμηση, ΟΧΙ στην αρχική κλήση - το try/catch εδώ δεν το έπιανε καθόλου, με αποτέλεσμα
+        // αδιαχείριστη εξαίρεση να κατεβάζει τον γενικό DispatcherUnhandledException handler ενώ η
+        // Εύρεση Διπλότυπων/Μεγάλων Αρχείων έτρεχε. ΙΔΙΟ μοτίβο διόρθωσης με το QuickCleanService's
+        // DirSize αλλού στην εφαρμογή - αναδρομικός, ΑΝΑ-ΦΑΚΕΛΟ προστατευμένος περίπατος αντί για
+        // αυτό, ώστε ένας απρόσβατος υποφάκελος να παραλείπεται αντί να ρίχνει όλη τη σάρωση.
         private static IEnumerable<string> SafeEnumerateFiles(string root)
         {
-            try { return Directory.EnumerateFiles(root, "*", SearchOption.AllDirectories); }
-            catch { return Array.Empty<string>(); }
+            var results = new List<string>();
+            SafeEnumerateFilesInto(root, results);
+            return results;
+        }
+
+        private static void SafeEnumerateFilesInto(string dir, List<string> results)
+        {
+            string[] files;
+            try { files = Directory.GetFiles(dir); } catch { return; }
+            results.AddRange(files);
+
+            string[] subdirs;
+            try { subdirs = Directory.GetDirectories(dir); } catch { return; }
+            foreach (var sub in subdirs) SafeEnumerateFilesInto(sub, results);
         }
 
         // Κάδος Ανακύκλωσης, ΠΟΤΕ μόνιμη διαγραφή.
@@ -231,38 +414,40 @@ namespace OptimizerWpf.Services
 
         // ===== Βελτιστοποίηση Υπηρεσιών - curated λίστα, μόνο υπηρεσίες που ήταν ήδη Automatic =====
 
-        public static readonly IReadOnlyDictionary<string, string> SafeServicesToOptimize = new Dictionary<string, string>
+        // Property (όχι readonly field) ώστε να ξαναχτίζεται με την τρέχουσα γλώσσα κάθε φορά που
+        // ανοίγει το SystemView (ρητό αίτημα χρήστη: "μετάφρασε τα όλα").
+        public static IReadOnlyDictionary<string, string> SafeServicesToOptimize => new Dictionary<string, string>
         {
-            ["DiagTrack"] = "Διαγνωστικά & Τηλεμετρία",
+            ["DiagTrack"] = LanguageService.T("Svc_DiagTrack"),
             ["dmwappushservice"] = "WAP Push Message Routing",
             ["MapsBroker"] = "Downloaded Maps Manager",
-            ["lfsvc"] = "Υπηρεσία Τοποθεσίας Γεωγραφίας",
-            ["WbioSrvc"] = "Βιομετρική Υπηρεσία (μην αγγίζετε αν χρησιμοποιείτε βιομετρικά)",
-            ["WMPNetworkSvc"] = "Κοινή Χρήση Δικτύου Windows Media Player",
-            ["PcaSvc"] = "Βοηθός Συμβατότητας Προγράμματος",
-            ["SessionEnv"] = "Ρύθμιση Περιβάλλοντος Υπηρεσιών Απομακρυσμένης Επιφάνειας Εργασίας (μην αγγίζετε αν χρησιμοποιείτε RDP)",
-            ["TermService"] = "Υπηρεσίες Απομακρυσμένης Επιφάνειας Εργασίας (μην αγγίζετε αν χρησιμοποιείτε RDP)",
-            ["RemoteRegistry"] = "Απομακρυσμένο Μητρώο",
-            ["TapiSrv"] = "Τηλεφωνία",
-            ["TabletInputService"] = "Υπηρεσία Εισαγωγής Tablet (μην αγγίζετε αν έχετε οθόνη αφής)",
+            ["lfsvc"] = LanguageService.T("Svc_Lfsvc"),
+            ["WbioSrvc"] = LanguageService.T("Svc_Wbio"),
+            ["WMPNetworkSvc"] = LanguageService.T("Svc_Wmp"),
+            ["PcaSvc"] = LanguageService.T("Svc_Pca"),
+            ["SessionEnv"] = LanguageService.T("Svc_SessionEnv"),
+            ["TermService"] = LanguageService.T("Svc_Term"),
+            ["RemoteRegistry"] = LanguageService.T("Svc_RemoteReg"),
+            ["TapiSrv"] = LanguageService.T("Svc_Tapi"),
+            ["TabletInputService"] = LanguageService.T("Svc_Tablet"),
             ["SNMPTrap"] = "SNMP Trap",
             ["WebClient"] = "WebClient",
-            ["WerSvc"] = "Αναφορά Σφαλμάτων Windows",
-            ["Wecsvc"] = "Συλλέκτης Συμβάντων Windows",
-            ["SDRSVC"] = "Αντίγραφα Ασφαλείας Windows",
-            ["fdPHost"] = "Ανακάλυψη Συσκευών Function Discovery",
-            ["FDResPub"] = "Δημοσίευση Πόρων Function Discovery",
-            ["upnphost"] = "Οικοδεσπότης Συσκευών UPnP",
-            ["SSDPSRV"] = "Ανακάλυψη SSDP",
+            ["WerSvc"] = LanguageService.T("Svc_Wer"),
+            ["Wecsvc"] = LanguageService.T("Svc_Wecsvc"),
+            ["SDRSVC"] = LanguageService.T("Svc_Sdrsvc"),
+            ["fdPHost"] = LanguageService.T("Svc_Fdphost"),
+            ["FDResPub"] = LanguageService.T("Svc_Fdrespub"),
+            ["upnphost"] = LanguageService.T("Svc_Upnphost"),
+            ["SSDPSRV"] = LanguageService.T("Svc_Ssdp"),
             ["SysMain"] = "SysMain (Superfetch)",
-            ["TrkWks"] = "Πελάτης Παρακολούθησης Κατανεμημένων Συνδέσμων",
-            ["iphlpsvc"] = "Βοηθός IP",
-            ["MSiSCSI"] = "Πρόγραμμα Εκκίνησης Microsoft iSCSI",
-            ["WSearch"] = "Αναζήτηση Windows (μην αγγίζετε αν χρησιμοποιείτε συχνά την αναζήτηση)",
-            ["WinRM"] = "Απομακρυσμένη Διαχείριση Windows",
-            ["XblAuthManager"] = "Xbox Live Auth Manager (μην αγγίζετε αν χρησιμοποιείτε Xbox/Game Pass)",
-            ["XblGameSave"] = "Xbox Live Game Save (μην αγγίζετε αν χρησιμοποιείτε Xbox/Game Pass)",
-            ["XboxNetApiSvc"] = "Xbox Live Networking Service (μην αγγίζετε αν χρησιμοποιείτε Xbox/Game Pass)",
+            ["TrkWks"] = LanguageService.T("Svc_Trkwks"),
+            ["iphlpsvc"] = LanguageService.T("Svc_Iphlp"),
+            ["MSiSCSI"] = LanguageService.T("Svc_Msiscsi"),
+            ["WSearch"] = LanguageService.T("Svc_Wsearch"),
+            ["WinRM"] = LanguageService.T("Svc_Winrm"),
+            ["XblAuthManager"] = LanguageService.T("Svc_XblAuth"),
+            ["XblGameSave"] = LanguageService.T("Svc_XblSave"),
+            ["XboxNetApiSvc"] = LanguageService.T("Svc_XboxNet"),
         };
 
         public static Task<IReadOnlyList<ServiceRow>> LoadServicesAsync() => Task.Run(() =>
@@ -319,7 +504,7 @@ namespace OptimizerWpf.Services
             try
             {
                 var drive = new DriveInfo(driveLetter.TrimEnd('\\') + "\\");
-                if (drive.AvailableFreeSpace < 1024L * 1024 * 1024) return new BenchmarkResult(0, 0, "Ανεπαρκής ελεύθερος χώρος (χρειάζεται τουλάχιστον 1GB).");
+                if (drive.AvailableFreeSpace < 1024L * 1024 * 1024) return new BenchmarkResult(0, 0, LanguageService.T("SysSvc_InsufficientSpace"));
 
                 const int size = 256 * 1024 * 1024;
                 var buffer = new byte[size];

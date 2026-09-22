@@ -1,0 +1,55 @@
+GearWin - Complete PC Care
+
+Herramientas completas para mantener, limpiar y mejorar tu PC.
+
+Una herramienta de mantenimiento y optimización gratuita y de código abierto para Windows 11,
+creada para reunir en un solo lugar todo lo que un usuario necesita para mantener su PC rápido,
+limpio, seguro y bajo su propio control - se acabó buscar entre docenas de herramientas separadas
+o editar manualmente el registro de Windows.
+
+La aplicación está organizada en 8 pestañas:
+
+* Inicio - Vista general de tu PC de un vistazo: puntuación de salud del sistema (con un gráfico de
+  tendencia y una insignia de salud del disco S.M.A.R.T.), acciones rápidas de mantenimiento,
+  análisis del espacio en disco y estado de la conexión de red con un gráfico de rendimiento en vivo.
+
+* Optimización - Limpieza de archivos temporales/basura, gestión del inicio, planes de energía,
+  mantenimiento semanal programado y actualizaciones de controladores desde múltiples fuentes
+  (Windows Update, Catálogo de Microsoft Update, AMD/NVIDIA/Dell/SDIO).
+
+* Salud del Sistema - Comprobaciones de salud de disco/memoria/sistema de archivos (SFC/DISM/CHKDSK),
+  un limpiador de registro con copia de seguridad automática e historial de restauración, análisis
+  del espacio en disco por categoría, y una Comprobación de Salud completa al estilo PC Manager con
+  un botón de reparación total con un solo clic.
+
+* Red y Seguridad - Diagnóstico de red, puertos abiertos/en escucha, configuración de DNS, Windows
+  Defender, bloqueo de telemetría, y todas las herramientas de privacidad en una sola sección.
+
+* Ajustes - Docenas de ajustes de interfaz/rendimiento/privacidad de Windows, activables con un solo
+  clic, con restauración segura al valor original, entradas personalizadas de menú contextual, y
+  perfiles de configuración con nombre o basados en archivo que puedes guardar y alternar
+  instantáneamente.
+
+* Eliminación de Bloatware - Elimina de forma segura las apps preinstaladas que no necesitas, con la
+  opción de reinstalarlas, además de instalación con un clic de apps recomendadas mediante winget.
+
+* Herramientas Avanzadas - Mantenimiento completo del sistema, características opcionales de
+  Windows, buscador de archivos duplicados, limpieza de dispositivos "fantasma", y una caja de
+  herramientas de Windows con acceso rápido a utilidades integradas.
+
+* Sistema - Desglose completo de hardware/SO ("Mi Dispositivo") con exportación a PDF, gestión de
+  inicio/procesos/servicios, prueba de velocidad de disco y puntos de restauración.
+
+Extras: un icono en la bandeja del sistema con acciones rápidas (Limpieza Rápida, Comprobación de
+Salud, mini ventana emergente en vivo de CPU/RAM/red) y un widget de escritorio opcional siempre
+visible, 21 temas visuales con modos claro/oscuro y fondos animados, una apariencia "Windows
+Classic" y "Microsoft PC Manager", y detección automática del idioma de pantalla de Windows en el
+primer inicio.
+
+Es totalmente compatible con 14 idiomas (griego, inglés, alemán, francés, español, italiano, ruso,
+chino, japonés, portugués, coreano, turco, árabe, hindi), y se distribuye gratuitamente bajo la
+Licencia MIT. Algunas funciones individuales dependen de bibliotecas de código abierto separadas
+bajo sus propias licencias (consulta la página de Licencia de esta instalación) - todos los
+detalles en la pestaña Ayuda > Licencia de la propia aplicación.
+
+Haz clic en "Siguiente" para continuar con la instalación.

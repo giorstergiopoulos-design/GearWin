@@ -1,0 +1,58 @@
+GearWin - Complete PC Care
+
+Des outils complets pour entretenir, nettoyer et améliorer votre PC.
+
+Un outil de maintenance et d'optimisation gratuit et open source pour Windows 11, conçu pour
+réunir en un seul endroit tout ce dont un utilisateur a besoin pour garder son PC rapide, propre,
+sécurisé et sous son propre contrôle - fini la recherche parmi des dizaines d'outils séparés ou la
+modification manuelle du registre Windows.
+
+L'application est organisée en 8 onglets :
+
+* Accueil - La vue d'ensemble de votre PC en un coup d'œil : score de santé du système (avec un
+  graphique de tendance et un badge d'état S.M.A.R.T. du disque), actions de maintenance rapides,
+  analyse de l'espace disque et état de la connexion réseau avec un graphique de débit en direct.
+
+* Optimisation - Nettoyage des fichiers temporaires/inutiles, gestion du démarrage, modes
+  d'alimentation, maintenance hebdomadaire planifiée, et mises à jour de pilotes provenant de
+  plusieurs sources (Windows Update, Catalogue Microsoft Update, AMD/NVIDIA/Dell/SDIO).
+
+* Santé du Système - Vérification de la santé des disques/mémoire/système de fichiers
+  (SFC/DISM/CHKDSK), un Nettoyeur de Registre avec sauvegarde automatique et historique de
+  restauration, analyse de l'espace disque par catégorie, et une Vérification de Santé complète de
+  style PC Manager avec un « Tout Corriger » en un clic.
+
+* Réseau & Sécurité - Diagnostics réseau, ports ouverts/en écoute, paramètres DNS, Windows
+  Defender, blocage de la télémétrie et tous les outils de confidentialité regroupés en une seule
+  section.
+
+* Réglages - Des dizaines de réglages d'interface/performance/confidentialité Windows,
+  activables en un clic, avec restauration sûre de la valeur d'origine, des entrées de menu
+  contextuel personnalisées, et des profils de paramètres nommés ou basés sur des fichiers que
+  vous pouvez enregistrer et changer instantanément.
+
+* Suppression des Bloatwares - Supprimez en toute sécurité les applications préinstallées dont
+  vous n'avez pas besoin, avec possibilité de restauration, ainsi que l'installation en un clic
+  d'applications recommandées via winget.
+
+* Outils Avancés - Maintenance système complète, fonctionnalités Windows facultatives, recherche
+  de fichiers en double, nettoyage des périphériques "fantômes", et une boîte à outils Windows
+  avec accès rapide aux outils intégrés.
+
+* Système - Analyse complète du matériel/système d'exploitation (« Mon Appareil ») avec export
+  PDF, gestion du démarrage/processus/services, test de vitesse du disque, et points de
+  restauration.
+
+Extras : une icône dans la barre système avec des actions rapides (Nettoyage Rapide, Vérification
+de Santé, mini popup en direct CPU/RAM/réseau) et un widget de bureau optionnel toujours visible,
+21 thèmes visuels avec modes clair/sombre et arrière-plans animés, un skin « Windows Classic » et
+« Microsoft PC Manager », et une détection automatique de la langue d'affichage de votre Windows
+au premier lancement.
+
+Prend entièrement en charge 14 langues (grec, anglais, allemand, français, espagnol, italien,
+russe, chinois, japonais, portugais, coréen, turc, arabe, hindi), et est distribué gratuitement sous licence
+MIT. Certaines fonctionnalités individuelles reposent sur des bibliothèques open source distinctes
+sous leur propre licence (voir la page Licence de cet assistant d'installation) - détails complets
+dans l'onglet Aide > Licence de l'application elle-même.
+
+Cliquez sur « Suivant » pour continuer l'installation.

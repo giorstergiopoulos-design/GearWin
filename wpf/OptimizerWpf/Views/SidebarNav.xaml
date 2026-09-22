@@ -3,6 +3,7 @@
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:views="clr-namespace:OptimizerWpf.Views"
              mc:Ignorable="d">
     <!--
         Port ΤΟΥ ΠΡΑΓΜΑΤΙΚΟΥ μοντέρνου πλευρικού μενού του Optimizer.ps1 (Add-SidebarItem, βλ.
@@ -15,16 +16,18 @@
     -->
     <Border Background="{DynamicResource CardBgBrush}" BorderBrush="{DynamicResource CardBorderBrush}"
             BorderThickness="1" CornerRadius="8" Padding="6">
-        <ScrollViewer VerticalScrollBarVisibility="Auto">
+        <ScrollViewer VerticalScrollBarVisibility="Auto" PreviewMouseWheel="NestedScroll_PreviewMouseWheel">
             <ItemsControl x:Name="ListItems">
                 <ItemsControl.ItemTemplate>
                     <DataTemplate>
+                        <!-- Λίγο πιο συμπαγές μέγεθος (84x84 από 92x96, ρητό αίτημα χρήστη: "να χωράει
+                             ακριβώς χωρίς scrollbar") - πιο κοντά στο 86x90 του ps1 original ούτως ή άλλως. -->
                         <Button Click="Shortcut_Click" Tag="{Binding}" Style="{StaticResource FlatButtonStyle}"
-                                Width="92" Height="96" Margin="0,0,0,6" Padding="0">
+                                Width="88" Height="84" Margin="0,0,0,4" Padding="0">
                             <StackPanel HorizontalAlignment="Center" VerticalAlignment="Center">
-                                <TextBlock Text="{Binding Icon}" FontSize="28" HorizontalAlignment="Center" Margin="0,0,0,8"/>
+                                <views:HeaderGlyphIcon Kind="{Binding IconKind}" Width="24" Height="24" HorizontalAlignment="Center" Margin="0,0,0,6"/>
                                 <TextBlock Text="{Binding Label}" TextWrapping="Wrap" TextAlignment="Center"
-                                           FontSize="11" Foreground="{DynamicResource TextBrush}" Width="80"/>
+                                           FontSize="10.5" Foreground="{DynamicResource TextBrush}" Width="80"/>
                             </StackPanel>
                         </Button>
                     </DataTemplate>

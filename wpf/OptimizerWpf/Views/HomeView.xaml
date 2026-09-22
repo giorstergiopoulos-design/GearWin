@@ -3,6 +3,8 @@
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:views="clr-namespace:OptimizerWpf.Views"
+             xmlns:tr="clr-namespace:OptimizerWpf"
              mc:Ignorable="d">
     <!--
         Stage 1 vertical slice: the Home tab, matching Optimizer.ps1's $tabHome (Add-CustomTabPage
@@ -11,10 +13,14 @@
         Health Score, and Disk Analysis are still static placeholders - the next increment is
         porting Get-SystemHealthScore's logic and the disk-usage WMI queries.
     -->
-    <ScrollViewer VerticalScrollBarVisibility="Auto">
+    <ScrollViewer VerticalScrollBarVisibility="Auto" PreviewMouseWheel="NestedScroll_PreviewMouseWheel">
         <StackPanel Margin="0,8,0,24">
 
-            <TextBlock Text="Παρακολούθηση Απόδοσης Συστήματος" Style="{StaticResource CardTitleStyle}" FontSize="16" Margin="0,0,0,12"/>
+            <Grid Margin="0,0,0,12">
+                <Grid.ColumnDefinitions><ColumnDefinition Width="Auto"/><ColumnDefinition Width="*"/></Grid.ColumnDefinitions>
+                <views:HeaderGlyphIcon Grid.Column="0" Kind="Monitor" Width="18" Height="18" Margin="0,2,8,0" VerticalAlignment="Top"/>
+                <TextBlock Grid.Column="1" Text="{tr:Tr Home_PerfMonitoring}" Style="{StaticResource CardTitleStyle}" FontSize="16"/>
+            </Grid>
 
             <!-- ΔΙΟΡΘΩΣΗ (ρητό αίτημα χρήστη: 4ο πλακίδιο GPU) - 4 ίσες στήλες αντί για 3, τα
                  υπάρχοντα 3 στένεψαν αναλογικά για να χωρέσει το νέο. Θερμοκρασία (🌡, ρητό αίτημα
@@ -34,54 +40,51 @@
                 </Grid.ColumnDefinitions>
 
                 <!-- CPU -->
+                <!-- ΔΙΟΡΘΩΣΗ (ρητό αίτημα χρήστη: "μεγέθυνση εικονιδίων ώστε να χωρούν ακριβώς στα
+                     περιθώρια των πλακιδίων, με τη μπάρα λίγο πάνω από το κάτω περιθώριο, στην ίδια
+                     ευθεία σε όλα τα πλακίδια") - Grid (ΟΧΙ πλέον απλό StackPanel) με 2 σειρές: Row0="*"
+                     (όλο το μεταβλητό περιεχόμενο, στοιβαγμένο από πάνω) + Row1="Auto" (η μπάρα ΜΟΝΗ
+                     της, "καρφωμένη" στο κάτω άκρο). Αφού η εξωτερική Grid.Column="*" ΗΔΗ τεντώνει και
+                     τα 4 πλακίδια στο ίδιο ακριβώς συνολικό ύψος (το ψηλότερο, Disk, καθορίζει το
+                     ύψος όλων), το Row1="Auto" προσγειώνεται ΠΑΝΤΑ στην ίδια απόλυτη θέση Y σε όλα τα
+                     4 πλακίδια - καμία χειροκίνητη μέτρηση/μαντεψιά ύψους χρειάζεται. -->
                 <Border Grid.Column="0" Style="{StaticResource CardStyle}">
-                    <StackPanel HorizontalAlignment="Center">
-                        <Border Width="48" Height="48" CornerRadius="24" Margin="0,0,0,8">
-                            <Border.Background>
-                                <RadialGradientBrush GradientOrigin="0.3,0.3" Center="0.5,0.5" RadiusX="0.9" RadiusY="0.9">
-                                    <GradientStop Color="#FF6EC6FF" Offset="0"/>
-                                    <GradientStop Color="#FF2196F3" Offset="0.6"/>
-                                    <GradientStop Color="#FF0D47A1" Offset="1"/>
-                                </RadialGradientBrush>
-                            </Border.Background>
-                            <TextBlock Text="⚙" FontSize="20" Foreground="White" HorizontalAlignment="Center" VerticalAlignment="Center"/>
-                        </Border>
-                        <TextBlock Text="CPU" Style="{StaticResource CardTitleStyle}" HorizontalAlignment="Center"/>
-                        <TextBlock x:Name="TxtCpuPercent" Text="--%" FontSize="22" FontWeight="Bold" Foreground="#FF2196F3" HorizontalAlignment="Center" Margin="0,4,0,6"/>
-                        <ProgressBar x:Name="BarCpu" Height="6" Width="120" Minimum="0" Maximum="100" Foreground="#FF2196F3"/>
-                        <StackPanel Orientation="Horizontal" HorizontalAlignment="Center" Margin="0,6,0,0">
-                            <TextBlock Text="🌡" FontSize="16" Margin="0,0,5,0"/>
-                            <TextBlock x:Name="TxtCpuTemp" Text="—" Style="{StaticResource TempValueStyle}"/>
+                    <Grid>
+                        <Grid.RowDefinitions><RowDefinition Height="*"/><RowDefinition Height="Auto"/></Grid.RowDefinitions>
+                        <StackPanel Grid.Row="0" HorizontalAlignment="Center">
+                            <Image Source="/Assets/cpu-icon.png" Width="200" Height="130" Stretch="Uniform" Margin="0,0,0,8"/>
+                            <TextBlock Text="CPU" Style="{StaticResource CardTitleStyle}" HorizontalAlignment="Center"/>
+                            <TextBlock x:Name="TxtCpuPercent" Text="--%" FontSize="22" FontWeight="Bold" Foreground="#FF2196F3" HorizontalAlignment="Center" Margin="0,4,0,6"/>
+                            <StackPanel Orientation="Horizontal" HorizontalAlignment="Center">
+                                <views:ThermometerIcon Width="14" Height="14" Margin="0,0,5,0"/>
+                                <TextBlock x:Name="TxtCpuTemp" Text="—" Style="{StaticResource TempValueStyle}"/>
+                            </StackPanel>
                         </StackPanel>
-                    </StackPanel>
+                        <ProgressBar x:Name="BarCpu" Grid.Row="1" Height="6" Width="120" Minimum="0" Maximum="100" Foreground="#FF2196F3" HorizontalAlignment="Center" Margin="0,10,0,4"/>
+                    </Grid>
                 </Border>
 
                 <!-- RAM -->
                 <Border Grid.Column="4" Style="{StaticResource CardStyle}">
-                    <StackPanel HorizontalAlignment="Center">
-                        <Border Width="48" Height="48" CornerRadius="24" Margin="0,0,0,8">
-                            <Border.Background>
-                                <RadialGradientBrush GradientOrigin="0.3,0.3" Center="0.5,0.5" RadiusX="0.9" RadiusY="0.9">
-                                    <GradientStop Color="#FF8BEA9E" Offset="0"/>
-                                    <GradientStop Color="#FF4CAF50" Offset="0.6"/>
-                                    <GradientStop Color="#FF1B5E20" Offset="1"/>
-                                </RadialGradientBrush>
-                            </Border.Background>
-                            <TextBlock Text="&#x1F4BE;" FontSize="18" Foreground="White" HorizontalAlignment="Center" VerticalAlignment="Center"/>
-                        </Border>
-                        <TextBlock Text="RAM" Style="{StaticResource CardTitleStyle}" HorizontalAlignment="Center"/>
-                        <TextBlock x:Name="TxtRamPercent" Text="--%" FontSize="22" FontWeight="Bold" Foreground="#FF4CAF50" HorizontalAlignment="Center" Margin="0,4,0,6"/>
-                        <ProgressBar x:Name="BarRam" Height="6" Width="120" Minimum="0" Maximum="100" Foreground="#FF4CAF50"/>
-                        <TextBlock x:Name="TxtRamDetail" Text="-- / -- GB" Style="{StaticResource SubTextStyle}" HorizontalAlignment="Center" Margin="0,6,0,0"/>
-                        <!-- ΔΙΟΡΘΩΣΗ (χρήστης ανέφερε: "στη RAM δεν φαίνεται τπτ") - πριν δεν υπήρχε
-                             ΚΑΘΟΛΟΥ γραμμή θερμοκρασίας εδώ (ασυνεπές με τα άλλα 3 tiles) - τώρα
-                             δείχνει τιμή αν το hardware την υποστηρίζει, αλλιώς τίμια "—" σαν τα
-                             υπόλοιπα, όχι πια απουσία στοιχείου. -->
-                        <StackPanel Orientation="Horizontal" HorizontalAlignment="Center" Margin="0,4,0,0">
-                            <TextBlock Text="🌡" FontSize="16" Margin="0,0,5,0"/>
-                            <TextBlock x:Name="TxtRamTemp" Text="—" Style="{StaticResource TempValueStyle}"/>
+                    <Grid>
+                        <Grid.RowDefinitions><RowDefinition Height="*"/><RowDefinition Height="Auto"/></Grid.RowDefinitions>
+                        <StackPanel Grid.Row="0" HorizontalAlignment="Center">
+                            <!-- ΔΙΟΡΘΩΣΗ (χρήστης ανέφερε: "το εικονίδιο της RAM κόβεται") - το UniformToFill
+                                 έκοβε τις άκρες της εικόνας (πολύ διαφορετική αναλογία διαστάσεων από την
+                                 πηγή). Uniform δείχνει ΟΛΗ την εικόνα χωρίς περικοπή. -->
+                            <Border Width="200" Height="130" CornerRadius="4" ClipToBounds="True" Margin="0,0,0,8">
+                                <Image Source="/Assets/ram-icon.png" Stretch="Uniform"/>
+                            </Border>
+                            <TextBlock Text="RAM" Style="{StaticResource CardTitleStyle}" HorizontalAlignment="Center"/>
+                            <TextBlock x:Name="TxtRamPercent" Text="--%" FontSize="22" FontWeight="Bold" Foreground="#FF4CAF50" HorizontalAlignment="Center" Margin="0,4,0,6"/>
+                            <TextBlock x:Name="TxtRamDetail" Text="-- / -- GB" Style="{StaticResource SubTextStyle}" HorizontalAlignment="Center"/>
+                            <StackPanel Orientation="Horizontal" HorizontalAlignment="Center" Margin="0,4,0,0">
+                                <views:ThermometerIcon Width="14" Height="14" Margin="0,0,5,0"/>
+                                <TextBlock x:Name="TxtRamTemp" Text="—" Style="{StaticResource TempValueStyle}"/>
+                            </StackPanel>
                         </StackPanel>
-                    </StackPanel>
+                        <ProgressBar x:Name="BarRam" Grid.Row="1" Height="6" Width="120" Minimum="0" Maximum="100" Foreground="#FF4CAF50" HorizontalAlignment="Center" Margin="0,10,0,4"/>
+                    </Grid>
                 </Border>
 
                 <!-- Disk - βελάκια αριστερά/δεξιά στα άκρα του πλακιδίου για εναλλαγή δίσκου· το
@@ -90,25 +93,37 @@
                      (TxtDriveModel, ρητό αίτημα χρήστη) ΚΑΙ τη θερμοκρασία (αν υπάρχει). -->
                 <Border Grid.Column="6" Style="{StaticResource CardStyle}">
                     <Grid>
-                        <StackPanel HorizontalAlignment="Center">
-                            <Border x:Name="BorderDiskIcon" Width="48" Height="48" CornerRadius="24" Margin="0,0,0,8">
-                                <TextBlock x:Name="TxtDiskIcon" Text="&#x1F4BF;" FontSize="18" Foreground="White" HorizontalAlignment="Center" VerticalAlignment="Center"/>
-                            </Border>
-                            <TextBlock x:Name="TxtDriveLabel" Text="C:" Style="{StaticResource CardTitleStyle}" HorizontalAlignment="Center"/>
-                            <TextBlock x:Name="TxtDriveKind" Text="" Style="{StaticResource SubTextStyle}" HorizontalAlignment="Center"/>
+                        <Grid.RowDefinitions><RowDefinition Height="*"/><RowDefinition Height="Auto"/></Grid.RowDefinitions>
+                        <StackPanel Grid.Row="0" HorizontalAlignment="Center">
+                            <Image x:Name="ImgDiskIcon" Source="/Assets/disk-icon.png" Width="200" Height="130" Stretch="Uniform" Margin="0,0,0,8"/>
+                            <!-- ΔΙΟΡΘΩΣΗ (ρητό αίτημα χρήστη: "το όνομα και το είδος του δίσκου δίπλα από
+                                 το γράμμα του δίσκου για εξοικονόμηση γραμμών" + "στοίχισε το γράμμα με
+                                 το είδος & την περιγραφή βάλε την μετά το γράμμα δίσκου") - "C:"/"NVMe"/
+                                 περιγραφή (μοντέλο) ήταν πριν σε 3 ξεχωριστές γραμμές, τώρα όλα μαζί σε
+                                 ένα WrapPanel (τυλίγει σε 2η γραμμή αν δεν χωράει, ΔΕΝ κόβεται) - ρητό
+                                 VerticalAlignment="Center" και στα 3 ώστε να ευθυγραμμίζονται σωστά
+                                 παρά τα διαφορετικά μεγέθη γραμματοσειράς. -->
+                            <WrapPanel HorizontalAlignment="Center" Margin="0,0,0,4">
+                                <TextBlock x:Name="TxtDriveLabel" Text="C:" Style="{StaticResource CardTitleStyle}" VerticalAlignment="Center"/>
+                                <TextBlock x:Name="TxtDriveKind" Text="" Style="{StaticResource SubTextStyle}" Margin="5,0,0,0" VerticalAlignment="Center"/>
+                                <TextBlock x:Name="TxtDriveModel" Text="" Style="{StaticResource SubTextStyle}" Margin="5,0,0,0" VerticalAlignment="Center" FontSize="10"/>
+                            </WrapPanel>
                             <TextBlock x:Name="TxtDiskPercent" Text="--%" FontSize="22" FontWeight="Bold" Foreground="#FFFF9800" HorizontalAlignment="Center" Margin="0,4,0,6"/>
-                            <ProgressBar x:Name="BarDisk" Height="6" Width="120" Minimum="0" Maximum="100" Foreground="#FFFF9800"/>
-                            <TextBlock x:Name="TxtDiskDetail" Text="-- GB ελεύθερα από -- GB" Style="{StaticResource SubTextStyle}" HorizontalAlignment="Center" TextWrapping="Wrap" TextAlignment="Center" Margin="0,6,0,0"/>
-                            <TextBlock x:Name="TxtDriveModel" Text="" Style="{StaticResource SubTextStyle}" HorizontalAlignment="Center" TextWrapping="Wrap" TextAlignment="Center" FontSize="10"/>
+                            <TextBlock x:Name="TxtDiskDetail" Text="-- GB ελεύθερα από -- GB" Style="{StaticResource SubTextStyle}" HorizontalAlignment="Center" TextWrapping="Wrap" TextAlignment="Center"/>
                             <StackPanel Orientation="Horizontal" HorizontalAlignment="Center" Margin="0,4,0,0">
-                                <TextBlock Text="🌡" FontSize="16" Margin="0,0,5,0"/>
+                                <views:ThermometerIcon Width="14" Height="14" Margin="0,0,5,0"/>
                                 <TextBlock x:Name="TxtDiskTemp" Text="—" Style="{StaticResource TempValueStyle}"/>
                             </StackPanel>
                         </StackPanel>
-                        <Button x:Name="BtnDrivePrev" Content="&#x2039;" FontSize="18" FontWeight="Bold" Width="24" Height="36"
-                                HorizontalAlignment="Left" VerticalAlignment="Top" Margin="0,20,0,0" Style="{StaticResource FlatButtonStyle}" Click="BtnDrivePrev_Click"/>
-                        <Button x:Name="BtnDriveNext" Content="&#x203A;" FontSize="18" FontWeight="Bold" Width="24" Height="36"
-                                HorizontalAlignment="Right" VerticalAlignment="Top" Margin="0,20,0,0" Style="{StaticResource FlatButtonStyle}" Click="BtnDriveNext_Click"/>
+                        <ProgressBar x:Name="BarDisk" Grid.Row="1" Height="6" Width="120" Minimum="0" Maximum="100" Foreground="#FFFF9800" HorizontalAlignment="Center" Margin="0,10,0,4"/>
+                        <!-- ΝΕΟ - roadmap "Έλεγχος προσβασιμότητας" - κουμπιά-μόνο-εικονίδιο χωρίς
+                             AutomationProperties.Name δεν παράγουν προσβάσιμο όνομα για screen readers. -->
+                        <Button x:Name="BtnDrivePrev" Grid.RowSpan="2" Content="&#x2039;" FontSize="18" FontWeight="Bold" Width="24" Height="36"
+                                HorizontalAlignment="Left" VerticalAlignment="Top" Margin="0,20,0,0" Style="{StaticResource FlatButtonStyle}" Click="BtnDrivePrev_Click"
+                                AutomationProperties.Name="{tr:Tr Home_PrevDriveAuto}"/>
+                        <Button x:Name="BtnDriveNext" Grid.RowSpan="2" Content="&#x203A;" FontSize="18" FontWeight="Bold" Width="24" Height="36"
+                                HorizontalAlignment="Right" VerticalAlignment="Top" Margin="0,20,0,0" Style="{StaticResource FlatButtonStyle}" Click="BtnDriveNext_Click"
+                                AutomationProperties.Name="{tr:Tr Home_NextDriveAuto}"/>
                     </Grid>
                 </Border>
 
@@ -118,28 +133,45 @@
                      hardware/driver δεν την εκθέτει, ΠΟΤΕ ψευδή τιμή. Σειρά πλακιδίων CPU/GPU/RAM/
                      Disk (ρητό αίτημα χρήστη) - Grid.Column="2", όχι πλέον τελευταίο. -->
                 <Border Grid.Column="2" Style="{StaticResource CardStyle}">
-                    <StackPanel HorizontalAlignment="Center">
-                        <Border Width="48" Height="48" CornerRadius="24" Margin="0,0,0,8">
-                            <Border.Background>
-                                <RadialGradientBrush GradientOrigin="0.3,0.3" Center="0.5,0.5" RadiusX="0.9" RadiusY="0.9">
-                                    <GradientStop Color="#FFD9A8FF" Offset="0"/>
-                                    <GradientStop Color="#FF9C27B0" Offset="0.6"/>
-                                    <GradientStop Color="#FF4A0072" Offset="1"/>
-                                </RadialGradientBrush>
-                            </Border.Background>
-                            <TextBlock Text="&#x1F5A5;" FontSize="18" Foreground="White" HorizontalAlignment="Center" VerticalAlignment="Center"/>
-                        </Border>
-                        <TextBlock Text="GPU" Style="{StaticResource CardTitleStyle}" HorizontalAlignment="Center"/>
-                        <TextBlock x:Name="TxtGpuPercent" Text="--%" FontSize="22" FontWeight="Bold" Foreground="#FF9C27B0" HorizontalAlignment="Center" Margin="0,4,0,6"/>
-                        <ProgressBar x:Name="BarGpu" Height="6" Width="120" Minimum="0" Maximum="100" Foreground="#FF9C27B0"/>
-                        <TextBlock x:Name="TxtGpuName" Text="" Style="{StaticResource SubTextStyle}" HorizontalAlignment="Center" TextWrapping="Wrap" TextAlignment="Center" FontSize="10" Margin="0,6,0,0"/>
-                        <StackPanel Orientation="Horizontal" HorizontalAlignment="Center" Margin="0,4,0,0">
-                            <TextBlock Text="🌡" FontSize="16" Margin="0,0,5,0"/>
-                            <TextBlock x:Name="TxtGpuTemp" Text="—" Style="{StaticResource TempValueStyle}"/>
+                    <Grid>
+                        <Grid.RowDefinitions><RowDefinition Height="*"/><RowDefinition Height="Auto"/></Grid.RowDefinitions>
+                        <StackPanel Grid.Row="0" HorizontalAlignment="Center">
+                            <Image Source="/Assets/gpu-icon.png" Width="200" Height="130" Stretch="Uniform" Margin="0,0,0,8"/>
+                            <TextBlock Text="GPU" Style="{StaticResource CardTitleStyle}" HorizontalAlignment="Center"/>
+                            <TextBlock x:Name="TxtGpuPercent" Text="--%" FontSize="22" FontWeight="Bold" Foreground="#FF9C27B0" HorizontalAlignment="Center" Margin="0,4,0,6"/>
+                            <TextBlock x:Name="TxtGpuName" Text="" Style="{StaticResource SubTextStyle}" HorizontalAlignment="Center" TextWrapping="Wrap" TextAlignment="Center" FontSize="10"/>
+                            <StackPanel Orientation="Horizontal" HorizontalAlignment="Center" Margin="0,4,0,0">
+                                <views:ThermometerIcon Width="14" Height="14" Margin="0,0,5,0"/>
+                                <TextBlock x:Name="TxtGpuTemp" Text="—" Style="{StaticResource TempValueStyle}"/>
+                            </StackPanel>
                         </StackPanel>
-                    </StackPanel>
+                        <ProgressBar x:Name="BarGpu" Grid.Row="1" Height="6" Width="120" Minimum="0" Maximum="100" Foreground="#FF9C27B0" HorizontalAlignment="Center" Margin="0,10,0,4"/>
+                    </Grid>
                 </Border>
             </Grid>
+
+            <!-- ΝΕΑ ΚΑΡΤΑ v3.2.0 (χρήστης ζήτησε: "δείκτης κατάστασης δικτύου στην Αρχική") - ελαφριά,
+                 μία γραμμή· ενημερώνεται σπάνια (μαζί με τον ήδη υπάρχοντα _diskRefreshTimer, 20s -
+                 όχι νέος timer, ίδιο σκεπτικό "ελάφρυνση εφαρμογής") αφού η σύνδεση δικτύου δεν αλλάζει
+                 αισθητά κάθε δευτερόλεπτο. Το κουμπί ανοίγει κατευθείαν την καρτέλα Δίκτυο & Ασφάλεια. -->
+            <Border Style="{StaticResource CardStyle}" Margin="0,0,0,16">
+                <Grid>
+                    <Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="170"/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions>
+                    <StackPanel Grid.Column="0" Orientation="Horizontal">
+                        <Ellipse x:Name="DotNetworkStatus" Width="10" Height="10" Fill="Gray" VerticalAlignment="Center" Margin="0,0,10,0"/>
+                        <TextBlock x:Name="TxtNetworkStatus" Text="{tr:Tr Home_NetworkChecking}" Foreground="{DynamicResource TextBrush}" VerticalAlignment="Center"/>
+                    </StackPanel>
+                    <!-- ΝΕΟ (χρήστης ζήτησε: "graph δίπλα στο δίκτυο, όπως στη Διαχείριση Εργασιών") -
+                         απλό, αυτο-κλιμακούμενο sparkline (throughput, ΟΧΙ σχέση με το ping του
+                         Home_NetworkChecking) - βλ. HomeView.xaml.cs's RefreshNetworkGraph, δειγματολ-
+                         ηψία στον ΙΔΙΟ γρήγορο 1s timer με CPU/RAM/GPU (χρειάζεται συχνά δείγματα για
+                         να δείχνει ζωντανό, σε αντίθεση με τον αραιό ping-έλεγχο σύνδεσης). -->
+                    <Border Grid.Column="1" Height="32" Margin="10,0" Background="{DynamicResource MainBgBrush}" CornerRadius="4" ClipToBounds="True">
+                        <Canvas x:Name="CanvasNetworkGraph"/>
+                    </Border>
+                    <Button Grid.Column="2" Content="{tr:Tr Home_NetworkOpenTab}" Style="{StaticResource FlatButtonStyle}" Width="180" Height="32" Click="BtnOpenNetworkTab_Click"/>
+                </Grid>
+            </Border>
 
             <!-- Health Score -->
             <Border Style="{StaticResource CardStyle}" Margin="0,0,0,16">
@@ -152,17 +184,28 @@
                         <RowDefinition Height="Auto"/>
                         <RowDefinition Height="Auto"/>
                         <RowDefinition Height="Auto"/>
+                        <RowDefinition Height="Auto"/>
                     </Grid.RowDefinitions>
 
-                    <TextBlock Grid.Row="0" Grid.ColumnSpan="2" Text="Βαθμολογία Υγείας Συστήματος" Style="{StaticResource CardTitleStyle}" Margin="0,0,0,12"/>
+                    <Grid Grid.Row="0" Grid.ColumnSpan="2" Margin="0,0,0,12">
+                        <Grid.ColumnDefinitions><ColumnDefinition Width="Auto"/><ColumnDefinition Width="*"/></Grid.ColumnDefinitions>
+                        <views:HeaderGlyphIcon Grid.Column="0" Kind="Heart" Width="16" Height="16" Margin="0,0,8,0" VerticalAlignment="Center"/>
+                        <TextBlock Grid.Column="1" Text="{tr:Tr Home_HealthScore}" Style="{StaticResource CardTitleStyle}"/>
+                    </Grid>
 
                     <StackPanel Grid.Row="1" Grid.Column="0" HorizontalAlignment="Center">
                         <TextBlock x:Name="TxtHealthScore" Text="--" FontSize="38" FontWeight="Bold" Foreground="#FF4CAF50" HorizontalAlignment="Center"/>
-                        <TextBlock x:Name="TxtHealthLabel" Text="Έλεγχος..." FontStyle="Italic" Foreground="#FF4CAF50" HorizontalAlignment="Center"/>
+                        <TextBlock x:Name="TxtHealthLabel" Text="{tr:Tr Home_Checking}" FontStyle="Italic" Foreground="#FF4CAF50" HorizontalAlignment="Center"/>
+                        <TextBlock x:Name="TxtHealthSparkline" Text="" FontSize="14" Foreground="{DynamicResource SubTextBrush}" HorizontalAlignment="Center" Margin="0,4,0,0" Visibility="Collapsed"/>
+                        <!-- ΝΕΟ - roadmap "πιο εμφανές S.M.A.R.T./υγεία δίσκου στην Αρχική" - η υποδομή
+                             (DriveTypeService.GetSmartHealthy) υπήρχε ήδη αλλά μόνο βαθιά στην καρτέλα
+                             Σύστημα· εδώ μια συνοπτική ένδειξη για τον δίσκο συστήματος, ορατή με μια ματιά
+                             μαζί με το Health Score. -->
+                        <TextBlock x:Name="TxtDiskSmart" Text="" FontSize="11" HorizontalAlignment="Center" Margin="0,6,0,0" Visibility="Collapsed"/>
                     </StackPanel>
 
                     <Border Grid.Row="1" Grid.Column="1" Background="{DynamicResource MainBgBrush}" CornerRadius="6" MinHeight="90" MaxHeight="140" Padding="10">
-                        <ScrollViewer VerticalScrollBarVisibility="Auto">
+                        <ScrollViewer VerticalScrollBarVisibility="Auto" PreviewMouseWheel="NestedScroll_PreviewMouseWheel">
                             <ItemsControl x:Name="ListHealthIssues">
                                 <ItemsControl.ItemTemplate>
                                     <DataTemplate>
@@ -177,14 +220,57 @@
                     </Border>
 
                     <StackPanel Grid.Row="2" Grid.Column="1" Orientation="Horizontal" Margin="0,10,0,0">
-                        <Button Content="Διόρθωση Όλων" Style="{StaticResource AccentButtonStyle}" Width="150" Margin="0,0,10,0" Click="BtnFixAllHealth_Click"/>
-                        <Button Content="Ανανέωση" Style="{StaticResource FlatButtonStyle}" Width="150" Click="BtnRefreshHealth_Click"/>
+                        <Button Content="{tr:Tr Home_FixAll}" Style="{StaticResource AccentButtonStyle}" Width="150" Margin="0,0,10,0" Click="BtnFixAllHealth_Click"/>
+                        <Button Content="{tr:Tr Refresh}" Style="{StaticResource FlatButtonStyle}" Width="150" Margin="0,0,10,0" Click="BtnRefreshHealth_Click"/>
+                        <!-- ΝΕΟ - ρητό αίτημα χρήστη: "αντίστοιχο γραφικό με το Health Check του PC Manager". -->
+                        <Button Content="{tr:Tr HealthCheck_RunButton}" Style="{StaticResource FlatButtonStyle}" Width="150" Click="BtnRunHealthCheck_Click"/>
                     </StackPanel>
+
+                    <!-- ΝΕΟ - roadmap "Προγραμματισμένος Πλήρης Έλεγχος Υγείας" - ήπια υπενθύμιση αν δεν
+                         έχει τρέξει Πλήρης Έλεγχος Υγείας εδώ και 7+ μέρες (ή ποτέ), βλ.
+                         HomeView.xaml.cs's CheckHealthCheckReminder. Κρυφή by default. -->
+                    <Border x:Name="BorderHealthCheckReminder" Grid.Row="3" Grid.ColumnSpan="2" Background="{DynamicResource CardBgBrush}"
+                            BorderBrush="{DynamicResource AccentBrush}" BorderThickness="1" CornerRadius="6" Padding="10" Margin="0,10,0,0" Visibility="Collapsed">
+                        <Grid>
+                            <Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions>
+                            <TextBlock x:Name="TxtHealthCheckReminder" Grid.Column="0" Style="{StaticResource SubTextStyle}" TextWrapping="Wrap" VerticalAlignment="Center"/>
+                            <Button Grid.Column="1" Content="{tr:Tr HealthCheck_RunButton}" Style="{StaticResource AccentButtonStyle}" Padding="12,6" Margin="10,0,0,0" Click="BtnRunHealthCheck_Click"/>
+                        </Grid>
+                    </Border>
                 </Grid>
             </Border>
 
+            <!-- ΝΕΟ - roadmap "Καρφιτσωμένες συντομεύσεις" - επιλογή 3-4 αγαπημένων tweaks για
+                 απευθείας πρόσβαση από την Αρχική (καρφιτσώνονται από τις Επιπλέον Ρυθμίσεις, ★). -->
+            <Border Style="{StaticResource CardStyle}" Margin="0,16,0,0">
+                <StackPanel>
+                    <Grid Margin="0,0,0,10">
+                        <Grid.ColumnDefinitions><ColumnDefinition Width="Auto"/><ColumnDefinition Width="*"/></Grid.ColumnDefinitions>
+                        <TextBlock Text="★" FontSize="14" Foreground="{DynamicResource AccentBrush}" Margin="0,0,8,0" VerticalAlignment="Center"/>
+                        <TextBlock Grid.Column="1" Text="{tr:Tr Home_Pinned}" Style="{StaticResource CardTitleStyle}"/>
+                    </Grid>
+                    <ItemsControl x:Name="ListPinnedTweaks">
+                        <ItemsControl.ItemTemplate>
+                            <DataTemplate>
+                                <Grid Margin="0,4,0,4">
+                                    <Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions>
+                                    <TextBlock Text="{Binding Tweak.Label}" VerticalAlignment="Center" TextWrapping="Wrap" Margin="0,0,10,0"/>
+                                    <ToggleButton Grid.Column="1" IsChecked="{Binding IsOn}" Style="{StaticResource ToggleSwitchStyle}" Click="TogglePinnedTweak_Click" Tag="{Binding}"/>
+                                </Grid>
+                            </DataTemplate>
+                        </ItemsControl.ItemTemplate>
+                    </ItemsControl>
+                    <TextBlock x:Name="TxtNoPinned" Text="{tr:Tr Home_PinnedEmpty}" Style="{StaticResource SubTextStyle}" Visibility="Collapsed"/>
+                </StackPanel>
+            </Border>
+
             <!-- Disk Analysis -->
-            <Border Style="{StaticResource CardStyle}">
+            <!-- ΔΙΟΡΘΩΣΗ (χρήστης ανέφερε: "τα καρφιτσωμένα και η ανάλυση χώρου ως πλαίσια είναι το
+                 ένα πάνω στο άλλο") - σε αντίθεση με ΚΑΘΕ άλλη κάρτα σε αυτή τη StackPanel (όλες με
+                 Margin="0,16,0,0" για συνεπές κενό ανάμεσά τους), αυτή η κάρτα δεν είχε ΚΑΘΟΛΟΥ πάνω
+                 περιθώριο - ακουμπούσε απευθείας πάνω στην κάρτα "Καρφιτσωμένα" από πάνω, χωρίς κενό
+                 ανάμεσα στις δύο σκιές/περιγράμματα (CardStyle's DropShadowEffect). -->
+            <Border Style="{StaticResource CardStyle}" Margin="0,16,0,0">
                 <StackPanel>
                     <Grid>
                         <Grid.ColumnDefinitions>
@@ -192,10 +278,13 @@
                             <ColumnDefinition Width="Auto"/>
                         </Grid.ColumnDefinitions>
                         <StackPanel Grid.Column="0">
-                            <TextBlock Text="Ανάλυση Χώρου Δίσκου ανά Κατηγορία" Style="{StaticResource CardTitleStyle}" Margin="0,0,0,6"/>
-                            <TextBlock x:Name="TxtDiskAnalysisStatus" Text="Πατήστε 'Ανάλυση' για κατανομή χώρου ανά κατηγορία (επιλεγμένος δίσκος από την κάρτα Δίσκου παραπάνω)." Style="{StaticResource SubTextStyle}"/>
+                            <StackPanel Orientation="Horizontal" Margin="0,0,0,6">
+                                <views:HeaderGlyphIcon Kind="Disk" Width="16" Height="16" Margin="0,0,8,0" VerticalAlignment="Center"/>
+                                <TextBlock Text="{tr:Tr Home_DiskAnalysis}" Style="{StaticResource CardTitleStyle}"/>
+                            </StackPanel>
+                            <TextBlock x:Name="TxtDiskAnalysisStatus" Text="{tr:Tr Home_DiskAnalysisPrompt}" Style="{StaticResource SubTextStyle}"/>
                         </StackPanel>
-                        <Button Grid.Column="1" Content="Ανάλυση" Style="{StaticResource AccentButtonStyle}" Width="130" VerticalAlignment="Center" Click="BtnAnalyzeDisk_Click"/>
+                        <Button Grid.Column="1" Content="{tr:Tr Home_Analyze}" Style="{StaticResource AccentButtonStyle}" Width="130" VerticalAlignment="Center" Click="BtnAnalyzeDisk_Click"/>
                     </Grid>
 
                     <!-- Port του ps1's $global:diskAnalysisBarWrap/$diskAnalysisLegendPanel (ρητό αίτημα
@@ -226,6 +315,27 @@
                             </DataTemplate>
                         </ItemsControl.ItemTemplate>
                     </ItemsControl>
+                </StackPanel>
+            </Border>
+
+            <!-- ΝΕΟ - roadmap ""Τι έκανε πρόσφατα η εφαρμογή"" - σύνοψη των 3 πιο πρόσφατων ενεργειών
+                 από το ήδη υπάρχον ActionLogService, με σύνδεσμο στο πλήρες Ιστορικό Ενεργειών. -->
+            <Border Style="{StaticResource CardStyle}" Margin="0,16,0,0">
+                <StackPanel>
+                    <Grid Margin="0,0,0,10">
+                        <Grid.ColumnDefinitions><ColumnDefinition Width="Auto"/><ColumnDefinition Width="*"/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions>
+                        <views:HeaderGlyphIcon Grid.Column="0" Kind="Document" Width="16" Height="16" Margin="0,0,8,0" VerticalAlignment="Center"/>
+                        <TextBlock Grid.Column="1" Text="{tr:Tr Home_RecentActivity}" Style="{StaticResource CardTitleStyle}"/>
+                        <Button Grid.Column="2" Content="{tr:Tr Home_RecentActivitySeeAll}" Style="{StaticResource FlatButtonStyle}" Padding="10,5" Click="BtnOpenActionLog_Click"/>
+                    </Grid>
+                    <ItemsControl x:Name="ListRecentActivity">
+                        <ItemsControl.ItemTemplate>
+                            <DataTemplate>
+                                <TextBlock Text="{Binding}" Style="{StaticResource SubTextStyle}" TextWrapping="Wrap" Margin="0,0,0,4"/>
+                            </DataTemplate>
+                        </ItemsControl.ItemTemplate>
+                    </ItemsControl>
+                    <TextBlock x:Name="TxtNoRecentActivity" Text="{tr:Tr Home_RecentActivityEmpty}" Style="{StaticResource SubTextStyle}" Visibility="Collapsed"/>
                 </StackPanel>
             </Border>
 

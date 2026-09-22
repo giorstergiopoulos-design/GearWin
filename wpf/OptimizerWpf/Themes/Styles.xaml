@@ -18,13 +18,13 @@
                     <Setter.Value>
                         <ControlTemplate TargetType="MenuItem">
                             <Grid>
-                                <Border x:Name="Bg" Background="Transparent" CornerRadius="4" Padding="10,6">
+                                <Border x:Name="Bg" Background="Transparent" CornerRadius="{DynamicResource AppCornerRadius}" Padding="10,6">
                                     <ContentPresenter ContentSource="Header" RecognizesAccessKey="True" VerticalAlignment="Center"/>
                                 </Border>
                                 <Popup x:Name="Popup" Placement="Bottom" IsOpen="{TemplateBinding IsSubmenuOpen}"
                                        AllowsTransparency="True" Focusable="False" PopupAnimation="Fade">
                                     <Border Background="{DynamicResource CardBgBrush}" BorderBrush="{DynamicResource CardBorderBrush}"
-                                            BorderThickness="1" CornerRadius="6" Padding="3">
+                                            BorderThickness="1" CornerRadius="{DynamicResource AppCornerRadius}" Padding="3">
                                         <StackPanel IsItemsHost="True"/>
                                     </Border>
                                 </Popup>
@@ -42,7 +42,7 @@
                 <Setter Property="Template">
                     <Setter.Value>
                         <ControlTemplate TargetType="MenuItem">
-                            <Border x:Name="Bg" Background="Transparent" CornerRadius="4">
+                            <Border x:Name="Bg" Background="Transparent" CornerRadius="{DynamicResource AppCornerRadius}">
                                 <Grid Margin="4,2">
                                     <Grid.ColumnDefinitions>
                                         <ColumnDefinition Width="8"/>
@@ -116,13 +116,77 @@
         </Style.Triggers>
     </Style>
 
-    <!-- Card container: rounded border, CardBg fill - used by every metric/section card across tabs -->
+    <!-- Card container: rounded border, CardBg fill - used by every metric/section card across tabs.
+         ΝΕΟ - roadmap "Ελαφριά ανύψωση κάρτας στο hover" - ρητό DropShadowEffect (Opacity=0 by
+         default, καμία ορατή επίδραση/σχεδόν μηδενικό κόστος όταν το ποντίκι δεν είναι από πάνω) +
+         διακριτική ανύψωση 2px, ίδιο DropShadowEffect μοτίβο με το ήδη υπάρχον HardwareChipIcon. -->
     <Style x:Key="CardStyle" TargetType="Border">
         <Setter Property="Background" Value="{DynamicResource CardBgBrush}"/>
         <Setter Property="BorderBrush" Value="{DynamicResource CardBorderBrush}"/>
         <Setter Property="BorderThickness" Value="1"/>
-        <Setter Property="CornerRadius" Value="8"/>
+        <Setter Property="CornerRadius" Value="{DynamicResource AppCornerRadius}"/>
         <Setter Property="Padding" Value="16"/>
+        <Setter Property="RenderTransformOrigin" Value="0.5,0.5"/>
+        <Setter Property="RenderTransform">
+            <Setter.Value><TranslateTransform X="0" Y="0"/></Setter.Value>
+        </Setter>
+        <Setter Property="Effect">
+            <Setter.Value>
+                <DropShadowEffect Color="Black" Opacity="0" BlurRadius="16" ShadowDepth="5" Direction="270"/>
+            </Setter.Value>
+        </Setter>
+        <Style.Triggers>
+            <Trigger Property="IsMouseOver" Value="True">
+                <Trigger.EnterActions>
+                    <BeginStoryboard>
+                        <Storyboard>
+                            <DoubleAnimation Storyboard.TargetProperty="(Border.Effect).(DropShadowEffect.Opacity)" To="0.32" Duration="0:0:0.15"/>
+                            <DoubleAnimation Storyboard.TargetProperty="(Border.RenderTransform).(TranslateTransform.Y)" To="-2" Duration="0:0:0.15"/>
+                        </Storyboard>
+                    </BeginStoryboard>
+                </Trigger.EnterActions>
+                <Trigger.ExitActions>
+                    <BeginStoryboard>
+                        <Storyboard>
+                            <DoubleAnimation Storyboard.TargetProperty="(Border.Effect).(DropShadowEffect.Opacity)" To="0" Duration="0:0:0.15"/>
+                            <DoubleAnimation Storyboard.TargetProperty="(Border.RenderTransform).(TranslateTransform.Y)" To="0" Duration="0:0:0.15"/>
+                        </Storyboard>
+                    </BeginStoryboard>
+                </Trigger.ExitActions>
+            </Trigger>
+        </Style.Triggers>
+    </Style>
+
+    <!-- ΝΕΟ - roadmap "Virtualization σε μεγάλες λίστες" - ListProcesses/ListServices/
+         ListScheduledTasks/ListFirewallRules ήταν απλά ItemsControl (StackPanel, ΚΑΘΕ στοιχείο
+         δημιουργείται/measure/arrange ταυτόχρονα) - με εκατοντάδες στοιχεία (πλήρης λίστα
+         διεργασιών/κανόνων firewall σε φορτωμένο σύστημα) η αρχική απόδοση υποβαθμιζόταν αισθητά.
+         ListBox virtualization είναι ενεργό ΕΞ ΟΡΙΣΜΟΥ (VirtualizingStackPanel.IsVirtualizing=True
+         default από .NET 4.5+) - το στυλ εδώ απλά αφαιρεί την οπτική "επιλογή" (background/χρώμα)
+         αφού αυτές είναι λίστες ΜΟΝΟ για προβολή/ενέργειες ανά γραμμή (toggle/κουμπί), όχι επιλογή. -->
+    <Style x:Key="VirtualizedListStyle" TargetType="ListBox">
+        <Setter Property="Background" Value="Transparent"/>
+        <Setter Property="BorderThickness" Value="0"/>
+        <Setter Property="ScrollViewer.CanContentScroll" Value="True"/>
+        <Setter Property="VirtualizingPanel.IsVirtualizing" Value="True"/>
+        <Setter Property="VirtualizingPanel.VirtualizationMode" Value="Recycling"/>
+        <Setter Property="VirtualizingPanel.ScrollUnit" Value="Pixel"/>
+        <Setter Property="ItemContainerStyle">
+            <Setter.Value>
+                <Style TargetType="ListBoxItem">
+                    <Setter Property="Focusable" Value="False"/>
+                    <Setter Property="Padding" Value="0"/>
+                    <Setter Property="HorizontalContentAlignment" Value="Stretch"/>
+                    <Setter Property="Template">
+                        <Setter.Value>
+                            <ControlTemplate TargetType="ListBoxItem">
+                                <ContentPresenter/>
+                            </ControlTemplate>
+                        </Setter.Value>
+                    </Setter>
+                </Style>
+            </Setter.Value>
+        </Setter>
     </Style>
 
     <!-- Section title inside a card (icon + bold text row) -->
@@ -136,6 +200,24 @@
         <Setter Property="FontSize" Value="12"/>
         <Setter Property="Foreground" Value="{DynamicResource SubTextBrush}"/>
         <Setter Property="TextWrapping" Value="Wrap"/>
+    </Style>
+
+    <!-- ΝΕΟ - HealthCheckWindow's "pills" γύρω από το κεντρικό εικονίδιο (ρητό αίτημα χρήστη - βλ.
+         PC Manager's Health Check γραφικό). Ξεκινάνε όλα σε ουδέτερη κατάσταση· το code-behind
+         εναλλάσσει BorderBrush/Background σε accent όταν το αντίστοιχο πραγματικό scan τρέχει, ίδιο
+         μοτίβο DynamicResource με όλα τα υπόλοιπα themed στοιχεία της εφαρμογής. -->
+    <Style x:Key="HealthCheckPillStyle" TargetType="Border">
+        <Setter Property="Background" Value="{DynamicResource CardBgBrush}"/>
+        <Setter Property="BorderBrush" Value="{DynamicResource CardBorderBrush}"/>
+        <Setter Property="BorderThickness" Value="1.5"/>
+        <Setter Property="CornerRadius" Value="14"/>
+        <Setter Property="Padding" Value="12,7"/>
+    </Style>
+
+    <Style x:Key="HealthCheckPillTextStyle" TargetType="TextBlock">
+        <Setter Property="FontSize" Value="12"/>
+        <Setter Property="FontWeight" Value="SemiBold"/>
+        <Setter Property="Foreground" Value="{DynamicResource TextBrush}"/>
     </Style>
 
     <!-- Τιμή θερμοκρασίας στα πλακίδια απόδοσης (ρητό αίτημα χρήστη: "τα εικονίδια... δεν είναι
@@ -162,11 +244,42 @@
         <Setter Property="Template">
             <Setter.Value>
                 <ControlTemplate TargetType="RadioButton">
-                    <Border x:Name="Bg" CornerRadius="8" Background="Transparent" Padding="{TemplateBinding Padding}">
+                    <Border x:Name="Bg" CornerRadius="{DynamicResource AppCornerRadius}" Background="Transparent" Padding="{TemplateBinding Padding}">
                         <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/>
                     </Border>
                     <ControlTemplate.Triggers>
                         <Trigger Property="IsChecked" Value="True">
+                            <Setter TargetName="Bg" Property="Background" Value="{DynamicResource TabSelectBrush}"/>
+                            <Setter Property="Foreground" Value="{DynamicResource TextBrush}"/>
+                        </Trigger>
+                        <Trigger Property="IsMouseOver" Value="True">
+                            <Setter TargetName="Bg" Property="Background" Value="{DynamicResource BtnHoverBrush}"/>
+                        </Trigger>
+                    </ControlTemplate.Triggers>
+                </ControlTemplate>
+            </Setter.Value>
+        </Setter>
+    </Style>
+
+    <!-- Ίδιο pill-στυλ με το TabPillStyle (RadioButton) παραπάνω, αλλά για πραγματικό TabItem/
+         TabControl (ρητό αίτημα χρήστη: "οι καρτέλες στις ρυθμίσεις εξακολουθούν να μην είναι pills
+         και να είναι λευκές" - το TabItem χωρίς δικό του Style/Template χρησιμοποιεί το προεπιλεγμένο
+         chrome των Windows, άσπρο ανεξαρτήτως θέματος). Χρησιμοποιείται ως TabControl.ItemContainerStyle. -->
+    <Style x:Key="PillTabItemStyle" TargetType="TabItem">
+        <Setter Property="Foreground" Value="{DynamicResource SubTextBrush}"/>
+        <Setter Property="FontSize" Value="13"/>
+        <Setter Property="FontWeight" Value="SemiBold"/>
+        <Setter Property="Padding" Value="14,8"/>
+        <Setter Property="Margin" Value="0,0,6,6"/>
+        <Setter Property="Cursor" Value="Hand"/>
+        <Setter Property="Template">
+            <Setter.Value>
+                <ControlTemplate TargetType="TabItem">
+                    <Border x:Name="Bg" CornerRadius="{DynamicResource AppCornerRadius}" Background="Transparent" Padding="{TemplateBinding Padding}">
+                        <ContentPresenter x:Name="Content" ContentSource="Header" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                    </Border>
+                    <ControlTemplate.Triggers>
+                        <Trigger Property="IsSelected" Value="True">
                             <Setter TargetName="Bg" Property="Background" Value="{DynamicResource TabSelectBrush}"/>
                             <Setter Property="Foreground" Value="{DynamicResource TextBrush}"/>
                         </Trigger>
@@ -189,7 +302,12 @@
         <Setter Property="Template">
             <Setter.Value>
                 <ControlTemplate TargetType="Button">
-                    <Border x:Name="Bg" CornerRadius="6" Background="{TemplateBinding Background}">
+                    <!-- ΔΙΟΡΘΩΣΗ (Windows Classic skin): CornerRadius+BorderThickness/Brush πλέον
+                         DynamicResource - 0/αόρατο σε όλα τα μοντέρνα θέματα (καμία οπτική αλλαγή εκεί),
+                         αλλά τετράγωνο+ορατό περίγραμμα (απλοποιημένη προσέγγιση classic bevel) όταν
+                         είναι ενεργό το "Windows Classic" - βλ. ThemeManager.Apply(). -->
+                    <Border x:Name="Bg" CornerRadius="{DynamicResource AppCornerRadius}" Background="{TemplateBinding Background}"
+                            BorderBrush="{DynamicResource AppButtonBorderBrush}" BorderThickness="{DynamicResource AppButtonBorderThickness}">
                         <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/>
                     </Border>
                     <ControlTemplate.Triggers>
@@ -223,7 +341,7 @@
         <Setter Property="Template">
             <Setter.Value>
                 <ControlTemplate TargetType="ListBoxItem">
-                    <Border x:Name="Bg" CornerRadius="4" Background="Transparent" Padding="{TemplateBinding Padding}">
+                    <Border x:Name="Bg" CornerRadius="{DynamicResource AppCornerRadius}" Background="Transparent" Padding="{TemplateBinding Padding}">
                         <Grid>
                             <Grid.ColumnDefinitions>
                                 <ColumnDefinition Width="4"/>
@@ -253,6 +371,102 @@
         </Setter>
     </Style>
 
+    <!-- ΔΙΟΡΘΩΣΗ (χρήστης ανέφερε με screenshot: "στην έναρξη δοκιμής το dropdown είναι δύσμορφο" -
+         το ComboBox της Δοκιμής Ταχύτητας Δίσκου, αλλά αφορά ΚΑΙ τα άλλα 3 ComboBox της εφαρμογής,
+         AddContextMenuDialog/AppearanceSettingsWindow×2): ΔΕΝ υπήρχε ΚΑΝΕΝΑ style για ComboBox σε
+         όλη την εφαρμογή - χρησιμοποιούσε το προεπιλεγμένο, "κλασικό Windows" chrome (λευκό φόντο,
+         διαφορετική γραμματοσειρά/περίγραμμα) που δεν ακολουθεί κανένα από τα 21 θέματα, ίδιο
+         bug-class με το ScrollBar/MenuItem/TabItem παραπάνω. Implicit styles (χωρίς x:Key) ώστε να
+         εφαρμόζονται αυτόματα ΠΑΝΤΟΥ χωρίς να χρειάζεται Style="..." σε κάθε ComboBox ξεχωριστά -
+         το ComboBoxItem template επαναχρησιμοποιεί το ίδιο οπτικό λεξιλόγιο με το ListBoxItem/
+         MenuItem popup παραπάνω (CardBgBrush popup, BtnHoverBrush/TabSelectBrush states). -->
+    <Style TargetType="ComboBoxItem">
+        <Setter Property="Foreground" Value="{DynamicResource TextBrush}"/>
+        <Setter Property="Padding" Value="10,6"/>
+        <Setter Property="Template">
+            <Setter.Value>
+                <ControlTemplate TargetType="ComboBoxItem">
+                    <Border x:Name="Bg" CornerRadius="{DynamicResource AppCornerRadius}" Background="Transparent" Padding="{TemplateBinding Padding}">
+                        <ContentPresenter/>
+                    </Border>
+                    <ControlTemplate.Triggers>
+                        <Trigger Property="IsHighlighted" Value="True">
+                            <Setter TargetName="Bg" Property="Background" Value="{DynamicResource BtnHoverBrush}"/>
+                        </Trigger>
+                        <Trigger Property="IsSelected" Value="True">
+                            <Setter TargetName="Bg" Property="Background" Value="{DynamicResource TabSelectBrush}"/>
+                        </Trigger>
+                    </ControlTemplate.Triggers>
+                </ControlTemplate>
+            </Setter.Value>
+        </Setter>
+    </Style>
+
+    <Style TargetType="ComboBox">
+        <Setter Property="Foreground" Value="{DynamicResource TextBrush}"/>
+        <Setter Property="Background" Value="{DynamicResource BtnDefaultBrush}"/>
+        <Setter Property="BorderBrush" Value="{DynamicResource CardBorderBrush}"/>
+        <Setter Property="BorderThickness" Value="1"/>
+        <Setter Property="Padding" Value="10,0"/>
+        <Setter Property="Height" Value="36"/>
+        <Setter Property="Cursor" Value="Hand"/>
+        <Setter Property="Template">
+            <Setter.Value>
+                <ControlTemplate TargetType="ComboBox">
+                    <Grid>
+                        <!-- ΔΙΟΡΘΩΣΗ (χρήστης ανέφερε, με screenshot: "στο θέμα εφαρμογής είναι πολύ
+                             λευκό" - επιβεβαιώθηκε ζωντανά, RGB(221,221,221) αντί για το αναμενόμενο
+                             σκούρο BtnDefault π.χ. (45,45,45) στο Windows 11 Fluent Dark) - αυτό το
+                             εσωτερικό ToggleButton δεν είχε ΠΟΤΕ δικό του Background/BorderBrush/
+                             BorderThickness ορισμένα εδώ· το {Binding ..., RelativeSource=
+                             {RelativeSource TemplatedParent}} μέσα στο ToggleButton.Template παρακάτω
+                             δείχνει στο ΙΔΙΟ το ToggleButton (όχι στο ComboBox), οπότε έπαιρνε πάντα το
+                             προεπιλεγμένο, ανοιχτόχρωμο σύστημα-θέμα φόντο ενός απλού ToggleButton -
+                             ΠΟΤΕ δεν έφτανε σε αυτό το σκούρο θεματικό χρώμα του ComboBox, σε ΚΑΝΕΝΑ
+                             θέμα/dark ή light. Τα 3 TemplateBinding εδώ (δείχνουν ΤΩΡΑ στο ίδιο το
+                             ComboBox) περνάνε επιτέλους τις πραγματικές θεματικές τιμές παρακάτω. -->
+                        <ToggleButton x:Name="ToggleButton"
+                                      Background="{TemplateBinding Background}"
+                                      BorderBrush="{TemplateBinding BorderBrush}"
+                                      BorderThickness="{TemplateBinding BorderThickness}"
+                                      IsChecked="{Binding IsDropDownOpen, Mode=TwoWay, RelativeSource={RelativeSource TemplatedParent}}"
+                                      ClickMode="Press" Focusable="False">
+                            <ToggleButton.Template>
+                                <ControlTemplate TargetType="ToggleButton">
+                                    <Border x:Name="ToggleBg" CornerRadius="{DynamicResource AppCornerRadius}"
+                                            Background="{Binding Background, RelativeSource={RelativeSource TemplatedParent}}"
+                                            BorderBrush="{Binding BorderBrush, RelativeSource={RelativeSource TemplatedParent}}"
+                                            BorderThickness="{Binding BorderThickness, RelativeSource={RelativeSource TemplatedParent}}"/>
+                                    <ControlTemplate.Triggers>
+                                        <Trigger Property="IsMouseOver" Value="True">
+                                            <Setter TargetName="ToggleBg" Property="Background" Value="{DynamicResource BtnHoverBrush}"/>
+                                        </Trigger>
+                                    </ControlTemplate.Triggers>
+                                </ControlTemplate>
+                            </ToggleButton.Template>
+                        </ToggleButton>
+                        <ContentPresenter x:Name="ContentSite" Margin="10,0,26,0"
+                                          VerticalAlignment="Center" HorizontalAlignment="Left" IsHitTestVisible="False"
+                                          Content="{TemplateBinding SelectionBoxItem}" ContentTemplate="{TemplateBinding SelectionBoxItemTemplate}"/>
+                        <Path Data="M0,0 L4,4 L8,0 Z" Fill="{DynamicResource SubTextBrush}" HorizontalAlignment="Right"
+                              VerticalAlignment="Center" Margin="0,0,10,0" IsHitTestVisible="False"/>
+                        <Popup x:Name="Popup" Placement="Bottom" IsOpen="{TemplateBinding IsDropDownOpen}"
+                               AllowsTransparency="True" Focusable="False" PopupAnimation="Fade">
+                            <Border Background="{DynamicResource CardBgBrush}" BorderBrush="{DynamicResource CardBorderBrush}"
+                                    BorderThickness="1" CornerRadius="{DynamicResource AppCornerRadius}" Padding="3"
+                                    MinWidth="{Binding ActualWidth, RelativeSource={RelativeSource TemplatedParent}}"
+                                    MaxHeight="{TemplateBinding MaxDropDownHeight}">
+                                <ScrollViewer SnapsToDevicePixels="True">
+                                    <ItemsPresenter/>
+                                </ScrollViewer>
+                            </Border>
+                        </Popup>
+                    </Grid>
+                </ControlTemplate>
+            </Setter.Value>
+        </Setter>
+    </Style>
+
     <!-- On/off pill switch - matches the custom on/off toggles Optimizer.ps1 owner-draws throughout
          every tab (dozens of tweak rows). Shared here since it'll be reused by every ported tab, not
          just Optimization. -->
@@ -263,19 +477,65 @@
         <Setter Property="Template">
             <Setter.Value>
                 <ControlTemplate TargetType="ToggleButton">
-                    <Border x:Name="Track" CornerRadius="12" Background="{DynamicResource BtnDefaultBrush}">
-                        <Ellipse x:Name="Knob" Width="18" Height="18" Fill="White" HorizontalAlignment="Left" Margin="3,0,0,0"/>
+                    <!-- ΔΙΟΡΘΩΣΗ (χρήστης έστειλε screenshot: οι διακόπτες στη λίστα Πρόσθετων
+                         Λειτουργιών "δεν φαίνονται σωστά" στο Light Mode) - το Track's BtnDefaultBrush
+                         σε αρκετά ανοιχτόχρωμα θέματα είναι σχεδόν λευκό (π.χ. "Windows Vista Aero
+                         Light Blue" -> RGB 212,233,247), και ο λευκός κύκλος (Knob, Fill="White")
+                         πάνω του γινόταν σχεδόν αόρατος - πολύ χαμηλή αντίθεση. Ρητό BorderBrush στο
+                         Track ΚΑΙ Stroke στο Knob (και τα δύο CardBorderBrush - το ίδιο χρώμα που η
+                         εφαρμογή ήδη χρησιμοποιεί ΠΑΝΤΟΥ ειδικά για να ξεχωρίζει από το φόντο) δίνουν
+                         ΠΑΝΤΑ ένα ορατό περίγραμμα γύρω από το κουμπί/κύκλο, ανεξάρτητα από το πόσο
+                         κοντά είναι τα χρώματα γεμίσματος σε κάθε συγκεκριμένο θέμα. -->
+                    <Border x:Name="Track" CornerRadius="12" Background="{DynamicResource BtnDefaultBrush}"
+                            BorderBrush="{DynamicResource CardBorderBrush}" BorderThickness="1">
+                        <Ellipse x:Name="Knob" Width="18" Height="18" Fill="White"
+                                 Stroke="{DynamicResource CardBorderBrush}" StrokeThickness="1"
+                                 HorizontalAlignment="Left" Margin="2,0,0,0"/>
                     </Border>
                     <ControlTemplate.Triggers>
                         <Trigger Property="IsChecked" Value="True">
                             <Setter TargetName="Track" Property="Background" Value="{DynamicResource AccentBrush}"/>
+                            <Setter TargetName="Track" Property="BorderThickness" Value="0"/>
                             <Setter TargetName="Knob" Property="HorizontalAlignment" Value="Right"/>
-                            <Setter TargetName="Knob" Property="Margin" Value="0,0,3,0"/>
+                            <Setter TargetName="Knob" Property="Margin" Value="0,0,2,0"/>
                         </Trigger>
                     </ControlTemplate.Triggers>
                 </ControlTemplate>
             </Setter.Value>
         </Setter>
+    </Style>
+
+    <!-- ΝΕΟ - ρητό αίτημα χρήστη: "ο οδηγός χρήσης με εικονίδια GIF" (κινούμενα εικονίδια, βλ.
+         HelpWindow.xaml) - παλμός Opacity+μέγεθος σε ΚΑΘΕ εικονίδιο ξεχωριστά (χωρίς
+         Storyboard.TargetName - EventTrigger σε Loaded ξεκινά μια τοπική, "ανώνυμη" instance για
+         κάθε ένα από τα δεκάδες instances του HeaderGlyphIcon στον οδηγό, αντί για ένα ΚΟΙΝΟ
+         named-target Storyboard όπως το ήδη υπάρχον PulseAttentionDotStoryboard - αυτό εδώ μοτίβο
+         χρειάζεται όποτε το ΙΔΙΟ animation πρέπει να εφαρμοστεί σε πολλαπλά, ανώνυμα instances του
+         ίδιου DataTemplate/επαναλαμβανόμενου στοιχείου).
+         ΔΙΟΡΘΩΣΗ (χρήστης ανέφερε: "πώς βλέπω τα GIF;" - δεν το πρόσεχε καθόλου) - η αρχική εκδοχή
+         (μόνο Opacity 1→0.5 σε 1.3s) επιβεβαιώθηκε ΤΕΧΝΙΚΑ ότι έτρεχε (μέτρηση pixel-brightness στο
+         χρόνο), αλλά ήταν οπτικά πολύ αδιόρατη σε εικονίδια 15px, ειδικά μέσα σε μια πυκνή σελίδα
+         κειμένου - ο χρήστης ΔΕΝ την έβλεπε καν σε κανονική χρήση. Τώρα ΣΥΝΔΥΑΣΜΟΣ Opacity (1→0.25,
+         πολύ πιο έντονη διαφορά) ΚΑΙ μεγέθους (ScaleTransform 1→1.35, ένα ξεκάθαρο "ανάσασμα") σε
+         γρηγορότερο κύκλο (0.8s ανά κατεύθυνση αντί για 1.3s) - αδύνατο πλέον να μη φανεί. -->
+    <Style x:Key="PulsingIconContainerStyle" TargetType="Border">
+        <Setter Property="RenderTransformOrigin" Value="0.5,0.5"/>
+        <Setter Property="RenderTransform">
+            <Setter.Value>
+                <ScaleTransform ScaleX="1" ScaleY="1"/>
+            </Setter.Value>
+        </Setter>
+        <Style.Triggers>
+            <EventTrigger RoutedEvent="FrameworkElement.Loaded">
+                <BeginStoryboard>
+                    <Storyboard RepeatBehavior="Forever" AutoReverse="True">
+                        <DoubleAnimation Storyboard.TargetProperty="Opacity" From="1" To="0.25" Duration="0:0:0.8"/>
+                        <DoubleAnimation Storyboard.TargetProperty="(Border.RenderTransform).(ScaleTransform.ScaleX)" From="1" To="1.35" Duration="0:0:0.8"/>
+                        <DoubleAnimation Storyboard.TargetProperty="(Border.RenderTransform).(ScaleTransform.ScaleY)" From="1" To="1.35" Duration="0:0:0.8"/>
+                    </Storyboard>
+                </BeginStoryboard>
+            </EventTrigger>
+        </Style.Triggers>
     </Style>
 
 </ResourceDictionary>

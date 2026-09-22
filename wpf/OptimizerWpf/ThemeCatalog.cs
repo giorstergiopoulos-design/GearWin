@@ -32,9 +32,13 @@ namespace OptimizerWpf
             new("Windows XP Luna (Dark)",
                 C(20, 40, 80), C(30, 55, 105), C(45, 75, 140), C(235, 243, 255), C(160, 195, 240),
                 C(180, 210, 255), C(25, 48, 92), C(0, 100, 200), C(38, 68, 125), C(230, 170, 50), C(30, 110, 240)),
+            // ΔΙΟΡΘΩΣΗ (χρήστης ανέφερε με screenshot: "σε κάποια θέματα η γραμμή κατάστασης δεν είναι
+            // ευδιακριτή") - το StatusText (6η τιμή) ήταν σχεδόν λευκό (230,240,255) πάνω σε επίσης
+            // ανοιχτόχρωμο CardBg (204,218,240) - contrast ratio ~1.1:1, ουσιαστικά αόρατο. Σκούρο
+            // navy (ίδια οικογένεια αποχρώσεων με το Accent/Text του θέματος) αντί για σχεδόν-λευκό.
             new("Windows XP Luna (Light)",
                 C(83, 114, 176), C(222, 231, 247), C(255, 255, 255), C(0, 45, 150), C(50, 90, 160),
-                C(230, 240, 255), C(204, 218, 240), C(0, 60, 140), C(226, 237, 252), C(255, 204, 102), C(0, 84, 227)));
+                C(10, 50, 110), C(204, 218, 240), C(0, 60, 140), C(226, 237, 252), C(255, 204, 102), C(0, 84, 227)));
 
         public static readonly ThemePair Cyberpunk = new("Cyberpunk",
             new("Cyberpunk (Dark)",
@@ -67,6 +71,23 @@ namespace OptimizerWpf
             new("Windows 7 Aero (Light Glass)",
                 C(205, 225, 245), C(225, 238, 250), C(255, 255, 255), C(15, 40, 70), C(45, 90, 130),
                 C(20, 100, 170), C(215, 232, 248), C(90, 150, 205), C(200, 222, 245), C(225, 240, 253), C(20, 120, 200)));
+
+        // Ρητό αίτημα χρήστη: "Windows Classic skin - τετράγωνα παράθυρα, όλα τα χαρακτηριστικά όπως τα
+        // αυθεντικά windows classic theme που τελευταία φορά εμφανίστηκαν ως θέμα στα Vista". Αυθεντική
+        // παλέτα: γκρι "3D Face" #D4D0C8 (κουμπιά/φόντο), λευκά πεδία περιεχομένου, μπλε τίτλου/επιλογής
+        // #0A246A/#316AC5, μαύρο κείμενο - ΧΩΡΙΣ dark variant στην πραγματικότητα (το Classic θέμα ήταν
+        // πάντα ανοιχτόχρωμο), αλλά η αρχιτεκτονική του ThemePair απαιτεί Dark+Light - το Dark παρακάτω
+        // είναι μια εύλογη σκουρόχρωμη παραλλαγή ΙΔΙΟΥ πνεύματος (ίδιο navy accent, ίδια επιπεδότητα).
+        // Τετράγωνες γωνίες + ορατό περίγραμμα κουμπιών εφαρμόζονται ΚΕΝΤΡΙΚΑ στο ThemeManager.Apply()
+        // όταν είναι ενεργό αυτό το θέμα (βλ. AppCornerRadius/AppButtonBorderThickness) - το layout
+        // (κρυφό sidebar/hamburger, πάντα ορατό κλασικό μενού) στο MainWindow.ApplyWindowsClassicSkinLayout.
+        public static readonly ThemePair WindowsClassic = new("Windows Classic",
+            new("Windows Classic (Σκούρο)",
+                C(58, 58, 58), C(68, 68, 68), C(90, 90, 90), C(232, 232, 232), C(176, 176, 176),
+                C(232, 232, 232), C(47, 47, 47), C(110, 110, 110), C(74, 74, 74), C(92, 92, 92), C(58, 110, 165)),
+            new("Windows Classic (Φωτεινό)",
+                C(212, 208, 200), C(236, 233, 216), C(255, 255, 255), C(0, 0, 0), C(68, 68, 68),
+                C(0, 0, 0), C(255, 255, 255), C(128, 128, 128), C(212, 208, 200), C(224, 221, 212), C(10, 36, 106)));
 
         public static readonly ThemePair Windows98Retro = new("Windows 98 Retro",
             new("Windows 98 Retro (Dark)",
@@ -104,9 +125,11 @@ namespace OptimizerWpf
             new("VS Code Dark+",
                 C(30, 30, 30), C(37, 37, 38), C(51, 51, 51), C(212, 212, 212), C(128, 128, 128),
                 C(206, 145, 120), C(37, 37, 38), C(60, 60, 60), C(45, 45, 48), C(62, 62, 66), C(206, 145, 120)),
+            // ΔΙΟΡΘΩΣΗ (ίδιο bug-class): StatusText (196,110,50) πάνω σε σχεδόν-ίδιο-φωτεινότητας CardBg
+            // (243,243,243) - contrast ~1.8:1. Σκουρότερο καφέ-πορτοκαλί ίδιας οικογένειας.
             new("VS Code Light+",
                 C(255, 255, 255), C(243, 243, 243), C(230, 230, 230), C(30, 30, 30), C(110, 110, 110),
-                C(196, 110, 50), C(243, 243, 243), C(215, 215, 215), C(230, 230, 230), C(214, 214, 214), C(196, 110, 50)));
+                C(110, 55, 10), C(243, 243, 243), C(215, 215, 215), C(230, 230, 230), C(214, 214, 214), C(196, 110, 50)));
 
         public static readonly ThemePair TerminalDosGreen = new("Terminal DOS Green",
             new("Terminal DOS Green",
@@ -120,9 +143,12 @@ namespace OptimizerWpf
             new("Discord Blurple",
                 C(30, 31, 34), C(43, 45, 49), C(49, 51, 56), C(242, 243, 245), C(148, 155, 164),
                 C(88, 101, 242), C(43, 45, 49), C(30, 31, 34), C(49, 51, 56), C(66, 69, 77), C(88, 101, 242)),
+            // ΔΙΟΡΘΩΣΗ (ίδιο bug-class με το Windows XP Luna Light παραπάνω): StatusText (88,101,242)
+            // ήταν φτιαγμένο για σκούρο φόντο, επαναχρησιμοποιήθηκε ατόφιο πάνω σε σχεδόν-λευκό CardBg
+            // (242,243,245) - contrast ~2.1:1. Σκουρότερο μπλε-μοβ ίδιας οικογένειας.
             new("Discord Light",
                 C(255, 255, 255), C(242, 243, 245), C(235, 236, 240), C(6, 6, 7), C(116, 127, 141),
-                C(88, 101, 242), C(242, 243, 245), C(225, 226, 230), C(235, 236, 240), C(220, 222, 228), C(88, 101, 242)));
+                C(40, 45, 110), C(242, 243, 245), C(225, 226, 230), C(235, 236, 240), C(220, 222, 228), C(88, 101, 242)));
 
         public static readonly ThemePair SteamDeckDark = new("Steam Deck Dark",
             new("Steam Deck Dark",
@@ -186,12 +212,27 @@ namespace OptimizerWpf
         public static ThemeColors Windows11FluentLight => Windows11Fluent.Light;
 
         // Display order matches $themeNamesList in Optimizer.ps1 (ComboTheme items).
+        // ΔΙΟΡΘΩΣΗ (ρητό αίτημα χρήστη: "τα skins PC Manager & Windows Classic εμφανίζονται και στο
+        // dropdown των θεμάτων, να απαλειφθούν από τα θέματα, να είναι μόνο skins") - το
+        // MicrosoftPcManager/WindowsClassic ΠΑΡΑΜΕΝΟΥΝ ως κανονικά static ThemePair πεδία παραπάνω (τα
+        // χρειάζεται το ίδιο το ThemeManager.Apply/Persist μηχανισμό από κάτω), αλλά αφαιρέθηκαν από
+        // αυτή τη λίστα - πλέον επιλέγονται ΑΠΟΚΛΕΙΣΤΙΚΑ μέσω των RadioSkinPcManager/
+        // RadioSkinWindowsClassic στην καρτέλα "Σκινς" (βλ. AppearanceSettingsWindow.xaml's Skin_Changed),
+        // ΠΟΤΕ πια μέσα από το ComboTheme (AppearanceSettingsWindow)/ListThemes (MainWindow popup), αφού
+        // αυτά τα δύο δεν είναι απλά "χρώματα" - αλλάζουν και τη διάταξη του κύριου παραθύρου.
         public static readonly IReadOnlyList<ThemePair> All = new[]
         {
             WindowsVista, Office2007, WindowsXpLuna, Cyberpunk, Matrix, NordicNight, Windows7Aero,
             Windows98Retro, MacOsMonterey, SolarizedDark, GitHubDark, VsCodeDarkPlus,
             TerminalDosGreen, DiscordBlurple, SteamDeckDark, RgbGamingRig, CircuitBoardPcb,
-            SynthwaveOutrun, Windows11Fluent, RetroDosBlue, MicrosoftPcManager,
+            SynthwaveOutrun, Windows11Fluent, RetroDosBlue,
         };
+
+        // ΝΕΟ - ξεχωριστή λίστα ΜΟΝΟ για αναζήτηση κατά DisplayName (π.χ. ThemeManager.LoadPersisted
+        // στην εκκίνηση της εφαρμογής) - ΠΡΕΠΕΙ να περιλαμβάνει ΚΑΙ τα δύο skins (αφαιρέθηκαν από το
+        // All παραπάνω, αλλά παραμένουν έγκυρες, επιλέξιμες τιμές μέσω της καρτέλας Σκινς) - αλλιώς ο
+        // χρήστης που έχει αποθηκεύσει skin ως προεπιλογή εκκίνησης θα έβλεπε το θέμα του να επανέρχεται
+        // σιωπηλά σε Windows 11 Fluent σε κάθε επόμενη εκκίνηση.
+        public static readonly IReadOnlyList<ThemePair> AllIncludingSkins = new List<ThemePair>(All) { MicrosoftPcManager, WindowsClassic };
     }
 }

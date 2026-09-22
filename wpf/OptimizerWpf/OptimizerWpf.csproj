@@ -6,10 +6,92 @@
     <Nullable>enable</Nullable>
     <ImplicitUsings>enable</ImplicitUsings>
     <UseWPF>true</UseWPF>
+    <!-- ΝΕΟ - roadmap "Mini widget / system tray live view" - το System.Windows.Forms.NotifyIcon
+         παραμένει το καθιερωμένο, απλό API για system tray icon σε WPF (καμία ενσωματωμένη WPF
+         εναλλακτική υπάρχει) - βλ. Services/TrayIconService.cs. ΔΕΝ προσθέτει WinForms UI πουθενά
+         αλλού στην εφαρμογή, μόνο το ίδιο το tray icon. -->
+    <UseWindowsForms>true</UseWindowsForms>
+    <!-- ΔΙΟΡΘΩΣΗ - το UseWindowsForms=true προσθέτει ΑΥΤΟΜΑΤΑ global implicit usings για
+         System.Windows.Forms/System.Drawing σε ΚΑΘΕ αρχείο του project (μέσω GlobalUsings.g.cs) -
+         συγκρούεται με δεκάδες ήδη υπάρχοντα WPF types (UserControl/Brush/Color/Point/
+         KeyEventArgs/RadioButton/Application, βλ. live αποτέλεσμα: 41 CS0104 ambiguous-reference
+         errors σε 20+ αρχεία στην πρώτη δοκιμή). Αφαιρούνται ρητά εδώ - τα ΜΟΝΑ 2 αρχεία που
+         χρειάζονται πραγματικά WinForms types (TrayIconService.cs/TrayPopupWindow.xaml.cs) έχουν
+         ήδη τη δική τους τοπική "using System.Windows.Forms;" γραμμή, καμία απώλεια λειτουργίας. -->
     <ApplicationManifest>app.manifest</ApplicationManifest>
+    <ApplicationIcon>AppIcon.ico</ApplicationIcon>
+    <!-- ΔΙΟΡΘΩΣΗ - ρητό αίτημα χρήστη: μετονομασία της εφαρμογής σε "GearWin" (υπότιτλος "Complete
+         PC Care") - το AssemblyName ελέγχει ΜΟΝΟ το όνομα του παραγόμενου .exe/.dll
+         (PCPerformanceMaintenanceSuite.exe/.dll -> GearWin.exe/.dll), ΧΩΡΙΣ να επηρεάζει το
+         namespace του κώδικα (OptimizerWpf, παραμένει ίδιο σε κάθε .cs/.xaml αρχείο - μια
+         μετονομασία namespace θα ήταν πολύ μεγαλύτερη, ασύνδετη αλλαγή σε εκατοντάδες αρχεία) ούτε
+         τον φάκελο δεδομένων χρήστη (%LocalAppData%\OptimizerWpf\... παραμένει ΙΔΙΟΣ επίτηδες -
+         μετονομασία θα "ορφάνευε" τις ήδη αποθηκευμένες ρυθμίσεις/backups κάθε υπάρχοντος χρήστη σε
+         μια ενημέρωση). Βλ. ΚΑΙ installer/OptimizerWpf.iss's MyAppExeName (πρέπει να ταιριάζει
+         ΑΚΡΙΒΩΣ) και AutoGamingModeService.IsSelfOrShell/GameOverlayService.GetForegroundFullscreenProcess
+         (ελέγχουν το process name για να αγνοούν το ίδιο το παράθυρο της εφαρμογής). -->
+    <AssemblyName>GearWin</AssemblyName>
+    <!-- ΝΕΟ - ρητό αίτημα χρήστη: ο installer να ενημερώνει ΜΟΝΟ τα αρχεία που άλλαξαν σε μια
+         επανεγκατάσταση πάνω από ήδη υπάρχουσα έκδοση, αντί να ξαναγράφει τα πάντα. Το Inno Setup
+         (installer/OptimizerWpf.iss) κάνει ΑΚΡΙΒΩΣ αυτό εγγενώς όταν ΔΕΝ υπάρχει το flag
+         "ignoreversion" - συγκρίνει το FileVersion του νέου αρχείου με το ήδη εγκατεστημένο και
+         παραλείπει την αντιγραφή αν δεν είναι νεότερο. Αυτό ΔΕΝ λειτουργεί καθόλου χωρίς αυτό εδώ το
+         <Version> - χωρίς ρητή τιμή, ΚΑΘΕ build παίρνει το ίδιο προεπιλεγμένο FileVersion
+         (1.0.0.0), οπότε το Inno θα έβλεπε "καμία αλλαγή" ΠΑΝΤΑ και θα παρέλειπε ΚΑΙ τα πραγματικά
+         ενημερωμένα OptimizerWpf.dll/.exe - σιωπηλή αποτυχία ενημέρωσης. ΠΡΕΠΕΙ να ενημερώνεται σε
+         ΚΑΘΕ έκδοση, μαζί με τα υπόλοιπα 3 σημεία (MainWindow.xaml/SplashWindow.xaml τίτλοι,
+         installer/OptimizerWpf.iss's MyAppVersion) - βλ. HANDOFF.md/commit history για το μοτίβο. -->
+    <Version>5.3.0</Version>
+    <!-- ΝΕΟ - βελτίωση απόδοσης: ReadyToRun προ-μεταγλωττίζει τη native εικόνα κατά το publish αντί
+         να αφήνει τα πάντα στο JIT κατά την πρώτη εκκίνηση - πιο γρήγορο cold start, χωρίς κανένα
+         ρίσκο διαγραφής κώδικα (σε αντίθεση με το trimming, το οποίο ΔΕΝ ενεργοποιείται εδώ σκόπιμα -
+         οι WPF εφαρμογές δεν είναι ακόμα πλήρως trim-safe, και η εφαρμογή στηρίζεται σε WMI/reflection
+         σε αρκετά σημεία που δεν θα μπορούσαν να επαληθευτούν ζωντανά χωρίς ρίσκο σιωπηλής αποτυχίας
+         μετά το trim). Ενεργοποιείται ΜΟΝΟ σε publish με RuntimeIdentifier (π.χ. -r win-x64), όχι σε
+         απλό dotnet build. -->
+    <PublishReadyToRun>true</PublishReadyToRun>
   </PropertyGroup>
 
   <ItemGroup>
+    <Using Remove="System.Windows.Forms" />
+    <Using Remove="System.Drawing" />
+  </ItemGroup>
+
+  <!-- ΝΕΟ - roadmap "Ταχύτερη εκκίνηση εφαρμογής" - ReadyToRun (AOT-compiled native code μαζί με το IL,
+       ΜΙΚΡΟΤΕΡΟΣ κίνδυνος JIT-κόστους στην πρώτη εκκίνηση) ενεργό ΜΟΝΟ σε Release+win-x64 publish (δεν
+       επηρεάζει Debug F5). ΣΚΟΠΙΜΑ ΧΩΡΙΣ PublishTrimmed: το WPF βασίζεται πολύ σε reflection-based XAML
+       loading (BAML) - το trimming είναι επίσημα μόνο μερικώς υποστηριγμένο για WPF και ρίσκο
+       MissingMethodException σε τυχαία σημεία της εφαρμογής χωρίς εξαντλητικό έλεγχο κάθε παραθύρου -
+       εκτός scope για ένα γρήγορο πέρασμα. Το ReadyToRun από μόνο του είναι πολύ χαμηλότερου ρίσκου
+       (καμία αφαίρεση κώδικα, μόνο προ-μεταγλωττισμένος IL) και το πιο ασφαλές πρώτο βήμα. -->
+  <PropertyGroup Condition="'$(Configuration)'=='Release' AND '$(RuntimeIdentifier)'!=''">
+    <PublishReadyToRun>true</PublishReadyToRun>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <!-- Πρόταση βελτίωσης που εγκρίθηκε ("κάνε τα όλα" - βασικά unit tests) - επιτρέπει στο νέο
+         OptimizerWpf.Tests project να βλέπει internal μέλη (π.χ. DriverService.IsDateNewer) χωρίς να
+         χρειάζεται να γίνουν public μόνο για να είναι test-able. -->
+    <InternalsVisibleTo Include="OptimizerWpf.Tests" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <!-- Εικονίδιο εφαρμογής (ρητό αίτημα χρήστη: "στο παράθυρο της εφαρμογής δεν εμφανίζεται
+         εικονίδιο") - Resource ώστε το Window.Icon="AppIcon.ico" να το βρίσκει μέσω pack URI, ΚΑΙ
+         ApplicationIcon παραπάνω για το ίδιο το exe/taskbar. -->
+    <Resource Include="AppIcon.ico" />
+    <!-- Ρητό αίτημα χρήστη - πραγματικές εικόνες CPU/RAM/GPU/Δίσκου στα αντίστοιχα πλακίδια της
+         Αρχικής (αντικαθιστούν το διανυσματικό HardwareChipIcon και στα 4 πλακίδια). -->
+    <Resource Include="Assets\cpu-icon.png" />
+    <Resource Include="Assets\ram-icon.png" />
+    <Resource Include="Assets\gpu-icon.png" />
+    <Resource Include="Assets\disk-icon.png" />
+    <!-- ΝΕΟ - ρητό αίτημα χρήστη: "όπου ο δίσκος είναι SSD ή NVMe χρησιμοποίησε το αντίστοιχο
+         εικονίδιο" - ξεχωριστά branded εικονίδια, εναλλάσσονται στο Home tile μέσω UpdateDiskIconAsync
+         ανάλογα με το PhysicalDriveKind που ανιχνεύεται (HDD/USB/Unknown συνεχίζουν να δείχνουν το
+         γενικό disk-icon.png). -->
+    <Resource Include="Assets\nvme-icon.png" />
+    <Resource Include="Assets\ssd-icon.png" />
     <PackageReference Include="System.Diagnostics.PerformanceCounter" Version="10.0.11" />
     <PackageReference Include="System.Management" Version="10.0.11" />
     <!-- Θερμοκρασίες CPU/GPU/Δίσκου (ρητό αίτημα χρήστη, μετά από έρευνα - βλ. HANDOFF.md): καμία
@@ -23,6 +105,23 @@
          0.9.4): επιβεβαιωμένο από το ίδιο το project ότι πρόσφατα διορθώθηκαν ακριβώς NVMe
          θερμοκρασία sensors (ο δίσκος σε αυτό το μηχάνημα είναι NVMe - "WD Blue SN580"). -->
     <PackageReference Include="LibreHardwareMonitorLib" Version="0.9.6" />
+    <!-- ΝΕΟ - ρητό αίτημα χρήστη: "κίνηση δικτύου ανά εφαρμογή" στο Δίκτυο &amp; Ασφάλεια. Δεν υπάρχει
+         WMI/perf-counter API για bytes ανά διεργασία στα Windows (το ίδιο API που χρησιμοποιεί
+         εσωτερικά η στήλη "Δίκτυο" του Task Manager) - το μόνο αξιόπιστο, επίσημα τεκμηριωμένο μονοπάτι
+         είναι ETW (Event Tracing for Windows), μέσω του NT Kernel Logger's Network TCP/IP provider. Το
+         TraceEvent είναι η καθιερωμένη, ανοιχτού κώδικα (MIT, Microsoft/dotnet org) βιβλιοθήκη γι' αυτό
+         ακριβώς - καταναλώνει τα ίδια kernel ETW events, χωρίς custom driver. Απαιτεί Administrator
+         (η εφαρμογή το έχει ήδη). Το NetworkTrafficService διαχειρίζεται τη διάρκεια ζωής της
+         TraceEventSession με προσοχή (Dispose σε κάθε περίπτωση, ακόμα και σε exception) ώστε να μην
+         μείνει "κολλημένο" ένα kernel session μετά το κλείσιμο της εφαρμογής. -->
+    <PackageReference Include="Microsoft.Diagnostics.Tracing.TraceEvent" Version="3.1.13" />
+    <!-- ΝΕΟ - ρητό αίτημα χρήστη: "η εξαγωγή των πληροφοριών συστήματος να γίνεται σε αρχείο PDF"
+         (πριν ήταν απλό .txt - βλ. SystemView.xaml.cs's BtnExportDevice_Click). Το PDFsharp (empira,
+         MIT από την v6) είναι το καθιερωμένο, ανοιχτού κώδικα εργαλείο για απευθείας δημιουργία PDF
+         από .NET χωρίς εξωτερικό PDF εκτυπωτή/driver (π.χ. "Microsoft Print to PDF", που δεν είναι
+         εγγυημένο ότι υπάρχει σε κάθε σύστημα) - απλό, imperative XGraphics API κατάλληλο για το ήδη
+         υπάρχον "=== Τίτλος ===" + γραμμές κειμένου format που παράγει το SystemView. -->
+    <PackageReference Include="PdfSharp" Version="6.2.4" />
   </ItemGroup>
 
 </Project>

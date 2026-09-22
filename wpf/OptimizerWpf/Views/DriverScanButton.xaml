@@ -1,0 +1,38 @@
+<UserControl x:Class="OptimizerWpf.Views.DriverScanButton"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:views="clr-namespace:OptimizerWpf.Views"
+             xmlns:tr="clr-namespace:OptimizerWpf"
+             mc:Ignorable="d" d:DesignWidth="190" d:DesignHeight="190">
+    <!-- Port του ps1's New-DriverScanButton (~5555, "στυλ IObit") - μεγάλο κυκλικό κουμπί σάρωσης
+         οδηγών (ρητό αίτημα χρήστη μετά από screenshot: "πού είναι το κυκλικό κουμπί σάρωσης;") - ίδιο
+         radial-gradient μπλε σώμα + λαμπερός δακτύλιος + γρανάζι+κείμενο στο κέντρο. Κατά τη σάρωση
+         (SetScanning(true)) εμφανίζεται περιστρεφόμενο τόξο προόδου γύρω-γύρω και το γρανάζι
+         "ζωντανεύει" (πλήρης αδιαφάνεια + περιστροφή) - στην αδράνεια είναι στατικό/διακριτικό, ίδια
+         λογική με το πρωτότυπο Draw-SimpleGear στάσιμη έκδοση. -->
+    <Grid x:Name="Root" Width="190" Height="190" Cursor="Hand" Background="Transparent" MouseLeftButtonUp="Root_MouseLeftButtonUp">
+        <Ellipse Width="190" Height="190" Stroke="#6690CAFF" StrokeThickness="1.5"/>
+        <Ellipse Width="174" Height="174">
+            <Ellipse.Fill>
+                <RadialGradientBrush GradientOrigin="0.3,0.3" Center="0.5,0.5" RadiusX="0.9" RadiusY="0.9">
+                    <GradientStop Color="#FF6EC6FF" Offset="0"/>
+                    <GradientStop Color="#FF2196F3" Offset="0.55"/>
+                    <GradientStop Color="#FF0D2E6B" Offset="1"/>
+                </RadialGradientBrush>
+            </Ellipse.Fill>
+        </Ellipse>
+        <Path x:Name="ProgressArc" Data="M 95,10 A 85,85 0 0 1 180,95" Stroke="#FFBEE6FF" StrokeThickness="5"
+              StrokeStartLineCap="Round" StrokeEndLineCap="Round" Visibility="Collapsed" RenderTransformOrigin="0.5,0.5">
+            <Path.RenderTransform>
+                <RotateTransform x:Name="ArcRotate"/>
+            </Path.RenderTransform>
+        </Path>
+        <!-- Ρητό αίτημα χρήστη: μεγαλύτερα γρανάζια + το "ΣΑΡΩΣΗ" πιο κοντά στο κάτω περιθώριο του
+             κύκλου (ΟΧΙ όλα στριμωγμένα στο ίδιο κέντρο) - το γρανάζι τοποθετείται ψηλότερα (κοντά στο
+             πάνω μισό) και το κείμενο χαμηλότερα (κοντά στο κάτω περιθώριο), ανεξάρτητα μεταξύ τους. -->
+        <views:ThreeGearIcon x:Name="Gear" Width="64" Height="64" HorizontalAlignment="Center" VerticalAlignment="Center" Margin="0,-28,0,0" Opacity="0.55" IsHitTestVisible="False"/>
+        <TextBlock Text="{tr:Tr Opt_ScanCaps}" FontWeight="Bold" FontSize="17" Foreground="White" HorizontalAlignment="Center" VerticalAlignment="Bottom" Margin="0,0,0,28" IsHitTestVisible="False"/>
+    </Grid>
+</UserControl>

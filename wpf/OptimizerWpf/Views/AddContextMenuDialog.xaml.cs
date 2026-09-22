@@ -1,5 +1,6 @@
 using System.Windows;
 using System.Windows.Controls;
+using OptimizerWpf.Services;
 
 namespace OptimizerWpf.Views
 {
@@ -9,13 +10,17 @@ namespace OptimizerWpf.Views
         public string CommandValue { get; private set; } = "";
         public string ScopeValue { get; private set; } = "Directory";
 
-        public AddContextMenuDialog() => InitializeComponent();
+        public AddContextMenuDialog()
+        {
+            InitializeComponent();
+            ThemeManager.AttachWindow(this);
+        }
 
         private void BtnAdd_Click(object sender, RoutedEventArgs e)
         {
             if (string.IsNullOrWhiteSpace(TxtMenuText.Text) || string.IsNullOrWhiteSpace(TxtCommand.Text))
             {
-                MessageBox.Show("Συμπληρώστε κείμενο μενού και εντολή.", "Σφάλμα", MessageBoxButton.OK, MessageBoxImage.Warning);
+                ThemedMessageBox.Show(LanguageService.T("Ctx_FillFieldsMsg"), LanguageService.T("Adv_ErrorTitle"), MessageBoxButton.OK, MessageBoxImage.Warning);
                 return;
             }
             MenuTextValue = TxtMenuText.Text.Trim();

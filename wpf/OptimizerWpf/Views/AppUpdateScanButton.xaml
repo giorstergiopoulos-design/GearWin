@@ -1,0 +1,40 @@
+<UserControl x:Class="OptimizerWpf.Views.AppUpdateScanButton"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:tr="clr-namespace:OptimizerWpf"
+             mc:Ignorable="d" d:DesignWidth="190" d:DesignHeight="190">
+    <!-- Ρητό αίτημα χρήστη: "αντί για απλό κουμπί, με έμπνευση από το κυκλικό των οδηγών, φτιάξε ένα
+         παρόμοιο με κινούμενο εικονίδιο αναβάθμισης εφαρμογών" - ίδιο σχήμα/μέγεθος/τόξο προόδου με το
+         DriverScanButton (βλ. εκεί), αλλά πράσινη/τιρκουάζ παλέτα (αντί για μπλε) ώστε να ξεχωρίζει
+         οπτικά από τη σάρωση οδηγών, και κεντρικό εικονίδιο βέλους-αναβάθμισης (αντί για γρανάζι) που
+         κατά τη σάρωση "ανεβαίνει"/σφύζει αντί να περιστρέφεται (η περιστροφή ταιριάζει σε γρανάζι, όχι
+         σε βέλος αναβάθμισης). -->
+    <Grid x:Name="Root" Width="190" Height="190" Cursor="Hand" Background="Transparent" MouseLeftButtonUp="Root_MouseLeftButtonUp">
+        <Ellipse Width="190" Height="190" Stroke="#66A5FFD6" StrokeThickness="1.5"/>
+        <Ellipse Width="174" Height="174">
+            <Ellipse.Fill>
+                <RadialGradientBrush GradientOrigin="0.3,0.3" Center="0.5,0.5" RadiusX="0.9" RadiusY="0.9">
+                    <GradientStop Color="#FF7FFFD4" Offset="0"/>
+                    <GradientStop Color="#FF26A69A" Offset="0.55"/>
+                    <GradientStop Color="#FF0B3D3A" Offset="1"/>
+                </RadialGradientBrush>
+            </Ellipse.Fill>
+        </Ellipse>
+        <Path x:Name="ProgressArc" Data="M 95,10 A 85,85 0 0 1 180,95" Stroke="#FFBEFFE6" StrokeThickness="5"
+              StrokeStartLineCap="Round" StrokeEndLineCap="Round" Visibility="Collapsed" RenderTransformOrigin="0.5,0.5">
+            <Path.RenderTransform>
+                <RotateTransform x:Name="ArcRotate"/>
+            </Path.RenderTransform>
+        </Path>
+        <Grid x:Name="IconGroup" Width="64" Height="64" HorizontalAlignment="Center" VerticalAlignment="Center"
+              Margin="0,-28,0,0" Opacity="0.55" IsHitTestVisible="False" RenderTransformOrigin="0.5,0.5">
+            <Grid.RenderTransform>
+                <TranslateTransform x:Name="IconBob"/>
+            </Grid.RenderTransform>
+            <Path Data="M32,4 L56,30 L42,30 L42,60 L22,60 L22,30 L8,30 Z" Fill="White"/>
+        </Grid>
+        <TextBlock Text="{tr:Tr Opt_ScanCaps}" FontWeight="Bold" FontSize="17" Foreground="White" HorizontalAlignment="Center" VerticalAlignment="Bottom" Margin="0,0,0,28" IsHitTestVisible="False"/>
+    </Grid>
+</UserControl>

@@ -1,0 +1,41 @@
+<Window x:Class="OptimizerWpf.ThemedMessageBox"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        mc:Ignorable="d"
+        WindowStartupLocation="CenterOwner" ResizeMode="NoResize" SizeToContent="Height" Width="440"
+        ShowInTaskbar="False" Background="{DynamicResource MainBgBrush}">
+    <!-- ΝΕΟ - ρητό αίτημα χρήστη: "έλεγξε αν τα παράθυρα μηνυμάτων εμφανίζονται με το αντίστοιχο
+         θέμα και mode" - το ενσωματωμένο System.Windows.MessageBox είναι ΠΑΝΤΑ ένα άθεμα, λευκό
+         native Windows dialog (108 σημεία κλήσης σε όλη την εφαρμογή, ΚΑΝΕΝΑ από αυτά δεν ακολουθεί
+         το θέμα/dark-light mode) - γνωστός, θεμελιώδης περιορισμός του WPF (το MessageBox ΔΕΝ
+         retemplate-άρεται). Αυτό εδώ είναι ένα ελαφρύ, θεματισμένο ισοδύναμο με ΤΗΝ ΙΔΙΑ ακριβώς
+         στατική υπογραφή Show(...) → MessageBoxResult, ώστε η αντικατάσταση σε όλα τα σημεία κλήσης
+         να είναι μηχανική (MessageBox.Show → ThemedMessageBox.Show, καμία άλλη αλλαγή στα ορίσματα).
+         Στη namespace OptimizerWpf (ρίζα, ίδιο με το ThemeManager) ώστε να είναι ορατό χωρίς using
+         από ΟΛΑ τα OptimizerWpf.Views.* αρχεία (εμφωλευμένη ανάλυση namespace της C#). Υποστηρίζει
+         μόνο τους πραγματικά χρησιμοποιούμενους συνδυασμούς σε αυτή την εφαρμογή (OK, YesNo - καμία
+         χρήση OKCancel/YesNoCancel βρέθηκε πουθενά στον έλεγχο). -->
+    <Grid Margin="24">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
+        </Grid.RowDefinitions>
+
+        <StackPanel Grid.Row="0" Orientation="Horizontal" Margin="0,0,0,22">
+            <TextBlock x:Name="TxtIcon" FontSize="26" Margin="0,0,16,0" VerticalAlignment="Top"/>
+            <TextBlock x:Name="TxtMessage" Foreground="{DynamicResource TextBrush}" FontSize="13"
+                       TextWrapping="Wrap" VerticalAlignment="Center" MaxWidth="340"/>
+        </StackPanel>
+
+        <StackPanel Grid.Row="1" Orientation="Horizontal" HorizontalAlignment="Right">
+            <Button x:Name="BtnNo" Style="{StaticResource FlatButtonStyle}"
+                    MinWidth="90" Padding="14,8" Margin="0,0,8,0" Click="BtnNo_Click" Visibility="Collapsed"/>
+            <Button x:Name="BtnYes" Style="{StaticResource AccentButtonStyle}" MinWidth="90" Padding="14,8"
+                    Margin="0,0,8,0" Click="BtnYes_Click" Visibility="Collapsed"/>
+            <Button x:Name="BtnOk" Style="{StaticResource AccentButtonStyle}" MinWidth="90" Padding="14,8"
+                    Click="BtnOk_Click" Visibility="Collapsed"/>
+        </StackPanel>
+    </Grid>
+</Window>

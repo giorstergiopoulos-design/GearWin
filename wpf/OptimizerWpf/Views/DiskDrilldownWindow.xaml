@@ -3,8 +3,9 @@
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:tr="clr-namespace:OptimizerWpf"
         mc:Ignorable="d"
-        Title="Περαιτέρω Ανάλυση" Height="560" Width="640"
+        Title="{tr:Tr Drilldown_Title}" Height="560" Width="640"
         WindowStartupLocation="CenterOwner" ResizeMode="CanResizeWithGrip"
         Background="{DynamicResource MainBgBrush}">
     <!--
@@ -21,10 +22,10 @@
             <RowDefinition Height="Auto"/>
         </Grid.RowDefinitions>
 
-        <TextBlock x:Name="TxtStatus" Grid.Row="0" Text="Ανάλυση σε εξέλιξη..." Style="{StaticResource SubTextStyle}" Margin="0,0,0,12"/>
+        <TextBlock x:Name="TxtStatus" Grid.Row="0" Text="{tr:Tr Drilldown_InProgress}" Style="{StaticResource SubTextStyle}" Margin="0,0,0,12"/>
 
         <Border Grid.Row="1" Background="{DynamicResource CardBgBrush}" BorderBrush="{DynamicResource CardBorderBrush}" BorderThickness="1" CornerRadius="8" Padding="8">
-            <ScrollViewer VerticalScrollBarVisibility="Auto">
+            <ScrollViewer VerticalScrollBarVisibility="Auto" PreviewMouseWheel="NestedScroll_PreviewMouseWheel">
                 <ItemsControl x:Name="ListResults">
                     <ItemsControl.ItemTemplate>
                         <DataTemplate>
@@ -42,6 +43,6 @@
             </ScrollViewer>
         </Border>
 
-        <Button Grid.Row="2" Content="Κλείσιμο" Style="{StaticResource AccentButtonStyle}" Width="120" HorizontalAlignment="Right" Margin="0,12,0,0" Click="BtnClose_Click"/>
+        <Button Grid.Row="2" Content="{tr:Tr Close}" Style="{StaticResource AccentButtonStyle}" Width="120" HorizontalAlignment="Right" Margin="0,12,0,0" Click="BtnClose_Click"/>
     </Grid>
 </Window>

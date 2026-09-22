@@ -3,18 +3,184 @@
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:tr="clr-namespace:OptimizerWpf"
+             xmlns:views="clr-namespace:OptimizerWpf.Views"
              mc:Ignorable="d">
     <!-- Σύστημα - port του Optimizer.ps1's $tabSystem (~15622-16518). Βλ. SystemService.cs. -->
-    <ScrollViewer VerticalScrollBarVisibility="Auto">
+    <UserControl.Resources>
+        <!-- ΝΕΟ v3.3.0 - κοινό template "Ετικέτα: Τιμή" για όλες τις κάρτες του "Η Συσκευή Μου"
+             section, ώστε κάθε κάρτα να γεμίζει από ένα απλό ItemsControl αντί για δεκάδες
+             χειροκίνητα named TextBlocks (βλ. SystemView.xaml.cs's InfoRow). -->
+        <DataTemplate x:Key="DeviceInfoRowTemplate">
+            <TextBlock Style="{StaticResource SubTextStyle}" TextWrapping="Wrap" Margin="0,0,0,3">
+                <Run Text="{Binding Label}" FontWeight="SemiBold" Foreground="{DynamicResource TextBrush}"/>
+                <Run Text=": "/>
+                <Run Text="{Binding Value}"/>
+            </TextBlock>
+        </DataTemplate>
+        <BooleanToVisibilityConverter x:Key="BoolToVis"/>
+    </UserControl.Resources>
+    <ScrollViewer VerticalScrollBarVisibility="Auto" PreviewMouseWheel="NestedScroll_PreviewMouseWheel">
         <StackPanel Margin="0,8,0,24">
+
+            <!-- ΝΕΟ v3.3.0 (χρήστης έδειξε screenshots από το "My Device" tab του WMT, ζήτησε: "να
+                 συμπεριλάβεις όλες τις πληροφορίες όπως το WMT, όχι τόσο μικρό πλαίσιο") - πλήρες,
+                 πολυκάρτο section (Motherboard/Storage/OS/Network/CPU/Battery/RAM/GPU, ίδια δομή με
+                 το WMT) στην κορυφή της καρτέλας - βλ. MyDeviceService.cs. Καθαρά πληροφοριακό - ΚΑΝΕΝΑ
+                 κουμπί ενέργειας πουθενά εδώ, όπως ρητά ζητήθηκε. Κάθε κάρτα γεμίζει από ένα
+                 ItemsControl δεμένο σε λίστα (Label,Value) ζευγών από το code-behind, αντί για
+                 δεκάδες χειροκίνητα named TextBlocks.
+                 ΣΗΜΕΙΩΣΗ ΕΙΛΙΚΡΙΝΕΙΑΣ: μερικά πεδία του WMT (π.χ. ακριβής αριθμός τοπικών admins,
+                 detailed firmware mode) δεν έχουν απλό, αξιόπιστο .NET/WMI ισοδύναμο σε κάθε Windows
+                 build - δείχνουν "?" αντί για εικασία όταν δεν μπορούν να επιβεβαιωθούν σίγουρα. -->
+            <!-- ΝΕΟ - ρητό αίτημα χρήστη: "στο σύστημα βάλε επικεφαλίδα Πληροφορίες Συστήματος" - έλειπε
+                 εντελώς μια επικεφαλίδα πάνω από την ενότητα "Η Συσκευή Μου" (μητρική/δίσκοι/CPU/κ.λπ.),
+                 ίδιο μοτίβο με τα υπόλοιπα section headers της καρτέλας (Εκκίνηση/Διεργασίες/κ.λπ.). -->
+            <Grid Margin="0,0,0,12">
+                <Grid.ColumnDefinitions><ColumnDefinition Width="Auto"/><ColumnDefinition Width="*"/><ColumnDefinition Width="Auto"/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions>
+                <views:HeaderGlyphIcon Grid.Column="0" Kind="Monitor" Width="18" Height="18" Margin="0,2,8,0" VerticalAlignment="Top"/>
+                <TextBlock Grid.Column="1" Text="{tr:Tr Sys_InfoHeader}" Style="{StaticResource CardTitleStyle}" FontSize="16"/>
+                <!-- ΝΕΟ - ρητό αίτημα χρήστη: "να μην ξανασκαναρονται καθε φορα οι πληροφοριες
+                     συστηματος" - το MyDeviceService πλέον cache-άρει ολόκληρο το DeviceSummary (βλ.
+                     σχόλιο εκεί), οπότε αυτό το κουμπί είναι η ρητή διέξοδος για να ζητήσει ο χρήστης
+                     μια πραγματικά φρέσκια σάρωση (π.χ. μετά τη σύνδεση νέου δίσκου). -->
+                <Button Grid.Column="2" Content="{tr:Tr Refresh}" Style="{StaticResource FlatButtonStyle}" Padding="12,6" Margin="0,0,8,0" Click="BtnRefreshDevice_Click"/>
+                <!-- ΝΕΟ - roadmap "Εξαγωγή Η Συσκευή Μου" - βλ. BtnExportDevice_Click. -->
+                <Button Grid.Column="3" Content="{tr:Tr Sys_ExportDevice}" Style="{StaticResource FlatButtonStyle}" Padding="12,6" Click="BtnExportDevice_Click"/>
+            </Grid>
+
+            <UniformGrid Columns="2" Margin="0,0,0,16">
+                <Border Style="{StaticResource CardStyle}" Margin="0,0,8,0">
+                    <StackPanel>
+                        <Grid Margin="0,0,0,10">
+                            <Grid.ColumnDefinitions><ColumnDefinition Width="Auto"/><ColumnDefinition Width="*"/></Grid.ColumnDefinitions>
+                            <views:HeaderGlyphIcon Grid.Column="0" Kind="Monitor" Width="16" Height="16" Margin="0,0,8,0" VerticalAlignment="Center"/>
+                            <TextBlock Grid.Column="1" Text="{tr:Tr Sys_MbTitle}" Style="{StaticResource CardTitleStyle}"/>
+                        </Grid>
+                        <ItemsControl x:Name="ListMotherboard" ItemTemplate="{StaticResource DeviceInfoRowTemplate}"/>
+                    </StackPanel>
+                </Border>
+                <Border Style="{StaticResource CardStyle}" Margin="8,0,0,0">
+                    <StackPanel>
+                        <Grid Margin="0,0,0,10">
+                            <Grid.ColumnDefinitions><ColumnDefinition Width="Auto"/><ColumnDefinition Width="*"/></Grid.ColumnDefinitions>
+                            <views:HeaderGlyphIcon Grid.Column="0" Kind="Disk" Width="16" Height="16" Margin="0,0,8,0" VerticalAlignment="Center"/>
+                            <TextBlock Grid.Column="1" Text="{tr:Tr Sys_DrivesTitle}" Style="{StaticResource CardTitleStyle}"/>
+                        </Grid>
+                        <ItemsControl x:Name="ListDrivesInfo">
+                            <ItemsControl.ItemTemplate>
+                                <DataTemplate>
+                                    <StackPanel Margin="0,0,0,10">
+                                        <Grid>
+                                            <Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions>
+                                            <TextBlock Grid.Column="0" FontWeight="Bold" Foreground="{DynamicResource AccentBrush}" Text="{Binding Header}"/>
+                                            <TextBlock Grid.Column="1" Foreground="{Binding HealthColor}" Text="{Binding Health}"/>
+                                        </Grid>
+                                        <TextBlock Style="{StaticResource SubTextStyle}" TextWrapping="Wrap" Text="{Binding Details}"/>
+                                        <ProgressBar Height="5" Margin="0,4,0,2" Minimum="0" Maximum="100" Value="{Binding UsedPercent, Mode=OneTime}" Foreground="{DynamicResource AccentBrush}"/>
+                                        <TextBlock Style="{StaticResource SubTextStyle}" Text="{Binding SpaceLine}"/>
+                                    </StackPanel>
+                                </DataTemplate>
+                            </ItemsControl.ItemTemplate>
+                        </ItemsControl>
+                    </StackPanel>
+                </Border>
+            </UniformGrid>
+
+            <UniformGrid Columns="3" Margin="0,0,0,16">
+                <Border Style="{StaticResource CardStyle}" Margin="0,0,8,0">
+                    <StackPanel>
+                        <Grid Margin="0,0,0,10">
+                            <Grid.ColumnDefinitions><ColumnDefinition Width="Auto"/><ColumnDefinition Width="*"/></Grid.ColumnDefinitions>
+                            <views:HeaderGlyphIcon Grid.Column="0" Kind="Monitor" Width="16" Height="16" Margin="0,0,8,0" VerticalAlignment="Center"/>
+                            <TextBlock Grid.Column="1" Text="{tr:Tr Sys_OsTitle}" Style="{StaticResource CardTitleStyle}"/>
+                        </Grid>
+                        <ItemsControl x:Name="ListOsInfo" ItemTemplate="{StaticResource DeviceInfoRowTemplate}"/>
+                    </StackPanel>
+                </Border>
+                <Border Style="{StaticResource CardStyle}" Margin="8,0,8,0">
+                    <StackPanel>
+                        <Grid Margin="0,0,0,10">
+                            <Grid.ColumnDefinitions><ColumnDefinition Width="Auto"/><ColumnDefinition Width="*"/></Grid.ColumnDefinitions>
+                            <views:HeaderGlyphIcon Grid.Column="0" Kind="SignalBars" Width="16" Height="16" Margin="0,0,8,0" VerticalAlignment="Center"/>
+                            <TextBlock Grid.Column="1" Text="{tr:Tr Sys_NetTitle}" Style="{StaticResource CardTitleStyle}"/>
+                        </Grid>
+                        <ItemsControl x:Name="ListNetInfo" ItemTemplate="{StaticResource DeviceInfoRowTemplate}"/>
+                    </StackPanel>
+                </Border>
+                <Border Style="{StaticResource CardStyle}" Margin="8,0,0,0">
+                    <StackPanel>
+                        <Grid Margin="0,0,0,10">
+                            <Grid.ColumnDefinitions><ColumnDefinition Width="Auto"/><ColumnDefinition Width="*"/></Grid.ColumnDefinitions>
+                            <views:HeaderGlyphIcon Grid.Column="0" Kind="Monitor" Width="16" Height="16" Margin="0,0,8,0" VerticalAlignment="Center"/>
+                            <TextBlock Grid.Column="1" Text="{tr:Tr Sys_CpuTitle}" Style="{StaticResource CardTitleStyle}"/>
+                        </Grid>
+                        <ItemsControl x:Name="ListCpuInfo" ItemTemplate="{StaticResource DeviceInfoRowTemplate}"/>
+                    </StackPanel>
+                </Border>
+            </UniformGrid>
+
+            <UniformGrid Columns="3" Margin="0,0,0,16">
+                <Border Style="{StaticResource CardStyle}" Margin="0,0,8,0">
+                    <StackPanel>
+                        <Grid Margin="0,0,0,10">
+                            <Grid.ColumnDefinitions><ColumnDefinition Width="Auto"/><ColumnDefinition Width="*"/></Grid.ColumnDefinitions>
+                            <views:HeaderGlyphIcon Grid.Column="0" Kind="Battery" Width="16" Height="16" Margin="0,0,8,0" VerticalAlignment="Center"/>
+                            <TextBlock Grid.Column="1" Text="{tr:Tr Sys_BatteryTitle}" Style="{StaticResource CardTitleStyle}"/>
+                        </Grid>
+                        <ItemsControl x:Name="ListBatteryInfo" ItemTemplate="{StaticResource DeviceInfoRowTemplate}"/>
+                        <!-- ΝΕΟ - roadmap "κατανάλωση ενέργειας ανά εφαρμογή": δεν υπάρχει αξιόπιστο
+                             δημόσιο API για πραγματικά ανά-εφαρμογή νούμερα ενέργειας, οπότε αντί να
+                             κατασκευαστούν αναξιόπιστα ψευδο-νούμερα, η κάρτα παραπέμπει στην ΙΔΙΑ
+                             την επίσημη οθόνη ανάλυσης μπαταρίας ανά εφαρμογή των Windows. -->
+                        <Button Content="{tr:Tr Sys_OpenBatteryUsageButton}" Style="{StaticResource FlatButtonStyle}" Padding="10,5" Margin="0,10,0,0" HorizontalAlignment="Left" Click="BtnOpenBatteryUsage_Click"/>
+                    </StackPanel>
+                </Border>
+                <Border Style="{StaticResource CardStyle}" Margin="8,0,8,0">
+                    <StackPanel>
+                        <Grid Margin="0,0,0,10">
+                            <Grid.ColumnDefinitions><ColumnDefinition Width="Auto"/><ColumnDefinition Width="*"/></Grid.ColumnDefinitions>
+                            <views:HeaderGlyphIcon Grid.Column="0" Kind="Monitor" Width="16" Height="16" Margin="0,0,8,0" VerticalAlignment="Center"/>
+                            <TextBlock Grid.Column="1" Text="{tr:Tr Sys_RamTitle}" Style="{StaticResource CardTitleStyle}"/>
+                        </Grid>
+                        <ItemsControl x:Name="ListRamInfo" ItemTemplate="{StaticResource DeviceInfoRowTemplate}"/>
+                    </StackPanel>
+                </Border>
+                <Border Style="{StaticResource CardStyle}" Margin="8,0,0,0">
+                    <StackPanel>
+                        <Grid Margin="0,0,0,10">
+                            <Grid.ColumnDefinitions><ColumnDefinition Width="Auto"/><ColumnDefinition Width="*"/></Grid.ColumnDefinitions>
+                            <views:HeaderGlyphIcon Grid.Column="0" Kind="Monitor" Width="16" Height="16" Margin="0,0,8,0" VerticalAlignment="Center"/>
+                            <TextBlock Grid.Column="1" Text="{tr:Tr Sys_GpuTitle}" Style="{StaticResource CardTitleStyle}"/>
+                        </Grid>
+                        <ItemsControl x:Name="ListGpuInfo">
+                            <ItemsControl.ItemTemplate>
+                                <DataTemplate>
+                                    <StackPanel Margin="0,0,0,10">
+                                        <TextBlock FontWeight="Bold" Foreground="{DynamicResource TextBrush}" TextWrapping="Wrap" Text="{Binding Name}"/>
+                                        <TextBlock Style="{StaticResource SubTextStyle}" TextWrapping="Wrap" Text="{Binding Details}"/>
+                                        <!-- ΝΕΟ - roadmap "Σήμανση ξεπερασμένων drivers". -->
+                                        <TextBlock Text="{Binding OutdatedHint}" Foreground="#FFE0A030" FontSize="11" TextWrapping="Wrap" Margin="0,2,0,0"
+                                                   Visibility="{Binding IsOutdated, Converter={StaticResource BoolToVis}}"/>
+                                    </StackPanel>
+                                </DataTemplate>
+                            </ItemsControl.ItemTemplate>
+                        </ItemsControl>
+                    </StackPanel>
+                </Border>
+            </UniformGrid>
 
             <!-- Εκκίνηση -->
             <Border Style="{StaticResource CardStyle}">
                 <StackPanel>
                     <Grid Margin="0,0,0,10">
                         <Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions>
-                        <TextBlock Grid.Column="0" Text="Εφαρμογές Εκκίνησης Συστήματος" Style="{StaticResource CardTitleStyle}"/>
-                        <Button Grid.Column="1" Content="Ανανέωση" Style="{StaticResource FlatButtonStyle}" Width="120" Click="BtnRefreshStartup_Click"/>
+                        <Grid Grid.Column="0">
+                            <Grid.ColumnDefinitions><ColumnDefinition Width="Auto"/><ColumnDefinition Width="*"/></Grid.ColumnDefinitions>
+                            <views:HeaderGlyphIcon Grid.Column="0" Kind="Bolt" Width="16" Height="16" Margin="0,0,8,0" VerticalAlignment="Center"/>
+                            <TextBlock Grid.Column="1" Text="{tr:Tr System_Startup}" Style="{StaticResource CardTitleStyle}"/>
+                        </Grid>
+                        <Button Grid.Column="1" Content="{tr:Tr Refresh}" Style="{StaticResource FlatButtonStyle}" Width="120" Click="BtnRefreshStartup_Click"/>
                     </Grid>
                     <ItemsControl x:Name="ListStartup">
                         <ItemsControl.ItemTemplate>
@@ -22,7 +188,15 @@
                                 <Grid Margin="0,0,0,8">
                                     <Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions>
                                     <StackPanel Grid.Column="0">
-                                        <TextBlock Text="{Binding Item.Name}" Foreground="{DynamicResource TextBrush}" FontWeight="SemiBold"/>
+                                        <StackPanel Orientation="Horizontal">
+                                            <TextBlock Text="{Binding Item.Name}" Foreground="{DynamicResource TextBrush}" FontWeight="SemiBold"/>
+                                            <!-- ΝΕΟ - roadmap "Εκτίμηση χρόνου εκκίνησης" - βλ. SystemService.GetStartupDelayEstimates. -->
+                                            <TextBlock Text="{Binding DelayText}" Foreground="{DynamicResource AccentBrush}" FontSize="10" Margin="8,0,0,0" VerticalAlignment="Center"
+                                                       Visibility="{Binding HasDelay, Converter={StaticResource BoolToVis}}"/>
+                                            <!-- ΝΕΟ - roadmap "Startup impact, όχι μόνο πλήθος" - βλ. SystemView.xaml.cs's LoadStartupAsync. -->
+                                            <TextBlock Text="{Binding ImpactLabel}" Foreground="{Binding ImpactColor}" FontSize="10" FontWeight="SemiBold" Margin="8,0,0,0" VerticalAlignment="Center"
+                                                       Visibility="{Binding HasDelay, Converter={StaticResource BoolToVis}}"/>
+                                        </StackPanel>
                                         <TextBlock Text="{Binding Item.Command}" Style="{StaticResource SubTextStyle}" FontSize="10" TextTrimming="CharacterEllipsis"/>
                                     </StackPanel>
                                     <ToggleButton Grid.Column="1" IsChecked="{Binding IsEnabled}" Style="{StaticResource ToggleSwitchStyle}" Click="ToggleStartupItem_Click" Tag="{Binding}"/>
@@ -37,30 +211,38 @@
             <Border Style="{StaticResource CardStyle}" Margin="0,16,0,0">
                 <StackPanel>
                     <Grid Margin="0,0,0,10">
-                        <Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions>
-                        <TextBlock Grid.Column="0" Text="Διεργασίες Συστήματος (Top 25 κατά μνήμη)" Style="{StaticResource CardTitleStyle}"/>
-                        <Button Grid.Column="1" Content="Ανανέωση" Style="{StaticResource FlatButtonStyle}" Width="120" Click="BtnRefreshProcesses_Click"/>
+                        <Grid.ColumnDefinitions><ColumnDefinition Width="Auto"/><ColumnDefinition Width="*"/><ColumnDefinition Width="Auto"/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions>
+                        <views:HeaderGlyphIcon Grid.Column="0" Kind="Brain" Width="16" Height="16" Margin="0,0,8,0" VerticalAlignment="Center"/>
+                        <TextBlock Grid.Column="1" Text="{tr:Tr System_Processes}" Style="{StaticResource CardTitleStyle}"/>
+                        <!-- ΝΕΟ v3.2.0 (χρήστης ζήτησε: "sleep mode αναστολή background apps για
+                             ελευθέρωση RAM, στυλ AVG TuneUp") - βλ. SystemService.
+                             FreeBackgroundMemoryAsync για το πλήρες σκεπτικό (EmptyWorkingSet, ΟΧΙ
+                             πραγματική αναστολή διεργασιών - ασφαλέστερο). -->
+                        <Button Grid.Column="2" Content="{tr:Tr System_FreeMemoryBtn}" Style="{StaticResource AccentButtonStyle}" Width="200" Margin="0,0,10,0" Click="BtnFreeMemory_Click"/>
+                        <Button Grid.Column="3" Content="{tr:Tr Refresh}" Style="{StaticResource FlatButtonStyle}" Width="120" Click="BtnRefreshProcesses_Click"/>
                     </Grid>
                     <Border Background="{DynamicResource MainBgBrush}" CornerRadius="6" MaxHeight="320" Padding="4">
-                        <ScrollViewer VerticalScrollBarVisibility="Auto">
-                            <ItemsControl x:Name="ListProcesses">
-                                <ItemsControl.ItemTemplate>
-                                    <DataTemplate>
-                                        <Grid Margin="6,4">
-                                            <Grid.ColumnDefinitions>
-                                                <ColumnDefinition Width="*"/>
-                                                <ColumnDefinition Width="90"/>
-                                                <ColumnDefinition Width="80"/>
-                                            </Grid.ColumnDefinitions>
-                                            <TextBlock Grid.Column="0" Text="{Binding Name}" Foreground="{DynamicResource TextBrush}"/>
-                                            <TextBlock Grid.Column="1" Text="{Binding WorkingSetMb, StringFormat={}{0} MB}" Style="{StaticResource SubTextStyle}"/>
-                                            <Button Grid.Column="2" Content="Τερματισμός" Style="{StaticResource FlatButtonStyle}" FontSize="10" Padding="4,2"
-                                                    IsEnabled="{Binding CanKill}" Click="BtnKillProcess_Click" Tag="{Binding}"/>
-                                        </Grid>
-                                    </DataTemplate>
-                                </ItemsControl.ItemTemplate>
-                            </ItemsControl>
-                        </ScrollViewer>
+                        <ListBox x:Name="ListProcesses" Style="{StaticResource VirtualizedListStyle}" PreviewMouseWheel="NestedScroll_PreviewMouseWheel">
+                            <ListBox.ItemTemplate>
+                                <DataTemplate>
+                                    <Grid Margin="6,4">
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="*"/>
+                                            <!-- ΝΕΟ - roadmap "Ιστορικό χρήσης πόρων" - sparkline μνήμης (τελευταία 20
+                                                 δείγματα, ανά "Ανανέωση") - βλ. ProcessHistoryService. -->
+                                            <ColumnDefinition Width="Auto"/>
+                                            <ColumnDefinition Width="90"/>
+                                            <ColumnDefinition Width="80"/>
+                                        </Grid.ColumnDefinitions>
+                                        <TextBlock Grid.Column="0" Text="{Binding Name}" Foreground="{DynamicResource TextBrush}"/>
+                                        <TextBlock Grid.Column="1" Text="{Binding MemoryTrend}" Foreground="{DynamicResource AccentBrush}" Margin="0,0,8,0" VerticalAlignment="Center" FontSize="12"/>
+                                        <TextBlock Grid.Column="2" Text="{Binding WorkingSetMb, StringFormat={}{0} MB}" Style="{StaticResource SubTextStyle}"/>
+                                        <Button Grid.Column="3" Content="{tr:Tr System_Kill}" Style="{StaticResource FlatButtonStyle}" FontSize="10" Padding="4,2"
+                                                IsEnabled="{Binding CanKill}" Click="BtnKillProcess_Click" Tag="{Binding}"/>
+                                    </Grid>
+                                </DataTemplate>
+                            </ListBox.ItemTemplate>
+                        </ListBox>
                     </Border>
                 </StackPanel>
             </Border>
@@ -68,15 +250,26 @@
             <!-- Αποθηκευτικός Χώρος -->
             <Border Style="{StaticResource CardStyle}" Margin="0,16,0,0">
                 <StackPanel>
-                    <TextBlock Text="Αποθηκευτικός Χώρος - Διπλότυπα &amp; Μεγάλα Αρχεία" Style="{StaticResource CardTitleStyle}" Margin="0,0,0,10"/>
-                    <StackPanel Orientation="Horizontal" Margin="0,0,0,10">
-                        <Button x:Name="BtnFindDuplicates" Content="Εύρεση Διπλότυπων" Style="{StaticResource AccentButtonStyle}" Width="200" Margin="0,0,10,0" Click="BtnFindDuplicates_Click"/>
-                        <Button x:Name="BtnFindLarge" Content="Εύρεση Μεγάλων Αρχείων" Style="{StaticResource FlatButtonStyle}" Width="200" Margin="0,0,10,0" Click="BtnFindLarge_Click"/>
-                        <Button x:Name="BtnOneDrive" Content="OneDrive - Ελευθέρωση Χώρου" Style="{StaticResource FlatButtonStyle}" Width="220" Click="BtnOneDrive_Click"/>
-                    </StackPanel>
-                    <TextBlock x:Name="TxtStorageStatus" Text="Σαρώνει μόνο προσωπικούς φακέλους (Έγγραφα/Λήψεις/Επιφάνεια/Εικόνες/Βίντεο), ποτέ φακέλους συστήματος." Style="{StaticResource SubTextStyle}" Margin="0,0,0,8" TextWrapping="Wrap"/>
+                    <Grid Margin="0,0,0,10">
+                        <Grid.ColumnDefinitions><ColumnDefinition Width="Auto"/><ColumnDefinition Width="*"/></Grid.ColumnDefinitions>
+                        <views:HeaderGlyphIcon Grid.Column="0" Kind="Disk" Width="16" Height="16" Margin="0,0,8,0" VerticalAlignment="Center"/>
+                        <TextBlock Grid.Column="1" Text="{tr:Tr System_Storage}" Style="{StaticResource CardTitleStyle}"/>
+                    </Grid>
+                    <WrapPanel Margin="0,0,0,10">
+                        <Button x:Name="BtnFindLarge" Content="{tr:Tr System_FindLarge}" Style="{StaticResource AccentButtonStyle}" Width="200" Height="40" Margin="0,0,10,10" Click="BtnFindLarge_Click"/>
+                        <Button x:Name="BtnOneDrive" Content="{tr:Tr System_OneDrive}" Style="{StaticResource FlatButtonStyle}" Width="220" Height="40" Margin="0,0,10,10" Click="BtnOneDrive_Click"/>
+                        <!-- ΝΕΑ v3.2.0 (χρήστης ζήτησε: "cloud cleanup για Google Drive/Dropbox") - το
+                             OneDrive έχει το ΔΙΚΟ ΤΟΥ, ειδικό μηχανισμό (attrib +U placeholder) - αυτά
+                             τα δύο επαναχρησιμοποιούν τα ήδη υπάρχοντα εργαλεία εύρεσης μεγάλων αρχείων,
+                             με πεδίο σάρωσης τον τοπικό φάκελο συγχρονισμού (βλ. SystemService.
+                             Find*Folder). Κρυμμένα από προεπιλογή - εμφανίζονται μόνο αν εντοπιστεί
+                             πραγματικά εγκατεστημένος ο αντίστοιχος client (βλ. code-behind constructor). -->
+                        <Button x:Name="BtnGoogleDrive" Content="{tr:Tr System_GoogleDrive}" Style="{StaticResource FlatButtonStyle}" Width="220" Height="40" Margin="0,0,10,10" Click="BtnGoogleDrive_Click" Visibility="Collapsed"/>
+                        <Button x:Name="BtnDropbox" Content="{tr:Tr System_Dropbox}" Style="{StaticResource FlatButtonStyle}" Width="220" Height="40" Margin="0,0,10,10" Click="BtnDropbox_Click" Visibility="Collapsed"/>
+                    </WrapPanel>
+                    <TextBlock x:Name="TxtStorageStatus" Text="{tr:Tr System_StorageDesc}" Style="{StaticResource SubTextStyle}" Margin="0,0,0,8" TextWrapping="Wrap"/>
                     <Border Background="{DynamicResource MainBgBrush}" CornerRadius="6" MaxHeight="280" Padding="4">
-                        <ScrollViewer VerticalScrollBarVisibility="Auto">
+                        <ScrollViewer VerticalScrollBarVisibility="Auto" PreviewMouseWheel="NestedScroll_PreviewMouseWheel">
                             <ItemsControl x:Name="ListStorageResults">
                                 <ItemsControl.ItemTemplate>
                                     <DataTemplate>
@@ -84,11 +277,16 @@
                                             <Grid.ColumnDefinitions>
                                                 <ColumnDefinition Width="*"/>
                                                 <ColumnDefinition Width="80"/>
+                                                <!-- ΝΕΟ - roadmap ""AI"-στυλ έξυπνες προτάσεις καθαρισμού" - πιθανότητα ασφαλούς διαγραφής (βλ. StorageResultRow.Score). -->
+                                                <ColumnDefinition Width="70"/>
                                                 <ColumnDefinition Width="100"/>
+                                                <ColumnDefinition Width="90"/>
                                             </Grid.ColumnDefinitions>
                                             <TextBlock Grid.Column="0" Text="{Binding Path}" Foreground="{DynamicResource TextBrush}" TextTrimming="CharacterEllipsis"/>
                                             <TextBlock Grid.Column="1" Text="{Binding SizeMb, StringFormat={}{0} MB}" Style="{StaticResource SubTextStyle}"/>
-                                            <Button Grid.Column="2" Content="Κάδος Ανακύκλωσης" Style="{StaticResource FlatButtonStyle}" FontSize="10" Padding="4,2" Click="BtnRecycleFile_Click" Tag="{Binding}"/>
+                                            <TextBlock Grid.Column="2" Text="{Binding SafetyLabel}" Foreground="{Binding SafetyColor}" FontSize="10" VerticalAlignment="Center" ToolTip="{tr:Tr Sys_SafetyTooltip}"/>
+                                            <Button Grid.Column="3" Content="{tr:Tr System_RecycleBin}" Style="{StaticResource FlatButtonStyle}" FontSize="10" Padding="4,2" Margin="0,0,4,0" Click="BtnRecycleFile_Click" Tag="{Binding}"/>
+                                            <Button Grid.Column="4" Content="{tr:Tr Sys_ShredButton}" Style="{StaticResource FlatButtonStyle}" FontSize="10" Padding="4,2" Foreground="#FFE53935" Click="BtnShredFile_Click" Tag="{Binding}"/>
                                         </Grid>
                                     </DataTemplate>
                                 </ItemsControl.ItemTemplate>
@@ -98,14 +296,118 @@
                 </StackPanel>
             </Border>
 
+            <!-- ΝΕΟ - roadmap "Εύρεση διπλότυπων αρχείων" - ο χρήστης επιλέγει ρητά έναν φάκελο (ΠΟΤΕ
+                 ολόκληρος δίσκος by default), βλ. DuplicateFileService.cs για τη μεθοδολογία σάρωσης
+                 (μέγεθος -> MD5 hash). Κάθε ομάδα διπλότυπων δείχνει όλα τα αντίγραφα με CheckBox -
+                 ΠΡΟ-επιλεγμένα όλα ΕΚΤΟΣ από το πρώτο κάθε ομάδας (ίδιο "Recommended" μοτίβο με το
+                 Quick Clean - διατηρεί αυτόματα ΤΟΥΛΑΧΙΣΤΟΝ ένα αντίγραφο, ο χρήστης απλά αποεπιλέγει
+                 όποιο αντίγραφο θέλει να ΚΡΑΤΗΣΕΙ αντί του πρώτου). Ρητό αίτημα χρήστη: ενοποιήθηκε με
+                 την προηγούμενη απλή "Εύρεση Διπλότυπων" της κάρτας Αποθηκευτικού Χώρου παραπάνω (ήταν
+                 δύο ασύνδετες υλοποιήσεις του ίδιου πράγματος) και μετακινήθηκε εδώ, στη σωστή καρτέλα
+                 (μετακομισμένο από την καρτέλα Προηγμένα Εργαλεία). -->
+            <Border Style="{StaticResource CardStyle}" Margin="0,16,0,0">
+                <StackPanel>
+                    <Grid Margin="0,0,0,4">
+                        <Grid.ColumnDefinitions><ColumnDefinition Width="Auto"/><ColumnDefinition Width="*"/></Grid.ColumnDefinitions>
+                        <views:HeaderGlyphIcon Grid.Column="0" Kind="Document" Width="16" Height="16" Margin="0,0,8,0" VerticalAlignment="Center"/>
+                        <TextBlock Grid.Column="1" Text="{tr:Tr Advanced_DuplicateFinder}" Style="{StaticResource CardTitleStyle}"/>
+                    </Grid>
+                    <TextBlock Text="{tr:Tr Advanced_DuplicateFinderDesc}" Style="{StaticResource SubTextStyle}" TextWrapping="Wrap" Margin="0,0,0,10"/>
+                    <Grid Margin="0,0,0,10">
+                        <Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="Auto"/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions>
+                        <TextBox x:Name="TxtDuplicateFolder" Grid.Column="0" IsReadOnly="True" Margin="0,0,10,0" VerticalContentAlignment="Center"
+                                 Background="{DynamicResource MainBgBrush}" Foreground="{DynamicResource TextBrush}" BorderBrush="{DynamicResource CardBorderBrush}"/>
+                        <Button Grid.Column="1" Content="{tr:Tr Advanced_ChooseFolder}" Style="{StaticResource FlatButtonStyle}" Width="160" Margin="0,0,10,0" Click="BtnChooseDuplicateFolder_Click"/>
+                        <Button Grid.Column="2" x:Name="BtnScanDuplicates" Content="{tr:Tr Advanced_ScanDuplicates}" Style="{StaticResource AccentButtonStyle}" Width="160" IsEnabled="False" Click="BtnScanDuplicates_Click"/>
+                    </Grid>
+                    <TextBlock x:Name="TxtDuplicateStatus" Style="{StaticResource SubTextStyle}" Margin="0,0,0,8"/>
+                    <Border Background="{DynamicResource MainBgBrush}" CornerRadius="6" MinHeight="60" MaxHeight="320" Padding="4">
+                        <ScrollViewer VerticalScrollBarVisibility="Auto" PreviewMouseWheel="NestedScroll_PreviewMouseWheel">
+                            <ItemsControl x:Name="ListDuplicateGroups">
+                                <ItemsControl.ItemTemplate>
+                                    <DataTemplate>
+                                        <StackPanel Margin="6,6">
+                                            <TextBlock Text="{Binding Header}" FontWeight="SemiBold" Foreground="{DynamicResource TextBrush}" Margin="0,0,0,2"/>
+                                            <ItemsControl ItemsSource="{Binding Files}">
+                                                <ItemsControl.ItemTemplate>
+                                                    <DataTemplate>
+                                                        <StackPanel Orientation="Horizontal" Margin="12,1,0,1">
+                                                            <CheckBox IsChecked="{Binding IsSelected}" VerticalAlignment="Center" Margin="0,0,6,0"/>
+                                                            <TextBlock Text="{Binding Path}" Style="{StaticResource SubTextStyle}" FontSize="11" TextTrimming="CharacterEllipsis"/>
+                                                        </StackPanel>
+                                                    </DataTemplate>
+                                                </ItemsControl.ItemTemplate>
+                                            </ItemsControl>
+                                        </StackPanel>
+                                    </DataTemplate>
+                                </ItemsControl.ItemTemplate>
+                            </ItemsControl>
+                        </ScrollViewer>
+                    </Border>
+                    <Button x:Name="BtnDeleteDuplicates" Content="{tr:Tr Advanced_DeleteSelectedDuplicates}" Style="{StaticResource FlatButtonStyle}" Background="#FFD12424"
+                            Width="240" HorizontalAlignment="Left" Margin="0,10,0,0" IsEnabled="False" Click="BtnDeleteDuplicates_Click"/>
+                </StackPanel>
+            </Border>
+
+            <!-- ΝΕΟ - roadmap "Κλείδωμα φακέλων με κωδικούς" (ρητό αίτημα χρήστη). Βλ. FolderLockService
+                 για την πλήρη τεκμηρίωση του μηχανισμού (AES-256-GCM, όχι BitLocker/VHD - λειτουργεί
+                 και σε Windows Home). -->
+            <Border Style="{StaticResource CardStyle}" Margin="0,16,0,0">
+                <StackPanel>
+                    <Grid Margin="0,0,0,10">
+                        <Grid.ColumnDefinitions><ColumnDefinition Width="Auto"/><ColumnDefinition Width="*"/></Grid.ColumnDefinitions>
+                        <views:HeaderGlyphIcon Grid.Column="0" Kind="Lock" Width="16" Height="16" Margin="0,0,8,0" VerticalAlignment="Center"/>
+                        <TextBlock Grid.Column="1" Text="{tr:Tr FolderLock_Title}" Style="{StaticResource CardTitleStyle}"/>
+                    </Grid>
+                    <TextBlock Text="{tr:Tr FolderLock_Desc}" Style="{StaticResource SubTextStyle}" TextWrapping="Wrap" Margin="0,0,0,12"/>
+
+                    <TextBlock Text="{tr:Tr FolderLock_LockSection}" FontWeight="SemiBold" Margin="0,0,0,6" Foreground="{DynamicResource TextBrush}"/>
+                    <Grid Margin="0,0,0,6">
+                        <Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions>
+                        <TextBox x:Name="TxtLockFolderPath" IsReadOnly="True" Height="32" Padding="8,4" VerticalContentAlignment="Center"
+                                 Background="{DynamicResource MainBgBrush}" Foreground="{DynamicResource TextBrush}" BorderBrush="{DynamicResource CardBorderBrush}"/>
+                        <Button Grid.Column="1" Content="{tr:Tr Advanced_ChooseFolder}" Style="{StaticResource FlatButtonStyle}" Margin="8,0,0,0" Click="BtnChooseLockFolder_Click"/>
+                    </Grid>
+                    <TextBlock Text="{tr:Tr FolderLock_PasswordHint}" Style="{StaticResource SubTextStyle}" Margin="0,0,0,4"/>
+                    <PasswordBox x:Name="PwdLock" Height="32" Padding="8,4" Margin="0,0,0,6"
+                                 Background="{DynamicResource MainBgBrush}" Foreground="{DynamicResource TextBrush}" BorderBrush="{DynamicResource CardBorderBrush}"/>
+                    <TextBlock Text="{tr:Tr FolderLock_ConfirmPasswordHint}" Style="{StaticResource SubTextStyle}" Margin="0,0,0,4"/>
+                    <PasswordBox x:Name="PwdLockConfirm" Height="32" Padding="8,4" Margin="0,0,0,10"
+                                 Background="{DynamicResource MainBgBrush}" Foreground="{DynamicResource TextBrush}" BorderBrush="{DynamicResource CardBorderBrush}"/>
+                    <Button x:Name="BtnLockFolder" Content="{tr:Tr FolderLock_LockButton}" Style="{StaticResource AccentButtonStyle}"
+                            HorizontalAlignment="Left" Padding="20,8" Click="BtnLockFolder_Click"/>
+
+                    <Border Height="1" Background="{DynamicResource CardBorderBrush}" Margin="0,18,0,18"/>
+
+                    <TextBlock Text="{tr:Tr FolderLock_UnlockSection}" FontWeight="SemiBold" Margin="0,0,0,6" Foreground="{DynamicResource TextBrush}"/>
+                    <Grid Margin="0,0,0,6">
+                        <Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions>
+                        <TextBox x:Name="TxtUnlockVaultPath" IsReadOnly="True" Height="32" Padding="8,4" VerticalContentAlignment="Center"
+                                 Background="{DynamicResource MainBgBrush}" Foreground="{DynamicResource TextBrush}" BorderBrush="{DynamicResource CardBorderBrush}"/>
+                        <Button Grid.Column="1" Content="{tr:Tr FolderLock_ChooseVault}" Style="{StaticResource FlatButtonStyle}" Margin="8,0,0,0" Click="BtnChooseVault_Click"/>
+                    </Grid>
+                    <TextBlock Text="{tr:Tr FolderLock_PasswordHint}" Style="{StaticResource SubTextStyle}" Margin="0,0,0,4"/>
+                    <PasswordBox x:Name="PwdUnlock" Height="32" Padding="8,4" Margin="0,0,0,10"
+                                 Background="{DynamicResource MainBgBrush}" Foreground="{DynamicResource TextBrush}" BorderBrush="{DynamicResource CardBorderBrush}"/>
+                    <Button x:Name="BtnUnlockFolder" Content="{tr:Tr FolderLock_UnlockButton}" Style="{StaticResource AccentButtonStyle}"
+                            HorizontalAlignment="Left" Padding="20,8" Click="BtnUnlockFolder_Click"/>
+
+                    <TextBlock x:Name="TxtFolderLockStatus" Style="{StaticResource SubTextStyle}" TextWrapping="Wrap" Margin="0,12,0,0"/>
+                </StackPanel>
+            </Border>
+
             <!-- Σημεία Επαναφοράς -->
             <Border Style="{StaticResource CardStyle}" Margin="0,16,0,0">
                 <StackPanel>
-                    <TextBlock Text="Σημεία Επαναφοράς Συστήματος" Style="{StaticResource CardTitleStyle}" Margin="0,0,0,10"/>
+                    <Grid Margin="0,0,0,10">
+                        <Grid.ColumnDefinitions><ColumnDefinition Width="Auto"/><ColumnDefinition Width="*"/></Grid.ColumnDefinitions>
+                        <views:HeaderGlyphIcon Grid.Column="0" Kind="Shield" Width="16" Height="16" Margin="0,0,8,0" VerticalAlignment="Center"/>
+                        <TextBlock Grid.Column="1" Text="{tr:Tr System_RestorePoints}" Style="{StaticResource CardTitleStyle}"/>
+                    </Grid>
                     <StackPanel Orientation="Horizontal" Margin="0,0,0,10">
-                        <Button Content="Δημιουργία Νέου Σημείου" Style="{StaticResource AccentButtonStyle}" Width="220" Margin="0,0,10,0" Click="BtnCreateRestorePoint_Click"/>
-                        <Button Content="Ανανέωση" Style="{StaticResource FlatButtonStyle}" Width="150" Margin="0,0,10,0" Click="BtnRefreshRestorePoints_Click"/>
-                        <Button Content="Άνοιγμα Ρυθμίσεων Προστασίας" Style="{StaticResource FlatButtonStyle}" Width="230" Click="BtnOpenProtectionSettings_Click"/>
+                        <Button Content="{tr:Tr System_CreatePoint}" Style="{StaticResource AccentButtonStyle}" Width="220" Height="40" Margin="0,0,10,0" Click="BtnCreateRestorePoint_Click"/>
+                        <Button Content="{tr:Tr Refresh}" Style="{StaticResource FlatButtonStyle}" Width="150" Height="40" Margin="0,0,10,0" Click="BtnRefreshRestorePoints_Click"/>
+                        <Button Content="{tr:Tr System_OpenProtectionSettings}" Style="{StaticResource FlatButtonStyle}" Width="230" Height="40" Click="BtnOpenProtectionSettings_Click"/>
                     </StackPanel>
                     <TextBlock x:Name="TxtRestorePointsStatus" Text="" Style="{StaticResource SubTextStyle}" Margin="0,0,0,8"/>
                     <ItemsControl x:Name="ListRestorePoints">
@@ -117,11 +419,32 @@
                                         <TextBlock Text="{Binding Description}" Foreground="{DynamicResource TextBrush}" FontWeight="SemiBold"/>
                                         <TextBlock Text="{Binding CreationTime}" Style="{StaticResource SubTextStyle}"/>
                                     </StackPanel>
-                                    <Button Grid.Column="1" Content="Επαναφορά" Style="{StaticResource FlatButtonStyle}" Click="BtnRestoreToPoint_Click" Tag="{Binding}"/>
+                                    <Button Grid.Column="1" Content="{tr:Tr System_RestoreAction}" Style="{StaticResource FlatButtonStyle}" Click="BtnRestoreToPoint_Click" Tag="{Binding}"/>
                                 </Grid>
                             </DataTemplate>
                         </ItemsControl.ItemTemplate>
                     </ItemsControl>
+                </StackPanel>
+            </Border>
+
+            <!-- ΝΕΟ - roadmap "Backup/imaging" - GUI wrapper γύρω από το ενσωματωμένο wbadmin.exe
+                 των Windows, βλ. BackupService.cs για λεπτομέρειες scope. -->
+            <Border Style="{StaticResource CardStyle}" Margin="0,16,0,0">
+                <StackPanel>
+                    <Grid Margin="0,0,0,10">
+                        <Grid.ColumnDefinitions><ColumnDefinition Width="Auto"/><ColumnDefinition Width="*"/></Grid.ColumnDefinitions>
+                        <views:HeaderGlyphIcon Grid.Column="0" Kind="Shield" Width="16" Height="16" Margin="0,0,8,0" VerticalAlignment="Center"/>
+                        <TextBlock Grid.Column="1" Text="{tr:Tr Backup_Title}" Style="{StaticResource CardTitleStyle}"/>
+                    </Grid>
+                    <TextBlock Text="{tr:Tr Backup_Desc}" Style="{StaticResource SubTextStyle}" TextWrapping="Wrap" Margin="0,0,0,10"/>
+                    <Grid Margin="0,0,0,10">
+                        <Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="Auto"/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions>
+                        <ComboBox x:Name="ListBackupTargetDrives" Grid.Column="0" Margin="0,0,8,0"/>
+                        <Button Grid.Column="1" Content="{tr:Tr Backup_StartButton}" Style="{StaticResource AccentButtonStyle}" Padding="16,8" Margin="0,0,8,0" Click="BtnStartBackup_Click"/>
+                        <Button Grid.Column="2" Content="{tr:Tr Backup_ViewVersionsButton}" Style="{StaticResource FlatButtonStyle}" Padding="16,8" Click="BtnViewBackupVersions_Click"/>
+                    </Grid>
+                    <TextBlock x:Name="TxtBackupStatus" Style="{StaticResource SubTextStyle}" TextWrapping="Wrap" Margin="0,0,0,8"/>
+                    <ItemsControl x:Name="ListBackupVersions"/>
                 </StackPanel>
             </Border>
 
@@ -130,26 +453,28 @@
                 <StackPanel>
                     <Grid Margin="0,0,0,10">
                         <Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions>
-                        <TextBlock Grid.Column="0" Text="Βελτιστοποίηση Υπηρεσιών Συστήματος" Style="{StaticResource CardTitleStyle}"/>
-                        <Button Grid.Column="1" Content="Ανανέωση" Style="{StaticResource FlatButtonStyle}" Width="120" Click="BtnRefreshServices_Click"/>
+                        <Grid Grid.Column="0">
+                            <Grid.ColumnDefinitions><ColumnDefinition Width="Auto"/><ColumnDefinition Width="*"/></Grid.ColumnDefinitions>
+                            <views:HeaderGlyphIcon Grid.Column="0" Kind="Gear" Width="16" Height="16" Margin="0,0,8,0" VerticalAlignment="Center"/>
+                            <TextBlock Grid.Column="1" Text="{tr:Tr System_Services}" Style="{StaticResource CardTitleStyle}"/>
+                        </Grid>
+                        <Button Grid.Column="1" Content="{tr:Tr Refresh}" Style="{StaticResource FlatButtonStyle}" Width="120" Click="BtnRefreshServices_Click"/>
                     </Grid>
                     <Border Background="{DynamicResource MainBgBrush}" CornerRadius="6" MaxHeight="320" Padding="4">
-                        <ScrollViewer VerticalScrollBarVisibility="Auto">
-                            <ItemsControl x:Name="ListServices">
-                                <ItemsControl.ItemTemplate>
-                                    <DataTemplate>
-                                        <Grid Margin="6,4">
-                                            <Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions>
-                                            <StackPanel Grid.Column="0">
-                                                <TextBlock Text="{Binding Service.DisplayName}" Foreground="{DynamicResource TextBrush}" FontWeight="SemiBold"/>
-                                                <TextBlock Text="{Binding Service.Description}" Style="{StaticResource SubTextStyle}" TextWrapping="Wrap"/>
-                                            </StackPanel>
-                                            <ToggleButton Grid.Column="1" IsChecked="{Binding IsAutomatic}" Style="{StaticResource ToggleSwitchStyle}" Click="ToggleService_Click" Tag="{Binding}"/>
-                                        </Grid>
-                                    </DataTemplate>
-                                </ItemsControl.ItemTemplate>
-                            </ItemsControl>
-                        </ScrollViewer>
+                        <ListBox x:Name="ListServices" Style="{StaticResource VirtualizedListStyle}" PreviewMouseWheel="NestedScroll_PreviewMouseWheel">
+                            <ListBox.ItemTemplate>
+                                <DataTemplate>
+                                    <Grid Margin="6,4">
+                                        <Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions>
+                                        <StackPanel Grid.Column="0">
+                                            <TextBlock Text="{Binding Service.DisplayName}" Foreground="{DynamicResource TextBrush}" FontWeight="SemiBold"/>
+                                            <TextBlock Text="{Binding Service.Description}" Style="{StaticResource SubTextStyle}" TextWrapping="Wrap"/>
+                                        </StackPanel>
+                                        <ToggleButton Grid.Column="1" IsChecked="{Binding IsAutomatic}" Style="{StaticResource ToggleSwitchStyle}" Click="ToggleService_Click" Tag="{Binding}"/>
+                                    </Grid>
+                                </DataTemplate>
+                            </ListBox.ItemTemplate>
+                        </ListBox>
                     </Border>
                 </StackPanel>
             </Border>
@@ -157,19 +482,23 @@
             <!-- Δοκιμή Ταχύτητας Δίσκου -->
             <Border Style="{StaticResource CardStyle}" Margin="0,16,0,0">
                 <StackPanel>
-                    <TextBlock Text="Δοκιμή Ταχύτητας Δίσκου" Style="{StaticResource CardTitleStyle}" Margin="0,0,0,10"/>
-                    <TextBlock Text="Ενδεικτική μέτρηση (256MB write/read) - όχι υποκατάστατο εξειδικευμένου εργαλείου όπως CrystalDiskMark. Η ανάγνωση μπορεί να επηρεαστεί από cache του λειτουργικού." Style="{StaticResource SubTextStyle}" Margin="0,0,0,10" TextWrapping="Wrap"/>
+                    <Grid Margin="0,0,0,10">
+                        <Grid.ColumnDefinitions><ColumnDefinition Width="Auto"/><ColumnDefinition Width="*"/></Grid.ColumnDefinitions>
+                        <views:HeaderGlyphIcon Grid.Column="0" Kind="Disk" Width="16" Height="16" Margin="0,0,8,0" VerticalAlignment="Center"/>
+                        <TextBlock Grid.Column="1" Text="{tr:Tr System_Benchmark}" Style="{StaticResource CardTitleStyle}"/>
+                    </Grid>
+                    <TextBlock Text="{tr:Tr System_BenchmarkDesc}" Style="{StaticResource SubTextStyle}" Margin="0,0,0,10" TextWrapping="Wrap"/>
                     <StackPanel Orientation="Horizontal" Margin="0,0,0,10">
                         <ComboBox x:Name="CmbBenchmarkDrive" Width="120" Margin="0,0,10,0"/>
-                        <Button x:Name="BtnStartBenchmark" Content="Έναρξη Δοκιμής" Style="{StaticResource AccentButtonStyle}" Width="180" Click="BtnStartBenchmark_Click"/>
+                        <Button x:Name="BtnStartBenchmark" Content="{tr:Tr System_StartBenchmark}" Style="{StaticResource AccentButtonStyle}" Width="180" Height="40" Click="BtnStartBenchmark_Click"/>
                     </StackPanel>
                     <StackPanel Orientation="Horizontal">
                         <StackPanel Margin="0,0,40,0">
-                            <TextBlock Text="Εγγραφή (Write)" Style="{StaticResource SubTextStyle}"/>
+                            <TextBlock Text="{tr:Tr System_Write}" Style="{StaticResource SubTextStyle}"/>
                             <TextBlock x:Name="TxtBenchWrite" Text="-- MB/s" FontSize="22" FontWeight="Bold" Foreground="{DynamicResource TextBrush}"/>
                         </StackPanel>
                         <StackPanel>
-                            <TextBlock Text="Ανάγνωση (Read)" Style="{StaticResource SubTextStyle}"/>
+                            <TextBlock Text="{tr:Tr System_Read}" Style="{StaticResource SubTextStyle}"/>
                             <TextBlock x:Name="TxtBenchRead" Text="-- MB/s" FontSize="22" FontWeight="Bold" Foreground="{DynamicResource TextBrush}"/>
                         </StackPanel>
                     </StackPanel>

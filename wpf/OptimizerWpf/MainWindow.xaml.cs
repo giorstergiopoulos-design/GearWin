@@ -1,9 +1,12 @@
+using System;
+using System.Collections.Generic;
 using System.Linq;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Input;
 using System.Windows.Media;
 using System.Windows.Media.Animation;
+using System.Windows.Threading;
 using OptimizerWpf.Services;
 using OptimizerWpf.Views;
 
@@ -23,20 +26,192 @@ public partial class MainWindow : Window
         // the generated InitializeComponent, causing a NullReferenceException on ContentHost. Doing
         // it here guarantees the full object graph already exists when the event fires.
         TabHome.IsChecked = true;
+        // ΔΙΟΡΘΩΣΗ - ρητό αίτημα χρήστη: ο υπότιτλος "Complete PC Care" να εμφανίζεται στα απαραίτητα
+        // πεδία - εδώ, δίπλα στην έκδοση, κάτω από το όνομα "GearWin".
+        TxtAppVersion.Text = $"Complete PC Care  ·  {App.DisplayVersion}";
+        RefreshThemeToggleLabel();
 
         PopulateClassicMenu();
-        ApplySidebarLayout();
 
         ListThemes.ItemsSource = ThemeCatalog.All;
         ListThemes.SelectedItem = ThemeManager.CurrentPair;
 
+        _searchIndex = ClassicMenuModel.Groups
+            .SelectMany(g => g.Items.Select(leaf => new SearchResultRow(leaf.Icon, leaf.Label, g.Header, leaf)))
+            .ToList();
+
         StatusService.Changed += OnStatusChanged;
         Closed += (_, _) => StatusService.Changed -= OnStatusChanged;
-        StatusService.SetBusy("Εκκίνηση εφαρμογής...");
-        StatusService.SetIdle("Έτοιμο για χρήση");
+        StatusService.SetBusy(LanguageService.T("Main_Starting"));
+        StatusService.SetIdle(LanguageService.T("Ready"));
+
+        ThemeManager.AttachBackground(AppBackground);
+        ListPcManagerRail.ItemsSource = NavItems.All;
+        ThemeManager.Changed += ApplyPcManagerSkinLayout;
+        Closed += (_, _) => ThemeManager.Changed -= ApplyPcManagerSkinLayout;
+        ApplyMenuModeVisibility();
+
+        Opacity = AppSettingsService.Current.WindowOpacityMode switch { "Light" => 0.94, "Medium" => 0.85, _ => 1.0 };
+
+        ApplyLanguage();
+        LanguageService.Changed += ApplyLanguage;
+        Closed += (_, _) => LanguageService.Changed -= ApplyLanguage;
+
+        // ΔΙΟΡΘΩΣΗ (χρήστης ζήτησε μέτρηση: "δες αν βαραίνει η εφαρμογή πολύ") - επιβεβαιώθηκε
+        // ζωντανά ότι το Pause/Resume του ThemedBackgroundControl (βλ. ThemeManager.AttachBackground)
+        // ΔΕΝ αρκούσε από μόνο του - το CPU έμενε στο ~4% ακόμα και ελαχιστοποιημένο. Το γρανάζι του
+        // τίτλου έχει ΔΙΚΟ ΤΟΥ, ανεξάρτητο DoubleAnimation με RepeatBehavior=Forever (βλ.
+        // ThreeGearIcon.StartSpin) - ίδια λογική εδώ, ίδιος λόγος (δεν έχει νόημα να περιστρέφεται
+        // κάτι που δεν είναι καν ορατό).
+        Deactivated += (_, _) => TitleGear.StopSpin();
+        Activated += (_, _) => TitleGear.StartSpin();
+        StateChanged += (_, _) =>
+        {
+            if (WindowState == WindowState.Minimized) TitleGear.StopSpin();
+            else if (IsActive) TitleGear.StartSpin();
+        };
+
+        _ = CheckHealthAttentionAsync();
+    }
+
+    // ΝΕΟ (roadmap: "ένδειξη προσοχής στο tab strip") - υπολογίζεται ΜΙΑ φορά στην εκκίνηση (ίδιο
+    // HealthScoreService.Compute() που ήδη τρέχει η Αρχική) ώστε η κουκκίδα να είναι ήδη ορατή πριν
+    // καν ανοίξει ο χρήστης την καρτέλα Υγεία - χωρίς δικό της περιοδικό timer (ελάφρυνση εφαρμογής).
+    private async System.Threading.Tasks.Task CheckHealthAttentionAsync()
+    {
+        try
+        {
+            var result = await System.Threading.Tasks.Task.Run(Services.HealthScoreService.Compute);
+            var needsAttention = result.Score < 70;
+            DotHealthAttention.Visibility = needsAttention ? Visibility.Visible : Visibility.Collapsed;
+            var pulse = (System.Windows.Media.Animation.Storyboard)Resources["PulseAttentionDotStoryboard"];
+            if (needsAttention) pulse.Begin(this, true);
+            else pulse.Stop(this);
+        }
+        catch { }
+    }
+
+    // ΝΕΟ - roadmap "Toast/snackbar για ολοκλήρωση εργασιών παρασκηνίου" - καλείται από όποια
+    // καρτέλα/παράθυρο το χρειάζεται μέσω (Window.GetWindow(this) as MainWindow)?.ShowToast(...).
+    // Fade-in + ελαφριά ανύψωση (16px -> 0), παραμένει ~3.5s, μετά fade-out.
+    private DispatcherTimer? _toastTimer;
+
+    // ΝΕΟ - βελτίωση: πριν, ένα δεύτερο toast κατά τη διάρκεια του πρώτου έσβηνε σιωπηλά το πρώτο
+    // μήνυμα (απλή επανεκκίνηση του ίδιου timer με το νέο κείμενο) - αν έτρεχαν πολλαπλές background
+    // εργασίες σχεδόν ταυτόχρονα (π.χ. Full Maintenance + driver scan), ο χρήστης έχανε την πρώτη
+    // ειδοποίηση χωρίς να το καταλάβει. Τώρα μπαίνει σε ουρά και εμφανίζεται αμέσως μετά το τρέχον -
+    // ΑΚΟΜΑ ένα toast τη φορά στην οθόνη (καμία αλλαγή στο οπτικό layout/μέγεθος), απλά καμία απώλεια
+    // μηνύματος πια.
+    private readonly Queue<string> _toastQueue = new();
+    private bool _toastShowing;
+
+    public void ShowToast(string message)
+    {
+        if (_toastShowing) { _toastQueue.Enqueue(message); return; }
+        DisplayToast(message);
+    }
+
+    private void DisplayToast(string message)
+    {
+        _toastShowing = true;
+        TxtToastMessage.Text = message;
+
+        var fadeIn = new DoubleAnimation(1, TimeSpan.FromMilliseconds(200));
+        ToastHost.BeginAnimation(OpacityProperty, fadeIn);
+        var slideIn = new DoubleAnimation(0, TimeSpan.FromMilliseconds(200));
+        ToastTranslate.BeginAnimation(TranslateTransform.YProperty, slideIn);
+
+        _toastTimer?.Stop();
+        _toastTimer = new DispatcherTimer { Interval = TimeSpan.FromSeconds(3.5) };
+        _toastTimer.Tick += (_, _) =>
+        {
+            _toastTimer!.Stop();
+            var fadeOut = new DoubleAnimation(0, TimeSpan.FromMilliseconds(250));
+            fadeOut.Completed += (_, _) =>
+            {
+                _toastShowing = false;
+                if (_toastQueue.Count > 0) DisplayToast(_toastQueue.Dequeue());
+            };
+            ToastHost.BeginAnimation(OpacityProperty, fadeOut);
+        };
+        _toastTimer.Start();
+    }
+
+    // Επεκτάθηκε πέρα από το αρχικό μονο-παράθυρο proof-of-concept (ρητό αίτημα χρήστη) - οι τίτλοι
+    // καρτελών του κύριου παραθύρου μεταφράζονται τώρα ζωντανά, μαζί με το κλασικό μενού/search
+    // index (ClassicMenuModel.Groups είναι πλέον property, όχι readonly field - ξαναχτίζεται εδώ σε
+    // κάθε αλλαγή γλώσσας, ίδιο μοτίβο με τις άλλες λίστες tweaks/features που έγιναν properties σε
+    // αυτό το πέρασμα - ρητό αίτημα χρήστη: "μετάφρασε τα όλα").
+    private void ApplyLanguage()
+    {
+        LblTabHome.Text = LanguageService.T("TabHome");
+        LblTabOptimization.Text = LanguageService.T("TabOptimization");
+        LblTabHealth.Text = LanguageService.T("TabHealth");
+        LblTabNetwork.Text = LanguageService.T("TabNetwork");
+        LblTabTweaks.Text = LanguageService.T("TabTweaks");
+        LblTabBloatware.Text = LanguageService.T("TabBloatware");
+        LblTabAdvanced.Text = LanguageService.T("TabAdvanced");
+        LblTabSystem.Text = LanguageService.T("TabSystem");
+
+        PopulateClassicMenu();
+        _searchIndex = ClassicMenuModel.Groups
+            .SelectMany(g => g.Items.Select(leaf => new SearchResultRow(leaf.Icon, leaf.Label, g.Header, leaf)))
+            .ToList();
+        ListPcManagerRail.ItemsSource = NavItems.All;
+
+        // ΔΙΟΡΘΩΣΗ (χρήστης ανέφερε: "κάποια elements μένουν στην προηγούμενη γλώσσα μέχρι το
+        // κλείσιμο και άνοιγμα ξανά") - το SidebarNav είναι μόνιμο UserControl (μόνο Visibility
+        // toggle, ποτέ δεν ξαναδημιουργείται), βλ. σχόλιο στο RefreshLanguage() εκεί.
+        Sidebar.RefreshLanguage();
+
+        // Ίδιο bug class - η οριζόντια "μοντέρνα λωρίδα μενού" (MenuMode="HorizontalModern",
+        // εναλλακτική του πλευρικού μενού) έδειχνε τα ίδια 6 shortcuts με το SidebarNav αλλά μέσω
+        // {x:Static local:SidebarShortcuts.All} στο XAML - αξιολογείται ΜΙΑ φορά στο InitializeComponent
+        // και ποτέ ξανά. Τώρα έχει x:Name ώστε να μπορεί να ξαναοριστεί εδώ, ίδιο μοτίβο με το
+        // ListPcManagerRail ακριβώς από πάνω.
+        ListHorizModernShortcuts.ItemsSource = SidebarShortcuts.All;
+
+        // Ίδιο bug class - το status bar δείχνει ΗΔΗ-μεταφρασμένο κείμενο από το StatusService
+        // (business event, όχι language event) - βλ. σχόλιο στο _statusIsIdle παραπάνω. Ξαναστέλνει
+        // ένα φρέσκο "Έτοιμο" ΜΟΝΟ αν η γραμμή είναι αυτή τη στιγμή σε ανάπαυση (δεν πειράζει ένα
+        // πραγματικά ενεργό busy-μήνυμα άλλης καρτέλας).
+        if (_statusIsIdle) StatusService.SetIdle(LanguageService.T("Ready"));
+
+        RefreshThemeToggleLabel();
+    }
+
+    // Port του $isPCManagerSkin κλάδου του Update-SidebarDockLayout (Optimizer.ps1 ~7426-7451) - όταν
+    // το θέμα "Microsoft PC Manager" είναι ενεργό, η οριζόντια λωρίδα καρτελών/hamburger/πλευρικό
+    // μενού κρύβονται και αντικαθίστανται από την κάθετη μπάρα εικονιδίων (PcManagerRail).
+    private void ApplyPcManagerSkinLayout()
+    {
+        var isPcManagerSkin = ThemeManager.CurrentPair.DisplayName == "Microsoft PC Manager";
+        var isWindowsClassicSkin = ThemeManager.IsWindowsClassicSkin;
+        TabStripScroll.Visibility = (isPcManagerSkin || isWindowsClassicSkin) ? Visibility.Collapsed : Visibility.Visible;
+        PcManagerRail.Visibility = isPcManagerSkin ? Visibility.Visible : Visibility.Collapsed;
+        ColRail.Width = isPcManagerSkin ? GridLength.Auto : new GridLength(0);
+        BtnHamburger.Visibility = (!isPcManagerSkin && !isWindowsClassicSkin && AppSettingsService.Current.SidebarEnabled) ? Visibility.Visible : Visibility.Collapsed;
+        if (isPcManagerSkin || isWindowsClassicSkin)
+        {
+            _sidebarVisible = false;
+            HideHorizModernStrip();
+            ApplySidebarLayout();
+        }
+
+        // Ρητό αίτημα χρήστη: "Windows Classic skin - δεν θα υπάρχει πλευρικό μενού ούτε το κουμπί
+        // μενού, θα λειτουργεί μόνο η γραμμή μενού η κλασική, που θα είναι πάντα εμφανής σε αυτό το
+        // σκιν" - το κλασικό μενού γίνεται μόνιμα ορατό (όχι toggle-able πλέον μέσω Ctrl+M/κουμπιού) σε
+        // αυτό το skin, ίδιο πνεύμα με το ήδη υπάρχον PC Manager rail replace-the-nav pattern.
+        if (isWindowsClassicSkin) ClassicMenu.Visibility = Visibility.Visible;
+    }
+
+    private void PcManagerRailItem_Click(object sender, RoutedEventArgs e)
+    {
+        if (sender is Button { Tag: NavItem item }) SelectTab(item.Tag);
     }
 
     private readonly Storyboard _spinnerStoryboard = BuildSpinnerStoryboard();
+    private List<SearchResultRow> _searchIndex = new();
 
     private static Storyboard BuildSpinnerStoryboard()
     {
@@ -53,9 +228,21 @@ public partial class MainWindow : Window
 
     // Μοναδικός συνδρομητής του StatusService - κάθε προβολή/υπηρεσία απλώς καλεί
     // StatusService.SetBusy/SetIdle, χωρίς να ξέρει τίποτα για το status bar ή το spinner.
+    // ΔΙΟΡΘΩΣΗ (χρήστης ανέφερε: "κάποια elements μένουν στην προηγούμενη γλώσσα μέχρι το κλείσιμο
+    // και άνοιγμα ξανά") - το StatusService.Changed μεταδίδει ΗΔΗ-μεταφρασμένο κείμενο (business
+    // event, όχι language event), οπότε το TxtStatus έμενε παγωμένο στην παλιά γλώσσα μέχρι το
+    // επόμενο άσχετο SetBusy/SetIdle από κάποια καρτέλα. Το _statusIsIdle παρακολουθεί αν η γραμμή
+    // κατάστασης είναι αυτή τη στιγμή σε ανάπαυση, ώστε το ApplyLanguage() να μπορεί να ξαναστείλει
+    // ένα φρέσκο "Έτοιμο" στη νέα γλώσσα - καλύπτει την κοινή, μόνιμη κατάσταση ηρεμίας· ένα σπάνιο
+    // "παγωμένο" αποτέλεσμα συγκεκριμένης ενέργειας (π.χ. "Ο λειτουργία Office ενεργοποιήθηκε") αυτο-
+    // επουλώνεται μόλις γίνει η επόμενη πραγματική ενέργεια, ίδιο πνεύμα με άλλες μικρές μεταβατικές
+    // περιπτώσεις σε αυτή την εφαρμογή.
+    private bool _statusIsIdle = true;
+
     private void OnStatusChanged(string message, bool busy)
     {
-        TxtStatus.Text = $"Κατάσταση: {message}";
+        _statusIsIdle = !busy;
+        TxtStatus.Text = $"{LanguageService.T("StatusPrefix")}{message}";
         if (busy)
         {
             ActivitySpinner.Visibility = Visibility.Visible;
@@ -78,7 +265,32 @@ public partial class MainWindow : Window
 
         if (e.Key == Key.M)
         {
-            ClassicMenu.Visibility = ClassicMenu.Visibility == Visibility.Visible ? Visibility.Collapsed : Visibility.Visible;
+            // Στο "Windows Classic" skin η κλασική γραμμή μενού είναι ΠΑΝΤΑ ορατή (ρητό αίτημα χρήστη) -
+            // το Ctrl+M δεν πρέπει να μπορεί να την κρύψει εκεί.
+            if (!ThemeManager.IsWindowsClassicSkin)
+                ClassicMenu.Visibility = ClassicMenu.Visibility == Visibility.Visible ? Visibility.Collapsed : Visibility.Visible;
+            e.Handled = true;
+            return;
+        }
+
+        // ΝΕΟ - roadmap "έλεγξε αν χρειάζονται νέες συντομεύσεις πληκτρολογίου" - Ctrl+F για εστίαση
+        // στο πεδίο αναζήτησης είναι μία από τις πιο καθιερωμένες συμβάσεις πληκτρολογίου (browsers,
+        // IDEs, κ.λπ.) και έλειπε εντελώς - πριν ο χρήστης έπρεπε πάντα να κάνει κλικ με το ποντίκι
+        // στο πεδίο. SelectAll ώστε μια ήδη υπάρχουσα αναζήτηση να αντικαθίσταται αμέσως πληκτρολογώντας,
+        // όχι να προστίθεται στο τέλος της.
+        if (e.Key == Key.F)
+        {
+            TxtSearch.Focus();
+            TxtSearch.SelectAll();
+            e.Handled = true;
+            return;
+        }
+
+        // ΝΕΟ - Ctrl+H ανοίγει απευθείας τον Πλήρη Έλεγχο Υγείας (ίδιο παράθυρο με το κουμπί στην
+        // Αρχική/tray) - "H" για Health, χωρίς σύγκρουση με καμία άλλη ήδη καθιερωμένη συντόμευση.
+        if (e.Key == Key.H)
+        {
+            new Views.HealthCheckWindow { Owner = this }.ShowDialog();
             e.Handled = true;
             return;
         }
@@ -134,6 +346,12 @@ public partial class MainWindow : Window
             "Advanced" => new AdvancedView(),
             _ => new PlaceholderView(label)
         };
+
+        // ΝΕΟ (roadmap: "ομαλή μετάβαση καρτελών") - απαλό fade-in αντί για ακαριαία εναλλαγή
+        // περιεχομένου· μικρή διάρκεια (180ms) ώστε να μην καθυστερεί αισθητά την πλοήγηση.
+        ContentHost.Opacity = 0;
+        ContentHost.BeginAnimation(OpacityProperty, new System.Windows.Media.Animation.DoubleAnimation(0, 1,
+            new Duration(TimeSpan.FromMilliseconds(180))) { EasingFunction = new System.Windows.Media.Animation.QuadraticEase() });
     }
 
     // Γεμίζει ΟΛΟΚΛΗΡΟ το κλασικό μενού (4 ομάδες: Εργαλεία/Προβολή/Ρυθμίσεις/Βοήθεια) από το κοινό
@@ -141,8 +359,22 @@ public partial class MainWindow : Window
     // ΙΔΙΟ μοντέλο τροφοδοτεί και το πλευρικό μενού (SidebarNav), ώστε τα δύο να μην αποκλίνουν ποτέ.
     private void PopulateClassicMenu()
     {
+        // ΔΙΟΡΘΩΣΗ (χρήστης ανέφερε με screenshot: "διπλότυπα" στη γραμμή μενού) - η μέθοδος καλείται
+        // ΚΑΙ απευθείας στον constructor ΚΑΙ μέσα από την ApplyLanguage() (η οποία επίσης καλείται
+        // στον constructor, στην εκκίνηση) - χωρίς Clear() εδώ, κάθε ομάδα προστίθεται στο
+        // ClassicMenu.Items ΔΥΟ φορές ήδη από την πρώτη εκκίνηση της εφαρμογής.
+        ClassicMenu.Items.Clear();
         foreach (var group in ClassicMenuModel.Groups)
         {
+            if (group.Flat)
+            {
+                var flatLeaf = group.Items[0];
+                var flatItem = new MenuItem { Header = $"{group.Icon} {group.Header}" };
+                flatItem.Click += (_, _) => HandleLeafClick(flatLeaf);
+                ClassicMenu.Items.Add(flatItem);
+                continue;
+            }
+
             var groupItem = new MenuItem { Header = $"{group.Icon} {group.Header}" };
             foreach (var leaf in group.Items)
             {
@@ -179,13 +411,16 @@ public partial class MainWindow : Window
     private void HandleLeafClick(MenuLeaf leaf)
     {
         if (leaf.Action.NavigateTag != null) SelectTab(leaf.Action.NavigateTag);
-        else if (leaf.Action.NotPortedLabel != null) ShowNotPorted(leaf.Action.NotPortedLabel);
+        else if (leaf.Action.DestinationKey != null) OpenDestination(leaf.Action.DestinationKey);
     }
 
     // Κοινή δρομολόγηση: βρίσκει το αντίστοιχο RadioButton στη λωρίδα καρτελών και το τσεκάρει - το
     // TabButton_Checked αναλαμβάνει από εκεί (ShowTabContent), οπότε το κλασικό μενού/Ctrl+1..8 ΔΕΝ
     // χρειάζεται να ξέρουν τίποτα το ένα για το άλλο.
-    private void SelectTab(string tag)
+    // internal (όχι private) - v3.2.0: το HomeView's νέο κουμπί κατάστασης δικτύου το καλεί
+    // απευθείας για να πηδήξει στην καρτέλα Δίκτυο & Ασφάλεια (βλ. HomeView.xaml.cs's
+    // BtnOpenNetworkTab_Click) - ίδιο assembly, ασφαλές χωρίς να γίνει πλήρως public API.
+    internal void SelectTab(string tag)
     {
         foreach (var child in TabStrip.Children)
         {
@@ -194,39 +429,275 @@ public partial class MainWindow : Window
     }
 
     // Το πλευρικό μενού (SidebarNav) είναι ΜΟΝΟ 6 συντομεύσεις προς δευτερεύοντα παράθυρα (βλ.
-    // SidebarShortcuts.cs) - κανένα από αυτά δεν έχει μεταφερθεί ακόμα στο WPF, οπότε κάθε κλικ
-    // δείχνει το ίδιο ειλικρινές "δεν έχει υλοποιηθεί ακόμα" μήνυμα με το κλασικό μενού.
-    private void Sidebar_ShortcutClicked(SidebarShortcut shortcut) => ShowNotPorted(shortcut.NotPortedLabel);
+    // SidebarShortcuts.cs) - πλέον ΟΛΑ ανοίγουν το πραγματικό τους παράθυρο (ολοκλήρωση μεταφοράς).
+    private void Sidebar_ShortcutClicked(SidebarShortcut shortcut) => OpenDestination(shortcut.DestinationKey);
 
     private bool _sidebarVisible;
 
+    // Port του $btnHamburger.Add_Click (Optimizer.ps1 ~8147) - το "SidebarEnabled" είναι ο ΜΟΝΙΜΟΣ
+    // (persisted) γενικός διακόπτης του χαρακτηριστικού (Ρυθμίσεις Εμφάνισης > Μενού) - το ίδιο το
+    // κλικ στο ☰ αλλάζει ΜΟΝΟ την προσωρινή, κατά τη διάρκεια της συνεδρίας ορατότητα, ΔΕΝ γράφει
+    // ξανά στη ρύθμιση (ίδια σημασιολογία με το ps1's Show/Hide-Sidebar - παροδικό, όχι ρύθμιση).
+    // ΔΙΟΡΘΩΣΗ (χρήστης ανέφερε: "δεν βρίσκω πουθενά το πλευρικό και σύγχρονο μενού με το αντίστοιχο
+    // κουμπί") - όσο το "Ενεργοποίηση πλευρικού μενού" είναι απενεργοποιημένο (Ρυθμίσεις Εμφάνισης >
+    // Μενού), το ☰ έκανε ΑΠΟΛΥΤΑ ΤΙΠΟΤΑ (silent no-op, χωρίς ΚΑΝΕΝΑ οπτικό feedback) - από την οπτική
+    // γωνία του χρήστη το χαρακτηριστικό απλά "εξαφανίζεται", χωρίς κανένα ίχνος για το πού να ψάξει.
+    // Τώρα ανοίγει ΚΑΤΕΥΘΕΙΑΝ τις Ρυθμίσεις Εμφάνισης στην καρτέλα "Μενού" (initialTabIndex: 1) αντί
+    // να μην κάνει τίποτα.
     private void BtnHamburger_Click(object sender, RoutedEventArgs e)
     {
+        if (!AppSettingsService.Current.SidebarEnabled)
+        {
+            new AppearanceSettingsWindow(initialTabIndex: 1) { Owner = this }.ShowDialog();
+            return;
+        }
+
+        if (AppSettingsService.Current.MenuMode == "HorizontalModern")
+        {
+            if (HorizModernStrip.Visibility == Visibility.Visible) HideHorizModernStrip();
+            else ShowHorizModernStrip();
+            return;
+        }
+
         _sidebarVisible = !_sidebarVisible;
         ApplySidebarLayout();
     }
 
+    // Ρητό αίτημα χρήστη: "να ξετυλίγεται από το κινούμενο εικονίδιο" + "να καλύπτει και το search" -
+    // ξεκινά με πλάτος 0 (δίπλα στο γρανάζι, ίδια θέση με τον τίτλο) και ανοίγει προς το φυσικό του
+    // πλάτος· το TxtSearch/SearchPopup κρύβονται όσο είναι ανοιχτό ώστε να μην υπάρχει επικάλυψη.
+    private void ShowHorizModernStrip()
+    {
+        TitleTextPanel.Visibility = Visibility.Collapsed;
+        TxtSearch.Visibility = Visibility.Collapsed;
+        SearchPopup.IsOpen = false;
+        HorizModernStrip.Visibility = Visibility.Visible;
+
+        HorizModernStripInner.Measure(new Size(double.PositiveInfinity, double.PositiveInfinity));
+        var targetWidth = HorizModernStripInner.DesiredSize.Width;
+        HorizModernStrip.Width = 0;
+        var anim = new DoubleAnimation(0, targetWidth, new Duration(System.TimeSpan.FromMilliseconds(400))) { EasingFunction = new QuadraticEase { EasingMode = EasingMode.EaseOut } };
+        HorizModernStrip.BeginAnimation(WidthProperty, anim);
+    }
+
+    private void HideHorizModernStrip()
+    {
+        HorizModernStrip.BeginAnimation(WidthProperty, null);
+        HorizModernStrip.Visibility = Visibility.Collapsed;
+        TitleTextPanel.Visibility = Visibility.Visible;
+        TxtSearch.Visibility = Visibility.Visible;
+    }
+
+    private void HorizModernItem_Click(object sender, RoutedEventArgs e)
+    {
+        if (sender is not Button { Tag: SidebarShortcut shortcut }) return;
+        OpenDestination(shortcut.DestinationKey);
+    }
+
+    // Port του Apply-MenuModeSettings (Optimizer.ps1 ~6347) - επαναφέρει ΚΑΙ τα δύο εναλλακτικά UI
+    // πλοήγησης (πλευρικό/οριζόντιο) σε καθαρή, κλειστή κατάσταση, μετά επανεφαρμόζει ό,τι ΘΑ έπρεπε
+    // να είναι αυτόματα ορατό για τις τρέχουσες ρυθμίσεις (μόνιμα ενσωματωμένο πλευρικό μενού σε
+    // MenuMode="Sidebar" όταν SidebarEnabled - ps1's startupSidebarShowTimer). Καλείται στο startup ΚΑΙ
+    // από το AppearanceSettingsWindow όποτε αλλάζει MenuMode/SidebarEnabled/SidebarPosition, ώστε η
+    // αλλαγή να φανεί άμεσα χωρίς επανεκκίνηση.
+    public void ApplyMenuModeVisibility()
+    {
+        HideHorizModernStrip();
+
+        var settings = AppSettingsService.Current;
+        _sidebarVisible = settings.MenuMode == "Sidebar" && settings.SidebarEnabled;
+        ApplySidebarLayout();
+        ApplyPcManagerSkinLayout();
+    }
+
+    // Υποστηρίζει ΚΑΙ τις δύο θέσεις (Δεξιά/Αριστερά, ρύθμιση "Μενού" του AppearanceSettingsWindow) -
+    // εναλλάσσει ποια στήλη έχει το πλάτος του πλευρικού μενού και σε ποια στήλη βρίσκεται το καθένα
+    // από τα δύο στοιχεία (Sidebar/ContentHostBorder), αντί να χρειάζεται ξεχωριστό Grid layout ανά θέση.
     private void ApplySidebarLayout()
     {
-        ColA.Width = _sidebarVisible ? GridLength.Auto : new GridLength(0);
+        var sidebarSize = _sidebarVisible ? GridLength.Auto : new GridLength(0);
         ColGap.Width = _sidebarVisible ? new GridLength(12) : new GridLength(0);
+
+        if (AppSettingsService.Current.SidebarPosition == "Left")
+        {
+            ColA.Width = sidebarSize;
+            ColC.Width = new GridLength(1, GridUnitType.Star);
+            Grid.SetColumn(Sidebar, 1);
+            Grid.SetColumn(ContentHostBorder, 3);
+        }
+        else
+        {
+            ColA.Width = new GridLength(1, GridUnitType.Star);
+            ColC.Width = sidebarSize;
+            Grid.SetColumn(Sidebar, 3);
+            Grid.SetColumn(ContentHostBorder, 1);
+        }
         Sidebar.Visibility = _sidebarVisible ? Visibility.Visible : Visibility.Collapsed;
     }
 
-    // Στοιχεία μενού των οποίων τα πραγματικά παράθυρα (Βοήθεια/Ιστορικό/ViVeTool/UWP Manager/
-    // Ρυθμίσεις Εμφάνισης) δεν έχουν μεταφερθεί ακόμα στο WPF - ειλικρινές placeholder αντί να
-    // προσποιείται ότι λειτουργούν, σύμφωνα με το σταδιακό πλάνο μετάβασης (βλ. HANDOFF.md).
-    private void ShowNotPorted(string label)
+    // Ανοίγει το πραγματικό δευτερεύον παράθυρο για κάθε προορισμό μενού/πλευρικού μενού - πλέον ΟΛΑ
+    // είναι υλοποιημένα (ολοκλήρωση μεταφοράς, ρητό αίτημα χρήστη). Οι ίδιες ετικέτες χρησιμοποιούνται
+    // σκόπιμα διαφορετικές ανάμεσα σε κλασικό/πλευρικό μενού (βλ. SidebarShortcuts.cs), οπότε ελέγχονται
+    // και οι δύο παραλλαγές εδώ.
+    // ΔΙΟΡΘΩΣΗ (εξονυχιστικός έλεγχος εντόπισε μετά τη μετάφραση του μενού): το `key` εδώ ΠΡΕΠΕΙ να
+    // είναι σταθερό LanguageService key name (π.χ. "Vive_Title"), ΟΧΙ μεταφρασμένο κείμενο - πριν
+    // γινόταν match σε literal ελληνικό κείμενο, που θα έσπαγε τη δρομολόγηση σε κάθε άλλη γλώσσα
+    // μετά τη μετάφραση των μενού (ClassicMenuModel.cs/SidebarShortcuts.cs).
+    private void OpenDestination(string key)
     {
-        MessageBox.Show($"«{label}» δεν έχει μεταφερθεί ακόμα από το Optimizer.ps1 σε αυτό το WPF preview.",
-            "Δεν έχει υλοποιηθεί ακόμα", MessageBoxButton.OK, MessageBoxImage.Information);
+        Window? window = key switch
+        {
+            "Vive_Title" => new ViveToolWindow { Owner = this },
+            "Uwp_Title" => new UwpAppManagerWindow { Owner = this },
+            // ΝΕΟ - roadmap "έλεγξε αν χρειάζονται ανανεώσεις σε δευτερεύοντα παράθυρα/μενού" - ο
+            // Πλήρης Έλεγχος Υγείας ήταν προσβάσιμος ΜΟΝΟ από κουμπί στην Αρχική (+ το tray, +το νέο
+            // Ctrl+H) - πρόσθεσε εδώ ώστε να είναι προσβάσιμος ΚΑΙ από το κλασικό μενού/πλευρικό
+            // μενού, ίδιο μοτίβο με τα υπόλοιπα δευτερεύοντα παράθυρα.
+            "HealthCheck_Title" => new HealthCheckWindow { Owner = this },
+            "AppearanceSettingsTitle" => new AppearanceSettingsWindow { Owner = this },
+            // ΔΙΟΡΘΩΣΗ (ρητό αίτημα χρήστη: "ενσωμάτωσε το ιστορικό εκδόσεων στο ίδιο δευτερεύον
+            // παράθυρο σε tab") - δεν υπάρχει πια ξεχωριστό VersionHistoryWindow, ανοίγει το ίδιο
+            // HelpWindow κατευθείαν στο 3ο tab (index 2, βλ. HelpWindow.xaml), ίδιο μοτίβο με το
+            // "License_Title" -> HelpWindow(initialTabIndex: 1) παρακάτω.
+            "VerHist_Title" => new HelpWindow(initialTabIndex: 2) { Owner = this },
+            "Help_Title" => new HelpWindow { Owner = this },
+            "ActionLog_Title" => new ActionLogWindow { Owner = this },
+            // ΝΕΟ - ρητό αίτημα χρήστη: αντικατέστησε τη συντόμευση "Ιστορικό Εκδόσεων" στο πλευρικό
+            // μενού (βλ. SidebarShortcuts.cs) - πλέον περιττή αφού είναι ήδη προσβάσιμη ως tab μέσα στο
+            // Βοήθεια/Οδηγίες παραπάνω. Το Ιστορικό Πρόχειρου (ClipboardHistoryWindow) ήταν μέχρι τώρα
+            // προσβάσιμο ΜΟΝΟ μέσω tray icon/καθολικής συντόμευσης (Win+Shift+V, βλ. TrayIconService/
+            // App.xaml.cs) - πραγματικό δευτερεύον παράθυρο που δεν είχε ακόμα θέση εδώ.
+            "Clipboard_Title" => new ClipboardHistoryWindow { Owner = this },
+            // ΔΙΟΡΘΩΣΗ (χρήστης ζήτησε: "στην Βοήθεια/Οδηγίες να ανοίγει το παράθυρο με δύο tabs όπου
+            // το δεύτερο θα είναι η άδεια χρήσης") - δεν υπάρχει πια ξεχωριστό LicenseWindow, ανοίγει
+            // το ίδιο HelpWindow κατευθείαν στο 2ο tab (index 1).
+            "License_Title" => new HelpWindow(initialTabIndex: 1) { Owner = this },
+            _ => null,
+        };
+        if (window != null) window.ShowDialog();
+        else ThemedMessageBox.Show($"{LanguageService.T("Main_NotPortedPrefix")}{LanguageService.T(key)}{LanguageService.T("Main_NotPortedSuffix")}",
+            LanguageService.T("Main_NotPortedTitle"), MessageBoxButton.OK, MessageBoxImage.Information);
+    }
+
+    // ΔΙΟΡΘΩΣΗ (ρητό αίτημα χρήστη: "το κουμπί γλώσσα δεν βγάζει ξεχωριστό dropdown") - βλ. σχόλιο
+    // στο LanguagePopup στο XAML. Λίστα φτιάχνεται ΚΑΘΕ φορά που ανοίγει (όχι μια φορά στον
+    // constructor) ώστε το "Name" της τρέχουσας γλώσσας να ενημερώνεται αν άλλαξε από αλλού
+    // (π.χ. από το πλήρες dropdown στις Ρυθμίσεις Εμφάνισης) πριν ξανανοίξει αυτό το popup.
+    private void BtnLanguage_Click(object sender, RoutedEventArgs e)
+    {
+        foreach (var item in ListLanguages.Items)
+        {
+            if (item is ListBoxItem lbi && lbi.Tag as string == LanguageService.Current)
+            {
+                ListLanguages.SelectedItem = lbi;
+                break;
+            }
+        }
+        LanguagePopup.IsOpen = !LanguagePopup.IsOpen;
+    }
+
+    private void ListLanguages_SelectionChanged(object sender, SelectionChangedEventArgs e)
+    {
+        if (ListLanguages.SelectedItem is not ListBoxItem { Tag: string code }) return;
+        LanguageService.SetLanguage(code);
+        LanguagePopup.IsOpen = false;
+    }
+
+    // Ζωντανή προεπισκόπηση - ταιριάζει ΚΑΘΕ λέξη του query ως substring στην ετικέτα (μερικό/κοινών
+    // λέξεων ταίριασμα, ρητό αίτημα χρήστη), όχι μόνο ταίριασμα με την αρχή της ετικέτας.
+    private void TxtSearch_TextChanged(object sender, TextChangedEventArgs e)
+    {
+        var query = TxtSearch.Text.Trim();
+        if (query.Length == 0) { SearchPopup.IsOpen = false; return; }
+
+        var words = query.Split(' ', StringSplitOptions.RemoveEmptyEntries);
+        var results = _searchIndex
+            .Where(r => words.All(w => r.Label.Contains(w, StringComparison.OrdinalIgnoreCase)))
+            .Take(8)
+            .ToList();
+
+        // ΝΕΟ - βελτίωση: fallback σε fuzzy (Levenshtein) matching ΜΟΝΟ όταν το ακριβές substring
+        // matching παραπάνω δεν βρίσκει τίποτα - πιάνει μικρά τυπογραφικά λάθη (π.χ. "netwrok" ->
+        // "network") χωρίς να αλλοιώνει τα ήδη γρήγορα/ακριβή αποτελέσματα του συνηθισμένου path.
+        if (results.Count == 0)
+        {
+            results = _searchIndex
+                .Select(r => (Row: r, Score: FuzzyScore(words, r.Label)))
+                .Where(x => x.Score < int.MaxValue)
+                .OrderBy(x => x.Score)
+                .Select(x => x.Row)
+                .Take(8)
+                .ToList();
+        }
+
+        ListSearchResults.ItemsSource = results;
+        SearchPopup.IsOpen = results.Count > 0;
+    }
+
+    // Κάθε λέξη του query πρέπει να ταιριάζει (κατά προσέγγιση) με ΤΟΥΛΑΧΙΣΤΟΝ μία λέξη της ετικέτας -
+    // ίδια λογική AND με το ακριβές matching παραπάνω. Το κατώφλι απόστασης κλιμακώνεται με το μήκος
+    // της λέξης (1 για κοντές, 2 για μεγαλύτερες) ώστε ένα τυπογραφικό λάθος να περάσει αλλά όχι μια
+    // εντελώς άσχετη λέξη. Επιστρέφει int.MaxValue αν δεν ταιριάζει καμία λέξη του query.
+    private static int FuzzyScore(string[] queryWords, string label)
+    {
+        var labelWords = label.Split(' ', StringSplitOptions.RemoveEmptyEntries);
+        var total = 0;
+        foreach (var qw in queryWords)
+        {
+            var threshold = qw.Length <= 4 ? 1 : 2;
+            var best = int.MaxValue;
+            foreach (var lw in labelWords)
+            {
+                var dist = Levenshtein(qw, lw);
+                if (dist < best) best = dist;
+            }
+            if (best > threshold) return int.MaxValue;
+            total += best;
+        }
+        return total;
+    }
+
+    private static int Levenshtein(string a, string b)
+    {
+        a = a.ToLowerInvariant();
+        b = b.ToLowerInvariant();
+        var dp = new int[a.Length + 1, b.Length + 1];
+        for (var i = 0; i <= a.Length; i++) dp[i, 0] = i;
+        for (var j = 0; j <= b.Length; j++) dp[0, j] = j;
+        for (var i = 1; i <= a.Length; i++)
+        {
+            for (var j = 1; j <= b.Length; j++)
+            {
+                var cost = a[i - 1] == b[j - 1] ? 0 : 1;
+                dp[i, j] = Math.Min(Math.Min(dp[i - 1, j] + 1, dp[i, j - 1] + 1), dp[i - 1, j - 1] + cost);
+            }
+        }
+        return dp[a.Length, b.Length];
+    }
+
+    private void ListSearchResults_SelectionChanged(object sender, SelectionChangedEventArgs e)
+    {
+        if (ListSearchResults.SelectedItem is not SearchResultRow row) return;
+        SearchPopup.IsOpen = false;
+        TxtSearch.Text = "";
+        HandleLeafClick(row.Leaf);
     }
 
     private void BtnThemeToggle_Click(object sender, RoutedEventArgs e)
     {
         ThemeManager.ToggleLightDark();
-        TxtThemeToggle.Text = ThemeManager.IsDarkMode ? "☀ Light Mode" : "☽ Dark Mode";
+        RefreshThemeToggleLabel();
     }
+
+    // ΔΙΟΡΘΩΣΗ (βρέθηκε κατά τον έλεγχο για "elements μένουν στην προηγούμενη γλώσσα") - το κείμενο
+    // αυτού του κουμπιού ήταν ΚΥΡΙΟΛΕΚΤΙΚΑ hardcoded αγγλικά ("Light Mode"/"Dark Mode"), ποτέ δεν
+    // περνούσε καν από το LanguageService - όχι μόνο δεν ανανεωνόταν σε αλλαγή γλώσσας, ήταν πάντα
+    // στα αγγλικά ανεξαρτήτως γλώσσας. Επαναχρησιμοποιεί τα ήδη υπάρχοντα Onb_SwitchToLight/
+    // Onb_SwitchToDark κλειδιά (ίδιο νόημα, ίδιο ☀/☽ σύμβολο - του onboarding) αντί να προστεθούν
+    // δύο νέα σχεδόν πανομοιότυπα κλειδιά σε 14 γλώσσες. Καλείται από τον constructor, από το
+    // BtnThemeToggle_Click, ΚΑΙ από το ApplyLanguage() ώστε να μένει σωστό σε κάθε σενάριο.
+    private void RefreshThemeToggleLabel() =>
+        TxtThemeToggle.Text = ThemeManager.IsDarkMode ? LanguageService.T("Onb_SwitchToLight") : LanguageService.T("Onb_SwitchToDark");
 
     private void BtnThemePicker_Click(object sender, RoutedEventArgs e)
     {
@@ -240,3 +711,7 @@ public partial class MainWindow : Window
         ThemePopup.IsOpen = false;
     }
 }
+
+// Μία γραμμή αποτελέσματος αναζήτησης - "τυλίγει" ένα MenuLeaf (ίδιο μοντέλο με το κλασικό/πλευρικό
+// μενού) μαζί με την ομάδα του, για εμφάνιση στο popup προεπισκόπησης.
+public record SearchResultRow(string Icon, string Label, string GroupHeader, MenuLeaf Leaf);

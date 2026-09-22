@@ -1,3 +1,8 @@
+<!-- ΔΙΟΡΘΩΣΗ (χρήστης ζήτησε: "μίκρυνε το ύψος της εφαρμογής να ματσάρει με το πλευρικό μενού") -
+     880->760: το sidebar πλέον κολλάει στο φυσικό του ύψος (βλ. Sidebar's VerticalAlignment="Top"
+     παρακάτω) αντί να τεντώνεται σε όλη τη στήλη - το παράθυρο μικραίνει αντίστοιχα ώστε να μη μένει
+     μεγάλο άδειο κενό. Κάθε καρτέλα περιεχομένου έχει ήδη δικό της ScrollViewer, οπότε μικρότερο
+     ύψος σημαίνει απλώς λίγο περισσότερο scroll, όχι κομμένο περιεχόμενο. -->
 <Window x:Class="OptimizerWpf.MainWindow"
         xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
@@ -6,11 +11,22 @@
         xmlns:local="clr-namespace:OptimizerWpf"
         xmlns:views="clr-namespace:OptimizerWpf.Views"
         mc:Ignorable="d"
-        Title="Windows 11 Maintenance &amp; Optimizer Tool (WPF Preview)"
-        Height="800" Width="1280" MinHeight="600" MinWidth="1000"
+        Title="GearWin - Complete PC Care"
+        Icon="AppIcon.ico"
+        Height="800" Width="1360" MinHeight="600" MinWidth="1000"
         WindowStartupLocation="CenterScreen"
         Background="{DynamicResource MainBgBrush}"
         PreviewKeyDown="Window_PreviewKeyDown">
+    <Window.Resources>
+        <local:NewlineToSpaceConverter x:Key="NewlineToSpace"/>
+        <!-- ΝΕΟ - roadmap "Παλλόμενο κόκκινο dot προσοχής" - το DotHealthAttention ήταν στατικό·
+             αργή, διακριτική παλμική Opacity animation τραβάει λίγο περισσότερο το βλέμμα χωρίς να
+             γίνεται ενοχλητική. Ξεκινά/σταματά από το code-behind (CheckHealthAttentionAsync) μαζί
+             με την εμφάνιση/απόκρυψη του dot. -->
+        <Storyboard x:Key="PulseAttentionDotStoryboard" RepeatBehavior="Forever" AutoReverse="True">
+            <DoubleAnimation Storyboard.TargetName="DotHealthAttention" Storyboard.TargetProperty="Opacity" From="1" To="0.3" Duration="0:0:1"/>
+        </Storyboard>
+    </Window.Resources>
     <!--
         Stage 1 of the WPF migration (see HANDOFF.md section on the migration plan). This is the
         app shell only: title bar, tab navigation, content host, status bar. Only the Home tab is
@@ -29,6 +45,17 @@
             <RowDefinition Height="Auto"/>
         </Grid.RowDefinitions>
 
+        <!-- Port του mainForm.BackgroundImage = New-ThemedBackgroundBitmap (Optimizer.ps1 ~6379+) -
+             ζωντανό (ή στατικό, ανάλογα με τη ρύθμιση "Κινούμενα φόντα θεμάτων") φόντο, μοναδικό ανά
+             θέμα - βλ. Views/ThemedBackgroundControl.cs + ThemeBackgroundStyles.cs.
+             ΔΙΟΡΘΩΣΗ (χρήστης παρατήρησε: "δεν φαίνεται καλά παντού" - επιβεβαιώθηκε με screenshots: σε
+             7 από τις 8 καρτέλες οι πυκνές κάρτες καλύπτουν όλο το παράθυρο, το φόντο ήταν ορατό ΜΟΝΟ
+             στην Αρχική) - RowSpan 5->3: καλύπτει πλέον ΜΟΝΟ κλασικό μενού+τίτλο+λωρίδα καρτελών (Row
+             0-2), ΟΧΙ το ContentRow (Row 3, όπου είναι οι κάρτες) ούτε τη γραμμή κατάστασης (Row 4) -
+             πάντα ορατό εκεί, ανεξάρτητα από καρτέλα, ΚΑΙ σημαντικά φθηνότερο να ζωγραφίζεται (πολύ
+             μικρότερη επιφάνεια) - βλ. και ThemedBackgroundControl's 120ms interval/Pause-Resume. -->
+        <views:ThemedBackgroundControl x:Name="AppBackground" Grid.Row="0" Grid.RowSpan="3"/>
+
         <!-- ===== Κλασικό μενού (Εργαλεία/Προβολή/Ρυθμίσεις/Βοήθεια) - ρητό αίτημα χρήστη -
              αντιστοιχεί στο $mainMenu (MainMenu) του Optimizer.ps1. Γεμίζει πλέον ΕΞ ΟΛΟΚΛΗΡΟΥ από
              κώδικα (βλ. PopulateClassicMenu στο .xaml.cs) από το κοινό ClassicMenuModel.Groups - ΟΧΙ
@@ -42,10 +69,20 @@
              κρυφτεί/εμφανιστεί με Ctrl+M - βλ. Window_PreviewKeyDown στο code-behind. Η ύπαρξή του
              ως togglable στοιχείο (όχι απλά πάντα-ορατό) εξυπηρετεί και το μελλοντικό "Windows
              Classic" skin, όπου θα είναι μέρος του χαρακτηριστικού κλασικού παραθύρου. -->
-        <Menu x:Name="ClassicMenu" Grid.Row="0" Background="{DynamicResource TabBgBrush}" Foreground="{DynamicResource TextBrush}"/>
+        <!-- Ρητό αίτημα χρήστη: "το κλασικό μενού να είναι κρυμμένο κατά το άνοιγμα" - Ctrl+M
+             (Window_PreviewKeyDown) το εμφανίζει/κρύβει κανονικά κατά τη διάρκεια της συνεδρίας. -->
+        <Menu x:Name="ClassicMenu" Grid.Row="0" Visibility="Collapsed" Background="{DynamicResource TabBgBrush}" Foreground="{DynamicResource TextBrush}"/>
 
-        <!-- ===== Title bar ===== -->
-        <Grid Grid.Row="1" Margin="24,16,24,8">
+        <!-- ===== Title bar =====
+             ΔΙΟΡΘΩΣΗ (χρήστης ζήτησε: "μεγάλωσε το ύψος του παραθύρου για να αυξήσεις το κενό μεταξύ
+             των καρτελών και του τίτλου... και για το κινούμενο φόντο") - μεγαλύτερα περιθώρια πάνω/
+             κάτω εδώ ΚΑΙ στη λωρίδα καρτελών παρακάτω δίνουν πραγματική οπτική αναπνοή, όχι απλά
+             μεγαλύτερο κενό παράθυρο (το Row="1" είναι Auto - το ύψος του παραθύρου από μόνο του δεν
+             θα άλλαζε αυτό το κενό, μόνο τη γραμμή περιεχομένου Row="3" που είναι "*"). Το AppBackground
+             (κινούμενο φόντο) καλύπτει ΑΚΡΙΒΩΣ Rows 0-2, οπότε το ίδιο μεγαλύτερο περιθώριο του δίνει
+             και περισσότερο ορατό χώρο. Height="760"->800 στο ίδιο το Window αντισταθμίζει το επιπλέον
+             περιθώριο, ώστε η περιοχή περιεχομένου να μη μικρύνει αισθητά. -->
+        <Grid Grid.Row="1" Margin="24,24,24,16">
             <Grid.ColumnDefinitions>
                 <ColumnDefinition Width="Auto"/>
                 <ColumnDefinition Width="*"/>
@@ -53,27 +90,317 @@
             </Grid.ColumnDefinitions>
 
             <StackPanel Grid.Column="0" Orientation="Horizontal" VerticalAlignment="Center">
-                <Border Width="36" Height="36" CornerRadius="8" Background="{DynamicResource AccentBrush}" Margin="0,0,12,0">
-                    <TextBlock Text="&#x2699;" FontSize="18" Foreground="White" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                <!-- Το "κινούμενο γρανάζι δίπλα στον τίτλο" (ρητό αίτημα χρήστη, port του ps1's
+                     γρανάζι σε σταθερή θέση τέρμα αριστερά) - συνεχής, αργή περιστροφή, όχι μόνο κατά
+                     τη διάρκεια κάποιας ενέργειας (βλ. spinner στη γραμμή κατάστασης, διαφορετικό
+                     στοιχείο). Το ίδιο ελεμέντο είναι ο στόχος "προσγείωσης" του γραναζιού της οθόνης
+                     εκκίνησης (βλ. SplashWindow) - x:Name εδώ ώστε να διαβάζεται η ΘΕΣΗ του στην οθόνη.-->
+                <!-- ΔΙΟΡΘΩΣΗ (χρήστης ανέφερε: "τα γρανάζια στο κινούμενο εικονίδιο είναι μικρά") -
+                     36->44 / 24->32 (ίδια αναλογία badge:γρανάζι ~1.5x κρατημένη) ώστε τα δόντια να
+                     είναι ευδιάκριτα αντί για σχεδόν-συμπαγή κουκκίδα στα 24px. Το SplashWindow's
+                     "προσγείωση" διαβάζει το ActualWidth δυναμικά (SplashWindow.xaml.cs) - καμία
+                     εξάρτηση εδώ σε συγκεκριμένο μέγεθος. -->
+                <Border x:Name="TitleGearBorder" Width="44" Height="44" CornerRadius="8" Background="{DynamicResource AccentBrush}" Margin="0,0,12,0">
+                    <views:ThreeGearIcon x:Name="TitleGear" Width="32" Height="32" HorizontalAlignment="Center" VerticalAlignment="Center"/>
                 </Border>
-                <StackPanel VerticalAlignment="Center">
-                    <StackPanel Orientation="Horizontal">
-                        <TextBlock Text="Windows 11 Maintenance " FontSize="20" FontWeight="Bold" Foreground="{DynamicResource TextBrush}"/>
-                        <TextBlock Text="Optimizer Tool" FontSize="20" FontWeight="Bold" Foreground="{DynamicResource TextBrush}"/>
-                    </StackPanel>
-                    <TextBlock Text="v0.1 WPF Preview" FontSize="11" Foreground="{DynamicResource SubTextBrush}"/>
+                <StackPanel x:Name="TitleTextPanel" VerticalAlignment="Center">
+                    <TextBlock Text="GearWin" FontSize="20" FontWeight="Bold" Foreground="{DynamicResource TextBrush}"/>
+                    <TextBlock x:Name="TxtAppVersion" FontSize="11" Foreground="{DynamicResource SubTextBrush}"/>
                 </StackPanel>
+
+                <!-- ===== Οριζόντιο σύγχρονο μενού (MenuMode="HorizontalModern", port του ps1's
+                     $global:horizModernStrip, ~8167) - εναλλακτικό του πλευρικού μενού, ΙΔΙΕΣ 6
+                     συντομεύσεις (SidebarShortcuts.All) αλλά σε οριζόντια λωρίδα που αντικαθιστά
+                     προσωρινά τον τίτλο όταν ο χρήστης πατήσει ☰ (βλ. BtnHamburger_Click) - ΜΟΝΟ όταν
+                     αυτό είναι το ενεργό MenuMode (ρύθμιση "Μενού" στις Ρυθμίσεις Εμφάνισης). -->
+                <!-- Ρητό αίτημα χρήστη: "σαν να ξετυλίγεται από το κινούμενο εικονίδιο" - Border με
+                     ClipToBounds="True" + Width animation (0 -> φυσικό πλάτος περιεχομένου, βλ.
+                     ShowHorizModernStrip στο code-behind) δίνει το εφέ "ξετυλίγματος" προς τα δεξιά,
+                     ξεκινώντας ακριβώς δίπλα στο γρανάζι. "Χωρίς pills" - Background="Transparent"
+                     στα items αντί για το γεμάτο FlatButtonStyle (μόνο hover highlight, όπως το
+                     πρωτότυπο horizModernStrip). -->
+                <Border x:Name="HorizModernStrip" ClipToBounds="True" VerticalAlignment="Center" Height="40" Visibility="Collapsed" Width="0">
+                    <StackPanel x:Name="HorizModernStripInner" Orientation="Horizontal" VerticalAlignment="Center">
+                        <!-- ΔΙΟΡΘΩΣΗ (χρήστης ανέφερε: "κάποια elements μένουν στην προηγούμενη γλώσσα") -
+                             x:Name προστέθηκε ώστε το ApplyLanguage() (MainWindow.xaml.cs) να μπορεί να
+                             ξαναορίσει το ItemsSource σε κάθε αλλαγή γλώσσας - το {x:Static} από μόνο
+                             του αξιολογείται ΜΙΑ φορά στο InitializeComponent και ποτέ ξανά, παρότι το
+                             ίδιο το SidebarShortcuts.All είναι ήδη property που φτιάχνει φρέσκα
+                             μεταφρασμένα αντικείμενα σε κάθε πρόσβαση. -->
+                        <ItemsControl x:Name="ListHorizModernShortcuts" ItemsSource="{x:Static local:SidebarShortcuts.All}">
+                            <ItemsControl.ItemsPanel>
+                                <ItemsPanelTemplate>
+                                    <StackPanel Orientation="Horizontal"/>
+                                </ItemsPanelTemplate>
+                            </ItemsControl.ItemsPanel>
+                            <ItemsControl.ItemTemplate>
+                                <DataTemplate>
+                                    <StackPanel Orientation="Horizontal">
+                                        <Button Style="{StaticResource FlatButtonStyle}" Background="Transparent" Height="34" Padding="10,0" VerticalContentAlignment="Center"
+                                                Click="HorizModernItem_Click" Tag="{Binding}">
+                                            <StackPanel Orientation="Horizontal">
+                                                <TextBlock Text="{Binding Icon}" FontSize="14" Margin="0,0,7,0" VerticalAlignment="Center"/>
+                                                <TextBlock Text="{Binding Label, Converter={StaticResource NewlineToSpace}}" FontSize="12" TextWrapping="NoWrap" VerticalAlignment="Center" Foreground="{DynamicResource TextBrush}"/>
+                                            </StackPanel>
+                                        </Button>
+                                        <!-- Λεπτός κάθετος διαχωριστής ανάμεσα στα στοιχεία (ρητό αίτημα χρήστη: "έχεις
+                                             κολλήσει τις επιλογές" - διαχωρισμός αντί για μόνο margin). -->
+                                        <Border Width="1" Height="20" Background="{DynamicResource CardBorderBrush}" Margin="4,0" VerticalAlignment="Center"/>
+                                    </StackPanel>
+                                </DataTemplate>
+                            </ItemsControl.ItemTemplate>
+                        </ItemsControl>
+                    </StackPanel>
+                </Border>
             </StackPanel>
 
+            <!-- Ζωντανή προεπισκόπηση αποτελεσμάτων καθώς πληκτρολογεί ο χρήστης (ρητό αίτημα χρήστη) -
+                 ταιριάζει μερικές/κοινές λέξεις πάνω στο ίδιο μοντέλο (ClassicMenuModel.Groups) που
+                 τροφοδοτεί ΚΑΙ το κλασικό μενού ΚΑΙ το πλευρικό μενού, ώστε η αναζήτηση να καλύπτει
+                 ό,τι ήδη είναι προσβάσιμο από εκεί (καρτέλες + εργαλεία + ρυθμίσεις + βοήθεια) χωρίς
+                 ξεχωριστό, παράλληλο ευρετήριο που θα μπορούσε να αποκλίνει. -->
             <TextBox x:Name="TxtSearch" Grid.Column="1" Width="260" Height="34" HorizontalAlignment="Right"
                      Margin="0,0,16,0" VerticalContentAlignment="Center" Padding="8,0"
                      Background="{DynamicResource CardBgBrush}" Foreground="{DynamicResource TextBrush}"
-                     BorderBrush="{DynamicResource CardBorderBrush}"/>
+                     BorderBrush="{DynamicResource CardBorderBrush}" TextChanged="TxtSearch_TextChanged"/>
+            <Popup x:Name="SearchPopup" PlacementTarget="{Binding ElementName=TxtSearch}" Placement="Bottom" StaysOpen="False" AllowsTransparency="True">
+                <Border Background="{DynamicResource CardBgBrush}" BorderBrush="{DynamicResource CardBorderBrush}" BorderThickness="1" CornerRadius="{DynamicResource AppCornerRadius}" Padding="4">
+                    <ListBox x:Name="ListSearchResults" BorderThickness="0" Background="Transparent" Width="260" MaxHeight="300"
+                             ScrollViewer.VerticalScrollBarVisibility="Auto" SelectionChanged="ListSearchResults_SelectionChanged">
+                        <ListBox.ItemTemplate>
+                            <DataTemplate>
+                                <StackPanel Orientation="Horizontal" Margin="4">
+                                    <TextBlock Text="{Binding Icon}" Margin="0,0,8,0" VerticalAlignment="Center"/>
+                                    <StackPanel>
+                                        <TextBlock Text="{Binding Label}" Foreground="{DynamicResource TextBrush}"/>
+                                        <TextBlock Text="{Binding GroupHeader}" Style="{StaticResource SubTextStyle}" FontSize="10"/>
+                                    </StackPanel>
+                                </StackPanel>
+                            </DataTemplate>
+                        </ListBox.ItemTemplate>
+                    </ListBox>
+                </Border>
+            </Popup>
 
             <StackPanel Grid.Column="2" Orientation="Horizontal" VerticalAlignment="Center">
-                <Button x:Name="BtnLanguage" Content="&#x1F310;" Width="36" Height="36" Margin="0,0,8,0" Style="{StaticResource FlatButtonStyle}"/>
+                <!-- Πρόταση βελτίωσης που εγκρίθηκε ("κάνε τα όλα") - AutomationProperties.Name στα
+                     κουμπιά-μόνο-εικονίδιο (χωρίς ορατό κείμενο, το WPF δεν παράγει αυτόματα προσβάσιμο
+                     όνομα από emoji Content) για αναγνώστες οθόνης. -->
+                <!-- ΔΙΟΡΘΩΣΗ (ρητό αίτημα χρήστη: "το κουμπί γλώσσα δεν βγάζει ξεχωριστό dropdown") -
+                     πριν άνοιγε ΟΛΟΚΛΗΡΟ το παράθυρο Ρυθμίσεων Εμφάνισης (BtnLanguage_Click παρακάτω) -
+                     τώρα ένα ελαφρύ Popup, ΙΔΙΟ μοτίβο με το ΗΔΗ υπάρχον ThemePopup ακριβώς από κάτω
+                     (ίδιο custom φόντο για τον ίδιο λόγο - το popup ενός ComboBox κρατάει πάντα λευκό
+                     φόντο). Η επιλογή γλώσσας ισχύει άμεσα (LanguageService.SetLanguage), το πλήρες
+                     dropdown στις Ρυθμίσεις Εμφάνισης παραμένει διαθέσιμο για όποιον το προτιμά εκεί. -->
+                <Button x:Name="BtnLanguage" Width="36" Height="36" Margin="0,0,8,0" Style="{StaticResource FlatButtonStyle}" Click="BtnLanguage_Click" AutomationProperties.Name="{local:Tr Appr_AppLanguage}">
+                    <views:HeaderGlyphIcon Kind="Globe" Width="16" Height="16"/>
+                </Button>
+                <Popup x:Name="LanguagePopup" PlacementTarget="{Binding ElementName=BtnLanguage}" Placement="Bottom" StaysOpen="False" AllowsTransparency="True">
+                    <Border Background="{DynamicResource CardBgBrush}" BorderBrush="{DynamicResource CardBorderBrush}" BorderThickness="1" CornerRadius="{DynamicResource AppCornerRadius}" Padding="4">
+                        <ListBox x:Name="ListLanguages" BorderThickness="0" Background="Transparent" Width="160"
+                                 SelectionChanged="ListLanguages_SelectionChanged">
+                            <ListBoxItem Tag="el">
+                                <StackPanel Orientation="Horizontal">
+                                    <Border Width="20" Height="14" CornerRadius="2" ClipToBounds="True" Margin="0,0,8,0" Background="#0D5EAF">
+                                        <Grid>
+                                            <Grid.RowDefinitions>
+                                                <RowDefinition/><RowDefinition/><RowDefinition/><RowDefinition/><RowDefinition/>
+                                                <RowDefinition/><RowDefinition/><RowDefinition/><RowDefinition/>
+                                            </Grid.RowDefinitions>
+                                            <Rectangle Grid.Row="0" Fill="White"/>
+                                            <Rectangle Grid.Row="1" Fill="#0D5EAF"/>
+                                            <Rectangle Grid.Row="2" Fill="White"/>
+                                            <Rectangle Grid.Row="3" Fill="#0D5EAF"/>
+                                            <Rectangle Grid.Row="4" Fill="White"/>
+                                            <Rectangle Grid.Row="5" Fill="#0D5EAF"/>
+                                            <Rectangle Grid.Row="6" Fill="#0D5EAF"/>
+                                            <Rectangle Grid.Row="7" Fill="White"/>
+                                            <Rectangle Grid.Row="8" Fill="#0D5EAF"/>
+                                            <Border Grid.Row="0" Grid.RowSpan="5" Width="8" HorizontalAlignment="Left" Background="#0D5EAF">
+                                                <Grid>
+                                                    <Rectangle Fill="White" Height="1.6" VerticalAlignment="Center"/>
+                                                    <Rectangle Fill="White" Width="1.6" HorizontalAlignment="Center"/>
+                                                </Grid>
+                                            </Border>
+                                        </Grid>
+                                    </Border>
+                                    <TextBlock Text="Ελληνικά" VerticalAlignment="Center"/>
+                                </StackPanel>
+                            </ListBoxItem>
+                            <ListBoxItem Tag="en">
+                                <StackPanel Orientation="Horizontal">
+                                    <Border Width="20" Height="14" CornerRadius="2" ClipToBounds="True" Margin="0,0,8,0" Background="#00247D">
+                                        <Grid>
+                                            <Path Data="M0,0 L20,14 M20,0 L0,14" Stroke="White" StrokeThickness="3"/>
+                                            <Path Data="M0,0 L20,14 M20,0 L0,14" Stroke="#CF142B" StrokeThickness="1.3"/>
+                                            <Rectangle Fill="White" Height="4.6" VerticalAlignment="Center"/>
+                                            <Rectangle Fill="White" Width="4.6" HorizontalAlignment="Center"/>
+                                            <Rectangle Fill="#CF142B" Height="2.2" VerticalAlignment="Center"/>
+                                            <Rectangle Fill="#CF142B" Width="2.2" HorizontalAlignment="Center"/>
+                                        </Grid>
+                                    </Border>
+                                    <TextBlock Text="English" VerticalAlignment="Center"/>
+                                </StackPanel>
+                            </ListBoxItem>
+                            <ListBoxItem Tag="de">
+                                <StackPanel Orientation="Horizontal">
+                                    <Border Width="20" Height="14" CornerRadius="2" ClipToBounds="True" Margin="0,0,8,0">
+                                        <Grid>
+                                            <Grid.RowDefinitions><RowDefinition/><RowDefinition/><RowDefinition/></Grid.RowDefinitions>
+                                            <Rectangle Grid.Row="0" Fill="#000000"/>
+                                            <Rectangle Grid.Row="1" Fill="#DD0000"/>
+                                            <Rectangle Grid.Row="2" Fill="#FFCE00"/>
+                                        </Grid>
+                                    </Border>
+                                    <TextBlock Text="Deutsch" VerticalAlignment="Center"/>
+                                </StackPanel>
+                            </ListBoxItem>
+                            <ListBoxItem Tag="fr">
+                                <StackPanel Orientation="Horizontal">
+                                    <Border Width="20" Height="14" CornerRadius="2" ClipToBounds="True" Margin="0,0,8,0">
+                                        <Grid>
+                                            <Grid.ColumnDefinitions><ColumnDefinition/><ColumnDefinition/><ColumnDefinition/></Grid.ColumnDefinitions>
+                                            <Rectangle Grid.Column="0" Fill="#0055A4"/>
+                                            <Rectangle Grid.Column="1" Fill="White"/>
+                                            <Rectangle Grid.Column="2" Fill="#EF4135"/>
+                                        </Grid>
+                                    </Border>
+                                    <TextBlock Text="Français" VerticalAlignment="Center"/>
+                                </StackPanel>
+                            </ListBoxItem>
+                            <ListBoxItem Tag="es">
+                                <StackPanel Orientation="Horizontal">
+                                    <Border Width="20" Height="14" CornerRadius="2" ClipToBounds="True" Margin="0,0,8,0">
+                                        <Grid>
+                                            <Grid.RowDefinitions><RowDefinition/><RowDefinition/><RowDefinition/></Grid.RowDefinitions>
+                                            <Rectangle Grid.Row="0" Fill="#AA151B"/>
+                                            <Rectangle Grid.Row="1" Fill="#F1BF00"/>
+                                            <Rectangle Grid.Row="2" Fill="#AA151B"/>
+                                        </Grid>
+                                    </Border>
+                                    <TextBlock Text="Español" VerticalAlignment="Center"/>
+                                </StackPanel>
+                            </ListBoxItem>
+                            <ListBoxItem Tag="ko">
+                                <StackPanel Orientation="Horizontal">
+                                    <Border Width="20" Height="14" CornerRadius="2" ClipToBounds="True" Margin="0,0,8,0" Background="White">
+                                        <Grid>
+                                            <Ellipse Width="6" Height="6" Fill="#CD2E3A" HorizontalAlignment="Center" VerticalAlignment="Center">
+                                                <Ellipse.Clip><RectangleGeometry Rect="0,0,6,3"/></Ellipse.Clip>
+                                            </Ellipse>
+                                            <Ellipse Width="6" Height="6" Fill="#0047A0" HorizontalAlignment="Center" VerticalAlignment="Center">
+                                                <Ellipse.Clip><RectangleGeometry Rect="0,3,6,3"/></Ellipse.Clip>
+                                            </Ellipse>
+                                        </Grid>
+                                    </Border>
+                                    <TextBlock Text="한국어" VerticalAlignment="Center"/>
+                                </StackPanel>
+                            </ListBoxItem>
+                            <ListBoxItem Tag="zh">
+                                <StackPanel Orientation="Horizontal">
+                                    <Border Width="20" Height="14" CornerRadius="2" ClipToBounds="True" Margin="0,0,8,0" Background="#DE2910">
+                                        <Grid>
+                                            <Polygon Points="5,1.6 5.56,3.23 7.28,3.26 5.9,4.29 6.41,5.94 5,4.95 3.59,5.94 4.1,4.29 2.72,3.26 4.44,3.23" Fill="#FFDE00"/>
+                                            <Ellipse Width="1.3" Height="1.3" Fill="#FFDE00" HorizontalAlignment="Left" VerticalAlignment="Top" Margin="9,2,0,0"/>
+                                        </Grid>
+                                    </Border>
+                                    <TextBlock Text="中文" VerticalAlignment="Center"/>
+                                </StackPanel>
+                            </ListBoxItem>
+                            <ListBoxItem Tag="it">
+                                <StackPanel Orientation="Horizontal">
+                                    <Border Width="20" Height="14" CornerRadius="2" ClipToBounds="True" Margin="0,0,8,0">
+                                        <Grid>
+                                            <Grid.ColumnDefinitions><ColumnDefinition/><ColumnDefinition/><ColumnDefinition/></Grid.ColumnDefinitions>
+                                            <Rectangle Grid.Column="0" Fill="#008C45"/>
+                                            <Rectangle Grid.Column="1" Fill="White"/>
+                                            <Rectangle Grid.Column="2" Fill="#CD212A"/>
+                                        </Grid>
+                                    </Border>
+                                    <TextBlock Text="Italiano" VerticalAlignment="Center"/>
+                                </StackPanel>
+                            </ListBoxItem>
+                            <ListBoxItem Tag="ru">
+                                <StackPanel Orientation="Horizontal">
+                                    <Border Width="20" Height="14" CornerRadius="2" ClipToBounds="True" Margin="0,0,8,0">
+                                        <Grid>
+                                            <Grid.RowDefinitions><RowDefinition/><RowDefinition/><RowDefinition/></Grid.RowDefinitions>
+                                            <Rectangle Grid.Row="0" Fill="White"/>
+                                            <Rectangle Grid.Row="1" Fill="#0039A6"/>
+                                            <Rectangle Grid.Row="2" Fill="#D52B1E"/>
+                                        </Grid>
+                                    </Border>
+                                    <TextBlock Text="Русский" VerticalAlignment="Center"/>
+                                </StackPanel>
+                            </ListBoxItem>
+                            <ListBoxItem Tag="ja">
+                                <StackPanel Orientation="Horizontal">
+                                    <Border Width="20" Height="14" CornerRadius="2" ClipToBounds="True" Margin="0,0,8,0" Background="White">
+                                        <Grid>
+                                            <Ellipse Width="5.6" Height="5.6" Fill="#BC002D" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                                        </Grid>
+                                    </Border>
+                                    <TextBlock Text="日本語" VerticalAlignment="Center"/>
+                                </StackPanel>
+                            </ListBoxItem>
+                            <ListBoxItem Tag="pt">
+                                <StackPanel Orientation="Horizontal">
+                                    <Border Width="20" Height="14" CornerRadius="2" ClipToBounds="True" Margin="0,0,8,0">
+                                        <Grid>
+                                            <Grid.ColumnDefinitions><ColumnDefinition Width="2*"/><ColumnDefinition Width="3*"/></Grid.ColumnDefinitions>
+                                            <Rectangle Grid.Column="0" Fill="#046A38"/>
+                                            <Rectangle Grid.Column="1" Fill="#DA291C"/>
+                                        </Grid>
+                                    </Border>
+                                    <TextBlock Text="Português" VerticalAlignment="Center"/>
+                                </StackPanel>
+                            </ListBoxItem>
+                            <ListBoxItem Tag="tr">
+                                <StackPanel Orientation="Horizontal">
+                                    <Border Width="20" Height="14" CornerRadius="2" ClipToBounds="True" Margin="0,0,8,0" Background="#E30A17">
+                                        <Grid>
+                                            <Ellipse Width="6" Height="6" Fill="White" Margin="6,4,0,0" HorizontalAlignment="Left" VerticalAlignment="Top"/>
+                                            <Ellipse Width="4.6" Height="4.6" Fill="#E30A17" Margin="7.3,4.7,0,0" HorizontalAlignment="Left" VerticalAlignment="Top"/>
+                                            <Polygon Points="13.5,5.1 13.9,6.1 15,6.2 14.15,6.9 14.4,8 13.5,7.4 12.6,8 12.85,6.9 12,6.2 13.1,6.1" Fill="White"/>
+                                        </Grid>
+                                    </Border>
+                                    <TextBlock Text="Türkçe" VerticalAlignment="Center"/>
+                                </StackPanel>
+                            </ListBoxItem>
+                            <ListBoxItem Tag="ar">
+                                <StackPanel Orientation="Horizontal">
+                                    <Border Width="20" Height="14" CornerRadius="2" ClipToBounds="True" Margin="0,0,8,0" Background="#006C35">
+                                        <Grid>
+                                            <Rectangle Width="12" Height="1.4" Fill="White" HorizontalAlignment="Center" VerticalAlignment="Bottom" Margin="0,0,0,2.4"/>
+                                            <Rectangle Width="1.4" Height="4" Fill="White" HorizontalAlignment="Right" VerticalAlignment="Bottom" Margin="0,0,2,1.2" RenderTransformOrigin="0.5,0.5">
+                                                <Rectangle.RenderTransform><RotateTransform Angle="35"/></Rectangle.RenderTransform>
+                                            </Rectangle>
+                                        </Grid>
+                                    </Border>
+                                    <TextBlock Text="العربية" VerticalAlignment="Center"/>
+                                </StackPanel>
+                            </ListBoxItem>
+                            <ListBoxItem Tag="hi">
+                                <StackPanel Orientation="Horizontal">
+                                    <Border Width="20" Height="14" CornerRadius="2" ClipToBounds="True" Margin="0,0,8,0">
+                                        <Grid>
+                                            <Grid.RowDefinitions>
+                                                <RowDefinition/><RowDefinition/><RowDefinition/>
+                                            </Grid.RowDefinitions>
+                                            <Rectangle Grid.Row="0" Fill="#FF9933"/>
+                                            <Rectangle Grid.Row="1" Fill="White"/>
+                                            <Rectangle Grid.Row="2" Fill="#138808"/>
+                                            <Ellipse Grid.Row="1" Width="3" Height="3" Stroke="#000080" StrokeThickness="0.4" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                                        </Grid>
+                                    </Border>
+                                    <TextBlock Text="हिन्दी" VerticalAlignment="Center"/>
+                                </StackPanel>
+                            </ListBoxItem>
+                        </ListBox>
+                    </Border>
+                </Popup>
                 <!-- Άνοιγμα/κλείσιμο του πλευρικού μενού (ρητό αίτημα χρήστη) - βλ. BtnHamburger_Click. -->
-                <Button x:Name="BtnHamburger" Content="&#x2261;" Width="36" Height="36" Margin="0,0,8,0" Style="{StaticResource FlatButtonStyle}" Click="BtnHamburger_Click"/>
+                <Button x:Name="BtnHamburger" Content="&#x2261;" Width="36" Height="36" Margin="0,0,8,0" Style="{StaticResource FlatButtonStyle}" Click="BtnHamburger_Click" AutomationProperties.Name="{local:Tr Main_ToggleSidebarAuto}"/>
                 <!-- Θέμα (θέση διπλα στο Light/Dark Mode, ρητό αίτημα χρήστη): τετράγωνο κουμπί με
                      εικονίδιο παλέτας (σαν τη Ζωγραφική των Windows) - το πάτημα ανοίγει popup με όλα
                      τα 21 θέματα (ίδια λίστα με το $themeNamesList στο Optimizer.ps1). Ξεχωριστό,
@@ -85,8 +412,8 @@
                      TextBrush (π.χ. λευκό σε σκούρα θέματα) - λευκό κείμενο πάνω σε λευκό φόντο,
                      αόρατο. Το custom Popup παρακάτω ορίζει ρητά το δικό του φόντο (CardBgBrush), άρα
                      δεν μπορεί να συγκρουστεί έτσι. -->
-                <Button x:Name="BtnThemePicker" Width="36" Height="36" Margin="0,0,8,0" Style="{StaticResource FlatButtonStyle}" Click="BtnThemePicker_Click">
-                    <TextBlock Text="&#x1F3A8;" FontSize="16"/>
+                <Button x:Name="BtnThemePicker" Width="36" Height="36" Margin="0,0,8,0" Style="{StaticResource FlatButtonStyle}" Click="BtnThemePicker_Click" AutomationProperties.Name="{local:Tr Main_ThemePickerAuto}">
+                    <views:HeaderGlyphIcon Kind="Palette" Width="16" Height="16"/>
                 </Button>
                 <!-- ΔΙΟΡΘΩΣΗ (χρήστης ανέφερε: "το ποντίκι δεν ρολάρει παρά μόνο πάνω από τη μπάρα
                      κύλισης"): το ListBox έχει ΔΙΚΟ ΤΟΥ εσωτερικό ScrollViewer μέσα στο default
@@ -97,14 +424,14 @@
                      Λύση: αφαιρέθηκε το εξωτερικό ScrollViewer - το MaxHeight/VerticalScrollBarVisibility
                      μπαίνουν απευθείας στο ListBox, οπότε η ρόδα δουλεύει πλέον πάνω από ΟΛΗ τη λίστα. -->
                 <Popup x:Name="ThemePopup" PlacementTarget="{Binding ElementName=BtnThemePicker}" Placement="Bottom" StaysOpen="False" AllowsTransparency="True">
-                    <Border Background="{DynamicResource CardBgBrush}" BorderBrush="{DynamicResource CardBorderBrush}" BorderThickness="1" CornerRadius="8" Padding="4">
+                    <Border Background="{DynamicResource CardBgBrush}" BorderBrush="{DynamicResource CardBorderBrush}" BorderThickness="1" CornerRadius="{DynamicResource AppCornerRadius}" Padding="4">
                         <ListBox x:Name="ListThemes" BorderThickness="0" Background="Transparent" Width="220" MaxHeight="420"
                                  ScrollViewer.VerticalScrollBarVisibility="Auto"
                                  DisplayMemberPath="DisplayName" SelectionChanged="ListThemes_SelectionChanged"/>
                     </Border>
                 </Popup>
                 <Button x:Name="BtnThemeToggle" Width="120" Height="36" Style="{StaticResource FlatButtonStyle}" Click="BtnThemeToggle_Click">
-                    <TextBlock x:Name="TxtThemeToggle" Text="&#x2600; Light Mode"/>
+                    <TextBlock x:Name="TxtThemeToggle"/>
                 </Button>
             </StackPanel>
         </Grid>
@@ -120,37 +447,44 @@
              εμφανίζεται λεπτή οριζόντια μπάρα κύλισης (το ίδιο μοντέρνο ScrollBar style του
              Styles.xaml) αντί να κόβεται σιωπηλά η τελευταία καρτέλα (ίδιος κανόνας με το
              "no truncated descriptions" - βλ. memory). -->
-        <ScrollViewer Grid.Row="2" Margin="24,0,24,12" HorizontalScrollBarVisibility="Auto" VerticalScrollBarVisibility="Disabled">
+        <ScrollViewer x:Name="TabStripScroll" Grid.Row="2" Margin="24,4,24,16" HorizontalScrollBarVisibility="Auto" VerticalScrollBarVisibility="Disabled">
         <StackPanel Orientation="Horizontal" x:Name="TabStrip">
             <RadioButton x:Name="TabHome" Tag="Home" Style="{StaticResource TabPillStyle}" Checked="TabButton_Checked">
-                <StackPanel Orientation="Horizontal"><TextBlock Text="&#x1F3E0;" Margin="0,0,6,0"/><TextBlock Text="Αρχική"/></StackPanel>
+                <StackPanel Orientation="Horizontal"><views:HeaderGlyphIcon Kind="Home" Width="20" Height="20" Margin="0,0,7,0"/><TextBlock x:Name="LblTabHome" Text="Αρχική"/></StackPanel>
             </RadioButton>
             <RadioButton Tag="Optimization" Style="{StaticResource TabPillStyle}" Checked="TabButton_Checked">
-                <StackPanel Orientation="Horizontal"><TextBlock Text="&#x26A1;" Margin="0,0,6,0"/><TextBlock Text="Βελτιστοποίηση"/></StackPanel>
+                <StackPanel Orientation="Horizontal"><views:HeaderGlyphIcon Kind="Bolt" Width="20" Height="20" Margin="0,0,7,0"/><TextBlock x:Name="LblTabOptimization" Text="Βελτιστοποίηση"/></StackPanel>
             </RadioButton>
-            <!-- ΔΙΟΡΘΩΣΗ (χρήστης ανέφερε με screenshot: το εικονίδιο της Υγείας δεν φαίνεται - "tofu"
-                 κουτάκι αντί για glyph): το U+1FA7A (Stethoscope) είναι πολύ πρόσφατο Unicode block
-                 (Emoji 13.1), δεν καλύπτεται αξιόπιστα από το Segoe UI Emoji σε όλες τις εκδόσεις
-                 Windows 10/11. Αντικαταστάθηκε με το καθιερωμένο ιατρικό σταυρό ✚ (U+271A, Dingbats
-                 block - πολύ παλιό/καθολικά υποστηριζόμενο), σύμφωνα με την ήδη καθιερωμένη πολιτική
-                 του project "αν ένα glyph δεν είναι εγγυημένα ασφαλές, μη χρησιμοποιείται". -->
+            <!-- ΔΙΟΡΘΩΣΗ (χρήστης ζήτησε ρητά: "εικονίδια καρδιάς όπως στην 2.8.2" - το ps1 original
+                 όντως χρησιμοποιεί καρδιά, [char]0xE95E στο δικό του Fluent icon font, βλ. $fluentGlyphMap
+                 στο Optimizer.ps1 ~432). Χρήση του U+2764 (❤, καθολικά υποστηριζόμενο emoji) αντί για
+                 το προηγούμενο ιατρικό σταυρό ✚ - ίδιο πνεύμα με το πρωτότυπο. -->
             <RadioButton Tag="Health" Style="{StaticResource TabPillStyle}" Checked="TabButton_Checked">
-                <StackPanel Orientation="Horizontal"><TextBlock Text="&#x271A;" Margin="0,0,6,0"/><TextBlock Text="Υγεία &amp; Συντήρηση"/></StackPanel>
+                <StackPanel Orientation="Horizontal">
+                    <views:HeaderGlyphIcon Kind="Heart" Width="20" Height="20" Margin="0,0,7,0"/>
+                    <TextBlock x:Name="LblTabHealth" Text="Υγεία &amp; Συντήρηση"/>
+                    <!-- ΝΕΟ (roadmap: "ένδειξη προσοχής στο tab strip") - μικρή κόκκινη κουκκίδα, ορατή
+                         μόνο όταν η Βαθμολογία Υγείας είναι χαμηλή (βλ. MainWindow.xaml.cs's
+                         CheckHealthAttentionAsync, υπολογίζεται μία φορά στην εκκίνηση). -->
+                    <Ellipse x:Name="DotHealthAttention" Width="8" Height="8" Fill="#FFE53935" Margin="6,0,0,0"
+                             VerticalAlignment="Top" Visibility="Collapsed"
+                             ToolTip="{local:Tr Home_HealthAttentionTooltip}"/>
+                </StackPanel>
             </RadioButton>
             <RadioButton Tag="Network" Style="{StaticResource TabPillStyle}" Checked="TabButton_Checked">
-                <StackPanel Orientation="Horizontal"><TextBlock Text="&#x1F310;" Margin="0,0,6,0"/><TextBlock Text="Δίκτυο &amp; Ασφάλεια"/></StackPanel>
+                <StackPanel Orientation="Horizontal"><views:HeaderGlyphIcon Kind="Globe" Width="20" Height="20" Margin="0,0,7,0"/><TextBlock x:Name="LblTabNetwork" Text="Δίκτυο &amp; Ασφάλεια"/></StackPanel>
             </RadioButton>
             <RadioButton Tag="Tweaks" Style="{StaticResource TabPillStyle}" Checked="TabButton_Checked">
-                <StackPanel Orientation="Horizontal"><TextBlock Text="&#x1F527;" Margin="0,0,6,0"/><TextBlock Text="Επιπλέον Ρυθμίσεις"/></StackPanel>
+                <StackPanel Orientation="Horizontal"><views:HeaderGlyphIcon Kind="Wrench" Width="20" Height="20" Margin="0,0,7,0"/><TextBlock x:Name="LblTabTweaks" Text="Επιπλέον Ρυθμίσεις"/></StackPanel>
             </RadioButton>
             <RadioButton Tag="Bloatware" Style="{StaticResource TabPillStyle}" Checked="TabButton_Checked">
-                <StackPanel Orientation="Horizontal"><TextBlock Text="&#x1F9F9;" Margin="0,0,6,0"/><TextBlock Text="Εφαρμογές &amp; Bloat"/></StackPanel>
+                <StackPanel Orientation="Horizontal"><views:HeaderGlyphIcon Kind="Broom" Width="20" Height="20" Margin="0,0,7,0"/><TextBlock x:Name="LblTabBloatware" Text="Εφαρμογές &amp; Bloat"/></StackPanel>
             </RadioButton>
             <RadioButton Tag="Advanced" Style="{StaticResource TabPillStyle}" Checked="TabButton_Checked">
-                <StackPanel Orientation="Horizontal"><TextBlock Text="&#x1F6E0;" Margin="0,0,6,0"/><TextBlock Text="Προηγμένα Εργαλεία"/></StackPanel>
+                <StackPanel Orientation="Horizontal"><views:HeaderGlyphIcon Kind="Tools" Width="20" Height="20" Margin="0,0,7,0"/><TextBlock x:Name="LblTabAdvanced" Text="Προηγμένα Εργαλεία"/></StackPanel>
             </RadioButton>
             <RadioButton Tag="System" Style="{StaticResource TabPillStyle}" Checked="TabButton_Checked">
-                <StackPanel Orientation="Horizontal"><TextBlock Text="&#x1F5A5;" Margin="0,0,6,0"/><TextBlock Text="Σύστημα"/></StackPanel>
+                <StackPanel Orientation="Horizontal"><views:HeaderGlyphIcon Kind="Monitor" Width="20" Height="20" Margin="0,0,7,0"/><TextBlock x:Name="LblTabSystem" Text="Σύστημα"/></StackPanel>
             </RadioButton>
         </StackPanel>
         </ScrollViewer>
@@ -161,13 +495,52 @@
              ΟΧΙ οι καρτέλες (αυτές έχουν ήδη τη δική τους λωρίδα). -->
         <Grid Grid.Row="3" Margin="24,0,24,12" x:Name="ContentRow">
             <Grid.ColumnDefinitions>
+                <ColumnDefinition x:Name="ColRail" Width="0"/>
                 <ColumnDefinition x:Name="ColA" Width="0"/>
                 <ColumnDefinition x:Name="ColGap" Width="0"/>
-                <ColumnDefinition Width="*"/>
+                <ColumnDefinition x:Name="ColC" Width="*"/>
             </Grid.ColumnDefinitions>
-            <views:SidebarNav x:Name="Sidebar" Grid.Column="0" Visibility="Collapsed"
+
+            <!-- Κάθετη μπάρα εικονιδίων του skin "Microsoft PC Manager" (ρητό αίτημα χρήστη - port
+                 του ps1's $global:pcManagerNavRail, ~7421+) - αντικαθιστά την οριζόντια λωρίδα
+                 καρτελών/hamburger/πλευρικό μενού όταν αυτό το θέμα είναι ενεργό (βλ.
+                 ApplyPcManagerSkinLayout). ΙΔΙΕΣ 8 καρτέλες (NavItems.All), μόνο εικονίδιο (χωρίς
+                 κείμενο, όπως στο πραγματικό PC Manager). -->
+            <Border x:Name="PcManagerRail" Grid.Column="0" Grid.RowSpan="1" Background="{DynamicResource TabBgBrush}" Visibility="Collapsed" Width="84">
+                <ItemsControl x:Name="ListPcManagerRail" Margin="0,12,0,0">
+                    <ItemsControl.ItemTemplate>
+                        <DataTemplate>
+                            <!-- Ρητό αίτημα χρήστη: εικονίδιο + περιγραφή σε ΔΥΟ γραμμές κάτω από αυτό
+                                 (όπως στο πραγματικό Microsoft PC Manager), όχι μόνο γυμνό εικονίδιο. -->
+                            <Button Style="{StaticResource FlatButtonStyle}" Width="76" Height="64" Margin="4,3" Click="PcManagerRailItem_Click" Tag="{Binding}"
+                                    ToolTip="{Binding Label}">
+                                <StackPanel>
+                                    <TextBlock Text="{Binding Icon}" FontSize="18" HorizontalAlignment="Center"/>
+                                    <TextBlock Text="{Binding Label}" FontSize="9.5" TextWrapping="Wrap" TextAlignment="Center" Margin="0,3,0,0"
+                                               Foreground="{DynamicResource TextBrush}" MaxWidth="72"/>
+                                </StackPanel>
+                            </Button>
+                        </DataTemplate>
+                    </ItemsControl.ItemTemplate>
+                </ItemsControl>
+            </Border>
+
+            <!-- ΔΙΟΡΘΩΣΗ (χρήστης ανέφερε: "δεν φαίνεται το φόντο, το στατικό ή το κινούμενο") - αυτό
+                 το Border είχε ΔΙΚΟ ΤΟΥ αδιαφανές Background="MainBgBrush" - ζωγράφιζε ΑΠΟ ΠΑΝΩ στο
+                 AppBackground (ThemedBackgroundControl, πίσω από ΟΛΟ το παράθυρο) σε ολόκληρη την
+                 περιοχή περιεχομένου, κρύβοντάς το εντελώς εκεί ακριβώς που είναι πιο ορατό. Τα ίδια
+                 τα cards κάθε καρτέλας παραμένουν αδιαφανή (CardBgBrush) για ευαναγνωσία - μόνο τα
+                 κενά γύρω/ανάμεσά τους έδειχναν πλέον το φόντο, οπότε αφαιρέθηκε τελείως εδώ.
+                 VerticalAlignment="Stretch" ρητά στο Sidebar (ήταν ήδη η προεπιλογή, αλλά ρητό εδώ ως
+                 τεκμηρίωση) ώστε το πλαίσιό του να καλύπτει ΟΛΟ το ύψος της στήλης, όχι μόνο τα 6 pill. -->
+            <!-- ΔΙΟΡΘΩΣΗ (χρήστης ζήτησε: "μίκρυνε το μενού να ματσάρεται με τα εικονίδια") - Stretch->Top:
+                 το πλαίσιο του sidebar κόλλαγε ολόκληρη τη στήλη ακόμα κι όταν τα 6 pills χρειάζονται
+                 πολύ λιγότερο ύψος, αφήνοντας μεγάλο άδειο μπλε/θεματικό χώρο κάτω από αυτά. Το κενό
+                 πλέον δείχνει το AppBackground (σκόπιμα - βλ. σχόλιο παραπάνω, ήδη τεκμηριωμένο ότι
+                 μόνο τα ίδια τα cards χρειάζονται αδιάφανο φόντο). -->
+            <views:SidebarNav x:Name="Sidebar" Grid.Column="1" Visibility="Collapsed" VerticalAlignment="Top"
                                ShortcutClicked="Sidebar_ShortcutClicked"/>
-            <Border Grid.Column="2" Background="{DynamicResource MainBgBrush}">
+            <Border x:Name="ContentHostBorder" Grid.Column="3">
                 <ContentControl x:Name="ContentHost"/>
             </Border>
         </Grid>
@@ -189,11 +562,34 @@
                         <Ellipse Width="14" Height="14" StrokeThickness="2" Stroke="{DynamicResource CardBorderBrush}"/>
                         <Path Data="M 7,0 A 7,7 0 0 1 14,7" StrokeThickness="2" Stroke="{DynamicResource AccentBrush}" StrokeStartLineCap="Round" StrokeEndLineCap="Round"/>
                     </Grid>
-                    <TextBlock x:Name="TxtStatus" Text="Κατάσταση: Έτοιμο για χρήση (WPF Preview)"
+                    <TextBlock x:Name="TxtStatus" Text="Κατάσταση: Έτοιμο για χρήση"
                                VerticalAlignment="Center"
                                FontSize="11" FontStyle="Italic" Foreground="{DynamicResource StatusTextBrush}"/>
                 </StackPanel>
             </Grid>
+        </Border>
+
+        <!-- ΝΕΟ - roadmap "Toast/snackbar για ολοκλήρωση εργασιών παρασκηνίου" - μικρό, αυτο-
+             εξαφανιζόμενο toast κάτω-δεξιά, για μεγάλες/σημαντικές εργασίες (π.χ. "Η Διαγνωστική
+             Αναφορά αποθηκεύτηκε") - πιο αξιόπιστο από το κείμενο της γραμμής κατάστασης (εύκολο να
+             χαθεί αν ο χρήστης κοιτάζει αλλού), χωρίς να γίνεται intrusive MessageBox. Ξεκινά κρυφό
+             (Opacity=0) - βλ. MainWindow.xaml.cs's ShowToast, καλείται από όποια καρτέλα το χρειάζεται
+             μέσω (Window.GetWindow(this) as MainWindow)?.ShowToast(...). Grid.RowSpan καλύπτει
+             περιεχόμενο+γραμμή κατάστασης ώστε να επιπλέει πάνω από όλα, IsHitTestVisible="False" ώστε
+             να μη μπλοκάρει κλικ από κάτω όταν είναι αόρατο/ημι-διάφανο. -->
+        <Border x:Name="ToastHost" Grid.Row="3" Grid.RowSpan="2" HorizontalAlignment="Right" VerticalAlignment="Bottom"
+                Margin="0,0,24,24" Background="{DynamicResource CardBgBrush}" BorderBrush="{DynamicResource AccentBrush}"
+                BorderThickness="1" CornerRadius="8" Padding="14,12" MaxWidth="360" Opacity="0" IsHitTestVisible="False">
+            <Border.Effect>
+                <DropShadowEffect Color="Black" Opacity="0.3" BlurRadius="16" ShadowDepth="4" Direction="270"/>
+            </Border.Effect>
+            <Border.RenderTransform>
+                <TranslateTransform x:Name="ToastTranslate" Y="16"/>
+            </Border.RenderTransform>
+            <StackPanel Orientation="Horizontal">
+                <views:HeaderGlyphIcon Kind="Shield" Width="16" Height="16" Margin="0,0,10,0" VerticalAlignment="Top"/>
+                <TextBlock x:Name="TxtToastMessage" Foreground="{DynamicResource TextBrush}" TextWrapping="Wrap" VerticalAlignment="Center" MaxWidth="290"/>
+            </StackPanel>
         </Border>
     </Grid>
 </Window>

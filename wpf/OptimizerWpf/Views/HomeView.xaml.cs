@@ -7,7 +7,10 @@ using System.Runtime.InteropServices;
 using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Controls;
+using System.Windows.Controls.Primitives;
 using System.Windows.Media;
+using System.Windows.Media.Imaging;
+using System.Windows.Shapes;
 using System.Windows.Threading;
 using OptimizerWpf.Services;
 using OptimizerWpf.Views;
@@ -16,6 +19,17 @@ namespace OptimizerWpf.Views
 {
     public partial class HomeView : UserControl
     {
+        private void NestedScroll_PreviewMouseWheel(object sender, System.Windows.Input.MouseWheelEventArgs e) => NestedScrollHelper.Forward(sender, e);
+
+        // ΝΕΟ - roadmap "Ομαλή μετάβαση τιμής στις ProgressBar" - οι μπάρες CPU/RAM/GPU/Δίσκου άλλαζαν
+        // τιμή ακαριαία κάθε 1s ("τίναγμα") - σύντομο DoubleAnimation αντί για απευθείας SetValue.
+        private static void AnimateBar(System.Windows.Controls.ProgressBar bar, double newValue)
+        {
+            var anim = new System.Windows.Media.Animation.DoubleAnimation(newValue, TimeSpan.FromMilliseconds(180))
+            { EasingFunction = new System.Windows.Media.Animation.QuadraticEase() };
+            bar.BeginAnimation(System.Windows.Controls.Primitives.RangeBase.ValueProperty, anim);
+        }
+
         // Matches the WinForms app's periodic-refresh pattern (a Timer ticking on the UI thread,
         // reading already-computed values) - PerformanceCounter.NextValue() and
         // GlobalMemoryStatusEx are both fast, synchronous, safe to call directly on the Dispatcher
@@ -32,40 +46,132 @@ namespace OptimizerWpf.Views
         private readonly List<string> _drives = new();
         private int _driveIndex;
 
+        // ΝΕΟ (χρήστης ζήτησε: "graph δίπλα στο δίκτυο, όπως στη Διαχείριση Εργασιών") - κυλιόμενο
+        // ιστορικό throughput (bytes/sec), ίδιο μέγεθος παραθύρου με τα sparklines της Διαχείρισης
+        // Εργασιών (~αρκετά δευτερόλεπτα ιστορικού, όχι ώρες).
+        private readonly Queue<double> _netSamples = new();
+        private const int NetSampleCap = 40;
+        private long? _lastNetBytes;
+        private DateTime _lastNetTime;
+
         public HomeView()
         {
             InitializeComponent();
             PopulateDriveList();
-            TryInitCpuCounter();
-            TryInitGpuCounters();
+            // ΝΕΟ - roadmap "Ταχύτερη εκκίνηση εφαρμογής" - το HomeView κατασκευάζεται συγχρονισμένα
+            // ΜΕΣΑ στον constructor του MainWindow (η Αρχική είναι το μοναδικό tab που φορτώνεται
+            // eager, όχι lazy, βλ. MainWindow.xaml.cs's TabHome.IsChecked=true), δηλαδή ΠΡΙΝ καν
+            // εμφανιστεί το κύριο παράθυρο. Το PerformanceCounterCategory("GPU Engine").GetInstanceNames()
+            // μέσα στο TryInitGpuCounters (βλ. GpuInfoService.CreateUsageCounters) είναι γνωστά αργό -
+            // απαριθμεί ΟΛΑ τα GPU-engine perf-counter instances σε όλο το σύστημα. Μετακινήθηκαν σε
+            // background thread ώστε να μην καθυστερούν το πρώτο paint του κύριου παραθύρου - τα πεδία
+            // _cpuCounter/_gpuCounters είναι ήδη null-checked στο RefreshCpuRamGpu (παρακάτω), οπότε
+            // απλά παραλείπεται το CPU%/GPU% για τα πρώτα ticks μέχρι να ολοκληρωθεί η αρχικοποίηση.
+            _ = Task.Run(() => { TryInitCpuCounter(); TryInitGpuCounters(); });
 
             _refreshTimer = new DispatcherTimer { Interval = TimeSpan.FromSeconds(1) };
-            _refreshTimer.Tick += (_, _) => RefreshCpuRamGpu();
+            _refreshTimer.Tick += (_, _) => { RefreshCpuRamGpu(); RefreshNetworkGraph(); };
             _refreshTimer.Start();
 
+            // ΝΕΟ - roadmap "Πιο αραιό polling όταν η εφαρμογή δεν έχει focus" - το CPU/RAM/GPU 1s
+            // timer συνέχιζε στον ίδιο ρυθμό ακόμα κι όταν το παράθυρο δεν είναι focused, σε αντίθεση
+            // με το ήδη υπάρχον animated background που ήδη παύει (Deactivated/StateChanged, βλ.
+            // MainWindow.xaml.cs's TitleGear). Ίδιο μοτίβο εδώ, ίδιο σκεπτικό "ελάφρυνση εφαρμογής" -
+            // 1s όσο ενεργό, 4s στο παρασκήνιο (ακόμα ζωντανό, απλά λιγότερο συχνό - όχι πλήρης παύση
+            // όπως το background, αφού οι τιμές αυτές είναι χρήσιμο να παραμένουν ενημερωμένες).
+            var parentWindow = Window.GetWindow(this);
+            if (parentWindow != null)
+            {
+                EventHandler onDeactivated = (_, _) => _refreshTimer.Interval = TimeSpan.FromSeconds(4);
+                EventHandler onActivated = (_, _) => _refreshTimer.Interval = TimeSpan.FromSeconds(1);
+                parentWindow.Deactivated += onDeactivated;
+                parentWindow.Activated += onActivated;
+                Unloaded += (_, _) =>
+                {
+                    parentWindow.Deactivated -= onDeactivated;
+                    parentWindow.Activated -= onActivated;
+                };
+            }
+
             _diskRefreshTimer = new DispatcherTimer { Interval = TimeSpan.FromSeconds(20) };
-            _diskRefreshTimer.Tick += (_, _) => RefreshDisk();
+            // ΝΕΟ v3.2.0 - η κατάσταση δικτύου μπήκε στον ΙΔΙΟ αραιό timer με τον δίσκο (όχι νέος
+            // timer) - ίδιο σκεπτικό "ελάφρυνση εφαρμογής": η σύνδεση δεν αλλάζει αισθητά κάθε 1s.
+            _diskRefreshTimer.Tick += (_, _) => { RefreshDisk(); _ = RefreshNetworkStatusAsync(); };
             _diskRefreshTimer.Start();
 
             RefreshCpuRamGpu();
             RefreshDisk();
+            _ = RefreshNetworkStatusAsync();
             _ = UpdateDiskIconAsync();
             _ = RefreshHealthScoreAsync();
+            CheckHealthCheckReminder();
             _ = RefreshCpuTemperatureAsync();
+
             _ = RefreshGpuTemperatureAsync();
             _ = RefreshRamTemperatureAsync();
             _ = LoadGpuNameAsync();
 
+            // ΝΕΟ - roadmap ""Τι έκανε πρόσφατα η εφαρμογή"" - βλ. ActionLogService (ήδη υπάρχον, hook
+            // στο StatusService.Changed). Ζωντανή ενημέρωση μέσω του event - όχι timer, ίδιο πνεύμα
+            // "ελάφρυνση εφαρμογής" με τα υπόλοιπα στοιχεία αυτής της καρτέλας.
+            RefreshRecentActivity();
+            ActionLogService.Changed += RefreshRecentActivity;
+            LoadPinnedTweaks();
+
             // ΔΙΟΡΘΩΣΗ ("ελάφρυνση εφαρμογής"): κάθε επιστροφή στην Αρχική δημιουργεί ΝΕΟ HomeView
             // (βλ. MainWindow.ShowTabContent) - χωρίς αυτό, οι timers του ΠΑΛΙΟΥ instance θα
             // συνέχιζαν να τρέχουν επ' αόριστον στο παρασκήνιο (διαρροή) κάθε φορά που ο χρήστης
-            // αλλάζει καρτέλα και ξαναγυρνάει.
+            // αλλάζει καρτέλα και ξαναγυρνάει. Το ίδιο ισχύει για το static event παραπάνω - χωρίς
+            // αφαίρεση εγγραφής, κάθε παλιό HomeView θα εξακολουθούσε να ενημερώνεται επ' αόριστον.
             Unloaded += (_, _) =>
             {
                 _refreshTimer.Stop();
                 _diskRefreshTimer.Stop();
+                ActionLogService.Changed -= RefreshRecentActivity;
             };
         }
+
+        // ΝΕΟ - roadmap "Καρφιτσωμένες συντομεύσεις" - συγκεντρώνει τα καρφιτσωμένα tweaks από όλες
+        // τις 4 λίστες (βλ. TweakRowVm.PinKey/AppSettingsService.PinnedTweakKeys) για γρήγορο toggle
+        // απευθείας από την Αρχική, χωρίς μετάβαση στις Επιπλέον Ρυθμίσεις.
+        private void LoadPinnedTweaks()
+        {
+            var pins = AppSettingsService.Current.PinnedTweakKeys;
+            var all = TweakService.AllMainTweaks().Select(t => new TweakRowVm(t, "Main"))
+                .Concat(TweakService.AiCopilotTweaksSimple().Select(t => new TweakRowVm(t, "Ai")))
+                .Concat(TweakService.PerfTweaksSimple().Select(t => new TweakRowVm(t, "Perf")))
+                .Concat(TweakService.LighterWindowsTweaksSimple().Select(t => new TweakRowVm(t, "Lighter")))
+                .Where(r => pins.Contains(r.PinKey))
+                .ToList();
+
+            ListPinnedTweaks.ItemsSource = all;
+            TxtNoPinned.Visibility = all.Count == 0 ? Visibility.Visible : Visibility.Collapsed;
+        }
+
+        private void TogglePinnedTweak_Click(object sender, RoutedEventArgs e)
+        {
+            if (sender is not ToggleButton { Tag: TweakRowVm row }) return;
+            if (row.IsOn) row.Tweak.OnAction(); else row.Tweak.OffAction();
+        }
+
+        // ΝΕΟ - ρητό αίτημα χρήστη: "Γρήγορος Καθαρισμός & Έλεγχος Υγείας πρέπει να συγχωνευθούν" - η
+        // ξεχωριστή κάρτα "Γρήγορος Καθαρισμός" στην Αρχική αφαιρέθηκε (μαζί με BtnScanQuickClean/
+        // LoadQuickCleanAsync/QuickCleanItemVm κ.λπ. - βλ. git history) επειδή σάρωνε ΑΚΡΙΒΩΣ το ίδιο
+        // QuickCleanService.ScanAsync() που ήδη τρέχει μέσα στο στάδιο "Καθαρισμός Χώρου" του Πλήρους
+        // Ελέγχου Υγείας (HealthCheckWindow.ScanSpaceAsync) - δύο ξεχωριστές κάρτες για την ίδια ουσιαστικά
+        // σάρωση. Το "Πλήρης Έλεγχος Υγείας" παρακάτω είναι πλέον το ΕΝΑ σημείο εισόδου για καθαρισμό.
+        private void BtnRunHealthCheck_Click(object sender, RoutedEventArgs e) =>
+            new HealthCheckWindow { Owner = Window.GetWindow(this) }.ShowDialog();
+
+        private void RefreshRecentActivity()
+        {
+            var recent = ActionLogService.Entries.Reverse().Take(3).ToList();
+            ListRecentActivity.ItemsSource = recent;
+            TxtNoRecentActivity.Visibility = recent.Count == 0 ? Visibility.Visible : Visibility.Collapsed;
+        }
+
+        private void BtnOpenActionLog_Click(object sender, RoutedEventArgs e) =>
+            new ActionLogWindow { Owner = Window.GetWindow(this) }.ShowDialog();
 
         private async Task LoadGpuNameAsync()
         {
@@ -88,6 +194,73 @@ namespace OptimizerWpf.Views
         }
 
         private void TryInitGpuCounters() => _gpuCounters = GpuInfoService.CreateUsageCounters();
+
+        // ΝΕΟ v3.2.0 (χρήστης ζήτησε: "δείκτης κατάστασης δικτύου στην Αρχική") - βλ.
+        // NetworkService.CheckInternetAsync για το πλήρες σκεπτικό (τοπική σύνδεση vs πραγματικό
+        // Internet, ping με σύντομο timeout).
+        private async Task RefreshNetworkStatusAsync()
+        {
+            var (connected, latencyMs) = await NetworkService.CheckInternetAsync();
+            DotNetworkStatus.Fill = new SolidColorBrush(connected ? Color.FromRgb(76, 175, 80) : Color.FromRgb(220, 53, 69));
+            TxtNetworkStatus.Text = connected
+                ? $"{LanguageService.T("Home_NetworkConnected")}{latencyMs} ms"
+                : LanguageService.T("Home_NetworkDisconnected");
+        }
+
+        private void BtnOpenNetworkTab_Click(object sender, RoutedEventArgs e) => (System.Windows.Window.GetWindow(this) as OptimizerWpf.MainWindow)?.SelectTab("Network");
+
+        // ΝΕΟ (χρήστης ζήτησε: "graph δίπλα στο δίκτυο, όπως στη Διαχείριση Εργασιών") - απλό,
+        // αυτο-κλιμακούμενο sparkline: bytes/sec υπολογίζεται από τη διαφορά δύο διαδοχικών
+        // στιγμιότυπων του NetworkService.GetTotalNetworkBytes (καθαρά τοπικοί μετρητές, καμία σχέση
+        // με το ping του RefreshNetworkStatusAsync). Ζωγραφίζεται χειροκίνητα με Polyline/Polygon αντί
+        // για βιβλιοθήκη γραφημάτων - πολύ απλό σχήμα, δεν αξίζει νέα εξάρτηση.
+        private void RefreshNetworkGraph()
+        {
+            var now = DateTime.UtcNow;
+            var bytes = NetworkService.GetTotalNetworkBytes();
+            if (_lastNetBytes.HasValue)
+            {
+                var elapsed = (now - _lastNetTime).TotalSeconds;
+                var bytesPerSec = elapsed > 0 ? Math.Max(0, (bytes - _lastNetBytes.Value) / elapsed) : 0;
+                _netSamples.Enqueue(bytesPerSec);
+                while (_netSamples.Count > NetSampleCap) _netSamples.Dequeue();
+                DrawNetworkGraph();
+            }
+            _lastNetBytes = bytes;
+            _lastNetTime = now;
+        }
+
+        private void DrawNetworkGraph()
+        {
+            var canvas = CanvasNetworkGraph;
+            var w = canvas.ActualWidth;
+            var h = canvas.ActualHeight;
+            canvas.Children.Clear();
+            if (w <= 0 || h <= 0 || _netSamples.Count < 2) return;
+
+            var samples = _netSamples.ToArray();
+            // Ελάχιστη κλίμακα 64 KB/s - αποφεύγει το graph να "τρελαίνεται" σε μικροσκοπικά
+            // αναπάντεχα ενεργά κτ. bytes όταν δεν τρέχει ουσιαστική κίνηση δικτύου.
+            var max = Math.Max(samples.Max(), 64.0 * 1024);
+            var stepX = w / (NetSampleCap - 1);
+            var startX = w - (samples.Length - 1) * stepX;
+
+            var linePoints = new PointCollection();
+            var fillPoints = new PointCollection();
+            fillPoints.Add(new Point(startX, h));
+            for (var i = 0; i < samples.Length; i++)
+            {
+                var x = startX + i * stepX;
+                var y = h - (samples[i] / max) * (h - 2) - 1;
+                linePoints.Add(new Point(x, y));
+                fillPoints.Add(new Point(x, y));
+            }
+            fillPoints.Add(new Point(startX + (samples.Length - 1) * stepX, h));
+
+            var accent = (Color)ColorConverter.ConvertFromString("#FF4CAF50")!;
+            canvas.Children.Add(new Polygon { Points = fillPoints, Fill = new SolidColorBrush(Color.FromArgb(50, accent.R, accent.G, accent.B)) });
+            canvas.Children.Add(new Polyline { Points = linePoints, Stroke = new SolidColorBrush(accent), StrokeThickness = 1.5 });
+        }
 
         // Δεν αλλάζει σε δευτερόλεπτα σαν το CPU - αρκεί μία φορά στην εκκίνηση, καμία ανάγκη για
         // επαναλαμβανόμενο timer (ίδιο σκεπτικό "ελάφρυνση εφαρμογής" με τον δίσκο παραπάνω).
@@ -113,11 +286,11 @@ namespace OptimizerWpf.Views
             if (SensorService.IsHvciActive())
             {
                 target.Text = "🔒";
-                target.ToolTip = "Δεν είναι διαθέσιμη - η Ακεραιότητα Μνήμης (Core Isolation/VBS) είναι ενεργή και μπλοκάρει την απευθείας πρόσβαση σε αισθητήρες υλικού. Δοκιμάστε το εργαλείο του κατασκευαστή της μητρικής/κάρτας γραφικών, ή απενεργοποιήστε προσωρινά το VBS από τις Ρυθμίσεις Windows (Ασφάλεια Windows > Ασφάλεια Συσκευής > Απομόνωση Πυρήνα).";
+                target.ToolTip = LanguageService.T("Home_TempLockedTip");
                 return;
             }
             target.Text = "—";
-            target.ToolTip = "Δεν βρέθηκε διαθέσιμος αισθητήρας θερμοκρασίας για αυτό το hardware.";
+            target.ToolTip = LanguageService.T("Home_TempNotFoundTip");
         }
 
         // ΔΙΟΡΘΩΣΗ (ρητό αίτημα χρήστη): αντί για ComboBox, τα δύο βελάκια στο πλακίδιο του δίσκου
@@ -158,7 +331,7 @@ namespace OptimizerWpf.Views
             var drive = CurrentDrive;
             if (drive == null) return;
 
-            StatusService.SetBusy($"Ανίχνευση τύπου δίσκου για {drive}...");
+            StatusService.SetBusy($"{LanguageService.T("Home_DetectingDiskType")}{drive}...");
             var model = await Task.Run(() => DriveTypeService.GetDiskModel(drive));
             var kind = await Task.Run(() => DriveTypeService.Detect(drive));
             var isGuess = false;
@@ -171,35 +344,31 @@ namespace OptimizerWpf.Views
                 var guessed = DriveTypeService.GuessFromModelName(model);
                 if (guessed != PhysicalDriveKind.Unknown) { kind = guessed; isGuess = true; }
             }
-            StatusService.SetIdle("Έτοιμο για χρήση");
+            StatusService.SetIdle(LanguageService.T("Ready"));
             // ΔΙΟΡΘΩΣΗ (χρήστης ανέφερε: "ζήτησα διαφορετικά εικονίδια για κάθε είδος δίσκου όταν
             // γίνεται η εναλλαγή") - το "Unknown" (ανίχνευση τύπου απέτυχε) χρησιμοποιούσε ΤΟ ΙΔΙΟ
             // glyph+χρώμα με το HDD - αν ένας δίσκος ανιχνευόταν Unknown, η εναλλαγή σε/από αυτόν
             // δεν έδειχνε ΚΑΜΙΑ οπτική αλλαγή, ενισχύοντας ακριβώς την εντύπωση "δεν αλλάζει τίποτα".
             // Τώρα ξεχωριστό, ουδέτερο γκρι glyph.
-            var (glyph, label, c1, c2, c3) = kind switch
+            var label = kind switch
             {
-                PhysicalDriveKind.Ssd => ("\U0001F5B4", "SSD", Color.FromRgb(140, 255, 210), Color.FromRgb(0, 191, 165), Color.FromRgb(0, 105, 92)),
-                PhysicalDriveKind.Hdd => ("\U0001F4BF", "HDD", Color.FromRgb(255, 213, 140), Color.FromRgb(255, 152, 0), Color.FromRgb(191, 100, 0)),
-                PhysicalDriveKind.Usb => ("\U0001F50C", "USB", Color.FromRgb(200, 170, 255), Color.FromRgb(140, 90, 220), Color.FromRgb(90, 50, 160)),
-                _ => ("❓", "", Color.FromRgb(210, 210, 210), Color.FromRgb(140, 140, 140), Color.FromRgb(90, 90, 90)),
+                PhysicalDriveKind.Nvme => "NVMe",
+                PhysicalDriveKind.Ssd => "SSD",
+                PhysicalDriveKind.Hdd => "HDD",
+                PhysicalDriveKind.Usb => "USB",
+                _ => "?",
             };
 
-            TxtDiskIcon.Text = glyph;
-            TxtDriveKind.Text = isGuess ? $"{label} (εκτίμηση)" : label;
-            BorderDiskIcon.Background = new RadialGradientBrush
+            TxtDriveKind.Text = isGuess ? $"{label} {LanguageService.T("Home_EstimateSuffix")}" : label;
+
+            // ΝΕΟ - ρητό αίτημα χρήστη: "όπου ο δίσκος είναι SSD ή NVMe χρησιμοποίησε το αντίστοιχο
+            // εικονίδιο" - HDD/USB/Unknown συνεχίζουν με το γενικό disk-icon.png.
+            ImgDiskIcon.Source = new BitmapImage(new Uri(kind switch
             {
-                GradientOrigin = new System.Windows.Point(0.3, 0.3),
-                Center = new System.Windows.Point(0.5, 0.5),
-                RadiusX = 0.9,
-                RadiusY = 0.9,
-                GradientStops = new GradientStopCollection
-                {
-                    new GradientStop(c1, 0),
-                    new GradientStop(c2, 0.6),
-                    new GradientStop(c3, 1),
-                },
-            };
+                PhysicalDriveKind.Nvme => "/Assets/nvme-icon.png",
+                PhysicalDriveKind.Ssd => "/Assets/ssd-icon.png",
+                _ => "/Assets/disk-icon.png",
+            }, UriKind.Relative));
 
             // Μάρκα/περιγραφή δίσκου + θερμοκρασία (ρητό αίτημα χρήστη) - μαζί με το είδος δίσκου
             // εδώ, όχι στο γρήγορο 1s tick, αφού ΚΑΝΕΝΑ από τα δύο δεν αλλάζει ζωντανά.
@@ -230,7 +399,7 @@ namespace OptimizerWpf.Views
                 {
                     var cpu = (int)Math.Round(_cpuCounter.NextValue());
                     TxtCpuPercent.Text = $"{cpu}%";
-                    BarCpu.Value = cpu;
+                    AnimateBar(BarCpu, cpu);
                 }
                 catch { /* counter can throw if it becomes invalid mid-run - skip this tick */ }
             }
@@ -241,7 +410,7 @@ namespace OptimizerWpf.Views
                 var usedGb = totalGb - (memStatus.ullAvailPhys / 1024.0 / 1024.0 / 1024.0);
                 var pct = (int)memStatus.dwMemoryLoad; // already an integer 0-100 percentage
                 TxtRamPercent.Text = $"{pct}%";
-                BarRam.Value = pct;
+                AnimateBar(BarRam, pct);
                 TxtRamDetail.Text = $"{usedGb:0.0} / {totalGb:0.0} GB";
             }
 
@@ -251,7 +420,7 @@ namespace OptimizerWpf.Views
                 {
                     var gpu = GpuInfoService.SampleUsagePercent(_gpuCounters);
                     TxtGpuPercent.Text = $"{gpu}%";
-                    BarGpu.Value = gpu;
+                    AnimateBar(BarGpu, gpu);
                 }
                 catch { /* an engine instance can disappear mid-run (its process exited) */ }
             }
@@ -270,7 +439,7 @@ namespace OptimizerWpf.Views
                 var freeGb = drive.TotalFreeSpace / 1024.0 / 1024.0 / 1024.0;
                 var usedPct = (int)Math.Round(100.0 * (1 - drive.TotalFreeSpace / (double)drive.TotalSize));
                 TxtDiskPercent.Text = $"{usedPct}%";
-                BarDisk.Value = usedPct;
+                AnimateBar(BarDisk, usedPct);
                 TxtDiskDetail.Text = $"{freeGb:0.0} GB ελεύθερα από {totalGb:0.0} GB";
             }
             catch { /* drive can become unready (removable media ejected mid-run) */ }
@@ -283,6 +452,10 @@ namespace OptimizerWpf.Views
             // Port of the "Διόρθωση Όλων" button in Optimizer.ps1 (only the safe, reversible fixes -
             // startup apps/pending restart are surfaced but never touched automatically, same as the
             // WinForms version).
+            // ΔΙΟΡΘΩΣΗ (γενικός έλεγχος γραμμής κατάστασης) - η διαγραφή προσωρινών αρχείων παρακάτω
+            // γινόταν χωρίς κανένα κυκλάκι/ένδειξη - μόνο το τελικό RefreshHealthScoreAsync() έδειχνε
+            // busy, ΑΦΟΥ είχε ήδη ολοκληρωθεί η ίδια η δουλειά.
+            StatusService.SetBusy(LanguageService.T("Home_AutoFixDone"));
             var result = await Task.Run(HealthScoreService.Compute);
             var fixedSomething = false;
 
@@ -314,7 +487,7 @@ namespace OptimizerWpf.Views
 
             if (fixedSomething)
             {
-                TxtHealthLabel.Text = "Ολοκληρώθηκαν οι διαθέσιμες αυτόματες διορθώσεις.";
+                TxtHealthLabel.Text = LanguageService.T("Home_AutoFixDone");
             }
             await RefreshHealthScoreAsync();
         }
@@ -333,33 +506,34 @@ namespace OptimizerWpf.Views
             ["Other"] = Color.FromRgb(140, 140, 140),
         };
 
-        // Port του Get-DiskCategoryLabel (Optimizer.ps1 ~18105) - ίδιες ελληνικές ετικέτες.
-        private static readonly Dictionary<string, string> CategoryLabels = new()
+        // Port του Get-DiskCategoryLabel (Optimizer.ps1 ~18105). Property (όχι readonly field) ώστε να
+        // ξαναχτίζεται με την τρέχουσα γλώσσα σε κάθε κλήση του BtnAnalyzeDisk_Click.
+        private static Dictionary<string, string> CategoryLabels => new()
         {
-            ["Games"] = "Παιχνίδια",
-            ["Apps"] = "Εφαρμογές",
-            ["Photos"] = "Φωτογραφίες",
-            ["Videos"] = "Βίντεο",
-            ["Documents"] = "Έγγραφα",
-            ["Downloads"] = "Λήψεις",
+            ["Games"] = LanguageService.T("Home_CatGames"),
+            ["Apps"] = LanguageService.T("Home_CatApps"),
+            ["Photos"] = LanguageService.T("Home_CatPhotos"),
+            ["Videos"] = LanguageService.T("Home_CatVideos"),
+            ["Documents"] = LanguageService.T("Home_CatDocuments"),
+            ["Downloads"] = LanguageService.T("Home_CatDownloads"),
             ["Windows"] = "Windows",
-            ["Other"] = "Λοιπά",
+            ["Other"] = LanguageService.T("Home_CatOther"),
         };
 
         private async void BtnAnalyzeDisk_Click(object sender, System.Windows.RoutedEventArgs e)
         {
             if (CurrentDrive is not string driveName) return;
 
-            TxtDiskAnalysisStatus.Text = $"Ανάλυση σε εξέλιξη για {driveName} - μπορεί να διαρκέσει λίγα λεπτά ανάλογα με το πλήθος αρχείων...";
-            StatusService.SetBusy($"Ανάλυση χώρου δίσκου {driveName}...");
+            TxtDiskAnalysisStatus.Text = $"{LanguageService.T("Home_DiskAnalysisRunningPrefix")}{driveName}{LanguageService.T("Home_DiskAnalysisRunningSuffix")}";
+            StatusService.SetBusy($"{LanguageService.T("Home_DiskAnalysisBusyPrefix")}{driveName}...");
             DiskBarGrid.ColumnDefinitions.Clear();
             DiskBarGrid.Children.Clear();
             ListDiskLegend.ItemsSource = null;
 
             var result = await DiskAnalysisService.AnalyzeAsync(driveName);
-            StatusService.SetIdle("Έτοιμο για χρήση");
+            StatusService.SetIdle(LanguageService.T("Ready"));
 
-            TxtDiskAnalysisStatus.Text = $"Σύνολο χρησιμοποιημένου χώρου: {result.TotalUsedGb:0.0} GB ({driveName})";
+            TxtDiskAnalysisStatus.Text = $"{LanguageService.T("Home_DiskAnalysisTotalPrefix")}{result.TotalUsedGb:0.0} GB ({driveName})";
 
             var cats = result.Categories.Where(c => c.SizeGb > 0).OrderByDescending(c => c.SizeGb).ToList();
             if (cats.Count == 0) return;
@@ -395,15 +569,62 @@ namespace OptimizerWpf.Views
             window.Show();
         }
 
+        // ΝΕΟ - roadmap "Προγραμματισμένος (background) Πλήρης Έλεγχος Υγείας" - απλή, τοπική εκδοχή
+        // χωρίς Windows Task Scheduler: αν δεν έχει τρέξει ΠΟΤΕ Πλήρης Έλεγχος Υγείας, ή έχουν περάσει
+        // 7+ μέρες από την τελευταία φορά (βλ. AppSettings.LastHealthCheckRunAt, γράφεται από
+        // HealthCheckWindow όταν ολοκληρώνεται σάρωση), δείχνει ήπιο banner με απευθείας κουμπί - καμία
+        // αυτόματη σάρωση/ενέργεια στο παρασκήνιο.
+        private void CheckHealthCheckReminder()
+        {
+            var lastRun = AppSettingsService.Current.LastHealthCheckRunAt;
+            var daysSince = lastRun.HasValue ? (DateTime.Now - lastRun.Value).TotalDays : (double?)null;
+            if (lastRun.HasValue && daysSince < 7)
+            {
+                BorderHealthCheckReminder.Visibility = Visibility.Collapsed;
+                return;
+            }
+
+            TxtHealthCheckReminder.Text = lastRun.HasValue
+                ? string.Format(LanguageService.T("Home_HealthCheckReminderDays"), (int)daysSince!.Value)
+                : LanguageService.T("Home_HealthCheckReminderNever");
+            BorderHealthCheckReminder.Visibility = Visibility.Visible;
+        }
+
         private async Task RefreshHealthScoreAsync()
         {
-            TxtHealthLabel.Text = "Υπολογισμός...";
-            StatusService.SetBusy("Υπολογισμός βαθμολογίας υγείας συστήματος...");
+            TxtHealthLabel.Text = LanguageService.T("Home_Calculating");
+            StatusService.SetBusy(LanguageService.T("Home_CalculatingHealthScore"));
             // HealthScoreService.Compute() does several WMI queries (Defender status, AV product,
             // restore points) which can take a noticeable moment - runs off the UI thread so the
             // window stays responsive while it's working (see the async-UI rule this project follows).
             var result = await Task.Run(HealthScoreService.Compute);
-            StatusService.SetIdle("Έτοιμο για χρήση");
+            StatusService.SetIdle(LanguageService.T("Ready"));
+
+            HealthScoreHistoryService.RecordSample(result.Score);
+            var sparkline = HealthScoreHistoryService.GetSparkline();
+            TxtHealthSparkline.Text = sparkline;
+            TxtHealthSparkline.Visibility = sparkline.Length > 0 ? Visibility.Visible : Visibility.Collapsed;
+
+            // ΝΕΟ - roadmap "πιο εμφανές S.M.A.R.T. στην Αρχική" - έλεγχος του δίσκου συστήματος μόνο
+            // (όχι όλων των δίσκων - κρατά το badge σύντομο/ενιαίο, το πλήρες breakdown ανά δίσκο
+            // παραμένει στην καρτέλα Σύστημα). GetSmartHealthy κάνει WMI ερωτήματα - εκτελείται off the
+            // UI thread, ίδιο μοτίβο με το HealthScoreService.Compute() παραπάνω.
+            var sysDrive = System.IO.Path.GetPathRoot(Environment.SystemDirectory) ?? "C:\\";
+            var smartHealthy = await Task.Run(() => DriveTypeService.GetSmartHealthy(sysDrive));
+            if (smartHealthy.HasValue)
+            {
+                TxtDiskSmart.Text = smartHealthy.Value
+                    ? $"✓ {LanguageService.T("Home_DiskSmartGood")}"
+                    : $"⚠ {LanguageService.T("Home_DiskSmartWarning")}";
+                TxtDiskSmart.Foreground = smartHealthy.Value
+                    ? new SolidColorBrush(Color.FromRgb(90, 200, 120))
+                    : new SolidColorBrush(Color.FromRgb(220, 80, 80));
+                TxtDiskSmart.Visibility = Visibility.Visible;
+            }
+            else
+            {
+                TxtDiskSmart.Visibility = Visibility.Collapsed;
+            }
 
             TxtHealthScore.Text = result.Score.ToString();
             var scoreColor = result.Score >= 80
@@ -414,11 +635,11 @@ namespace OptimizerWpf.Views
 
             TxtHealthScore.Foreground = scoreColor;
             TxtHealthLabel.Foreground = scoreColor;
-            TxtHealthLabel.Text = result.Score >= 80 ? "Καλή Κατάσταση" : result.Score >= 50 ? "Μέτρια Κατάσταση" : "Χρειάζεται Προσοχή";
+            TxtHealthLabel.Text = result.Score >= 80 ? LanguageService.T("Home_HealthGood") : result.Score >= 50 ? LanguageService.T("Home_HealthFair") : LanguageService.T("Home_HealthNeedsAttention");
 
             if (result.Issues.Count == 0)
             {
-                ListHealthIssues.ItemsSource = new[] { new HealthIssueRow("Δεν εντοπίστηκαν προβλήματα - το σύστημά σας λειτουργεί καλά!", scoreColor) };
+                ListHealthIssues.ItemsSource = new[] { new HealthIssueRow(LanguageService.T("Home_NoIssuesFound"), scoreColor) };
             }
             else
             {

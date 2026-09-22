@@ -1,0 +1,44 @@
+<UserControl x:Class="OptimizerWpf.Views.ThreeGearIcon"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             mc:Ignorable="d" d:DesignWidth="40" d:DesignHeight="40">
+    <!-- Πιστό port του ps1's Draw-SimpleGear (~5521) - πραγματικά σχεδιασμένα γρανάζια (κύκλος σώματος
+         + ορθογώνια "δόντια" ισομερώς γύρω από την περιφέρεια + σκουρότερη κεντρική "τρύπα"), ΟΧΙ το
+         γενικό Unicode "⚙" glyph που χρησιμοποιούνταν πριν (ρητό αίτημα χρήστη: "την απόδοση του
+         κινούμενου εικονιδίου όπως στην 2.8.2"). Η γεωμετρία κάθε γραναζιού χτίζεται στο code-behind
+         (BuildGear) - τα 3 Path εδώ είναι απλώς placeholders· η περιστροφή γίνεται με RotateTransform
+         γύρω από το πραγματικό κέντρο κάθε γραναζιού (CenterX/CenterY), όχι RenderTransformOrigin. -->
+    <Viewbox Stretch="Uniform">
+        <!-- ΔΙΟΡΘΩΣΗ (χρήστης ζήτησε: "αναπαρήγαγε ακριβώς το κινούμενο εικονίδιο της 2.8.2") - Opacity
+             ανά γρανάζι τώρα αντιστοιχεί ακριβώς στα alpha 190/215/235 (out of 255) του ps1's title-bar
+             γραναζιού ($global:titleGearBadge.Add_Paint, ~6767-6769) - το μεγαλύτερο γρανάζι είναι το πιο
+             διάφανο, δίνοντας την ίδια αίσθηση επιπέδου/βάθους. -->
+        <!-- ΔΙΟΡΘΩΣΗ (χρήστης επανέλαβε: "ζήτησα ακριβή αναπαραγωγή του κινούμενου εικονιδίου της
+             2.8.2 του τίτλου") - οι ακτίνες/δόντια/alpha/φορά περιστροφής ήταν ήδη σωστά, αλλά η
+             ΔΙΑΤΑΞΗ (θέση κάθε γραναζιού σχετικά με τα άλλα δύο) όχι: το πραγματικό ps1's
+             $global:titleGearBadge.Add_Paint (~6760-6763) τοποθετεί τα 3 γρανάζια σε συγκεκριμένα
+             σημεία μέσα σε πλαίσιο 44x40 (Big στο 16,21 · Small1 στο 26,12 · Small2 στο 32,24) - το
+             προηγούμενο WPF port είχε τυχαίες θέσεις (Big 46,62 / Small1 16,16 / Small2 76,18) που
+             ΔΕΝ αντιστοιχούσαν καθόλου σε αυτή τη διάταξη. Canvas 88x80 = ακριβώς 2x το πλαίσιο
+             44x40 του ps1 (ίδιος συντελεστής κλίμακας με τις ακτίνες 24/16/12 = 2× των 12/8/6). -->
+        <Canvas Width="88" Height="80">
+            <Path x:Name="PathSmall1" Fill="White" Opacity="0.843">
+                <Path.RenderTransform>
+                    <RotateTransform x:Name="RotSmall1" CenterX="52" CenterY="24"/>
+                </Path.RenderTransform>
+            </Path>
+            <Path x:Name="PathSmall2" Fill="White" Opacity="0.922">
+                <Path.RenderTransform>
+                    <RotateTransform x:Name="RotSmall2" CenterX="64" CenterY="48"/>
+                </Path.RenderTransform>
+            </Path>
+            <Path x:Name="PathBig" Fill="White" Opacity="0.745">
+                <Path.RenderTransform>
+                    <RotateTransform x:Name="RotBig" CenterX="32" CenterY="42"/>
+                </Path.RenderTransform>
+            </Path>
+        </Canvas>
+    </Viewbox>
+</UserControl>

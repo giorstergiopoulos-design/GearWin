@@ -1,0 +1,23 @@
+<UserControl x:Class="OptimizerWpf.Views.ThermometerIcon"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             mc:Ignorable="d" d:DesignWidth="16" d:DesignHeight="16">
+    <!-- ΔΙΟΡΘΩΣΗ (χρήστης ανέφερε, με screenshot: "τα εικονίδια της θερμοκρασίας δεν αποδίδονται
+         χρωματικά σωστά") - το "🌡" emoji rendering στο WPF TextBlock είναι το ΙΔΙΟ, ήδη τεκμηριωμένο
+         πρόβλημα με τις σημαίες γλωσσών και τα εικονίδια του οδηγού χρήσης (WPF δεν κάνει πάντα σωστό
+         color-font compositing, πέφτει σε μονόχρωμο περίγραμμα) - ίδια λύση: αντικατάσταση με απλό,
+         χειροκίνητο διανυσματικό εικονίδιο (Canvas + Ellipse/Rectangle) αντί για emoji, εγγυημένα
+         σωστά χρώματα ανεξαρτήτως γραμματοσειράς/έκδοσης Windows. Χρησιμοποιείται 4 φορές στο
+         HomeView.xaml (CPU/RAM/Δίσκος/GPU), ίδιο μοτίβο επαναχρησιμοποιήσιμου εικονιδίου με το
+         ThreeGearIcon/HardwareChipIcon. -->
+    <Viewbox Stretch="Uniform">
+        <Canvas Width="16" Height="16">
+            <Rectangle Canvas.Left="6" Canvas.Top="1" Width="4" Height="9" RadiusX="2" RadiusY="2"
+                       Fill="#FFE53935" Stroke="#FFCFD8DC" StrokeThickness="0.75"/>
+            <Ellipse Canvas.Left="4" Canvas.Top="8" Width="8" Height="8"
+                     Fill="#FFE53935" Stroke="#FFCFD8DC" StrokeThickness="0.75"/>
+        </Canvas>
+    </Viewbox>
+</UserControl>

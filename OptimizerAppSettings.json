@@ -4,9 +4,9 @@
     "SidebarPosition":  "Right",
     "SidebarEnabled":  true,
     "AnimatedBackground":  true,
-    "AnimationStyle":  "Particles",
+    "AnimationStyle":  "Theme",
     "DefaultTheme":  null,
-    "TransparencyLevel":  "None",
+    "TransparencyLevel":  "Light",
     "AutoInstallDrivers":  false,
     "Language":  "el",
     "Skin":  "Classic"

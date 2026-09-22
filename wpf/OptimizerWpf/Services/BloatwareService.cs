@@ -24,9 +24,109 @@ namespace OptimizerWpf.Services
         public static Task<bool> RemoveAppxAsync(string namePattern) => RunPsForSuccessAsync(
             $"Get-AppxPackage -Name '*{namePattern}*' -AllUsers | Remove-AppxPackage -AllUsers -ErrorAction SilentlyContinue");
 
-        public static Task<bool> InstallWindowsMediaPlayerAsync() => RunPsForSuccessAsync(
-            "Enable-WindowsOptionalFeature -Online -FeatureName MediaPlayback -All -NoRestart -ErrorAction SilentlyContinue; " +
-            "Enable-WindowsOptionalFeature -Online -FeatureName WindowsMediaPlayer -All -NoRestart -ErrorAction SilentlyContinue");
+        // ΝΕΟ (εντοπίστηκε σε audit παλαιότητας WPF-έναντι-ps1 v2.8.2): το ps1 original δεν κάνει ΜΟΝΟ
+        // enable του optional feature - ορίζει επίσης το WMP Legacy ως προεπιλογή για αρχεία μουσικής
+        // ΚΑΙ το καρφιτσώνει στη γραμμή εργασιών (best-effort, βλ. Set-DefaultAppAssociations/
+        // Add-TaskbarPin ~10817-10853). Και τα δύο βήματα είναι best-effort (δεν αποτυγχάνει η συνολική
+        // εγκατάσταση αν αποτύχουν - ίδιο "μη-κρίσιμο" πνεύμα με το original).
+        public static async Task<bool> InstallWindowsMediaPlayerAsync()
+        {
+            var ok = await RunPsForSuccessAsync(
+                "Enable-WindowsOptionalFeature -Online -FeatureName MediaPlayback -All -NoRestart -ErrorAction SilentlyContinue; " +
+                "Enable-WindowsOptionalFeature -Online -FeatureName WindowsMediaPlayer -All -NoRestart -ErrorAction SilentlyContinue");
+            if (!ok) return false;
+            await SetDefaultAppAssociationsAsync(new Dictionary<string, string>
+            {
+                [".mp3"] = "Applications\\wmplayer.exe", [".wma"] = "Applications\\wmplayer.exe",
+                [".wav"] = "Applications\\wmplayer.exe", [".m4a"] = "Applications\\wmplayer.exe",
+            });
+            await AddTaskbarPinAsync(Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.Windows), "System32", "wmplayer.exe"));
+            return true;
+        }
+
+        // Port του K-Lite install script (~14731) - winget install + ορισμός WMP Legacy για μουσική,
+        // MPC-HC για βίντεο (αν εντοπιστεί το exe του, η θέση εγκατάστασης διαφέρει ανά αρχιτεκτονική),
+        // με καρφίτσωμα στη γραμμή εργασιών και για τα δύο (όλα best-effort, ίδιο με WMP παραπάνω).
+        public static async Task<bool> InstallKLiteAsync()
+        {
+            var ok = await WingetInstallAsync("CodecGuide.K-LiteCodecPack.Mega");
+            if (!ok) return false;
+
+            var programFiles = Environment.GetFolderPath(Environment.SpecialFolder.ProgramFiles);
+            var programFilesX86 = Environment.GetFolderPath(Environment.SpecialFolder.ProgramFilesX86);
+            var mpcCandidates = new[]
+            {
+                Path.Combine(programFiles, "K-Lite Codec Pack", "MPC-HC64", "mpc-hc64.exe"),
+                Path.Combine(programFilesX86, "K-Lite Codec Pack", "MPC-HC", "mpc-hc.exe"),
+                Path.Combine(programFiles, "K-Lite Codec Pack", "MPC-HC", "mpc-hc.exe"),
+            };
+            var mpcPath = mpcCandidates.FirstOrDefault(File.Exists);
+
+            var associations = new Dictionary<string, string>
+            {
+                [".mp3"] = "Applications\\wmplayer.exe", [".wma"] = "Applications\\wmplayer.exe",
+                [".wav"] = "Applications\\wmplayer.exe", [".flac"] = "Applications\\wmplayer.exe",
+            };
+            if (mpcPath != null)
+            {
+                var mpcExeName = Path.GetFileName(mpcPath);
+                foreach (var ext in new[] { ".mp4", ".mkv", ".avi", ".mov", ".wmv" }) associations[ext] = $"Applications\\{mpcExeName}";
+            }
+            await SetDefaultAppAssociationsAsync(associations);
+            await AddTaskbarPinAsync(Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.Windows), "System32", "wmplayer.exe"));
+            if (mpcPath != null) await AddTaskbarPinAsync(mpcPath);
+            return true;
+        }
+
+        // Port του Set-DefaultAppAssociations (~10817) - DISM /Import-DefaultAppAssociations μέσω
+        // προσωρινού XML, best-effort (δεν ρίχνει exception σε αποτυχία, απλά επιστρέφει false).
+        private static async Task<bool> SetDefaultAppAssociationsAsync(Dictionary<string, string> associations)
+        {
+            var xmlLines = string.Join("\r\n", associations.Select(kv =>
+                $"  <Association Identifier=\"{kv.Key}\" ProgId=\"{kv.Value}\" ApplicationName=\"\" />"));
+            var xmlContent = $"<?xml version=\"1.0\" encoding=\"UTF-8\"?>\r\n<DefaultAssociations>\r\n{xmlLines}\r\n</DefaultAssociations>";
+            var xmlPath = Path.Combine(Path.GetTempPath(), $"OptimizerWpfDefaultAppAssoc_{Guid.NewGuid():N}.xml");
+            try
+            {
+                await File.WriteAllTextAsync(xmlPath, xmlContent, System.Text.Encoding.UTF8);
+                return await RunProcessForSuccessAsync("dism.exe", $"/Online /Import-DefaultAppAssociations:\"{xmlPath}\"");
+            }
+            catch { return false; }
+            finally { try { File.Delete(xmlPath); } catch { } }
+        }
+
+        // Port του Add-TaskbarPin (~10837) - η Microsoft δεν προσφέρει επίσημο API για προγραμματιστικό
+        // pin στη γραμμή εργασιών των Windows 11· χρησιμοποιείται το ίδιο "verb" του Explorer (shell
+        // context-menu action) όπως το ps1 original - λειτουργεί σε πολλά builds, όχι εγγυημένο σε όλα.
+        private static async Task<bool> AddTaskbarPinAsync(string exePath)
+        {
+            if (!File.Exists(exePath)) return false;
+            var script = $@"
+try {{
+    $folder = Split-Path '{exePath}' -Parent
+    $fileName = Split-Path '{exePath}' -Leaf
+    $shellApp = New-Object -ComObject Shell.Application
+    $ns = $shellApp.Namespace($folder)
+    $item = $ns.ParseName($fileName)
+    if (-not $item) {{ exit 1 }}
+    $pinVerb = $item.Verbs() | Where-Object {{ ($_.Name -replace '&','') -match 'στη γραμμή εργασιών|to Tas' }}
+    if ($pinVerb) {{ $pinVerb.DoIt(); exit 0 }} else {{ exit 1 }}
+}} catch {{ exit 1 }}
+";
+            var scriptFile = Path.Combine(Path.GetTempPath(), $"OptimizerWpfTaskbarPin_{Guid.NewGuid():N}.ps1");
+            try
+            {
+                await File.WriteAllTextAsync(scriptFile, script);
+                using var process = Process.Start(new ProcessStartInfo("powershell.exe",
+                    $"-NoProfile -ExecutionPolicy Bypass -File \"{scriptFile}\"")
+                { UseShellExecute = false, CreateNoWindow = true });
+                if (process == null) return false;
+                await process.WaitForExitAsync();
+                return process.ExitCode == 0;
+            }
+            catch { return false; }
+            finally { try { File.Delete(scriptFile); } catch { } }
+        }
 
         public static Task<bool> RemoveWindowsMediaPlayerAsync() => RunPsForSuccessAsync(
             "Disable-WindowsOptionalFeature -Online -FeatureName WindowsMediaPlayer -NoRestart -ErrorAction SilentlyContinue");
@@ -44,31 +144,37 @@ namespace OptimizerWpf.Services
 
         // ===== Προτεινόμενες Εφαρμογές (winget) =====
 
+        // Group είναι πλέον ένα σταθερό, ουδέτερο-ως-προς-γλώσσα κλειδί (όχι το ελληνικό εμφανιζόμενο
+        // όνομα) - το GroupHeaderIconConverter στο BloatwareView.xaml.cs μεταφράζει το κλειδί σε
+        // εμφανιζόμενο κείμενο τη στιγμή της εμφάνισης, ώστε η ομαδοποίηση/κεφαλίδα να ακολουθεί την
+        // τρέχουσα γλώσσα (ρητό αίτημα χρήστη: "μετάφρασε τα όλα").
         public static readonly IReadOnlyList<RecommendedApp> RecommendedApps = new[]
         {
-            new RecommendedApp("Προγράμματα Περιήγησης", "Google Chrome", "Google.Chrome"),
-            new RecommendedApp("Προγράμματα Περιήγησης", "Mozilla Firefox", "Mozilla.Firefox"),
-            new RecommendedApp("Προγράμματα Περιήγησης", "Opera", "Opera.Opera"),
-            new RecommendedApp("Προγράμματα Περιήγησης", "Microsoft Edge", "Microsoft.Edge"),
-            new RecommendedApp("Συμπίεση Αρχείων", "7-Zip", "7zip.7zip"),
-            new RecommendedApp("Συμπίεση Αρχείων", "WinRAR", "RARLab.WinRAR"),
-            new RecommendedApp("Πολυμέσα", "VLC", "VideoLAN.VLC"),
-            new RecommendedApp("Πολυμέσα", "Spotify", "Spotify.Spotify"),
-            new RecommendedApp("Πολυμέσα", "GOM Player", "GOMLab.GOMPlayer"),
-            new RecommendedApp("Πολυμέσα", "Winamp", "Winamp.Winamp"),
-            new RecommendedApp("Πολυμέσα", "K-Lite Codec Pack", "CodecGuide.K-LiteCodecPack.Mega"),
-            new RecommendedApp("Επικοινωνία", "Zoom", "Zoom.Zoom"),
-            new RecommendedApp("Επικοινωνία", "Discord", "Discord.Discord"),
-            new RecommendedApp("Επικοινωνία", "Microsoft Teams", "Microsoft.Teams"),
-            new RecommendedApp("Επικοινωνία", "Viber", "Viber.Viber"),
-            new RecommendedApp("Εργαλεία", "AnyDesk", "AnyDeskSoftwareGmbH.AnyDesk"),
-            new RecommendedApp("Εργαλεία", "TeamViewer", "TeamViewer.TeamViewer"),
-            new RecommendedApp("Εργαλεία", "PowerToys", "Microsoft.PowerToys"),
-            new RecommendedApp("Έγγραφα", "OpenOffice", "Apache.OpenOffice"),
-            new RecommendedApp("Έγγραφα", "Adobe Acrobat Reader", "Adobe.Acrobat.Reader.64-bit"),
-            new RecommendedApp("Βιβλιοθήκες Συστήματος", ".NET Desktop Runtime 8", "Microsoft.DotNet.DesktopRuntime.8"),
-            new RecommendedApp("Βιβλιοθήκες Συστήματος", "DirectX Runtime", "Microsoft.DirectX"),
-            new RecommendedApp("Βιβλιοθήκες Συστήματος", "Visual C++ Redistributable x64", "Microsoft.VCRedist.2015+.x64"),
+            new RecommendedApp("Browsers", "Google Chrome", "Google.Chrome"),
+            new RecommendedApp("Browsers", "Mozilla Firefox", "Mozilla.Firefox"),
+            new RecommendedApp("Browsers", "Opera", "Opera.Opera"),
+            new RecommendedApp("Browsers", "Microsoft Edge", "Microsoft.Edge"),
+            new RecommendedApp("Compression", "7-Zip", "7zip.7zip"),
+            new RecommendedApp("Compression", "WinRAR", "RARLab.WinRAR"),
+            new RecommendedApp("Multimedia", "VLC", "VideoLAN.VLC"),
+            new RecommendedApp("Multimedia", "Spotify", "Spotify.Spotify"),
+            new RecommendedApp("Multimedia", "GOM Player", "GOMLab.GOMPlayer"),
+            new RecommendedApp("Multimedia", "Winamp", "Winamp.Winamp"),
+            new RecommendedApp("Multimedia", "K-Lite Codec Pack", "CodecGuide.K-LiteCodecPack.Mega"),
+            new RecommendedApp("Communication", "Zoom", "Zoom.Zoom"),
+            new RecommendedApp("Communication", "Discord", "Discord.Discord"),
+            new RecommendedApp("Communication", "Microsoft Teams", "Microsoft.Teams"),
+            // ΔΙΟΡΘΩΣΗ (χρήστης ανέφερε: "του viber θέλει διόρθωση") - "Viber.Viber" δεν υπάρχει στο
+            // winget repository, η εγκατάσταση απέτυχε πάντα σιωπηλά - το σωστό ID είναι "Rakuten.Viber".
+            new RecommendedApp("Communication", "Viber", "Rakuten.Viber"),
+            new RecommendedApp("Tools", "AnyDesk", "AnyDeskSoftwareGmbH.AnyDesk"),
+            new RecommendedApp("Tools", "TeamViewer", "TeamViewer.TeamViewer"),
+            new RecommendedApp("Tools", "PowerToys", "Microsoft.PowerToys"),
+            new RecommendedApp("Documents", "OpenOffice", "Apache.OpenOffice"),
+            new RecommendedApp("Documents", "Adobe Acrobat Reader", "Adobe.Acrobat.Reader.64-bit"),
+            new RecommendedApp("SystemLibs", ".NET Desktop Runtime 8", "Microsoft.DotNet.DesktopRuntime.8"),
+            new RecommendedApp("SystemLibs", "DirectX Runtime", "Microsoft.DirectX"),
+            new RecommendedApp("SystemLibs", "Visual C++ Redistributable x64", "Microsoft.VCRedist.2015+.x64"),
         };
 
         public static async Task<bool> IsWingetAppInstalledAsync(string wingetId)
