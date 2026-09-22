@@ -20,9 +20,10 @@
 ### Μεταφράσεις
 
 Κάθε string που φαίνεται στον χρήστη περνάει από `LanguageService.T("Key")` — ορίζεται ταυτόχρονα και
-στις 4 γλώσσες (Ελληνικά/Αγγλικά/Γερμανικά/Γαλλικά) στο `Services/LanguageService.cs`. Αν προσθέτεις
-νέο UI κείμενο, χρειάζεται νέο κλειδί **και στα 4** language blocks - ένα PR που προσθέτει κλειδί μόνο
-σε ένα block δεν θα γίνει merge. Αν δεν μιλάς και τις 4 γλώσσες, μια μηχανική μετάφραση είναι καλύτερη
+στις 14 γλώσσες (Ελληνικά, Αγγλικά, Γερμανικά, Γαλλικά, Ισπανικά, Ιταλικά, Ρωσικά, Κινέζικα, Ιαπωνικά,
+Πορτογαλικά, Κορεατικά, Τουρκικά, Αραβικά, Χίντι) στο `Services/LanguageService.cs`. Αν προσθέτεις νέο
+UI κείμενο, χρειάζεται νέο κλειδί **και στις 14** language blocks - ένα PR που προσθέτει κλειδί μόνο
+σε ένα block δεν θα γίνει merge. Αν δεν μιλάς όλες τις γλώσσες, μια μηχανική μετάφραση είναι καλύτερη
 από τίποτα — θα ελεγχθεί/διορθωθεί στο review.
 
 ### Εικονίδια
@@ -56,10 +57,11 @@ a PR:
 
 ### Translations
 
-Every user-facing string goes through `LanguageService.T("Key")`, defined identically across all 4
-language blocks (Greek/English/German/French) in `Services/LanguageService.cs`. New UI text needs a
-new key added to **all four** blocks — a PR adding a key to only one block won't be merged. A machine
-translation is better than nothing if you don't speak all four languages; it'll be reviewed/fixed.
+Every user-facing string goes through `LanguageService.T("Key")`, defined identically across all 14
+language blocks (Greek, English, German, French, Spanish, Italian, Russian, Chinese, Japanese,
+Portuguese, Korean, Turkish, Arabic, Hindi) in `Services/LanguageService.cs`. New UI text needs a
+new key added to **all 14** blocks — a PR adding a key to only one block won't be merged. A machine
+translation is better than nothing if you don't speak all the languages; it'll be reviewed/fixed.
 
 ### Icons
 
