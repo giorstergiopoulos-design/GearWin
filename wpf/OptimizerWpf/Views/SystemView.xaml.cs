@@ -15,15 +15,26 @@ namespace OptimizerWpf.Views
     {
         private void NestedScroll_PreviewMouseWheel(object sender, System.Windows.Input.MouseWheelEventArgs e) => NestedScrollHelper.Forward(sender, e);
 
+        // Αυτές οι τέσσερις φορτώνονται αυτόματα ΞΑΝΑ σε κάθε constructor παρακάτω (LoadStartupAsync
+        // κλπ.) - παραμένουν instance (ΟΧΙ static): ο χρήστης θέλει τη ΦΡΕΣΚΙΑ λίστα διεργασιών/
+        // υπηρεσιών κάθε φορά που ανοίγει ξανά την καρτέλα Σύστημα, όχι μια παλιά στιγμιότυπη εικόνα.
         private readonly ObservableCollection<StartupRow> _startup = new();
         private readonly ObservableCollection<ProcessRowVm> _processes = new();
-        private readonly ObservableCollection<StorageResultRow> _storage = new();
         private readonly ObservableCollection<RestorePointInfo> _restorePoints = new();
         private readonly ObservableCollection<ServiceRowVm> _services = new();
+
+        // ΔΙΟΡΘΩΣΗ (bug εντοπίστηκε - χρήστης ανέφερε: "τα αποτελέσματα των σαρώσεων χάνονται όταν
+        // αλλάζω καρτέλα") - σε αντίθεση με τις παραπάνω 4 λίστες, η εύρεση μεγάλων/διπλότυπων αρχείων
+        // είναι μια αργή, ρητά ζητημένη από τον χρήστη σάρωση - ΔΕΝ πρέπει να χάνεται σε κάθε αλλαγή
+        // καρτέλας (βλ. MainWindow.ShowTabContent - κάθε επιστροφή δημιουργεί ΝΕΟ SystemView). Static
+        // αντί για instance - ίδιο μοτίβο με το OptimizationView/BloatwareView.
+        private static readonly ObservableCollection<StorageResultRow> _storage = new();
         // ===== Εύρεση διπλότυπων αρχείων (ενοποιημένη - μετακινήθηκε εδώ από την καρτέλα Προηγμένα
         // Εργαλεία, ρητό αίτημα χρήστη - ίδια καρτέλα με το υπόλοιπο "Αποθηκευτικός Χώρος") =====
-        private readonly ObservableCollection<DuplicateGroupVm> _duplicateGroups = new();
-        private string? _duplicateFolder;
+        private static readonly ObservableCollection<DuplicateGroupVm> _duplicateGroups = new();
+        private static string? s_duplicateFolder;
+        private static string? s_storageStatusCache;
+        private static string? s_duplicateStatusCache;
 
         public SystemView()
         {
@@ -34,6 +45,16 @@ namespace OptimizerWpf.Views
             ListRestorePoints.ItemsSource = _restorePoints;
             ListServices.ItemsSource = _services;
             ListDuplicateGroups.ItemsSource = _duplicateGroups;
+
+            if (s_storageStatusCache != null) TxtStorageStatus.Text = s_storageStatusCache;
+            if (s_duplicateFolder != null)
+            {
+                TxtDuplicateFolder.Text = s_duplicateFolder;
+                BtnScanDuplicates.IsEnabled = true;
+            }
+            if (s_duplicateStatusCache != null) TxtDuplicateStatus.Text = s_duplicateStatusCache;
+            BtnDeleteDuplicates.IsEnabled = _duplicateGroups.Count > 0;
+
             _ = LoadBenchmarkDrivesAsync();
 
             _ = LoadStartupAsync();
@@ -365,6 +386,7 @@ namespace OptimizerWpf.Views
             StatusService.SetIdle(LanguageService.T("Ready"));
             foreach (var r in results) _storage.Add(new StorageResultRow(r.Path, r.SizeMb, r.LastWriteTime));
             TxtStorageStatus.Text = $"{LanguageService.T("Sys_FoundPrefix")}{results.Count}{LanguageService.T("Sys_LargeFilesSuffix")}";
+            s_storageStatusCache = TxtStorageStatus.Text;
         }
 
         private async void BtnOneDrive_Click(object sender, RoutedEventArgs e)
@@ -375,6 +397,7 @@ namespace OptimizerWpf.Views
             var ok = await SystemService.OneDriveFreeUpSpaceAsync();
             StatusService.SetIdle(LanguageService.T("Ready"));
             TxtStorageStatus.Text = ok ? LanguageService.T("Sys_Completed") : LanguageService.T("Sys_OneDriveNotFound");
+            s_storageStatusCache = TxtStorageStatus.Text;
         }
 
         // ΝΕΑ v3.2.0 - βλ. σχόλιο στο SystemService.cs's FindDuplicatesInFolderAsync/
@@ -391,6 +414,7 @@ namespace OptimizerWpf.Views
             StatusService.SetIdle(LanguageService.T("Ready"));
             foreach (var r in results) _storage.Add(new StorageResultRow(r.Path, r.SizeMb, r.LastWriteTime));
             TxtStorageStatus.Text = $"{LanguageService.T("Sys_FoundPrefix")}{results.Count}{LanguageService.T("Sys_LargeFilesSuffix")}";
+            s_storageStatusCache = TxtStorageStatus.Text;
         }
 
         private async void BtnDropbox_Click(object sender, RoutedEventArgs e)
@@ -404,6 +428,7 @@ namespace OptimizerWpf.Views
             StatusService.SetIdle(LanguageService.T("Ready"));
             foreach (var r in results) _storage.Add(new StorageResultRow(r.Path, r.SizeMb, r.LastWriteTime));
             TxtStorageStatus.Text = $"{LanguageService.T("Sys_FoundPrefix")}{results.Count}{LanguageService.T("Sys_LargeFilesSuffix")}";
+            s_storageStatusCache = TxtStorageStatus.Text;
         }
 
         private void BtnRecycleFile_Click(object sender, RoutedEventArgs e)
@@ -440,21 +465,21 @@ namespace OptimizerWpf.Views
         {
             var dialog = new Microsoft.Win32.OpenFolderDialog { Title = LanguageService.T("Advanced_ChooseFolder") };
             if (dialog.ShowDialog() != true) return;
-            _duplicateFolder = dialog.FolderName;
-            TxtDuplicateFolder.Text = _duplicateFolder;
+            s_duplicateFolder = dialog.FolderName;
+            TxtDuplicateFolder.Text = s_duplicateFolder;
             BtnScanDuplicates.IsEnabled = true;
         }
 
         private async void BtnScanDuplicates_Click(object sender, RoutedEventArgs e)
         {
-            if (_duplicateFolder == null) return;
+            if (s_duplicateFolder == null) return;
             BtnScanDuplicates.IsEnabled = false;
             BtnDeleteDuplicates.IsEnabled = false;
             _duplicateGroups.Clear();
             TxtDuplicateStatus.Text = LanguageService.T("Advanced_ScanningDuplicates");
             StatusService.SetBusy(LanguageService.T("Advanced_ScanningDuplicates"));
 
-            var groups = await DuplicateFileService.ScanAsync(_duplicateFolder);
+            var groups = await DuplicateFileService.ScanAsync(s_duplicateFolder);
             StatusService.SetIdle(LanguageService.T("Ready"));
             BtnScanDuplicates.IsEnabled = true;
 
@@ -463,6 +488,7 @@ namespace OptimizerWpf.Views
                 ? LanguageService.T("Advanced_NoDuplicatesFound")
                 : string.Format(LanguageService.T("Advanced_DuplicatesFoundPrefix"), groups.Count);
             BtnDeleteDuplicates.IsEnabled = groups.Count > 0;
+            s_duplicateStatusCache = TxtDuplicateStatus.Text;
         }
 
         private async void BtnDeleteDuplicates_Click(object sender, RoutedEventArgs e)
@@ -489,6 +515,7 @@ namespace OptimizerWpf.Views
             }
             TxtDuplicateStatus.Text = string.Format(LanguageService.T("Advanced_DuplicatesDeletedPrefix"), deleted);
             BtnDeleteDuplicates.IsEnabled = _duplicateGroups.Count > 0;
+            s_duplicateStatusCache = TxtDuplicateStatus.Text;
         }
 
         // ΝΕΟ - roadmap "Κλείδωμα φακέλων με κωδικούς" (ρητό αίτημα χρήστη) - βλ. FolderLockService για

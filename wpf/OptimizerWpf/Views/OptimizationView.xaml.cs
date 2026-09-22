@@ -15,9 +15,26 @@ namespace OptimizerWpf.Views
     {
         private void NestedScroll_PreviewMouseWheel(object sender, System.Windows.Input.MouseWheelEventArgs e) => NestedScrollHelper.Forward(sender, e);
 
-        private readonly ObservableCollection<WingetUpdateRow> _updates = new();
-        private readonly ObservableCollection<UnifiedDriverRow> _driverUpdates = new();
-        private readonly ObservableCollection<DriverStoreEntry> _driverStoreEntries = new();
+        // ΔΙΟΡΘΩΣΗ (bug εντοπίστηκε - χρήστης ανέφερε: "τα αποτελέσματα των σαρώσεων χάνονται όταν
+        // αλλάζω καρτέλα") - κάθε αλλαγή καρτέλας δημιουργεί ΝΕΟ OptimizationView (βλ.
+        // MainWindow.ShowTabContent, σκόπιμο για να μη μένουν timers ζωντανοί στο παρασκήνιο - βλ.
+        // ίδιο σχόλιο στο HomeView) - οι instance ObservableCollection ξεκινούσαν πάντα άδειες, άρα
+        // τα αποτελέσματα μιας (συχνά αργής) σάρωσης χάνονταν αμέσως μόλις ο χρήστης άλλαζε καρτέλα
+        // και ξαναγύριζε. Οι τρεις λίστες είναι πλέον static - ΤΟ ΙΔΙΟ session-lifetime αντικείμενο
+        // επαναχρησιμοποιείται από κάθε νέο instance (ίδιο μοτίβο με το BloatwareView's
+        // s_recommendedInstalledCache) - καμία αλλαγή χρειάζεται στον υπόλοιπο κώδικα του αρχείου,
+        // αφού το Add/Remove/Clear στην ΙΔΙΑ συλλογή παραμένει ορατό στο επόμενο instance.
+        private static readonly ObservableCollection<WingetUpdateRow> _updates = new();
+        private static readonly ObservableCollection<UnifiedDriverRow> _driverUpdates = new();
+        private static readonly ObservableCollection<DriverStoreEntry> _driverStoreEntries = new();
+
+        // Μικρά πεδία κατάστασης (κείμενο γραμμής κατάστασης, ορατότητα, κάρτες κατασκευαστή) που ΔΕΝ
+        // ζουν μέσα σε κάποια από τις παραπάνω συλλογές, αλλά χάνονταν με τον ίδιο ακριβώς τρόπο - ίδιο
+        // static-cache μοτίβο, αποκαθίστανται ρητά στον constructor.
+        private static string? s_driverStatusCache;
+        private static VendorScanResult? s_vendorCache;
+        private static string? s_wingetStatusCache;
+        private static string? s_driverStoreStatusCache;
 
         public OptimizationView()
         {
@@ -25,6 +42,12 @@ namespace OptimizerWpf.Views
             ListWingetUpdates.ItemsSource = _updates;
             ListDriverUpdates.ItemsSource = _driverUpdates;
             ListDriverStore.ItemsSource = _driverStoreEntries;
+
+            if (s_driverStatusCache != null) TxtDriverStatus.Text = s_driverStatusCache;
+            BorderDriverResults.Visibility = _driverUpdates.Count > 0 ? Visibility.Visible : Visibility.Collapsed;
+            if (s_vendorCache != null) ShowVendorExtras(s_vendorCache);
+            if (s_wingetStatusCache != null) TxtWingetStatus.Text = s_wingetStatusCache;
+            if (s_driverStoreStatusCache != null) TxtDriverStoreStatus.Text = s_driverStoreStatusCache;
 
             ToggleScheduledMaintenance.IsChecked = AppSettingsService.Current.ScheduledMaintenanceEnabled;
             UpdateScheduledMaintenanceStatusText();
@@ -134,6 +157,7 @@ namespace OptimizerWpf.Views
             finally
             {
                 SetBusy(false);
+                s_wingetStatusCache = TxtWingetStatus.Text;
             }
         }
 
@@ -177,6 +201,7 @@ namespace OptimizerWpf.Views
                 ? $"{LanguageService.T("Opt_UpgradeAllSucceededPrefix")}{succeeded.Count}{LanguageService.T("Opt_UpgradeAllSucceededSuffix")}"
                 : $"{LanguageService.T("Opt_UpgradePartialPrefix")}{succeeded.Count}{LanguageService.T("Opt_UpgradePartialMid")}{failed.Count}{LanguageService.T("Opt_UpgradePartialSuffix")}{string.Join(", ", failed)}).";
             TxtWingetStatus.Text = summary;
+            s_wingetStatusCache = summary;
             ThemedMessageBox.Show(summary, LanguageService.T("Opt_UpgradeAppsTitle"), MessageBoxButton.OK,
                 failed.Count == 0 ? MessageBoxImage.Information : MessageBoxImage.Warning);
         }
@@ -321,6 +346,8 @@ namespace OptimizerWpf.Views
                 ? $"{LanguageService.T("Opt_NoDriverUpdatesFound")} {string.Join(" ", parts)}"
                 : $"{LanguageService.T("Opt_DriverUpdatesFoundPrefix")}{_driverUpdates.Count}{LanguageService.T("Opt_DriverUpdatesFoundSuffix")} {string.Join(" ", parts)}";
             UpdatesHubService.ReportDriverScan(_driverUpdates.Count);
+            s_driverStatusCache = TxtDriverStatus.Text;
+            s_vendorCache = vendor;
 
             ShowVendorExtras(vendor);
         }
@@ -521,6 +548,7 @@ namespace OptimizerWpf.Views
                 StatusService.SetIdle(LanguageService.T("Ready"));
                 ProgressDriverStore.Visibility = Visibility.Collapsed;
                 BtnScanDriverStore.IsEnabled = true;
+                s_driverStoreStatusCache = TxtDriverStoreStatus.Text;
             }
         }
 

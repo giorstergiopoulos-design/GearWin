@@ -42,15 +42,21 @@ namespace OptimizerWpf.Views
 
         private readonly ObservableCollection<BuiltinAppRow> _builtin = new();
         private readonly ObservableCollection<RecommendedAppRow> _recommended = new();
-        private readonly ObservableCollection<DeepUninstallRow> _installedApps = new();
+        // ΔΙΟΡΘΩΣΗ (bug εντοπίστηκε - χρήστης ανέφερε: "τα αποτελέσματα των σαρώσεων χάνονται όταν
+        // αλλάζω καρτέλα") - static αντί για instance, ίδιο μοτίβο με OptimizationView/SystemView/
+        // AdvancedView - το Deep Uninstall scan (BtnRefreshInstalledApps_Click) ΔΕΝ τρέχει αυτόματα
+        // στον constructor (σε αντίθεση με το _recommended παραπάνω), οπότε χωρίς αυτό η λίστα
+        // εμφανιζόταν εντελώς άδεια σε κάθε επιστροφή στην καρτέλα, ζητώντας νέο χειροκίνητο κλικ.
+        private static readonly ObservableCollection<DeepUninstallRow> _installedApps = new();
         private readonly ListCollectionView _recommendedView;
         private readonly ICollectionView _installedAppsView;
 
         // ===== Πρόσθετες Λειτουργίες Windows (ενοποιημένη λίστα - μετακινήθηκε εδώ από την καρτέλα
         // Προηγμένα Εργαλεία, ρητό αίτημα χρήστη - ίδια ουσιαστικά λειτουργία με τα "Ενσωματωμένα
-        // Στοιχεία Windows" παραπάνω) =====
-        private List<AllFeatureRow> _allFeatures = new();
-        private readonly ObservableCollection<AllFeatureRow> _displayedFeatures = new();
+        // Στοιχεία Windows" παραπάνω) - static για τον ίδιο λόγο όπως παραπάνω, το scan δεν τρέχει
+        // αυτόματα στον constructor. =====
+        private static List<AllFeatureRow> _allFeatures = new();
+        private static readonly ObservableCollection<AllFeatureRow> _displayedFeatures = new();
 
         public BloatwareView()
         {

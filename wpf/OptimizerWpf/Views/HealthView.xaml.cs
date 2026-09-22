@@ -15,7 +15,14 @@ namespace OptimizerWpf.Views
     {
         private void NestedScroll_PreviewMouseWheel(object sender, System.Windows.Input.MouseWheelEventArgs e) => NestedScrollHelper.Forward(sender, e);
 
-        private readonly ObservableCollection<RegistryFindingRow> _findings = new();
+        // ΔΙΟΡΘΩΣΗ (bug εντοπίστηκε - χρήστης ανέφερε: "τα αποτελέσματα των σαρώσεων χάνονται όταν
+        // αλλάζω καρτέλα") - static αντί για instance, ίδιο μοτίβο με τις υπόλοιπες καρτέλες - το
+        // BtnRegCleanScan_Click scan ΔΕΝ τρέχει αυτόματα στον constructor, άρα χωρίς αυτό η λίστα
+        // ευρημάτων εξαφανιζόταν σε κάθε επιστροφή στην καρτέλα Υγεία & Συντήρηση.
+        private static readonly ObservableCollection<RegistryFindingRow> _findings = new();
+        private static string? s_regCleanStatusCache;
+        // Instance (ΟΧΙ static) - φορτώνεται αυτόματα ξανά κάθε φορά (RefreshRegBackupsAsync
+        // παρακάτω), ο χρήστης θέλει το φρέσκο ιστορικό αντιγράφων ασφαλείας, όχι παλιό στιγμιότυπο.
         private readonly ObservableCollection<RegistryBackupRow> _regBackups = new();
 
         public HealthView()
@@ -24,6 +31,7 @@ namespace OptimizerWpf.Views
             ListRegFindings.ItemsSource = _findings;
             ListRegBackups.ItemsSource = _regBackups;
             ListBrowsers.ItemsSource = HealthCleanupService.DetectBrowsers().Select(BrowserRow.From).ToList();
+            if (s_regCleanStatusCache != null) TxtRegCleanStatus.Text = s_regCleanStatusCache;
             _ = RefreshWinREAsync();
             _ = RefreshRegBackupsAsync();
             LoadDiskTrend();
@@ -146,6 +154,7 @@ namespace OptimizerWpf.Views
             TxtRegCleanStatus.Text = results.Count == 0
                 ? LanguageService.T("Health_NoCleanupItems")
                 : $"{LanguageService.T("Health_ItemsFoundPrefix")}{results.Count}{LanguageService.T("Health_ItemsFoundSuffix")}";
+            s_regCleanStatusCache = TxtRegCleanStatus.Text;
         }
 
         private async void BtnRegCleanDelete_Click(object sender, RoutedEventArgs e)
@@ -180,6 +189,7 @@ namespace OptimizerWpf.Views
             TxtRegCleanStatus.Text = ok
                 ? $"{LanguageService.T("Health_DeletedItemsPrefix")}{selected.Count}{LanguageService.T("Health_DeletedItemsMid")}{backupDir}"
                 : LanguageService.T("Health_DeletePartialFailed");
+            s_regCleanStatusCache = TxtRegCleanStatus.Text;
             foreach (var f in selected) _findings.Remove(_findings.First(r => r.Finding == f));
             await RefreshRegBackupsAsync();
         }

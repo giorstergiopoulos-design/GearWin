@@ -13,8 +13,15 @@ namespace OptimizerWpf.Views
     {
         private void NestedScroll_PreviewMouseWheel(object sender, System.Windows.Input.MouseWheelEventArgs e) => NestedScrollHelper.Forward(sender, e);
 
-        private readonly ObservableCollection<GhostDeviceInfo> _ghostDevices = new();
-        private readonly ObservableCollection<ScheduledTaskRow> _scheduledTasks = new();
+        // ΔΙΟΡΘΩΣΗ (bug εντοπίστηκε - χρήστης ανέφερε: "τα αποτελέσματα των σαρώσεων χάνονται όταν
+        // αλλάζω καρτέλα") - static αντί για instance, ίδιο μοτίβο με OptimizationView/SystemView -
+        // κάθε αλλαγή καρτέλας δημιουργεί ΝΕΟ AdvancedView (βλ. MainWindow.ShowTabContent).
+        private static readonly ObservableCollection<GhostDeviceInfo> _ghostDevices = new();
+        private static readonly ObservableCollection<ScheduledTaskRow> _scheduledTasks = new();
+        private static string? s_ghostStatusCache;
+        private static string? s_scheduledTasksStatusCache;
+        // Instance (ΟΧΙ static) - φορτώνεται αυτόματα ξανά κάθε φορά (LoadWslAsync παρακάτω), ο
+        // χρήστης θέλει τη φρέσκια κατάσταση των διανομών WSL, όχι παλιό στιγμιότυπο.
         private readonly ObservableCollection<WslDistroRow> _wslDistros = new();
 
         public AdvancedView()
@@ -23,6 +30,8 @@ namespace OptimizerWpf.Views
             ListGhostDevices.ItemsSource = _ghostDevices;
             ListScheduledTasks.ItemsSource = _scheduledTasks;
             ListWslDistros.ItemsSource = _wslDistros;
+            if (s_ghostStatusCache != null) TxtGhostStatus.Text = s_ghostStatusCache;
+            if (s_scheduledTasksStatusCache != null) TxtScheduledTasksStatus.Text = s_scheduledTasksStatusCache;
             LoadBootTimeline();
             RefreshUsbHistory();
             RefreshAutologonStatus();
@@ -224,6 +233,7 @@ namespace OptimizerWpf.Views
             StatusService.SetIdle(LanguageService.T("Ready"));
             foreach (var d in results) _ghostDevices.Add(d);
             TxtGhostStatus.Text = $"{LanguageService.T("Adv_GhostFoundPrefix")}{results.Count}{LanguageService.T("Adv_GhostFoundSuffix")}";
+            s_ghostStatusCache = TxtGhostStatus.Text;
         }
 
         // ΔΙΟΡΘΩΣΗ (ρητό αίτημα από deep review §0.4ιβ - ο ps1 original δεν είχε confirm dialog εδώ):
@@ -249,6 +259,7 @@ namespace OptimizerWpf.Views
             StatusService.SetIdle(LanguageService.T("Ready"));
             foreach (var t in results) _scheduledTasks.Add(new ScheduledTaskRow(t));
             TxtScheduledTasksStatus.Text = $"{LanguageService.T("Adv_GhostFoundPrefix")}{results.Count}{LanguageService.T("Adv_GhostFoundSuffix")}";
+            s_scheduledTasksStatusCache = TxtScheduledTasksStatus.Text;
         }
 
         private async void ToggleScheduledTask_Click(object sender, RoutedEventArgs e)

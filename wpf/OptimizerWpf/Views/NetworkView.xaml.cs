@@ -17,8 +17,14 @@ namespace OptimizerWpf.Views
     {
         private void NestedScroll_PreviewMouseWheel(object sender, System.Windows.Input.MouseWheelEventArgs e) => NestedScrollHelper.Forward(sender, e);
 
-        private List<FirewallRule> _allRules = new();
-        private readonly ObservableCollection<FirewallRuleRow> _displayedRules = new();
+        // ΔΙΟΡΘΩΣΗ (bug εντοπίστηκε - χρήστης ανέφερε: "τα αποτελέσματα των σαρώσεων χάνονται όταν
+        // αλλάζω καρτέλα") - static αντί για instance, ίδιο μοτίβο με τις υπόλοιπες καρτέλες - τα
+        // κανόνες τείχους προστασίας/ανοιχτές θύρες ΔΕΝ φορτώνονται αυτόματα στον constructor.
+        private static List<FirewallRule> _allRules = new();
+        private static readonly ObservableCollection<FirewallRuleRow> _displayedRules = new();
+        private static string? s_firewallStatusCache;
+        private static IReadOnlyList<ListeningPort>? s_openPortsCache;
+        private static string? s_openPortsStatusCache;
 
         // ΝΕΟ - roadmap "Κίνηση δικτύου ανά εφαρμογή" (v4.3.5).
         private readonly ObservableCollection<NetworkTrafficRowVm> _trafficRows = new();
@@ -29,6 +35,12 @@ namespace OptimizerWpf.Views
             InitializeComponent();
             ListFirewallRules.ItemsSource = _displayedRules;
             ListNetworkTraffic.ItemsSource = _trafficRows;
+            if (s_firewallStatusCache != null) TxtFirewallStatus.Text = s_firewallStatusCache;
+            if (s_openPortsCache != null)
+            {
+                ListOpenPorts.ItemsSource = s_openPortsCache;
+                TxtOpenPortsStatus.Text = s_openPortsStatusCache;
+            }
             TxtHostsContent.Text = NetworkService.ReadHostsFile();
             RefreshTelemetryButton();
             _ = CheckPublicWifiAsync();
@@ -156,6 +168,7 @@ namespace OptimizerWpf.Views
             _allRules = (await NetworkService.LoadFirewallRulesAsync()).ToList();
             StatusService.SetIdle(LanguageService.T("Ready"));
             TxtFirewallStatus.Text = $"{LanguageService.T("Net_RulesLoadedPrefix")}{_allRules.Count}{LanguageService.T("Net_RulesLoadedSuffix")}";
+            s_firewallStatusCache = TxtFirewallStatus.Text;
             UpdateFirewallDisplay();
         }
 
@@ -167,6 +180,8 @@ namespace OptimizerWpf.Views
             StatusService.SetIdle(LanguageService.T("Ready"));
             ListOpenPorts.ItemsSource = ports;
             TxtOpenPortsStatus.Text = $"{LanguageService.T("Net_RulesLoadedPrefix")}{ports.Count}{LanguageService.T("Network_OpenPortsSuffix")}";
+            s_openPortsCache = ports;
+            s_openPortsStatusCache = TxtOpenPortsStatus.Text;
         }
 
         private void TxtFirewallSearch_TextChanged(object sender, TextChangedEventArgs e) => UpdateFirewallDisplay();
