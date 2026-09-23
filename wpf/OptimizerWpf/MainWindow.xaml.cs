@@ -562,18 +562,28 @@ public partial class MainWindow : Window
             "VerHist_Title" => new HelpWindow(initialTabIndex: 2) { Owner = this },
             "Help_Title" => new HelpWindow { Owner = this },
             "ActionLog_Title" => new ActionLogWindow { Owner = this },
-            // ΝΕΟ - ρητό αίτημα χρήστη: αντικατέστησε τη συντόμευση "Ιστορικό Εκδόσεων" στο πλευρικό
-            // μενού (βλ. SidebarShortcuts.cs) - πλέον περιττή αφού είναι ήδη προσβάσιμη ως tab μέσα στο
-            // Βοήθεια/Οδηγίες παραπάνω. Το Ιστορικό Πρόχειρου (ClipboardHistoryWindow) ήταν μέχρι τώρα
-            // προσβάσιμο ΜΟΝΟ μέσω tray icon/καθολικής συντόμευσης (Win+Shift+V, βλ. TrayIconService/
-            // App.xaml.cs) - πραγματικό δευτερεύον παράθυρο που δεν είχε ακόμα θέση εδώ.
-            "Clipboard_Title" => new ClipboardHistoryWindow { Owner = this },
             // ΔΙΟΡΘΩΣΗ (χρήστης ζήτησε: "στην Βοήθεια/Οδηγίες να ανοίγει το παράθυρο με δύο tabs όπου
             // το δεύτερο θα είναι η άδεια χρήσης") - δεν υπάρχει πια ξεχωριστό LicenseWindow, ανοίγει
             // το ίδιο HelpWindow κατευθείαν στο 2ο tab (index 1).
             "License_Title" => new HelpWindow(initialTabIndex: 1) { Owner = this },
             _ => null,
         };
+
+        // ΔΙΟΡΘΩΣΗ (bug εντοπίστηκε - χρήστης ανέφερε: "ανοίγοντας το ιστορικό clipboard το παράθυρο
+        // φαίνεται να κολλάει και βγάζει κάποιο μήνυμα λάθους") - το ClipboardHistoryWindow είναι
+        // σχεδιασμένο ως ελαφρύ, αυτο-κλειόμενο popup (Window_Deactivated -> Close(), βλ. εκεί) για
+        // την αρχική του χρήση μέσω tray icon/Win+Shift+V (TrayIconService: .Show(), ΧΩΡΙΣ Owner). Η
+        // δρομολόγηση εδώ (πλευρικό μενού/κλασικό μενού) το άνοιγε με το ΓΕΝΙΚΟ .ShowDialog() παρακάτω -
+        // ένα modal ShowDialog() πυροδοτεί Deactivated (άρα Close()) ΜΕΣΑ στο δικό του Window_Loaded,
+        // ΠΡΙΝ ολοκληρωθεί η εσωτερική διαδικασία εμφάνισης του ShowDialog - ακριβώς το σφάλμα WPF
+        // "Cannot set Visibility to Visible or call Show, ShowDialog, or WindowInteropHelper.
+        // EnsureHandle while a Window is closing." Το ίδιο το παράθυρο ΔΕΝ έγινε ποτέ modal dialog -
+        // το μη-αποκλειστικό .Show() (ίδιο με το tray icon) δουλεύει σωστά από ΚΑΘΕ σημείο εισόδου.
+        if (key == "Clipboard_Title")
+        {
+            new ClipboardHistoryWindow { Owner = this }.Show();
+            return;
+        }
         if (window != null) window.ShowDialog();
         else ThemedMessageBox.Show($"{LanguageService.T("Main_NotPortedPrefix")}{LanguageService.T(key)}{LanguageService.T("Main_NotPortedSuffix")}",
             LanguageService.T("Main_NotPortedTitle"), MessageBoxButton.OK, MessageBoxImage.Information);

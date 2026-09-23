@@ -257,15 +257,19 @@ namespace OptimizerWpf.Views
 
         private void LoadPopularFeatureChips()
         {
+            // ΔΙΟΡΘΩΣΗ (χρήστης ζήτησε: "κάνε τα κουμπιά πιο φαρδιά και πλατιά στις πρόσθετες
+            // λειτουργίες των windows") - μεγαλύτερο Padding/FontSize ώστε τα chips να είναι πιο
+            // άνετα/ευανάγνωστα - το WrapPanel γύρω τους ήδη τυλίγει σε νέα γραμμή όποτε χρειάζεται,
+            // οπότε δεν υπάρχει κίνδυνος περικοπής, απλά πιο άνετο μέγεθος ανά chip.
             foreach (var f in AdvancedToolsService.CuratedFeatures)
             {
                 var btn = new Button
                 {
                     Content = f.DisplayName,
                     Style = (Style)FindResource("AccentButtonStyle"),
-                    FontSize = 14,
-                    Padding = new Thickness(18, 10, 18, 10),
-                    Margin = new Thickness(0, 0, 8, 8),
+                    FontSize = 15,
+                    Padding = new Thickness(24, 13, 24, 13),
+                    Margin = new Thickness(0, 0, 10, 10),
                     Tag = f.DisplayName,
                 };
                 btn.Click += (_, _) => { TxtAllFeaturesSearch.Text = (string)btn.Tag; };

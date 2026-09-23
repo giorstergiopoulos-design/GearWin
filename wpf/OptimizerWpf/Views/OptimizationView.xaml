@@ -15,48 +15,6 @@
     <ScrollViewer VerticalScrollBarVisibility="Auto" PreviewMouseWheel="NestedScroll_PreviewMouseWheel">
         <StackPanel Margin="0,8,0,24">
 
-            <!-- Office Mode - ρητό αίτημα χρήστη: στένεψε το κενό ανάμεσα σε Office/Gaming Mode (πριν
-                 16px, ίδιο με το κενό προς την επόμενη κάρτα - τώρα 8px, ώστε τα δύο mode-toggle να
-                 διαβάζονται οπτικά ως ζευγάρι). -->
-            <Border Style="{StaticResource CardStyle}" Margin="0,0,0,8">
-                <Grid>
-                    <Grid.ColumnDefinitions>
-                        <ColumnDefinition Width="*"/>
-                        <ColumnDefinition Width="Auto"/>
-                    </Grid.ColumnDefinitions>
-                    <StackPanel Grid.Column="0">
-                        <Grid Margin="0,0,0,6">
-                            <Grid.ColumnDefinitions><ColumnDefinition Width="Auto"/><ColumnDefinition Width="*"/></Grid.ColumnDefinitions>
-                            <views:HeaderGlyphIcon Grid.Column="0" Kind="Gear" Width="16" Height="16" Margin="0,0,8,0" VerticalAlignment="Center"/>
-                            <TextBlock Grid.Column="1" Text="{tr:Tr Optimization_OfficeMode}" Style="{StaticResource CardTitleStyle}"/>
-                        </Grid>
-                        <TextBlock Text="{tr:Tr Opt_OfficeModeDesc}" Style="{StaticResource SubTextStyle}"/>
-                    </StackPanel>
-                    <ToggleButton x:Name="ToggleOfficeMode" Grid.Column="1" VerticalAlignment="Center"
-                                  Style="{StaticResource ToggleSwitchStyle}" Click="ToggleOfficeMode_Click"/>
-                </Grid>
-            </Border>
-
-            <!-- Gaming Mode -->
-            <Border Style="{StaticResource CardStyle}" Margin="0,0,0,16">
-                <Grid>
-                    <Grid.ColumnDefinitions>
-                        <ColumnDefinition Width="*"/>
-                        <ColumnDefinition Width="Auto"/>
-                    </Grid.ColumnDefinitions>
-                    <StackPanel Grid.Column="0">
-                        <Grid Margin="0,0,0,6">
-                            <Grid.ColumnDefinitions><ColumnDefinition Width="Auto"/><ColumnDefinition Width="*"/></Grid.ColumnDefinitions>
-                            <views:HeaderGlyphIcon Grid.Column="0" Kind="Gamepad" Width="16" Height="16" Margin="0,0,8,0" VerticalAlignment="Center"/>
-                            <TextBlock Grid.Column="1" Text="{tr:Tr Optimization_GamingMode}" Style="{StaticResource CardTitleStyle}"/>
-                        </Grid>
-                        <TextBlock Text="{tr:Tr Opt_GamingModeDesc}" Style="{StaticResource SubTextStyle}"/>
-                    </StackPanel>
-                    <ToggleButton x:Name="ToggleGamingMode" Grid.Column="1" VerticalAlignment="Center"
-                                  Style="{StaticResource ToggleSwitchStyle}" Click="ToggleGamingMode_Click"/>
-                </Grid>
-            </Border>
-
             <!-- Ενημερώσεις Οδηγών Συσκευών - ενοποιημένη λειτουργία (ρητό αίτημα χρήστη: "οι δύο
                  ενημερώσεις οδηγών να ενσωματωθούν σε μια ενιαία λειτουργία"). Μία σάρωση ελέγχει ΚΑΙ
                  τις δύο πηγές: το επίσημο Windows Update (port του cardOpt4, ~11847) ΚΑΙ το Microsoft
@@ -70,7 +28,7 @@
                  (port του New-DriverScanButton, ~5555) αντί για απλό ορθογώνιο κουμπί - βλ.
                  DriverScanButton.xaml. Η λίστα αποτελεσμάτων μένει κρυφή μέχρι να υπάρξουν
                  αποτελέσματα (καθαρή "δεν έχει σαρωθεί ακόμα" κατάσταση, όπως στο screenshot). -->
-            <Border Style="{StaticResource CardStyle}" Margin="0,16,0,0">
+            <Border Style="{StaticResource CardStyle}">
                 <StackPanel>
                     <Grid Margin="0,0,0,4">
                         <Grid.ColumnDefinitions><ColumnDefinition Width="Auto"/><ColumnDefinition Width="*"/></Grid.ColumnDefinitions>
@@ -123,64 +81,10 @@
                 </StackPanel>
             </Border>
 
-            <!-- Αντίγραφο Ασφαλείας Οδηγών - port του cardOpt5 (~13037). DISM Export-Driver/pnputil. -->
-            <Border Style="{StaticResource CardStyle}" Margin="0,16,0,0">
-                <StackPanel>
-                    <TextBlock Text="{tr:Tr Optimization_DriverBackup}" Style="{StaticResource CardTitleStyle}" Margin="0,0,0,4"/>
-                    <TextBlock Text="{tr:Tr Opt_DriverBackupDesc}" Style="{StaticResource SubTextStyle}" Margin="0,0,0,10" TextWrapping="Wrap"/>
-                    <StackPanel Orientation="Horizontal">
-                        <Button x:Name="BtnDriverBackup" Content="{tr:Tr Opt_DriverBackupBtn}" Style="{StaticResource AccentButtonStyle}" Width="280" Height="40" Margin="0,0,10,0" Click="BtnDriverBackup_Click"/>
-                        <Button x:Name="BtnDriverRestore" Content="{tr:Tr Opt_DriverRestoreBtn}" Style="{StaticResource FlatButtonStyle}" Width="280" Height="40" Click="BtnDriverRestore_Click"/>
-                    </StackPanel>
-                    <TextBlock x:Name="TxtDriverBackupStatus" Text="{tr:Tr Opt_ChooseAction}" Style="{StaticResource SubTextStyle}" Margin="0,10,0,0" TextWrapping="Wrap"/>
-                </StackPanel>
-            </Border>
-
-            <!-- Καθαρισμός Αποθήκης Οδηγών - port του cardDriverStore (~13136). Get-WindowsDriver,
-                 ομαδοποίηση κατά OriginalFileName, μόνο παλιότερες εκδόσεις προτείνονται προς διαγραφή. -->
-            <Border Style="{StaticResource CardStyle}" Margin="0,16,0,0">
-                <StackPanel>
-                    <TextBlock Text="{tr:Tr Optimization_DriverStore}" Style="{StaticResource CardTitleStyle}" Margin="0,0,0,4"/>
-                    <TextBlock x:Name="TxtDriverStoreStatus" Text="{tr:Tr Opt_DriverStoreDesc}" Style="{StaticResource SubTextStyle}" Margin="0,0,0,6" TextWrapping="Wrap"/>
-                    <ProgressBar x:Name="ProgressDriverStore" Height="6" IsIndeterminate="True" Visibility="Collapsed" Margin="0,0,0,10"/>
-                    <Border Background="{DynamicResource MainBgBrush}" CornerRadius="6" MinHeight="80" MaxHeight="280" Padding="4">
-                        <ScrollViewer VerticalScrollBarVisibility="Auto" PreviewMouseWheel="NestedScroll_PreviewMouseWheel">
-                            <ItemsControl x:Name="ListDriverStore">
-                                <ItemsControl.ItemTemplate>
-                                    <DataTemplate>
-                                        <Border Background="{DynamicResource CardBgBrush}" CornerRadius="4" Margin="4" Padding="10">
-                                            <Grid>
-                                                <Grid.ColumnDefinitions>
-                                                    <ColumnDefinition Width="*"/>
-                                                    <ColumnDefinition Width="Auto"/>
-                                                </Grid.ColumnDefinitions>
-                                                <StackPanel Grid.Column="0">
-                                                    <TextBlock Text="{Binding OriginalFileName}" Foreground="{DynamicResource TextBrush}" FontWeight="SemiBold"/>
-                                                    <TextBlock Style="{StaticResource SubTextStyle}">
-                                                        <Run Text="{Binding Version, Mode=OneWay}"/>
-                                                        <Run Text=" &#x00B7; "/>
-                                                        <Run Text="{Binding Date, Mode=OneWay}"/>
-                                                        <Run Text=" &#x00B7; "/>
-                                                        <Run Text="{Binding Class, Mode=OneWay}"/>
-                                                    </TextBlock>
-                                                </StackPanel>
-                                                <Button Grid.Column="1" Content="{tr:Tr Opt_Delete}" Style="{StaticResource FlatButtonStyle}" VerticalAlignment="Center"
-                                                        Click="BtnDeleteStoreDriver_Click" Tag="{Binding}" Margin="10,0,0,0"/>
-                                            </Grid>
-                                        </Border>
-                                    </DataTemplate>
-                                </ItemsControl.ItemTemplate>
-                            </ItemsControl>
-                        </ScrollViewer>
-                    </Border>
-                    <Button x:Name="BtnScanDriverStore" Content="{tr:Tr Opt_ScanDriverStore}" Style="{StaticResource AccentButtonStyle}" Width="240"
-                            HorizontalAlignment="Left" Margin="0,12,0,0" Click="BtnScanDriverStore_Click"/>
-                </StackPanel>
-            </Border>
-
-            <!-- Ρητό αίτημα χρήστη: "τον διαχειριστή ενημερώσεων λογισμικού βάλε τον στο τέλος" -
-                 μετακινήθηκε από 3η θέση (μετά το Gaming Mode) στο τέλος της καρτέλας, μετά τις κάρτες
-                 οδηγών. -->
+            <!-- Ρητό αίτημα χρήστη: "στη Βελτιστοποίηση πρώτα θα εμφανίζεις τον διαχειριστή ενημερώσεων
+                 λογισμικού αμέσως μετά τις ενημερώσεις οδηγών" - μετακινήθηκε από το τέλος της
+                 καρτέλας (προηγούμενο ρητό αίτημα) σε αμέσως μετά την κάρτα Ενημερώσεων Οδηγών
+                 παραπάνω, πριν το Αντίγραφο Ασφαλείας/Καθαρισμός Αποθήκης Οδηγών. -->
             <Border Style="{StaticResource CardStyle}" Margin="0,16,0,0">
                 <StackPanel>
                     <TextBlock Text="{tr:Tr Optimization_SoftwareUpdate}" Style="{StaticResource CardTitleStyle}" Margin="0,0,0,4"/>
@@ -294,6 +198,111 @@
                     </StackPanel>
                     <TextBlock x:Name="TxtWingetPortableStatus" Style="{StaticResource SubTextStyle}" TextWrapping="Wrap" Margin="0,6,0,0"/>
                 </StackPanel>
+            </Border>
+
+            <!-- Αντίγραφο Ασφαλείας Οδηγών - port του cardOpt5 (~13037). DISM Export-Driver/pnputil. -->
+            <Border Style="{StaticResource CardStyle}" Margin="0,16,0,0">
+                <StackPanel>
+                    <TextBlock Text="{tr:Tr Optimization_DriverBackup}" Style="{StaticResource CardTitleStyle}" Margin="0,0,0,4"/>
+                    <TextBlock Text="{tr:Tr Opt_DriverBackupDesc}" Style="{StaticResource SubTextStyle}" Margin="0,0,0,10" TextWrapping="Wrap"/>
+                    <StackPanel Orientation="Horizontal">
+                        <Button x:Name="BtnDriverBackup" Content="{tr:Tr Opt_DriverBackupBtn}" Style="{StaticResource AccentButtonStyle}" Width="280" Height="40" Margin="0,0,10,0" Click="BtnDriverBackup_Click"/>
+                        <Button x:Name="BtnDriverRestore" Content="{tr:Tr Opt_DriverRestoreBtn}" Style="{StaticResource FlatButtonStyle}" Width="280" Height="40" Click="BtnDriverRestore_Click"/>
+                    </StackPanel>
+                    <TextBlock x:Name="TxtDriverBackupStatus" Text="{tr:Tr Opt_ChooseAction}" Style="{StaticResource SubTextStyle}" Margin="0,10,0,0" TextWrapping="Wrap"/>
+                </StackPanel>
+            </Border>
+
+            <!-- Καθαρισμός Αποθήκης Οδηγών - port του cardDriverStore (~13136). Get-WindowsDriver,
+                 ομαδοποίηση κατά OriginalFileName, μόνο παλιότερες εκδόσεις προτείνονται προς διαγραφή. -->
+            <Border Style="{StaticResource CardStyle}" Margin="0,16,0,0">
+                <StackPanel>
+                    <TextBlock Text="{tr:Tr Optimization_DriverStore}" Style="{StaticResource CardTitleStyle}" Margin="0,0,0,4"/>
+                    <TextBlock x:Name="TxtDriverStoreStatus" Text="{tr:Tr Opt_DriverStoreDesc}" Style="{StaticResource SubTextStyle}" Margin="0,0,0,6" TextWrapping="Wrap"/>
+                    <ProgressBar x:Name="ProgressDriverStore" Height="6" IsIndeterminate="True" Visibility="Collapsed" Margin="0,0,0,10"/>
+                    <Border Background="{DynamicResource MainBgBrush}" CornerRadius="6" MinHeight="80" MaxHeight="280" Padding="4">
+                        <ScrollViewer VerticalScrollBarVisibility="Auto" PreviewMouseWheel="NestedScroll_PreviewMouseWheel">
+                            <ItemsControl x:Name="ListDriverStore">
+                                <ItemsControl.ItemTemplate>
+                                    <DataTemplate>
+                                        <Border Background="{DynamicResource CardBgBrush}" CornerRadius="4" Margin="4" Padding="10">
+                                            <Grid>
+                                                <Grid.ColumnDefinitions>
+                                                    <ColumnDefinition Width="*"/>
+                                                    <ColumnDefinition Width="Auto"/>
+                                                </Grid.ColumnDefinitions>
+                                                <StackPanel Grid.Column="0">
+                                                    <TextBlock Text="{Binding OriginalFileName}" Foreground="{DynamicResource TextBrush}" FontWeight="SemiBold"/>
+                                                    <TextBlock Style="{StaticResource SubTextStyle}">
+                                                        <Run Text="{Binding Version, Mode=OneWay}"/>
+                                                        <Run Text=" &#x00B7; "/>
+                                                        <Run Text="{Binding Date, Mode=OneWay}"/>
+                                                        <Run Text=" &#x00B7; "/>
+                                                        <Run Text="{Binding Class, Mode=OneWay}"/>
+                                                    </TextBlock>
+                                                </StackPanel>
+                                                <Button Grid.Column="1" Content="{tr:Tr Opt_Delete}" Style="{StaticResource FlatButtonStyle}" VerticalAlignment="Center"
+                                                        Click="BtnDeleteStoreDriver_Click" Tag="{Binding}" Margin="10,0,0,0"/>
+                                            </Grid>
+                                        </Border>
+                                    </DataTemplate>
+                                </ItemsControl.ItemTemplate>
+                            </ItemsControl>
+                        </ScrollViewer>
+                    </Border>
+                    <Button x:Name="BtnScanDriverStore" Content="{tr:Tr Opt_ScanDriverStore}" Style="{StaticResource AccentButtonStyle}" Width="240"
+                            HorizontalAlignment="Left" Margin="0,12,0,0" Click="BtnScanDriverStore_Click"/>
+                </StackPanel>
+            </Border>
+
+            <!-- Office Mode/Gaming Mode - ρητό αίτημα χρήστη: "τα Office & Gaming mode θα τα βάλεις
+                 μαζί με την προγραμματισμένη συντήρηση και το αυτόματο Gaming mode" - μετακινήθηκαν
+                 εδώ (πριν ήταν στην κορυφή της καρτέλας) ώστε και οι 4 κάρτες "λειτουργίας/
+                 προφίλ" (Office, Gaming, Προγραμματισμένη Συντήρηση, Αυτόματο Gaming Mode) να
+                 εμφανίζονται μαζί, ως μία ενότητα, στο τέλος της καρτέλας.
+                 ΔΙΟΡΘΩΣΗ (bug εντοπίστηκε - χρήστης έστειλε screenshot: "πίσω από το gaming mode
+                 φαίνεται σαν να υπάρχει κάτι") - το προηγούμενο τεχνητά στενό κενό (8px, βλ. ιστορικό
+                 σχόλιο στο git) ανάμεσα σε αυτές τις δύο κάρτες ήταν αρκετά στενό ώστε η ζωντανή σκιά/
+                 ανύψωση του CardStyle σε hover (DropShadowEffect, βλ. Themes/Styles.xaml) να
+                 "μπλέκεται" οπτικά με την επόμενη κάρτα - τώρα κανονικό 16px κενό, ίδιο με όλες τις
+                 άλλες κάρτες της εφαρμογής, χωρίς να χάνεται η οπτική ομαδοποίηση αφού είναι πλέον
+                 και οι 4 συνεχόμενες. -->
+            <Border Style="{StaticResource CardStyle}" Margin="0,16,0,0">
+                <Grid>
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="*"/>
+                        <ColumnDefinition Width="Auto"/>
+                    </Grid.ColumnDefinitions>
+                    <StackPanel Grid.Column="0">
+                        <Grid Margin="0,0,0,6">
+                            <Grid.ColumnDefinitions><ColumnDefinition Width="Auto"/><ColumnDefinition Width="*"/></Grid.ColumnDefinitions>
+                            <views:HeaderGlyphIcon Grid.Column="0" Kind="Gear" Width="16" Height="16" Margin="0,0,8,0" VerticalAlignment="Center"/>
+                            <TextBlock Grid.Column="1" Text="{tr:Tr Optimization_OfficeMode}" Style="{StaticResource CardTitleStyle}"/>
+                        </Grid>
+                        <TextBlock Text="{tr:Tr Opt_OfficeModeDesc}" Style="{StaticResource SubTextStyle}"/>
+                    </StackPanel>
+                    <ToggleButton x:Name="ToggleOfficeMode" Grid.Column="1" VerticalAlignment="Center"
+                                  Style="{StaticResource ToggleSwitchStyle}" Click="ToggleOfficeMode_Click"/>
+                </Grid>
+            </Border>
+
+            <Border Style="{StaticResource CardStyle}" Margin="0,16,0,0">
+                <Grid>
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="*"/>
+                        <ColumnDefinition Width="Auto"/>
+                    </Grid.ColumnDefinitions>
+                    <StackPanel Grid.Column="0">
+                        <Grid Margin="0,0,0,6">
+                            <Grid.ColumnDefinitions><ColumnDefinition Width="Auto"/><ColumnDefinition Width="*"/></Grid.ColumnDefinitions>
+                            <views:HeaderGlyphIcon Grid.Column="0" Kind="Gamepad" Width="16" Height="16" Margin="0,0,8,0" VerticalAlignment="Center"/>
+                            <TextBlock Grid.Column="1" Text="{tr:Tr Optimization_GamingMode}" Style="{StaticResource CardTitleStyle}"/>
+                        </Grid>
+                        <TextBlock Text="{tr:Tr Opt_GamingModeDesc}" Style="{StaticResource SubTextStyle}"/>
+                    </StackPanel>
+                    <ToggleButton x:Name="ToggleGamingMode" Grid.Column="1" VerticalAlignment="Center"
+                                  Style="{StaticResource ToggleSwitchStyle}" Click="ToggleGamingMode_Click"/>
+                </Grid>
             </Border>
 
             <!-- ΝΕΟ - roadmap "Προγραμματισμένη συντήρηση" - πραγματική εβδομαδιαία εργασία Task
