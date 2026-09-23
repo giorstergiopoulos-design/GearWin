@@ -15,77 +15,13 @@
     <ScrollViewer VerticalScrollBarVisibility="Auto" PreviewMouseWheel="NestedScroll_PreviewMouseWheel">
         <StackPanel Margin="0,8,0,24">
 
-            <!-- Ενημερώσεις Οδηγών Συσκευών - ενοποιημένη λειτουργία (ρητό αίτημα χρήστη: "οι δύο
-                 ενημερώσεις οδηγών να ενσωματωθούν σε μια ενιαία λειτουργία"). Μία σάρωση ελέγχει ΚΑΙ
-                 τις δύο πηγές: το επίσημο Windows Update (port του cardOpt4, ~11847) ΚΑΙ το Microsoft
-                 Update Catalog ανά Hardware ID (βλ. HANDOFF.md §0.4ιε) - ένας ενιαίος κατάλογος
-                 αποτελεσμάτων, κάθε γραμμή επισημαίνει την πηγή της. AMD/NVIDIA/Dell ΠΑΡΑΜΕΝΟΥΝ εκτός
-                 εμβέλειας (web scraping/vendor tools συγκεκριμένα ανά κατασκευαστή, δεν καλύπτουν τη
-                 γενική περίπτωση). ΣΗΜΕΙΩΣΗ ΕΙΛΙΚΡΙΝΕΙΑΣ: δεν γίνεται αξιόπιστη αποδιπλότυπηση ανάμεσα
-                 στις δύο πηγές (διαφορετική μορφή αναγνώρισης συσκευής η καθεμία) - ενδέχεται να
-                 εμφανιστεί ενημέρωση για την ίδια συσκευή και από τις δύο πηγές. -->
-            <!-- Ρητό αίτημα χρήστη (screenshot της πραγματικής 2.8.2): μεγάλο κυκλικό κουμπί σάρωσης
-                 (port του New-DriverScanButton, ~5555) αντί για απλό ορθογώνιο κουμπί - βλ.
-                 DriverScanButton.xaml. Η λίστα αποτελεσμάτων μένει κρυφή μέχρι να υπάρξουν
-                 αποτελέσματα (καθαρή "δεν έχει σαρωθεί ακόμα" κατάσταση, όπως στο screenshot). -->
+            <!-- ΔΙΟΡΘΩΣΗ (χρήστης ξεκαθάρισε: "σου είπα το διαχειριστή ενημερώσεων λογισμικού πάνω
+                 πάνω και μετά των οδηγών") - το αρχικό αίτημα ("πρώτα θα εμφανίζεις τον διαχειριστή
+                 ενημερώσεων λογισμικού αμέσως μετά τις ενημερώσεις οδηγών") είχε παρερμηνευτεί ως
+                 "Οδηγοί πρώτα, μετά Λογισμικό" - το σωστό νόημα ήταν "Λογισμικό ΠΡΩΤΑ (πάνω πάνω στην
+                 καρτέλα), Οδηγοί αμέσως μετά". Τώρα πρώτη κάρτα της καρτέλας (καμία πάνω περιθώριο,
+                 όπως κάθε πρώτη κάρτα εδώ) - η κάρτα Ενημερώσεων Οδηγών ακολουθεί αμέσως από κάτω. -->
             <Border Style="{StaticResource CardStyle}">
-                <StackPanel>
-                    <Grid Margin="0,0,0,4">
-                        <Grid.ColumnDefinitions><ColumnDefinition Width="Auto"/><ColumnDefinition Width="*"/></Grid.ColumnDefinitions>
-                        <views:HeaderGlyphIcon Grid.Column="0" Kind="Package" Width="16" Height="16" Margin="0,0,8,0" VerticalAlignment="Center"/>
-                        <TextBlock Grid.Column="1" Text="{tr:Tr Optimization_Drivers}" Style="{StaticResource CardTitleStyle}"/>
-                    </Grid>
-                    <TextBlock Text="{tr:Tr Opt_DriversDesc1}" Style="{StaticResource SubTextStyle}" TextWrapping="Wrap"/>
-                    <TextBlock Text="{tr:Tr Opt_DriversDesc2}" FontStyle="Italic" Style="{StaticResource SubTextStyle}" TextWrapping="Wrap" Margin="0,2,0,0"/>
-                    <TextBlock x:Name="TxtDriverStatus" Text="" Style="{StaticResource SubTextStyle}" TextWrapping="Wrap" Margin="0,8,0,0"/>
-
-                    <views:DriverScanButton x:Name="BtnScanDrivers" HorizontalAlignment="Center" Margin="0,16,0,10" Click="BtnScanDrivers_Click"/>
-                    <TextBlock Text="{tr:Tr Opt_DriversScanHint}" Style="{StaticResource SubTextStyle}" HorizontalAlignment="Center" TextAlignment="Center" Margin="0,0,0,4"/>
-
-                    <Border x:Name="BorderDriverResults" Visibility="Collapsed" Background="{DynamicResource MainBgBrush}" CornerRadius="6" MinHeight="80" MaxHeight="280" Padding="4" Margin="0,10,0,0">
-                        <ScrollViewer VerticalScrollBarVisibility="Auto" PreviewMouseWheel="NestedScroll_PreviewMouseWheel">
-                            <ItemsControl x:Name="ListDriverUpdates">
-                                <ItemsControl.ItemTemplate>
-                                    <DataTemplate>
-                                        <Border Background="{DynamicResource CardBgBrush}" CornerRadius="4" Margin="4" Padding="10">
-                                            <Grid>
-                                                <Grid.ColumnDefinitions>
-                                                    <ColumnDefinition Width="*"/>
-                                                    <ColumnDefinition Width="Auto"/>
-                                                </Grid.ColumnDefinitions>
-                                                <StackPanel Grid.Column="0">
-                                                    <StackPanel Orientation="Horizontal">
-                                                        <Border Background="{DynamicResource AccentBrush}" CornerRadius="3" Padding="6,1" Margin="0,0,8,0">
-                                                            <TextBlock Text="{Binding SourceBadge}" FontSize="11" Foreground="White"/>
-                                                        </Border>
-                                                        <TextBlock Text="{Binding Title}" Foreground="{DynamicResource TextBrush}" FontWeight="SemiBold" TextWrapping="Wrap"/>
-                                                    </StackPanel>
-                                                    <TextBlock Text="{Binding SubText}" Style="{StaticResource SubTextStyle}"/>
-                                                </StackPanel>
-                                                <Button Grid.Column="1" Content="{Binding ActionLabel}" Style="{StaticResource FlatButtonStyle}" VerticalAlignment="Center"
-                                                        Click="BtnInstallDriver_Click" Tag="{Binding}" Margin="10,0,0,0"/>
-                                            </Grid>
-                                        </Border>
-                                    </DataTemplate>
-                                </ItemsControl.ItemTemplate>
-                            </ItemsControl>
-                        </ScrollViewer>
-                    </Border>
-
-                    <!-- Dell Command Update / SDIO / OEM (Lenovo/HP) - συνοπτικές, ξεχωριστές πηγές
-                         (ΟΧΙ ανά-συσκευή γραμμές σαν τα παραπάνω) - port του Complete-DriverScan's Dell/
-                         SDIO/OEM ενοτήτων. ΚΑΝΕΝΑ αυτόματο install - μόνο ανοίγει το επίσημο εργαλείο/
-                         φάκελο αναφοράς, ο χρήστης αποφασίζει μέσα σε αυτό. -->
-                    <TextBlock x:Name="TxtVendorExtra" Text="" Style="{StaticResource SubTextStyle}" TextWrapping="Wrap" Margin="0,10,0,0"/>
-                    <StackPanel x:Name="PanelVendorExtraButtons" Orientation="Horizontal" Margin="0,8,0,0"/>
-                </StackPanel>
-            </Border>
-
-            <!-- Ρητό αίτημα χρήστη: "στη Βελτιστοποίηση πρώτα θα εμφανίζεις τον διαχειριστή ενημερώσεων
-                 λογισμικού αμέσως μετά τις ενημερώσεις οδηγών" - μετακινήθηκε από το τέλος της
-                 καρτέλας (προηγούμενο ρητό αίτημα) σε αμέσως μετά την κάρτα Ενημερώσεων Οδηγών
-                 παραπάνω, πριν το Αντίγραφο Ασφαλείας/Καθαρισμός Αποθήκης Οδηγών. -->
-            <Border Style="{StaticResource CardStyle}" Margin="0,16,0,0">
                 <StackPanel>
                     <TextBlock Text="{tr:Tr Optimization_SoftwareUpdate}" Style="{StaticResource CardTitleStyle}" Margin="0,0,0,4"/>
                     <TextBlock x:Name="TxtWingetStatus" Text="{tr:Tr Opt_WingetPrompt}" Style="{StaticResource SubTextStyle}" Margin="0,0,0,6"/>
@@ -199,6 +135,73 @@
                     <TextBlock x:Name="TxtWingetPortableStatus" Style="{StaticResource SubTextStyle}" TextWrapping="Wrap" Margin="0,6,0,0"/>
                 </StackPanel>
             </Border>
+
+            <!-- Ενημερώσεις Οδηγών Συσκευών - ενοποιημένη λειτουργία (ρητό αίτημα χρήστη: "οι δύο
+                 ενημερώσεις οδηγών να ενσωματωθούν σε μια ενιαία λειτουργία"). Μία σάρωση ελέγχει ΚΑΙ
+                 τις δύο πηγές: το επίσημο Windows Update (port του cardOpt4, ~11847) ΚΑΙ το Microsoft
+                 Update Catalog ανά Hardware ID (βλ. HANDOFF.md §0.4ιε) - ένας ενιαίος κατάλογος
+                 αποτελεσμάτων, κάθε γραμμή επισημαίνει την πηγή της. AMD/NVIDIA/Dell ΠΑΡΑΜΕΝΟΥΝ εκτός
+                 εμβέλειας (web scraping/vendor tools συγκεκριμένα ανά κατασκευαστή, δεν καλύπτουν τη
+                 γενική περίπτωση). ΣΗΜΕΙΩΣΗ ΕΙΛΙΚΡΙΝΕΙΑΣ: δεν γίνεται αξιόπιστη αποδιπλότυπηση ανάμεσα
+                 στις δύο πηγές (διαφορετική μορφή αναγνώρισης συσκευής η καθεμία) - ενδέχεται να
+                 εμφανιστεί ενημέρωση για την ίδια συσκευή και από τις δύο πηγές. -->
+            <!-- Ρητό αίτημα χρήστη (screenshot της πραγματικής 2.8.2): μεγάλο κυκλικό κουμπί σάρωσης
+                 (port του New-DriverScanButton, ~5555) αντί για απλό ορθογώνιο κουμπί - βλ.
+                 DriverScanButton.xaml. Η λίστα αποτελεσμάτων μένει κρυφή μέχρι να υπάρξουν
+                 αποτελέσματα (καθαρή "δεν έχει σαρωθεί ακόμα" κατάσταση, όπως στο screenshot). -->
+            <Border Style="{StaticResource CardStyle}" Margin="0,16,0,0">
+                <StackPanel>
+                    <Grid Margin="0,0,0,4">
+                        <Grid.ColumnDefinitions><ColumnDefinition Width="Auto"/><ColumnDefinition Width="*"/></Grid.ColumnDefinitions>
+                        <views:HeaderGlyphIcon Grid.Column="0" Kind="Package" Width="16" Height="16" Margin="0,0,8,0" VerticalAlignment="Center"/>
+                        <TextBlock Grid.Column="1" Text="{tr:Tr Optimization_Drivers}" Style="{StaticResource CardTitleStyle}"/>
+                    </Grid>
+                    <TextBlock Text="{tr:Tr Opt_DriversDesc1}" Style="{StaticResource SubTextStyle}" TextWrapping="Wrap"/>
+                    <TextBlock Text="{tr:Tr Opt_DriversDesc2}" FontStyle="Italic" Style="{StaticResource SubTextStyle}" TextWrapping="Wrap" Margin="0,2,0,0"/>
+                    <TextBlock x:Name="TxtDriverStatus" Text="" Style="{StaticResource SubTextStyle}" TextWrapping="Wrap" Margin="0,8,0,0"/>
+
+                    <views:DriverScanButton x:Name="BtnScanDrivers" HorizontalAlignment="Center" Margin="0,16,0,10" Click="BtnScanDrivers_Click"/>
+                    <TextBlock Text="{tr:Tr Opt_DriversScanHint}" Style="{StaticResource SubTextStyle}" HorizontalAlignment="Center" TextAlignment="Center" Margin="0,0,0,4"/>
+
+                    <Border x:Name="BorderDriverResults" Visibility="Collapsed" Background="{DynamicResource MainBgBrush}" CornerRadius="6" MinHeight="80" MaxHeight="280" Padding="4" Margin="0,10,0,0">
+                        <ScrollViewer VerticalScrollBarVisibility="Auto" PreviewMouseWheel="NestedScroll_PreviewMouseWheel">
+                            <ItemsControl x:Name="ListDriverUpdates">
+                                <ItemsControl.ItemTemplate>
+                                    <DataTemplate>
+                                        <Border Background="{DynamicResource CardBgBrush}" CornerRadius="4" Margin="4" Padding="10">
+                                            <Grid>
+                                                <Grid.ColumnDefinitions>
+                                                    <ColumnDefinition Width="*"/>
+                                                    <ColumnDefinition Width="Auto"/>
+                                                </Grid.ColumnDefinitions>
+                                                <StackPanel Grid.Column="0">
+                                                    <StackPanel Orientation="Horizontal">
+                                                        <Border Background="{DynamicResource AccentBrush}" CornerRadius="3" Padding="6,1" Margin="0,0,8,0">
+                                                            <TextBlock Text="{Binding SourceBadge}" FontSize="11" Foreground="White"/>
+                                                        </Border>
+                                                        <TextBlock Text="{Binding Title}" Foreground="{DynamicResource TextBrush}" FontWeight="SemiBold" TextWrapping="Wrap"/>
+                                                    </StackPanel>
+                                                    <TextBlock Text="{Binding SubText}" Style="{StaticResource SubTextStyle}"/>
+                                                </StackPanel>
+                                                <Button Grid.Column="1" Content="{Binding ActionLabel}" Style="{StaticResource FlatButtonStyle}" VerticalAlignment="Center"
+                                                        Click="BtnInstallDriver_Click" Tag="{Binding}" Margin="10,0,0,0"/>
+                                            </Grid>
+                                        </Border>
+                                    </DataTemplate>
+                                </ItemsControl.ItemTemplate>
+                            </ItemsControl>
+                        </ScrollViewer>
+                    </Border>
+
+                    <!-- Dell Command Update / SDIO / OEM (Lenovo/HP) - συνοπτικές, ξεχωριστές πηγές
+                         (ΟΧΙ ανά-συσκευή γραμμές σαν τα παραπάνω) - port του Complete-DriverScan's Dell/
+                         SDIO/OEM ενοτήτων. ΚΑΝΕΝΑ αυτόματο install - μόνο ανοίγει το επίσημο εργαλείο/
+                         φάκελο αναφοράς, ο χρήστης αποφασίζει μέσα σε αυτό. -->
+                    <TextBlock x:Name="TxtVendorExtra" Text="" Style="{StaticResource SubTextStyle}" TextWrapping="Wrap" Margin="0,10,0,0"/>
+                    <StackPanel x:Name="PanelVendorExtraButtons" Orientation="Horizontal" Margin="0,8,0,0"/>
+                </StackPanel>
+            </Border>
+
 
             <!-- Αντίγραφο Ασφαλείας Οδηγών - port του cardOpt5 (~13037). DISM Export-Driver/pnputil. -->
             <Border Style="{StaticResource CardStyle}" Margin="0,16,0,0">
