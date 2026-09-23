@@ -144,6 +144,20 @@
                 <DropShadowEffect Color="Black" Opacity="0" BlurRadius="8" ShadowDepth="3" Direction="270"/>
             </Setter.Value>
         </Setter>
+        <!-- ΔΙΟΡΘΩΣΗ (χρήστης επέμενε, με νέο screenshot, ότι το bug ΕΞΑΚΟΛΟΥΘΟΥΣΕ και μετά το
+             μείωμα BlurRadius/ShadowDepth παραπάνω) - το zoomed screenshot αποκάλυψε ότι ΔΕΝ ήταν καν
+             θολή σκιά (θα ήταν γκρι/μαύρη, διάχυτη) αλλά δύο μικρά, ΜΠΛΕ, κοφτά τμήματα στρογγυλής
+             γωνίας "αιωρούμενα" ανάμεσα στις δύο κάρτες - γνωστό WPF rendering artifact όταν ένα
+             στοιχείο έχει ΤΑΥΤΟΧΡΟΝΑ RenderTransform (το animated TranslateTransform.Y παραπάνω για το
+             "ανασήκωμα" σε hover) ΚΑΙ Effect (το DropShadowEffect) χωρίς CacheMode: το WPF composition
+             layer αφήνει μερικές φορές ένα stale/partial bitmap του Effect από το ΠΡΟΗΓΟΥΜΕΝΟ frame
+             (πριν τη μετατόπιση) χωρίς σωστή επανα-ακύρωση, με τις στρογγυλές γωνίες να είναι το πιο
+             ορατό υπόλειμμα. BitmapCache αναγκάζει το WPF να ξανααποδώσει σε cached bitmap ΚΑΘΕ φορά
+             που αλλάζει το RenderTransform, αντί να βασίζεται σε ενδιάμεση κατάσταση σύνθεσης - καθιερωμένη
+             διόρθωση για ακριβώς αυτή την κατηγορία artifact (Effect+RenderTransform στο ίδιο στοιχείο). -->
+        <Setter Property="CacheMode">
+            <Setter.Value><BitmapCache/></Setter.Value>
+        </Setter>
         <Style.Triggers>
             <Trigger Property="IsMouseOver" Value="True">
                 <Trigger.EnterActions>

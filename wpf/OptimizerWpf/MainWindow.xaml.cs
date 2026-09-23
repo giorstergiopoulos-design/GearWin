@@ -316,6 +316,25 @@ public partial class MainWindow : Window
         e.Handled = true;
     }
 
+    // ΔΙΟΡΘΩΣΗ (χρήστης ανέφερε: "όταν κλείνω το παράθυρο κλείνει και το tray") - δεν υπήρχε ΚΑΝΕΝΑΣ
+    // Closing handler εδώ, οπότε το X του παραθύρου έκλεινε το MainWindow κανονικά, και επειδή το
+    // ShutdownMode είναι OnLastWindowClose (βλ. App.xaml.cs) αυτό πυροδοτούσε πλήρες Application
+    // shutdown - μαζί του TrayIconService.Stop() (το tray icon εξαφανιζόταν) ΚΑΙ όλες οι άλλες
+    // "πάντα ενεργές" υπηρεσίες παρασκηνίου (Clipboard hotkey, Desktop Widget, Auto Gaming Mode). Αυτό
+    // αναιρούσε το νόημα του ήδη υπάρχοντος tray μενού ("Άνοιγμα κύριου παραθύρου"/"Έξοδος" - βλ.
+    // TrayIconService._openMainItem/_exitItem) - αν το X έκλεινε ήδη τα πάντα, το "Έξοδος" θα ήταν
+    // περιττό. Τώρα το X απλώς ΚΡΥΒΕΙ το παράθυρο (minimize-to-tray, ίδιο μοτίβο με το
+    // RestoreMainWindow's .Show()) εκτός αν η έξοδος είναι πραγματικά σκόπιμη
+    // (TrayIconService.IsExiting=true, οριζόμενο ΑΠΟΚΛΕΙΣΤΙΚΑ από το tray's "Έξοδος" πριν καλέσει
+    // Application.Current.Shutdown() - διαφορετικά η εφαρμογή δεν θα μπορούσε ΠΟΤΕ να κλείσει πραγματικά,
+    // αφού το Shutdown() κλείνει ΚΑΙ αυτό το ίδιο το MainWindow, πυροδοτώντας ξανά αυτό το Closing).
+    private void Window_Closing(object sender, System.ComponentModel.CancelEventArgs e)
+    {
+        if (TrayIconService.IsExiting) return;
+        e.Cancel = true;
+        Hide();
+    }
+
     private void TabButton_Checked(object sender, RoutedEventArgs e)
     {
         if (sender is not RadioButton rb || rb.Tag is not string tag) return;

@@ -25,6 +25,12 @@ namespace OptimizerWpf.Services
         private static ToolStripMenuItem? _clipboardHistoryItem;
         private static ToolStripMenuItem? _exitItem;
 
+        // ΝΕΟ - ρητό αίτημα χρήστη: "όταν κλείνω το παράθυρο κλείνει και το tray" - το MainWindow's
+        // Window_Closing (βλ. MainWindow.xaml.cs) πλέον ακυρώνει το κλείσιμο (minimize-to-tray) εκτός
+        // αν αυτή η σημαία είναι true - ορίζεται ΑΠΟΚΛΕΙΣΤΙΚΑ εδώ, αμέσως πριν το πραγματικό
+        // Application.Current.Shutdown() στο "Έξοδος" του tray μενού.
+        public static bool IsExiting { get; private set; }
+
         // ΝΕΟ - ρητό αίτημα χρήστη: "εμπλούτισε το tray με συντομεύσεις σημαντικών λειτουργιών" - το
         // μενού περιείχε μόνο "Άνοιγμα/Έξοδος". Προστέθηκαν 3 πραγματικές συντομεύσεις που δεν
         // χρειάζονται άνοιγμα ολόκληρου του κύριου παραθύρου: Γρήγορος Καθαρισμός (τρέχει απευθείας τα
@@ -55,7 +61,7 @@ namespace OptimizerWpf.Services
             _widgetMenuItem = new ToolStripMenuItem(LanguageService.T("Appr_DesktopWidget"), null, (_, _) => ToggleWidget());
             menu.Items.Add(_widgetMenuItem);
             menu.Items.Add(new ToolStripSeparator());
-            _exitItem = new ToolStripMenuItem(LanguageService.T("Tray_Exit"), null, (_, _) => System.Windows.Application.Current.Shutdown());
+            _exitItem = new ToolStripMenuItem(LanguageService.T("Tray_Exit"), null, (_, _) => { IsExiting = true; System.Windows.Application.Current.Shutdown(); });
             menu.Items.Add(_exitItem);
             menu.Opening += (_, _) => _widgetMenuItem!.Checked = DesktopWidgetService.IsRunning;
 
