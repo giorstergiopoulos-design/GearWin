@@ -25,9 +25,11 @@
                 <RowDefinition Height="Auto"/>
                 <RowDefinition Height="Auto"/>
                 <!-- ΝΕΟ - ρητό αίτημα χρήστη: "κάνε πάλι ως widget το FPS/in-game overlay που θα
-                     επεκτείνει το Widget Επιφάνειας Εργασίας" - 2 επιπλέον γραμμές (GPU, FPS) ορατές
-                     ΜΟΝΟ όσο εντοπίζεται fullscreen παιχνίδι (βλ. GameOverlayService/code-behind) -
-                     Collapsed by default ώστε το widget να παραμένει συμπαγές έξω από παιχνίδι. -->
+                     επεκτείνει το Widget Επιφάνειας Εργασίας" - επιπλέον γραμμές (GPU, GPU Voltage, FPS)
+                     ορατές ΜΟΝΟ όσο εντοπίζεται fullscreen παιχνίδι (βλ. GameOverlayService/code-behind) -
+                     Collapsed by default ώστε το widget να παραμένει συμπαγές έξω από παιχνίδι. Το
+                     GPU Voltage (ρητό αίτημα χρήστη) προστέθηκε ως 4η γραμμή εδώ. -->
+                <RowDefinition Height="Auto"/>
                 <RowDefinition Height="Auto"/>
                 <RowDefinition Height="Auto"/>
                 <RowDefinition Height="Auto"/>
@@ -60,12 +62,20 @@
                 <TextBlock Text="GPU" Foreground="{DynamicResource SubTextBrush}"/>
                 <TextBlock Grid.Column="1" x:Name="TxtGpu" Text="--%" FontWeight="SemiBold" Foreground="{DynamicResource TextBrush}"/>
             </Grid>
-            <Grid Grid.Row="5" x:Name="RowFps" Margin="0,0,0,8" Visibility="Collapsed">
+            <!-- ΝΕΟ - ρητό αίτημα χρήστη: "πρόσθεσε και το voltage της GPU" - LibreHardwareMonitorLib
+                 (ήδη bundled dependency, ίδιο μοτίβο με SensorService's GetGpuTemperatureCelsius) -
+                 δείχνει τίμια παύλες αν ο αισθητήρας δεν είναι διαθέσιμος στο συγκεκριμένο hardware. -->
+            <Grid Grid.Row="5" x:Name="RowGpuVoltage" Margin="0,0,0,8" Visibility="Collapsed">
+                <Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions>
+                <TextBlock Text="{tr:Tr Widget_GpuVoltage}" Foreground="{DynamicResource SubTextBrush}"/>
+                <TextBlock Grid.Column="1" x:Name="TxtGpuVoltage" Text="--" FontWeight="SemiBold" Foreground="{DynamicResource TextBrush}"/>
+            </Grid>
+            <Grid Grid.Row="6" x:Name="RowFps" Margin="0,0,0,8" Visibility="Collapsed">
                 <Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions>
                 <TextBlock Text="FPS" Foreground="{DynamicResource SubTextBrush}"/>
                 <TextBlock Grid.Column="1" x:Name="TxtFps" Text="--" FontWeight="SemiBold" Foreground="{DynamicResource TextBrush}"/>
             </Grid>
-            <TextBlock Grid.Row="6" x:Name="TxtGameName" Visibility="Collapsed" TextTrimming="CharacterEllipsis"
+            <TextBlock Grid.Row="7" x:Name="TxtGameName" Visibility="Collapsed" TextTrimming="CharacterEllipsis"
                        FontSize="10.5" Foreground="{DynamicResource SubTextBrush}" Margin="0,2,0,0"/>
         </Grid>
     </Border>

@@ -65,6 +65,11 @@
                         <Button Grid.Column="1" Content="{tr:Tr Advanced_RefreshListBtn}" Style="{StaticResource AccentButtonStyle}" Width="160" Height="32" Click="BtnRefreshAllFeatures_Click"/>
                     </Grid>
                     <TextBlock Text="{tr:Tr Advanced_OptionalFeaturesDesc}" Style="{StaticResource SubTextStyle}" Margin="0,0,0,8"/>
+                    <!-- ΝΕΟ - ρητό αίτημα χρήστη: "όταν επιλέγω κάτι για προσθήκη δεν εμφανίζεται μπάρα
+                         προόδου" - ίδιο μοτίβο με το OptimizationView's ProgressWinget/ProgressDriverStore
+                         (indeterminate, ΟΧΙ ψεύτικη ακρίβεια αφού ένα Enable/Disable-WindowsOptionalFeature
+                         δεν εκθέτει πρόοδο σε ποσοστό) - εμφανίζεται/κρύβεται στο ToggleAllFeature_Click. -->
+                    <ProgressBar x:Name="ProgressOptionalFeature" Height="6" IsIndeterminate="True" Visibility="Collapsed" Margin="0,0,0,10"/>
                     <WrapPanel x:Name="PanelPopularFeatures" Margin="0,0,0,10"/>
                     <Border Background="{DynamicResource MainBgBrush}" CornerRadius="6" MaxHeight="320" Padding="4">
                         <ScrollViewer VerticalScrollBarVisibility="Auto" PreviewMouseWheel="NestedScroll_PreviewMouseWheel">

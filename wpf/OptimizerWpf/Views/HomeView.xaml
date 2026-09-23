@@ -54,11 +54,14 @@
                         <StackPanel Grid.Row="0" HorizontalAlignment="Center">
                             <Image Source="/Assets/cpu-icon.png" Width="200" Height="130" Stretch="Uniform" Margin="0,0,0,8"/>
                             <TextBlock Text="CPU" Style="{StaticResource CardTitleStyle}" HorizontalAlignment="Center"/>
-                            <TextBlock x:Name="TxtCpuPercent" Text="--%" FontSize="22" FontWeight="Bold" Foreground="#FF2196F3" HorizontalAlignment="Center" Margin="0,4,0,6"/>
-                            <StackPanel Orientation="Horizontal" HorizontalAlignment="Center">
+                            <!-- ΔΙΟΡΘΩΣΗ (ρητό αίτημα χρήστη: "το εμφανιζόμενο ποσοστό να είναι πάνω από
+                                 την μπάρα και κάτω από τη θερμοκρασία") - η θερμοκρασία μετακινήθηκε πριν
+                                 το ποσοστό σε ΟΛΑ τα πλακίδια (πρώην ήταν ποσοστό->θερμοκρασία). -->
+                            <StackPanel Orientation="Horizontal" HorizontalAlignment="Center" Margin="0,4,0,0">
                                 <views:ThermometerIcon Width="14" Height="14" Margin="0,0,5,0"/>
                                 <TextBlock x:Name="TxtCpuTemp" Text="—" Style="{StaticResource TempValueStyle}"/>
                             </StackPanel>
+                            <TextBlock x:Name="TxtCpuPercent" Text="--%" FontSize="22" FontWeight="Bold" Foreground="#FF2196F3" HorizontalAlignment="Center" Margin="0,6,0,0"/>
                         </StackPanel>
                         <ProgressBar x:Name="BarCpu" Grid.Row="1" Height="6" Width="120" Minimum="0" Maximum="100" Foreground="#FF2196F3" HorizontalAlignment="Center" Margin="0,10,0,4"/>
                     </Grid>
@@ -76,12 +79,12 @@
                                 <Image Source="/Assets/ram-icon.png" Stretch="Uniform"/>
                             </Border>
                             <TextBlock Text="RAM" Style="{StaticResource CardTitleStyle}" HorizontalAlignment="Center"/>
-                            <TextBlock x:Name="TxtRamPercent" Text="--%" FontSize="22" FontWeight="Bold" Foreground="#FF4CAF50" HorizontalAlignment="Center" Margin="0,4,0,6"/>
-                            <TextBlock x:Name="TxtRamDetail" Text="-- / -- GB" Style="{StaticResource SubTextStyle}" HorizontalAlignment="Center"/>
                             <StackPanel Orientation="Horizontal" HorizontalAlignment="Center" Margin="0,4,0,0">
                                 <views:ThermometerIcon Width="14" Height="14" Margin="0,0,5,0"/>
                                 <TextBlock x:Name="TxtRamTemp" Text="—" Style="{StaticResource TempValueStyle}"/>
                             </StackPanel>
+                            <TextBlock x:Name="TxtRamPercent" Text="--%" FontSize="22" FontWeight="Bold" Foreground="#FF4CAF50" HorizontalAlignment="Center" Margin="0,6,0,6"/>
+                            <TextBlock x:Name="TxtRamDetail" Text="-- / -- GB" Style="{StaticResource SubTextStyle}" HorizontalAlignment="Center"/>
                         </StackPanel>
                         <ProgressBar x:Name="BarRam" Grid.Row="1" Height="6" Width="120" Minimum="0" Maximum="100" Foreground="#FF4CAF50" HorizontalAlignment="Center" Margin="0,10,0,4"/>
                     </Grid>
@@ -108,12 +111,12 @@
                                 <TextBlock x:Name="TxtDriveKind" Text="" Style="{StaticResource SubTextStyle}" Margin="5,0,0,0" VerticalAlignment="Center"/>
                                 <TextBlock x:Name="TxtDriveModel" Text="" Style="{StaticResource SubTextStyle}" Margin="5,0,0,0" VerticalAlignment="Center" FontSize="10"/>
                             </WrapPanel>
-                            <TextBlock x:Name="TxtDiskPercent" Text="--%" FontSize="22" FontWeight="Bold" Foreground="#FFFF9800" HorizontalAlignment="Center" Margin="0,4,0,6"/>
-                            <TextBlock x:Name="TxtDiskDetail" Text="-- GB ελεύθερα από -- GB" Style="{StaticResource SubTextStyle}" HorizontalAlignment="Center" TextWrapping="Wrap" TextAlignment="Center"/>
-                            <StackPanel Orientation="Horizontal" HorizontalAlignment="Center" Margin="0,4,0,0">
+                            <StackPanel Orientation="Horizontal" HorizontalAlignment="Center" Margin="0,0,0,0">
                                 <views:ThermometerIcon Width="14" Height="14" Margin="0,0,5,0"/>
                                 <TextBlock x:Name="TxtDiskTemp" Text="—" Style="{StaticResource TempValueStyle}"/>
                             </StackPanel>
+                            <TextBlock x:Name="TxtDiskPercent" Text="--%" FontSize="22" FontWeight="Bold" Foreground="#FFFF9800" HorizontalAlignment="Center" Margin="0,6,0,6"/>
+                            <TextBlock x:Name="TxtDiskDetail" Text="-- GB ελεύθερα από -- GB" Style="{StaticResource SubTextStyle}" HorizontalAlignment="Center" TextWrapping="Wrap" TextAlignment="Center"/>
                         </StackPanel>
                         <ProgressBar x:Name="BarDisk" Grid.Row="1" Height="6" Width="120" Minimum="0" Maximum="100" Foreground="#FFFF9800" HorizontalAlignment="Center" Margin="0,10,0,4"/>
                         <!-- ΝΕΟ - roadmap "Έλεγχος προσβασιμότητας" - κουμπιά-μόνο-εικονίδιο χωρίς
@@ -138,46 +141,31 @@
                         <StackPanel Grid.Row="0" HorizontalAlignment="Center">
                             <Image Source="/Assets/gpu-icon.png" Width="200" Height="130" Stretch="Uniform" Margin="0,0,0,8"/>
                             <TextBlock Text="GPU" Style="{StaticResource CardTitleStyle}" HorizontalAlignment="Center"/>
-                            <TextBlock x:Name="TxtGpuPercent" Text="--%" FontSize="22" FontWeight="Bold" Foreground="#FF9C27B0" HorizontalAlignment="Center" Margin="0,4,0,6"/>
-                            <TextBlock x:Name="TxtGpuName" Text="" Style="{StaticResource SubTextStyle}" HorizontalAlignment="Center" TextWrapping="Wrap" TextAlignment="Center" FontSize="10"/>
                             <StackPanel Orientation="Horizontal" HorizontalAlignment="Center" Margin="0,4,0,0">
                                 <views:ThermometerIcon Width="14" Height="14" Margin="0,0,5,0"/>
                                 <TextBlock x:Name="TxtGpuTemp" Text="—" Style="{StaticResource TempValueStyle}"/>
                             </StackPanel>
+                            <TextBlock x:Name="TxtGpuPercent" Text="--%" FontSize="22" FontWeight="Bold" Foreground="#FF9C27B0" HorizontalAlignment="Center" Margin="0,6,0,6"/>
+                            <TextBlock x:Name="TxtGpuName" Text="" Style="{StaticResource SubTextStyle}" HorizontalAlignment="Center" TextWrapping="Wrap" TextAlignment="Center" FontSize="10"/>
                         </StackPanel>
                         <ProgressBar x:Name="BarGpu" Grid.Row="1" Height="6" Width="120" Minimum="0" Maximum="100" Foreground="#FF9C27B0" HorizontalAlignment="Center" Margin="0,10,0,4"/>
                     </Grid>
                 </Border>
             </Grid>
 
-            <!-- ΝΕΑ ΚΑΡΤΑ v3.2.0 (χρήστης ζήτησε: "δείκτης κατάστασης δικτύου στην Αρχική") - ελαφριά,
-                 μία γραμμή· ενημερώνεται σπάνια (μαζί με τον ήδη υπάρχοντα _diskRefreshTimer, 20s -
-                 όχι νέος timer, ίδιο σκεπτικό "ελάφρυνση εφαρμογής") αφού η σύνδεση δικτύου δεν αλλάζει
-                 αισθητά κάθε δευτερόλεπτο. Το κουμπί ανοίγει κατευθείαν την καρτέλα Δίκτυο & Ασφάλεια. -->
-            <Border Style="{StaticResource CardStyle}" Margin="0,0,0,16">
-                <Grid>
-                    <Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="170"/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions>
-                    <StackPanel Grid.Column="0" Orientation="Horizontal">
-                        <Ellipse x:Name="DotNetworkStatus" Width="10" Height="10" Fill="Gray" VerticalAlignment="Center" Margin="0,0,10,0"/>
-                        <TextBlock x:Name="TxtNetworkStatus" Text="{tr:Tr Home_NetworkChecking}" Foreground="{DynamicResource TextBrush}" VerticalAlignment="Center"/>
-                    </StackPanel>
-                    <!-- ΝΕΟ (χρήστης ζήτησε: "graph δίπλα στο δίκτυο, όπως στη Διαχείριση Εργασιών") -
-                         απλό, αυτο-κλιμακούμενο sparkline (throughput, ΟΧΙ σχέση με το ping του
-                         Home_NetworkChecking) - βλ. HomeView.xaml.cs's RefreshNetworkGraph, δειγματολ-
-                         ηψία στον ΙΔΙΟ γρήγορο 1s timer με CPU/RAM/GPU (χρειάζεται συχνά δείγματα για
-                         να δείχνει ζωντανό, σε αντίθεση με τον αραιό ping-έλεγχο σύνδεσης). -->
-                    <Border Grid.Column="1" Height="32" Margin="10,0" Background="{DynamicResource MainBgBrush}" CornerRadius="4" ClipToBounds="True">
-                        <Canvas x:Name="CanvasNetworkGraph"/>
-                    </Border>
-                    <Button Grid.Column="2" Content="{tr:Tr Home_NetworkOpenTab}" Style="{StaticResource FlatButtonStyle}" Width="180" Height="32" Click="BtnOpenNetworkTab_Click"/>
-                </Grid>
-            </Border>
-
             <!-- Health Score -->
             <Border Style="{StaticResource CardStyle}" Margin="0,0,0,16">
                 <Grid>
+                    <!-- ΔΙΟΡΘΩΣΗ (χρήστης έστειλε screenshot: το TxtDiskSmart/TxtHealthLabel έκοβαν στις
+                         άκρες στην κατάσταση "Καλή Κατάσταση δίσκου (SMART)" - το CardStyle's Border
+                         κόβει (clip) οτιδήποτε ξεχειλίζει από τη στήλη 140px λόγω του CornerRadius).
+                         Η στήλη πλατύνθηκε 140->170 (ρητό αίτημα χρήστη: "μείωσε προς τα δεξιά το
+                         πλαίσιο των μηνυμάτων", δηλ. στένεψε τη δεξιά στήλη μετακινώντας το όριο προς
+                         τα δεξιά) ΚΑΙ προστέθηκε TextWrapping/TextAlignment σε TxtHealthLabel/
+                         TxtDiskSmart ώστε ΚΑΘΕ μετάφραση (ακόμη και οι πιο μακριές, π.χ. Γαλλικά/Ρωσικά/
+                         Τουρκικά) να αναδιπλώνεται αντί να ξεχειλίζει και να κόβεται. -->
                     <Grid.ColumnDefinitions>
-                        <ColumnDefinition Width="140"/>
+                        <ColumnDefinition Width="170"/>
                         <ColumnDefinition Width="*"/>
                     </Grid.ColumnDefinitions>
                     <Grid.RowDefinitions>
@@ -195,24 +183,33 @@
 
                     <StackPanel Grid.Row="1" Grid.Column="0" HorizontalAlignment="Center">
                         <TextBlock x:Name="TxtHealthScore" Text="--" FontSize="38" FontWeight="Bold" Foreground="#FF4CAF50" HorizontalAlignment="Center"/>
-                        <TextBlock x:Name="TxtHealthLabel" Text="{tr:Tr Home_Checking}" FontStyle="Italic" Foreground="#FF4CAF50" HorizontalAlignment="Center"/>
+                        <TextBlock x:Name="TxtHealthLabel" Text="{tr:Tr Home_Checking}" FontStyle="Italic" Foreground="#FF4CAF50" HorizontalAlignment="Center" TextWrapping="Wrap" TextAlignment="Center"/>
                         <TextBlock x:Name="TxtHealthSparkline" Text="" FontSize="14" Foreground="{DynamicResource SubTextBrush}" HorizontalAlignment="Center" Margin="0,4,0,0" Visibility="Collapsed"/>
                         <!-- ΝΕΟ - roadmap "πιο εμφανές S.M.A.R.T./υγεία δίσκου στην Αρχική" - η υποδομή
                              (DriveTypeService.GetSmartHealthy) υπήρχε ήδη αλλά μόνο βαθιά στην καρτέλα
                              Σύστημα· εδώ μια συνοπτική ένδειξη για τον δίσκο συστήματος, ορατή με μια ματιά
                              μαζί με το Health Score. -->
-                        <TextBlock x:Name="TxtDiskSmart" Text="" FontSize="11" HorizontalAlignment="Center" Margin="0,6,0,0" Visibility="Collapsed"/>
+                        <TextBlock x:Name="TxtDiskSmart" Text="" FontSize="11" HorizontalAlignment="Center" Margin="0,6,0,0" Visibility="Collapsed" TextWrapping="Wrap" TextAlignment="Center"/>
                     </StackPanel>
 
                     <Border Grid.Row="1" Grid.Column="1" Background="{DynamicResource MainBgBrush}" CornerRadius="6" MinHeight="90" MaxHeight="140" Padding="10">
                         <ScrollViewer VerticalScrollBarVisibility="Auto" PreviewMouseWheel="NestedScroll_PreviewMouseWheel">
+                            <!-- ΔΙΟΡΘΩΣΗ - το TextBlock είχε πρώην σταθερό Width="720" (μάντεψε ένα
+                                 "αρκετά πλατύ" νούμερο) που ξεχείλιζε/κοβόταν όταν το πραγματικό πλάτος
+                                 της στήλης ήταν στενότερο (π.χ. μικρότερο παράθυρο). Grid Auto/* αντί για
+                                 οριζόντιο StackPanel ώστε το TextBlock να αναδιπλώνεται πάντα στο
+                                 ΠΡΑΓΜΑΤΙΚΟ διαθέσιμο πλάτος, όχι σε ένα σταθερό νούμερο. -->
                             <ItemsControl x:Name="ListHealthIssues">
                                 <ItemsControl.ItemTemplate>
                                     <DataTemplate>
-                                        <StackPanel Orientation="Horizontal" Margin="0,0,0,8">
-                                            <Ellipse Width="8" Height="8" Fill="{Binding DotColor}" Margin="0,4,8,0" VerticalAlignment="Top"/>
-                                            <TextBlock Text="{Binding Title}" Style="{StaticResource SubTextStyle}" Foreground="{DynamicResource TextBrush}" Width="720"/>
-                                        </StackPanel>
+                                        <Grid Margin="0,0,0,8">
+                                            <Grid.ColumnDefinitions>
+                                                <ColumnDefinition Width="Auto"/>
+                                                <ColumnDefinition Width="*"/>
+                                            </Grid.ColumnDefinitions>
+                                            <Ellipse Grid.Column="0" Width="8" Height="8" Fill="{Binding DotColor}" Margin="0,4,8,0" VerticalAlignment="Top"/>
+                                            <TextBlock Grid.Column="1" Text="{Binding Title}" Style="{StaticResource SubTextStyle}" Foreground="{DynamicResource TextBrush}"/>
+                                        </Grid>
                                     </DataTemplate>
                                 </ItemsControl.ItemTemplate>
                             </ItemsControl>
@@ -237,6 +234,29 @@
                             <Button Grid.Column="1" Content="{tr:Tr HealthCheck_RunButton}" Style="{StaticResource AccentButtonStyle}" Padding="12,6" Margin="10,0,0,0" Click="BtnRunHealthCheck_Click"/>
                         </Grid>
                     </Border>
+                </Grid>
+            </Border>
+
+            <!-- ΝΕΑ ΚΑΡΤΑ v3.2.0 (χρήστης ζήτησε: "δείκτης κατάστασης δικτύου στην Αρχική") - ελαφριά,
+                 μία γραμμή· ενημερώνεται σπάνια (μαζί με τον ήδη υπάρχοντα _diskRefreshTimer, 20s -
+                 όχι νέος timer, ίδιο σκεπτικό "ελάφρυνση εφαρμογής") αφού η σύνδεση δικτύου δεν αλλάζει
+                 αισθητά κάθε δευτερόλεπτο. Το κουμπί ανοίγει κατευθείαν την καρτέλα Δίκτυο & Ασφάλεια. -->
+            <Border Style="{StaticResource CardStyle}" Margin="0,0,0,16">
+                <Grid>
+                    <Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="170"/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions>
+                    <StackPanel Grid.Column="0" Orientation="Horizontal">
+                        <Ellipse x:Name="DotNetworkStatus" Width="10" Height="10" Fill="Gray" VerticalAlignment="Center" Margin="0,0,10,0"/>
+                        <TextBlock x:Name="TxtNetworkStatus" Text="{tr:Tr Home_NetworkChecking}" Foreground="{DynamicResource TextBrush}" VerticalAlignment="Center"/>
+                    </StackPanel>
+                    <!-- ΝΕΟ (χρήστης ζήτησε: "graph δίπλα στο δίκτυο, όπως στη Διαχείριση Εργασιών") -
+                         απλό, αυτο-κλιμακούμενο sparkline (throughput, ΟΧΙ σχέση με το ping του
+                         Home_NetworkChecking) - βλ. HomeView.xaml.cs's RefreshNetworkGraph, δειγματολ-
+                         ηψία στον ΙΔΙΟ γρήγορο 1s timer με CPU/RAM/GPU (χρειάζεται συχνά δείγματα για
+                         να δείχνει ζωντανό, σε αντίθεση με τον αραιό ping-έλεγχο σύνδεσης). -->
+                    <Border Grid.Column="1" Height="32" Margin="10,0" Background="{DynamicResource MainBgBrush}" CornerRadius="4" ClipToBounds="True">
+                        <Canvas x:Name="CanvasNetworkGraph"/>
+                    </Border>
+                    <Button Grid.Column="2" Content="{tr:Tr Home_NetworkOpenTab}" Style="{StaticResource FlatButtonStyle}" Width="180" Height="32" Click="BtnOpenNetworkTab_Click"/>
                 </Grid>
             </Border>
 

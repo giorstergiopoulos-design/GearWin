@@ -309,6 +309,18 @@ namespace OptimizerWpf.Views
                 _displayedFeatures.Add(f);
         }
 
+        // ΔΙΟΡΘΩΣΗ (χρήστης ανέφερε: "όταν επιλέγω κάτι για προσθήκη δεν εμφανίζεται μπάρα προόδου" +
+        // "επέλεξα εγκατάσταση του .NET Framework 3.5 και μετά το popup μήνυμα δεν βλέπω να γίνεται
+        // εγκατάσταση") - 3 πραγματικά bugs εντοπίστηκαν εδώ:
+        // 1) Καμία μπάρα προόδου δεν υπήρχε για αυτή τη λειτουργία (βλ. νέο ProgressOptionalFeature
+        //    στο XAML) - μόνο το γενικό status-bar spinner, εύκολο να μην το προσέξει κανείς.
+        // 2) Το αποτέλεσμα του SetFeatureEnabledAsync (bool επιτυχίας/αποτυχίας) ΑΓΝΟΟΥΝΤΑΝ εντελώς -
+        //    αν το powershell command απέτυχε (π.χ. NetFx3 χρειάζεται πρόσβαση στο Windows Update και
+        //    δεν την είχε), ο χρήστης ΔΕΝ έβλεπε ΚΑΝΕΝΑ μήνυμα σφάλματος και το toggle παρέμενε στη
+        //    "επιτυχημένη" θέση παρόλο που η λειτουργία ΔΕΝ άλλαξε πραγματικά στο σύστημα.
+        // 3) Το .NET Framework 3.5 ειδικά αποτυγχάνει συχνά χωρίς σύνδεση στο διαδίκτυο (χρειάζεται
+        //    Windows Update ως πηγή) - τώρα το μήνυμα σφάλματος περιλαμβάνει μια στοχευμένη υπόδειξη
+        //    ΜΟΝΟ για αυτή τη λειτουργία (Adv_FeatureNetFx3Hint).
         private async void ToggleAllFeature_Click(object sender, RoutedEventArgs e)
         {
             if (sender is not ToggleButton { Tag: AllFeatureRow row } button) return;
@@ -318,11 +330,22 @@ namespace OptimizerWpf.Views
                 row.IsEnabled = !row.IsEnabled;
                 return;
             }
+            var targetState = row.IsEnabled;
             button.IsEnabled = false;
+            ProgressOptionalFeature.Visibility = Visibility.Visible;
             StatusService.SetBusy($"{row.DisplayName}...");
-            await AdvancedToolsService.SetFeatureEnabledAsync(row.FeatureName, row.IsEnabled);
+            var success = await AdvancedToolsService.SetFeatureEnabledAsync(row.FeatureName, targetState);
             StatusService.SetIdle(LanguageService.T("Ready"));
+            ProgressOptionalFeature.Visibility = Visibility.Collapsed;
             button.IsEnabled = true;
+
+            if (!success)
+            {
+                row.IsEnabled = !targetState;
+                var msg = LanguageService.T("Adv_FeatureToggleFailed");
+                if (row.FeatureName == "NetFx3") msg += LanguageService.T("Adv_FeatureNetFx3Hint");
+                ThemedMessageBox.Show(msg, LanguageService.T("Adv_ErrorTitle"), MessageBoxButton.OK, MessageBoxImage.Warning);
+            }
         }
     }
 

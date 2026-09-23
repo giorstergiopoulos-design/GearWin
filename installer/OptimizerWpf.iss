@@ -16,7 +16,7 @@
 ; ΔΙΟΡΘΩΣΗ - ρητό αίτημα χρήστη: μετονομασία σε "GearWin" (υπότιτλος "Complete PC Care") - βλ.
 ; OptimizerWpf.csproj για την πλήρη αιτιολόγηση/έλεγχο εμπορικού σήματος.
 #define MyAppName "GearWin - Complete PC Care"
-#define MyAppVersion "5.3.2"
+#define MyAppVersion "5.4.0"
 #define MyAppPublisher "GearWin"
 ; ΝΕΟ - ρητό αίτημα χρήστη: "το όνομα του exe να προσαρμοστεί στο όνομα της εφαρμογής" - πρέπει να
 ; ταιριάζει ΑΚΡΙΒΩΣ με το <AssemblyName> στο OptimizerWpf.csproj (το πραγματικό όνομα του .exe που

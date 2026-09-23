@@ -38,13 +38,25 @@ namespace OptimizerWpf.Services
         [DllImport("user32.dll")] private static extern IntPtr GetForegroundWindow();
         [DllImport("user32.dll")] private static extern bool GetWindowRect(IntPtr hWnd, out RECT rect);
         [DllImport("user32.dll")] private static extern int GetWindowThreadProcessId(IntPtr hWnd, out int processId);
-        [DllImport("user32.dll")] private static extern int GetSystemMetrics(int index);
+        [DllImport("user32.dll")] private static extern IntPtr MonitorFromWindow(IntPtr hwnd, uint dwFlags);
+        [DllImport("user32.dll")] private static extern bool GetMonitorInfo(IntPtr hMonitor, ref MONITORINFO lpmi);
         private struct RECT { public int Left, Top, Right, Bottom; }
-        private const int SM_CXSCREEN = 0, SM_CYSCREEN = 1;
+        [StructLayout(LayoutKind.Sequential)]
+        private struct MONITORINFO { public int cbSize; public RECT rcMonitor; public RECT rcWork; public uint dwFlags; }
+        private const uint MONITOR_DEFAULTTONEAREST = 2;
 
-        // Ίδιο heuristic (exclusive fullscreen) με το AutoGamingModeService - ΣΚΟΠΙΜΑ διπλότυπο μικρό
-        // P/Invoke block αντί για κοινόχρηστο service, ώστε η αλλαγή εδώ να μη ρισκάρει το ήδη
-        // δουλεμένο/σταθερό AutoGamingModeService.
+        // ΔΙΟΡΘΩΣΗ (bug εντοπίστηκε - χρήστης ανέφερε: "εξακολουθεί να μην εμφανίζεται ο μετρητής των
+        // FPS") - GetSystemMetrics(SM_CXSCREEN/SM_CYSCREEN) επιστρέφει ΠΑΝΤΑ την ανάλυση της ΚΥΡΙΑΣ
+        // οθόνης, ΟΧΙ της οθόνης όπου βρίσκεται πραγματικά το παράθυρο. Σε setup πολλαπλών οθονών όπου
+        // το παιχνίδι τρέχει fullscreen σε ΔΕΥΤΕΡΕΥΟΥΣΑ οθόνη με διαφορετική ανάλυση από την κύρια, η
+        // σύγκριση απέτυχε ΠΑΝΤΑ (ψευδώς αρνητικό) - ο εντοπισμός fullscreen δεν πυροδοτούνταν ΠΟΤΕ σε
+        // τέτοιο setup, όσο "σωστό" fullscreen κι αν ήταν το παιχνίδι. MonitorFromWindow+GetMonitorInfo
+        // παίρνει τα όρια της ΣΥΓΚΕΚΡΙΜΕΝΗΣ οθόνης που περιέχει το παράθυρο - λειτουργεί σωστά σε
+        // οποιαδήποτε οθόνη/ανάλυση.
+        //
+        // Ίδιο heuristic (exclusive/borderless fullscreen = παράθυρο == όρια οθόνης) με το
+        // AutoGamingModeService - ΣΚΟΠΙΜΑ διπλότυπο μικρό P/Invoke block αντί για κοινόχρηστο service,
+        // ώστε η αλλαγή εδώ να μη ρισκάρει το ήδη δουλεμένο/σταθερό AutoGamingModeService.
         public static (int Pid, string Name)? GetForegroundFullscreenProcess()
         {
             try
@@ -52,7 +64,14 @@ namespace OptimizerWpf.Services
                 var hwnd = GetForegroundWindow();
                 if (hwnd == IntPtr.Zero || !GetWindowRect(hwnd, out var r)) return null;
                 var w = r.Right - r.Left; var h = r.Bottom - r.Top;
-                if (w != GetSystemMetrics(SM_CXSCREEN) || h != GetSystemMetrics(SM_CYSCREEN)) return null;
+
+                var hMonitor = MonitorFromWindow(hwnd, MONITOR_DEFAULTTONEAREST);
+                var mi = new MONITORINFO { cbSize = Marshal.SizeOf<MONITORINFO>() };
+                if (!GetMonitorInfo(hMonitor, ref mi)) return null;
+                var monW = mi.rcMonitor.Right - mi.rcMonitor.Left;
+                var monH = mi.rcMonitor.Bottom - mi.rcMonitor.Top;
+                if (w != monW || h != monH) return null;
+
                 GetWindowThreadProcessId(hwnd, out var pid);
                 var proc = System.Diagnostics.Process.GetProcessById(pid);
                 if (proc.ProcessName is "explorer" or "dwm" or "GearWin" or "dotnet") return null;

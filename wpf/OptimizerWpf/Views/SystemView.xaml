@@ -247,7 +247,12 @@
                 </StackPanel>
             </Border>
 
-            <!-- Αποθηκευτικός Χώρος -->
+            <!-- Αποθηκευτικός Χώρος + Εύρεση Διπλότυπων Αρχείων - ρητό αίτημα χρήστη: "αποθηκευτικός
+                 χώρος διπλότυπα και εύρεση διπλότυπων βάλε τα στο ίδιο πλαίσιο" - πρώην 2 ξεχωριστές,
+                 διαδοχικές κάρτες (CardStyle Border η καθεμία) ενοποιήθηκαν σε ΜΙΑ κάρτα με τα δύο
+                 υπο-τμήματα χωρισμένα από μια λεπτή διαχωριστική γραμμή (ίδιο μοτίβο με το Άδεια
+                 Χρήσης/Ιστορικό Εκδόσεων tab στο HelpWindow) - όλα τα x:Name/click handlers παρέμειναν
+                 ακριβώς τα ίδια, άλλαξε ΜΟΝΟ η δομή του container. -->
             <Border Style="{StaticResource CardStyle}" Margin="0,16,0,0">
                 <StackPanel>
                     <Grid Margin="0,0,0,10">
@@ -293,20 +298,9 @@
                             </ItemsControl>
                         </ScrollViewer>
                     </Border>
-                </StackPanel>
-            </Border>
 
-            <!-- ΝΕΟ - roadmap "Εύρεση διπλότυπων αρχείων" - ο χρήστης επιλέγει ρητά έναν φάκελο (ΠΟΤΕ
-                 ολόκληρος δίσκος by default), βλ. DuplicateFileService.cs για τη μεθοδολογία σάρωσης
-                 (μέγεθος -> MD5 hash). Κάθε ομάδα διπλότυπων δείχνει όλα τα αντίγραφα με CheckBox -
-                 ΠΡΟ-επιλεγμένα όλα ΕΚΤΟΣ από το πρώτο κάθε ομάδας (ίδιο "Recommended" μοτίβο με το
-                 Quick Clean - διατηρεί αυτόματα ΤΟΥΛΑΧΙΣΤΟΝ ένα αντίγραφο, ο χρήστης απλά αποεπιλέγει
-                 όποιο αντίγραφο θέλει να ΚΡΑΤΗΣΕΙ αντί του πρώτου). Ρητό αίτημα χρήστη: ενοποιήθηκε με
-                 την προηγούμενη απλή "Εύρεση Διπλότυπων" της κάρτας Αποθηκευτικού Χώρου παραπάνω (ήταν
-                 δύο ασύνδετες υλοποιήσεις του ίδιου πράγματος) και μετακινήθηκε εδώ, στη σωστή καρτέλα
-                 (μετακομισμένο από την καρτέλα Προηγμένα Εργαλεία). -->
-            <Border Style="{StaticResource CardStyle}" Margin="0,16,0,0">
-                <StackPanel>
+                    <Border Height="1" Background="{DynamicResource CardBorderBrush}" Margin="0,16"/>
+
                     <Grid Margin="0,0,0,4">
                         <Grid.ColumnDefinitions><ColumnDefinition Width="Auto"/><ColumnDefinition Width="*"/></Grid.ColumnDefinitions>
                         <views:HeaderGlyphIcon Grid.Column="0" Kind="Document" Width="16" Height="16" Margin="0,0,8,0" VerticalAlignment="Center"/>

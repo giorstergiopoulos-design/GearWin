@@ -13,6 +13,7 @@ namespace OptimizerWpf.Views
         private PerformanceCounter[]? _gpuCounters;
         private readonly DispatcherTimer _timer;
         private int _currentGamePid = -1;
+        private bool _voltageQueryInFlight;
 
         public DesktopWidgetWindow()
         {
@@ -67,17 +68,20 @@ namespace OptimizerWpf.Views
             {
                 if (_currentGamePid != -1) { GameOverlayService.Stop(); _currentGamePid = -1; }
                 RowGpu.Visibility = Visibility.Collapsed;
+                RowGpuVoltage.Visibility = Visibility.Collapsed;
                 RowFps.Visibility = Visibility.Collapsed;
                 TxtGameName.Visibility = Visibility.Collapsed;
                 return;
             }
 
             RowGpu.Visibility = Visibility.Visible;
+            RowGpuVoltage.Visibility = Visibility.Visible;
             RowFps.Visibility = Visibility.Visible;
             TxtGameName.Visibility = Visibility.Visible;
             TxtGameName.Text = $"{LanguageService.T("Widget_MonitoringPrefix")}{game.Value.Name}";
 
             if (_gpuCounters != null) TxtGpu.Text = $"{GpuInfoService.SampleUsagePercent(_gpuCounters)}%";
+            RefreshGpuVoltageAsync();
 
             if (_currentGamePid != game.Value.Pid)
             {
@@ -86,6 +90,26 @@ namespace OptimizerWpf.Views
             }
             var fps = GameOverlayService.SampleFps();
             TxtFps.Text = fps?.ToString() ?? "--";
+        }
+
+        // ΝΕΟ - ρητό αίτημα χρήστη: "πρόσθεσε και το voltage της GPU" - SensorService.GetGpuVoltageVolts
+        // κάνει Update() σε LibreHardwareMonitorLib hardware objects, ίδιο σκεπτικό "όχι στο UI thread"
+        // με το HomeView's RefreshGpuTemperatureAsync (βλ. HomeView.xaml.cs) - Task.Run εδώ ομοίως.
+        // _voltageQueryInFlight αποτρέπει επικαλυπτόμενα queries αν ο tick (1.5s) είναι πιο γρήγορος από
+        // την επιστροφή του προηγούμενου query.
+        private async void RefreshGpuVoltageAsync()
+        {
+            if (_voltageQueryInFlight) return;
+            _voltageQueryInFlight = true;
+            try
+            {
+                var volts = await System.Threading.Tasks.Task.Run(SensorService.GetGpuVoltageVolts);
+                TxtGpuVoltage.Text = volts.HasValue ? $"{volts.Value:0.000} V" : "--";
+            }
+            finally
+            {
+                _voltageQueryInFlight = false;
+            }
         }
 
         private void Border_MouseLeftButtonDown(object sender, MouseButtonEventArgs e)

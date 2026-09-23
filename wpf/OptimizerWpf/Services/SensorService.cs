@@ -111,6 +111,51 @@ namespace OptimizerWpf.Services
             GetNvidiaTemperatureViaNvml() ??
             GetAmdTemperatureViaAdl();
 
+        // ΝΕΟ - ρητό αίτημα χρήστη: "πρόσθεσε και το voltage της GPU" (στο Widget Επιφάνειας Εργασίας) -
+        // ίδιο μοτίβο/αισθητήρες ονόματα με το GetGpuTemperatureCelsius παραπάνω, απλά SensorType.Voltage
+        // αντί για Temperature. ΧΩΡΙΣ NVML/ADL fallback (σε αντίθεση με τη θερμοκρασία) - το NVML API
+        // δεν εκθέτει άμεσα GPU core voltage, και το αντίστοιχο ADL call θα χρειαζόταν ξεχωριστό δομημένο
+        // P/Invoke (ADL_Overdrive5_CurrentActivity_Get) εκτός πεδίου εδώ - όταν το VBS/HVCI μπλοκάρει το
+        // LibreHardwareMonitorLib, δείχνει τίμια "--" (ίδιο σκεπτικό ειλικρίνειας με όλα τα sensors εδώ).
+        public static double? GetGpuVoltageVolts() =>
+            GetVoltage(HardwareType.GpuNvidia, GpuCoreNames) ??
+            GetVoltage(HardwareType.GpuAmd, GpuCoreNames) ??
+            GetVoltage(HardwareType.GpuIntel, GpuCoreNames);
+
+        private static double? GetVoltage(HardwareType type, string[]? preferredNames)
+        {
+            var computer = GetComputer();
+            if (computer == null) return null;
+            try
+            {
+                RefreshAll(computer);
+                var hw = computer.Hardware.FirstOrDefault(h => h.HardwareType == type);
+                if (hw == null) return null;
+                return PickVoltage(hw, preferredNames);
+            }
+            catch
+            {
+                return null;
+            }
+        }
+
+        private static double? PickVoltage(IHardware hw, string[]? preferredNames)
+        {
+            var sensors = hw.Sensors.Where(s => s.SensorType == SensorType.Voltage && s.Value.HasValue && s.Value.Value > 0).ToList();
+            if (sensors.Count == 0) return null;
+
+            if (preferredNames != null)
+            {
+                foreach (var name in preferredNames)
+                {
+                    var match = sensors.FirstOrDefault(s => s.Name.Contains(name, StringComparison.OrdinalIgnoreCase));
+                    if (match != null) return Math.Round(match.Value!.Value, 3);
+                }
+            }
+
+            return Math.Round(sensors[0].Value!.Value, 3);
+        }
+
         private static int? GetAmdTemperatureViaAdl()
         {
             try
