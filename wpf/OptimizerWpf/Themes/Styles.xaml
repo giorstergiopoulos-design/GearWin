@@ -130,9 +130,18 @@
         <Setter Property="RenderTransform">
             <Setter.Value><TranslateTransform X="0" Y="0"/></Setter.Value>
         </Setter>
+        <!-- ΔΙΟΡΘΩΣΗ (χρήστης επέμενε ότι το bug ΕΞΑΚΟΛΟΥΘΟΥΣΕ μετά την πρώτη "διόρθωση" - φάρδεμα του
+             κενού 8px->16px ανάμεσα σε διαδοχικές κάρτες ΔΕΝ αρκούσε): το Direction="270" ρίχνει τη
+             σκιά ΚΑΘΕΤΑ ΠΡΟΣ ΤΑ ΚΑΤΩ (ΟΧΙ διαγώνια), και η προηγούμενη τιμή BlurRadius=16+
+             ShadowDepth=5 έφτανε ΠΑΝΩ από 16px σε πραγματική εμβέλεια (ShadowDepth + BlurRadius = 21px
+             ως το σημείο μηδενικής αδιαφάνειας) - δηλαδή η σκιά της κάθε κάρτας σε hover ξεπερνούσε
+             ΠΑΝΤΑ το τυπικό 16px κενό και "μπλεκόταν" οπτικά με την επόμενη κάρτα, ανεξάρτητα από πόσο
+             μεγάλο ήταν το κενό μεταξύ τους. Μειώθηκε σε BlurRadius=8+ShadowDepth=3 (εμβέλεια ~11px,
+             ΠΑΝΤΑ μικρότερη από το ελάχιστο 16px κενό ανάμεσα σε ΚΑΘΕ ζεύγος καρτών στην εφαρμογή) -
+             η ανύψωση σε hover παραμένει ορατή, απλά χωρίς να διαρρέει στην επόμενη κάρτα. -->
         <Setter Property="Effect">
             <Setter.Value>
-                <DropShadowEffect Color="Black" Opacity="0" BlurRadius="16" ShadowDepth="5" Direction="270"/>
+                <DropShadowEffect Color="Black" Opacity="0" BlurRadius="8" ShadowDepth="3" Direction="270"/>
             </Setter.Value>
         </Setter>
         <Style.Triggers>
