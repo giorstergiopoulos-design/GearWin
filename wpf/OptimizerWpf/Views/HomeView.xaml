@@ -291,6 +291,58 @@
                 </StackPanel>
             </Border>
 
+            <!-- ΝΕΟ - ρητό αίτημα χρήστη: "νέες ιδέες για όλη την εφαρμογή" - το UpdatesHubService
+                 συγκέντρωνε ήδη τα αποτελέσματα των σαρώσεων εφαρμογών/οδηγών (και τώρα Windows Update,
+                 βλ. Services/WindowsUpdateService.cs) αλλά ΔΕΝ εμφανιζόταν πουθενά στην Αρχική - μόνο
+                 τροφοδοτούνταν από άλλες καρτέλες/το background UpdateNotificationService. Μικρή κάρτα
+                 σύνοψης, ζωντανά ενημερωνόμενη (UpdatesHubService.Changed) - "—" όσο δεν έχει τρέξει
+                 ακόμα καμία σάρωση σε αυτή τη συνεδρία, ΟΧΙ ψευδές 0 (ίδιο πνεύμα ειλικρίνειας με το
+                 UpdatesHubService's σχόλιο). -->
+            <Border Style="{StaticResource CardStyle}" Margin="0,16,0,0">
+                <StackPanel>
+                    <Grid Margin="0,0,0,10">
+                        <Grid.ColumnDefinitions><ColumnDefinition Width="Auto"/><ColumnDefinition Width="*"/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions>
+                        <views:HeaderGlyphIcon Grid.Column="0" Kind="Bolt" Width="16" Height="16" Margin="0,0,8,0" VerticalAlignment="Center"/>
+                        <TextBlock Grid.Column="1" Text="{tr:Tr Home_UpdatesTitle}" Style="{StaticResource CardTitleStyle}"/>
+                        <Button Grid.Column="2" Content="{tr:Tr Home_UpdatesOpenBtn}" Style="{StaticResource FlatButtonStyle}" Padding="10,5" Click="BtnOpenUpdatesTab_Click"/>
+                    </Grid>
+                    <Grid>
+                        <Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="*"/><ColumnDefinition Width="*"/></Grid.ColumnDefinitions>
+                        <StackPanel Grid.Column="0" HorizontalAlignment="Center">
+                            <TextBlock x:Name="TxtUpdatesAppsCount" Text="—" FontSize="20" FontWeight="Bold" HorizontalAlignment="Center" Foreground="{DynamicResource TextBrush}"/>
+                            <TextBlock Text="{tr:Tr Home_UpdatesApps}" Style="{StaticResource SubTextStyle}" HorizontalAlignment="Center"/>
+                        </StackPanel>
+                        <StackPanel Grid.Column="1" HorizontalAlignment="Center">
+                            <TextBlock x:Name="TxtUpdatesDriversCount" Text="—" FontSize="20" FontWeight="Bold" HorizontalAlignment="Center" Foreground="{DynamicResource TextBrush}"/>
+                            <TextBlock Text="{tr:Tr Home_UpdatesDrivers}" Style="{StaticResource SubTextStyle}" HorizontalAlignment="Center"/>
+                        </StackPanel>
+                        <StackPanel Grid.Column="2" HorizontalAlignment="Center">
+                            <TextBlock x:Name="TxtUpdatesWindowsCount" Text="—" FontSize="20" FontWeight="Bold" HorizontalAlignment="Center" Foreground="{DynamicResource TextBrush}"/>
+                            <TextBlock Text="{tr:Tr Home_UpdatesWindows}" Style="{StaticResource SubTextStyle}" HorizontalAlignment="Center"/>
+                        </StackPanel>
+                    </Grid>
+                </StackPanel>
+            </Border>
+
+            <!-- ΝΕΟ - roadmap ιδέα #5 (ρητό αίτημα χρήστη: "κάνε τα 4-7" - "Σύγκριση πριν/μετά σε
+                 όλες τις σαρώσεις... πόσος χώρος/πόσα ms boot time κέρδισε ο χρήστης συνολικά,
+                 ιστορικό στο Home") - βλ. Services/ImpactTrackingService.cs. Ο χρόνος εκκίνησης
+                 χρησιμοποιεί ΤΑ ΙΔΙΑ πραγματικά δεδομένα με το Boot Timeline (Προηγμένα Εργαλεία, βλ.
+                 AdvancedToolsService.GetRecentBootTimes) - καμία νέα μέτρηση, μόνο σύγκριση παλιότερων
+                 vs πιο πρόσφατων καταγραφών. Κρυφό (Visibility.Collapsed αρχικά στο XAML) όσο δεν
+                 υπάρχουν αρκετά δεδομένα - ΚΑΜΙΑ ψεύτικη τάση από 0-1 σημεία. -->
+            <Border Style="{StaticResource CardStyle}" Margin="0,16,0,0">
+                <StackPanel>
+                    <Grid Margin="0,0,0,8">
+                        <Grid.ColumnDefinitions><ColumnDefinition Width="Auto"/><ColumnDefinition Width="*"/></Grid.ColumnDefinitions>
+                        <views:HeaderGlyphIcon Grid.Column="0" Kind="Check" Width="16" Height="16" Margin="0,0,8,0" VerticalAlignment="Center"/>
+                        <TextBlock Grid.Column="1" Text="{tr:Tr Home_ImpactTitle}" Style="{StaticResource CardTitleStyle}"/>
+                    </Grid>
+                    <TextBlock x:Name="TxtImpactFreed" Style="{StaticResource SubTextStyle}" TextWrapping="Wrap"/>
+                    <TextBlock x:Name="TxtImpactBootTrend" Style="{StaticResource SubTextStyle}" TextWrapping="Wrap" Margin="0,4,0,0" Visibility="Collapsed"/>
+                </StackPanel>
+            </Border>
+
             <!-- Disk Analysis -->
             <!-- ΔΙΟΡΘΩΣΗ (χρήστης ανέφερε: "τα καρφιτσωμένα και η ανάλυση χώρου ως πλαίσια είναι το
                  ένα πάνω στο άλλο") - σε αντίθεση με ΚΑΘΕ άλλη κάρτα σε αυτή τη StackPanel (όλες με

@@ -118,6 +118,17 @@ namespace OptimizerWpf.Views
             ActionLogService.Changed += RefreshRecentActivity;
             LoadPinnedTweaks();
 
+            // ΝΕΟ - βλ. σχόλιο στο XAML: η κάρτα "Ενημερώσεις Συστήματος" δείχνει το ΤΕΛΕΥΤΑΙΟ γνωστό
+            // στιγμιότυπο του UpdatesHubService (ζωντανά ενημερωνόμενο, ίδιο μοτίβο event με το
+            // ActionLogService παραπάνω) - όχι δική της σάρωση, το background UpdateNotificationService
+            // (ή οι σαρώσεις της καρτέλας Βελτιστοποίηση) τροφοδοτούν το hub.
+            RefreshUpdatesSummary();
+            UpdatesHubService.Changed += RefreshUpdatesSummary;
+
+            // ΝΕΟ - βλ. σχόλιο στο XAML - roadmap ιδέα #5.
+            RefreshImpactSummary();
+            ImpactTrackingService.Changed += RefreshImpactSummary;
+
             // ΔΙΟΡΘΩΣΗ ("ελάφρυνση εφαρμογής"): κάθε επιστροφή στην Αρχική δημιουργεί ΝΕΟ HomeView
             // (βλ. MainWindow.ShowTabContent) - χωρίς αυτό, οι timers του ΠΑΛΙΟΥ instance θα
             // συνέχιζαν να τρέχουν επ' αόριστον στο παρασκήνιο (διαρροή) κάθε φορά που ο χρήστης
@@ -128,7 +139,47 @@ namespace OptimizerWpf.Views
                 _refreshTimer.Stop();
                 _diskRefreshTimer.Stop();
                 ActionLogService.Changed -= RefreshRecentActivity;
+                UpdatesHubService.Changed -= RefreshUpdatesSummary;
+                ImpactTrackingService.Changed -= RefreshImpactSummary;
             };
+        }
+
+        private void RefreshUpdatesSummary()
+        {
+            TxtUpdatesAppsCount.Text = UpdatesHubService.AppUpdatesAvailable?.ToString() ?? "—";
+            TxtUpdatesDriversCount.Text = UpdatesHubService.DriverUpdatesAvailable?.ToString() ?? "—";
+            TxtUpdatesWindowsCount.Text = UpdatesHubService.WindowsUpdatesAvailable?.ToString() ?? "—";
+        }
+
+        private void BtnOpenUpdatesTab_Click(object sender, RoutedEventArgs e) =>
+            (Window.GetWindow(this) as MainWindow)?.SelectTab("Optimization");
+
+        // ΝΕΟ - roadmap ιδέα #5 - βλ. σχόλιο στο XAML.
+        private void RefreshImpactSummary()
+        {
+            var totalGb = ImpactTrackingService.TotalBytesFreedAllTime / 1024.0 / 1024 / 1024;
+            TxtImpactFreed.Text = totalGb > 0.05
+                ? string.Format(LanguageService.T("Home_ImpactFreedFormat"), totalGb.ToString("0.#"))
+                : LanguageService.T("Home_ImpactFreedNone");
+
+            // Ταξινόμηση ρητά κατά ημερομηνία (ΟΧΙ υπόθεση για τη σειρά επιστροφής του
+            // GetRecentBootTimes) - παλιότερος μισός έναντι πιο πρόσφατου μισού, ίδιο σκεπτικό με τα
+            // δύο μισά ενός A/B σύγκρισης.
+            var boots = AdvancedToolsService.GetRecentBootTimes(10).OrderBy(b => b.When).ToList();
+            if (boots.Count >= 2)
+            {
+                var half = Math.Max(1, boots.Count / 2);
+                var older = boots.Take(half).Average(b => b.Seconds);
+                var newer = boots.Skip(boots.Count - half).Average(b => b.Seconds);
+                if (older > 0.1)
+                {
+                    var pct = (older - newer) / older * 100.0;
+                    TxtImpactBootTrend.Visibility = Visibility.Visible;
+                    TxtImpactBootTrend.Text = string.Format(
+                        LanguageService.T(pct >= 0 ? "Home_ImpactBootTrendBetter" : "Home_ImpactBootTrendWorse"),
+                        Math.Abs(pct).ToString("0"));
+                }
+            }
         }
 
         // ΝΕΟ - roadmap "Καρφιτσωμένες συντομεύσεις" - συγκεντρώνει τα καρφιτσωμένα tweaks από όλες

@@ -58,6 +58,36 @@ namespace OptimizerWpf.Services
         public bool DesktopWidgetEnabled { get; set; }
         public double? DesktopWidgetX { get; set; }
         public double? DesktopWidgetY { get; set; }
+
+        // ΝΕΟ - ρητό αίτημα χρήστη: ειδοποίηση τύπου Windows πάνω από τη γραμμή εργασιών όταν
+        // υπάρχουν διαθέσιμες ενημερώσεις εφαρμογών/οδηγών, ακόμα κι όταν η εφαρμογή είναι
+        // ελαχιστοποιημένη στο tray - βλ. Services/UpdateNotificationService.cs. Τα LastNotified*
+        // αποτρέπουν την επανάληψη της ΙΔΙΑΣ ειδοποίησης σε κάθε περιοδικό έλεγχο - ειδοποιεί ξανά
+        // ΜΟΝΟ όταν ο αριθμός αλλάξει από την τελευταία φορά που ειδοποιήθηκε ο χρήστης.
+        public bool UpdateNotificationsEnabled { get; set; } = true;
+        public int UpdateCheckIntervalHours { get; set; } = 6;
+        public DateTime? LastUpdateCheckAt { get; set; }
+        public int? LastNotifiedAppUpdateCount { get; set; }
+        public int? LastNotifiedDriverUpdateCount { get; set; }
+        // ΝΕΟ - roadmap ιδέα #3 (ρητό αίτημα χρήστη: "κάνε το 3 από τις ιδέες") - βλ.
+        // Services/WindowsUpdateService.cs.
+        public int? LastNotifiedWindowsUpdateCount { get; set; }
+
+        // ΝΕΟ - roadmap ιδέα #4 (ρητό αίτημα χρήστη: "κάνε τα 4-7") - "Ειδοποίηση χαμηλού χώρου
+        // δίσκου" - ίδιο background μηχανισμό με τις ενημερώσεις (UpdateNotificationService), αλλά
+        // χρονικό (ΟΧΙ αριθμητικό) dedup: το πόσο χαμηλός είναι ο χώρος δεν είναι διακριτός μετρήσιμος
+        // αριθμός σαν το "3 ενημερώσεις" - αρκεί μία ειδοποίηση ανά 24ωρο όσο παραμένει κάτω από το
+        // όριο, βλ. UpdateNotificationService.CheckLowDiskSpace.
+        public bool LowDiskNotificationsEnabled { get; set; } = true;
+        public int LowDiskThresholdPercent { get; set; } = 10;
+        public DateTime? LastLowDiskNotifyAt { get; set; }
+
+        // ΝΕΟ - roadmap ιδέα #5 (ρητό αίτημα χρήστη) - "Σύγκριση πριν/μετά σε όλες τις σαρώσεις" -
+        // αθροιστικός μετρητής χώρου που ελευθερώθηκε ΣΥΝΟΛΙΚΑ από τον Γρήγορο Καθαρισμό/Πλήρη Έλεγχο
+        // Υγείας/καθαρισμό cache browser από τότε που εγκαταστάθηκε η εφαρμογή - βλ.
+        // Services/ImpactTrackingService.cs. Persisted (ΟΧΙ session-only) ακριβώς επειδή ο σκοπός είναι
+        // να δείξει το ΣΥΝΟΛΙΚΟ όφελος στον χρόνο, όχι μόνο τη μία τρέχουσα συνεδρία.
+        public long TotalBytesFreedAllTime { get; set; }
     }
 
     // Port του $global:appSettings / Save-AppSettings του Optimizer.ps1 - JSON persisted ρυθμίσεις

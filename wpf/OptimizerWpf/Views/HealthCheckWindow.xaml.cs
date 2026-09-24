@@ -115,6 +115,11 @@ namespace OptimizerWpf.Views
 
             if (_cancelled) return;
             _scoreResult = await Task.Run(HealthScoreService.Compute);
+            // ΝΕΟ - roadmap ιδέα #7 (ρητό αίτημα χρήστη: "κάνε τα 4-7") - βλ.
+            // Services/HealthScoreDailyHistoryService.cs (ΞΕΧΩΡΙΣΤΟ από το ήδη υπάρχον, in-memory
+            // HealthScoreHistoryService που τροφοδοτεί το sparkline της Αρχικής), ίδιο μοτίβο με το
+            // Disk Trend (Health tab).
+            HealthScoreDailyHistoryService.RecordIfNeeded(_scoreResult.Score, _scoreResult.Issues?.Count ?? 0);
             BuildResults();
             ScanPanel.Visibility = Visibility.Collapsed;
             ResultPanel.Visibility = Visibility.Visible;
@@ -223,6 +228,18 @@ namespace OptimizerWpf.Views
                     sb.AppendLine();
                 }
 
+                // ΝΕΟ - roadmap ιδέα #7 (ρητό αίτημα χρήστη: "κάνε τα 4-7" - "αρχείο τάσης στον
+                // χρόνο") - το PDF εξαγόμενο εδώ πλέον περιλαμβάνει ΟΛΟΚΛΗΡΟ το ιστορικό βαθμολογιών
+                // (όχι μόνο το τρέχον στιγμιότυπο παραπάνω), ίδιο πνεύμα με το Disk Trend section.
+                var history = HealthScoreDailyHistoryService.GetHistory();
+                if (history.Count > 1)
+                {
+                    sb.AppendLine($"=== {LanguageService.T("HealthCheck_TrendSectionTitle")} ===");
+                    foreach (var snap in history)
+                        sb.AppendLine($"{snap.Date}   {snap.Score}/100   ({snap.IssueCount} {LanguageService.T("HealthCheck_TrendIssuesSuffix")})");
+                    sb.AppendLine();
+                }
+
                 var path = System.IO.Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.DesktopDirectory),
                     $"HealthCheck_Report_{DateTime.Now:yyyyMMdd_HHmmss}.pdf");
                 await Task.Run(() => PdfExportService.ExportTextReport(path, LanguageService.T("HealthCheck_Title"), sb.ToString()));
@@ -261,6 +278,7 @@ namespace OptimizerWpf.Views
                         await HealthCleanupService.ClearBrowserCacheAsync(browser);
                     freed += _browserCacheBytes;
                 }
+                ImpactTrackingService.RecordBytesFreed(freed);
                 summary.Add(string.Format(LanguageService.T("HealthCheck_SummarySpace"), QuickCleanService.FormatSize(freed)));
                 spaceCleaned = true;
             }

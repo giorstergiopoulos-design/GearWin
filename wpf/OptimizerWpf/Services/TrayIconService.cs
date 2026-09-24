@@ -74,6 +74,11 @@ namespace OptimizerWpf.Services
             };
             _icon.MouseClick += (_, args) => { if (args.Button == MouseButtons.Left) TogglePopup(); };
             _icon.DoubleClick += (_, _) => RestoreMainWindow();
+            // ΝΕΟ - ρητό αίτημα χρήστη: κλικ πάνω στην ειδοποίηση ενημερώσεων (βλ. ShowUpdateBalloon
+            // παρακάτω) εκτελεί ό,τι ενέργεια όρισε ο καλών (π.χ. άνοιγμα της καρτέλας Βελτιστοποίηση
+            // για ενημερώσεις εφαρμογών/οδηγών, ή απευθείας οι Ρυθμίσεις Windows Update για τις OS
+            // ενημερώσεις - βλ. UpdateNotificationService.RunCheckAsync).
+            _icon.BalloonTipClicked += (_, _) => _balloonClickAction?.Invoke();
 
             // ΔΙΟΡΘΩΣΗ (χρήστης ανέφερε: "κάποια elements μένουν στην προηγούμενη γλώσσα μέχρι το
             // κλείσιμο και άνοιγμα ξανά") - το ContextMenuStrip είναι WinForms, εντελώς έξω από τον
@@ -111,6 +116,7 @@ namespace OptimizerWpf.Services
                 var items = await QuickCleanService.ScanAsync();
                 var keys = items.Where(i => i.Recommended).Select(i => i.Key).ToList();
                 var freed = await QuickCleanService.CleanAsync(keys);
+                ImpactTrackingService.RecordBytesFreed(freed);
                 _icon.ShowBalloonTip(4000, "GearWin - Complete PC Care",
                     $"{LanguageService.T("Tray_QuickCleanDonePrefix")}{QuickCleanService.FormatSize(freed)}", ToolTipIcon.Info);
             }
@@ -119,6 +125,33 @@ namespace OptimizerWpf.Services
                 _icon.Text = "GearWin - Complete PC Care";
                 _quickCleanMenuItem.Enabled = true;
             }
+        }
+
+        // ΝΕΟ - ρητό αίτημα χρήστη: "όταν υπάρχουν updates σε εφαρμογές να εμφανίζεται παράθυρο πάνω
+        // από την taskbar (όπως στα windows 10/11)... το ίδιο και για τους οδηγούς" - καλείται από το
+        // UpdateNotificationService (ενημερώσεις εφαρμογών/οδηγών/Windows, ΚΑΙ πλέον χαμηλός χώρος
+        // δίσκου - roadmap ιδέα #4, ίδιο μηχανισμό). Το NotifyIcon.ShowBalloonTip αποδίδεται από τα
+        // ίδια τα Windows 10/11 ως πραγματικό toast της περιοχής ειδοποιήσεων (πάνω από τη γραμμή
+        // εργασιών), ΟΧΙ η παλιά "balloon" εμφάνιση - λειτουργεί ανεξάρτητα από το αν το κύριο
+        // παράθυρο είναι ελαχιστοποιημένο/κρυμμένο στο tray, αφού το NotifyIcon παραμένει πάντα ενεργό.
+        // onClick=null πέφτει πίσω στο άνοιγμα της καρτέλας Βελτιστοποίηση (προεπιλογή αρχικά για
+        // εφαρμογές/οδηγούς, το όνομα της μεθόδου έμεινε γενικό μόλις προστέθηκε η ειδοποίηση δίσκου).
+        private static Action? _balloonClickAction;
+
+        public static void ShowNotificationBalloon(string title, string text, Action? onClick = null)
+        {
+            if (_icon == null) return;
+            _balloonClickAction = onClick ?? (() => OpenTab("Optimization"));
+            _icon.ShowBalloonTip(8000, title, text, ToolTipIcon.Info);
+        }
+
+        // ΝΕΟ - βοηθητική μέθοδος: επαναφέρει το κύριο παράθυρο και επιλέγει την καρτέλα tag -
+        // εξήχθη από το προεπιλεγμένο onClick παραπάνω ώστε να την ξαναχρησιμοποιεί ΚΑΙ το
+        // UpdateNotificationService.CheckLowDiskSpace (ανοίγει "System" αντί για "Optimization").
+        public static void OpenTab(string tag)
+        {
+            RestoreMainWindow();
+            (_mainWindow as MainWindow)?.SelectTab(tag);
         }
 
         private static void TogglePopup()

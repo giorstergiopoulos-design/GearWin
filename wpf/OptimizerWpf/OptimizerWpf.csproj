@@ -41,7 +41,7 @@
          ενημερωμένα OptimizerWpf.dll/.exe - σιωπηλή αποτυχία ενημέρωσης. ΠΡΕΠΕΙ να ενημερώνεται σε
          ΚΑΘΕ έκδοση, μαζί με τα υπόλοιπα 3 σημεία (MainWindow.xaml/SplashWindow.xaml τίτλοι,
          installer/OptimizerWpf.iss's MyAppVersion) - βλ. HANDOFF.md/commit history για το μοτίβο. -->
-    <Version>5.4.1</Version>
+    <Version>5.6.0</Version>
     <!-- ΝΕΟ - βελτίωση απόδοσης: ReadyToRun προ-μεταγλωττίζει τη native εικόνα κατά το publish αντί
          να αφήνει τα πάντα στο JIT κατά την πρώτη εκκίνηση - πιο γρήγορο cold start, χωρίς κανένα
          ρίσκο διαγραφής κώδικα (σε αντίθεση με το trimming, το οποίο ΔΕΝ ενεργοποιείται εδώ σκόπιμα -

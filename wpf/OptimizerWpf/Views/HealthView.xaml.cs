@@ -239,6 +239,7 @@ namespace OptimizerWpf.Views
             await HealthCleanupService.ClearBrowserCacheAsync(browser);
             StatusService.SetIdle(LanguageService.T("Ready"));
             var freed = GetSystemDriveFreeGb() - freeBefore;
+            if (freed > 0.05) ImpactTrackingService.RecordBytesFreed((long)(freed * 1024 * 1024 * 1024));
             var freedText = freed > 0.05 ? $" (+{freed:0.0} GB)" : "";
             TxtBrowserCacheStatus.Text = $"{LanguageService.T("Health_CacheClearedPrefix")}{browser.Label}{LanguageService.T("Health_CacheClearedSuffix")}{freedText}";
         }

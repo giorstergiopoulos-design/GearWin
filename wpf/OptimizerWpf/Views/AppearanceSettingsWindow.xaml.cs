@@ -19,6 +19,25 @@ namespace OptimizerWpf.Views
             ChkAnimatedBg.IsChecked = ThemeManager.AnimatedBackgrounds;
             ChkDesktopWidget.IsChecked = AppSettingsService.Current.DesktopWidgetEnabled;
 
+            ChkUpdateNotifications.IsChecked = AppSettingsService.Current.UpdateNotificationsEnabled;
+            foreach (var hours in new[] { 1, 2, 4, 6, 12, 24 })
+            {
+                var item = new ComboBoxItem { Content = string.Format(LanguageService.T("Appr_UpdateIntervalHoursFormat"), hours), Tag = hours };
+                ComboUpdateInterval.Items.Add(item);
+                if (hours == AppSettingsService.Current.UpdateCheckIntervalHours) ComboUpdateInterval.SelectedItem = item;
+            }
+            if (ComboUpdateInterval.SelectedItem == null && ComboUpdateInterval.Items.Count > 3) ComboUpdateInterval.SelectedIndex = 3;
+            RefreshUpdateCheckStatus();
+
+            ChkLowDiskNotifications.IsChecked = AppSettingsService.Current.LowDiskNotificationsEnabled;
+            foreach (var pct in new[] { 5, 10, 15, 20 })
+            {
+                var item = new ComboBoxItem { Content = string.Format(LanguageService.T("Appr_LowDiskThresholdFormat"), pct), Tag = pct };
+                ComboLowDiskThreshold.Items.Add(item);
+                if (pct == AppSettingsService.Current.LowDiskThresholdPercent) ComboLowDiskThreshold.SelectedItem = item;
+            }
+            if (ComboLowDiskThreshold.SelectedItem == null && ComboLowDiskThreshold.Items.Count > 1) ComboLowDiskThreshold.SelectedIndex = 1;
+
             var settings = AppSettingsService.Current;
             ChkSidebarEnabled.IsChecked = settings.SidebarEnabled;
             if (settings.SidebarPosition == "Left") RadioLeft.IsChecked = true;
@@ -91,6 +110,50 @@ namespace OptimizerWpf.Views
         }
 
         private void ChkAnimatedBg_Changed(object sender, RoutedEventArgs e) => ThemeManager.SetAnimatedBackgrounds(ChkAnimatedBg.IsChecked == true);
+
+        // ΝΕΟ - βλ. σχόλιο στο XAML/UpdateNotificationService.cs.
+        private void ChkUpdateNotifications_Changed(object sender, RoutedEventArgs e)
+        {
+            AppSettingsService.Current.UpdateNotificationsEnabled = ChkUpdateNotifications.IsChecked == true;
+            AppSettingsService.Save();
+        }
+
+        private void ComboUpdateInterval_SelectionChanged(object sender, SelectionChangedEventArgs e)
+        {
+            if (ComboUpdateInterval.SelectedItem is not ComboBoxItem { Tag: int hours }) return;
+            AppSettingsService.Current.UpdateCheckIntervalHours = hours;
+            AppSettingsService.Save();
+        }
+
+        private async void BtnUpdateCheckNow_Click(object sender, RoutedEventArgs e)
+        {
+            TxtUpdateCheckStatus.Text = LanguageService.T("Appr_UpdateChecking");
+            StatusService.SetBusy(LanguageService.T("Appr_UpdateChecking"));
+            await UpdateNotificationService.RunCheckAsync();
+            StatusService.SetIdle(LanguageService.T("Ready"));
+            RefreshUpdateCheckStatus();
+        }
+
+        private void RefreshUpdateCheckStatus()
+        {
+            var apps = UpdatesHubService.AppUpdatesAvailable;
+            var drivers = UpdatesHubService.DriverUpdatesAvailable;
+            TxtUpdateCheckStatus.Text = $"{LanguageService.T("Appr_UpdateStatusApps")}{(apps?.ToString() ?? "—")}{LanguageService.T("Appr_UpdateStatusDrivers")}{(drivers?.ToString() ?? "—")}";
+        }
+
+        // ΝΕΟ - roadmap ιδέα #4 - βλ. σχόλιο στο XAML.
+        private void ChkLowDiskNotifications_Changed(object sender, RoutedEventArgs e)
+        {
+            AppSettingsService.Current.LowDiskNotificationsEnabled = ChkLowDiskNotifications.IsChecked == true;
+            AppSettingsService.Save();
+        }
+
+        private void ComboLowDiskThreshold_SelectionChanged(object sender, SelectionChangedEventArgs e)
+        {
+            if (ComboLowDiskThreshold.SelectedItem is not ComboBoxItem { Tag: int pct }) return;
+            AppSettingsService.Current.LowDiskThresholdPercent = pct;
+            AppSettingsService.Save();
+        }
 
         // ΝΕΟ - roadmap "Widget επιφάνειας εργασίας" - ζωντανή ενεργοποίηση/απενεργοποίηση, ίδιο μοτίβο
         // με το ChkAnimatedBg_Changed παραπάνω.

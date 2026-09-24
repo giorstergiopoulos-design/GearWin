@@ -14,6 +14,8 @@ namespace OptimizerWpf.Services
     {
         public static int? DriverUpdatesAvailable { get; private set; }
         public static int? AppUpdatesAvailable { get; private set; }
+        // ΝΕΟ - roadmap ιδέα #3 (ρητό αίτημα χρήστη) - βλ. Services/WindowsUpdateService.cs.
+        public static int? WindowsUpdatesAvailable { get; private set; }
 
         public static event Action? Changed;
 
@@ -26,6 +28,12 @@ namespace OptimizerWpf.Services
         public static void ReportAppScan(int count)
         {
             AppUpdatesAvailable = count;
+            Changed?.Invoke();
+        }
+
+        public static void ReportWindowsUpdateScan(int count)
+        {
+            WindowsUpdatesAvailable = count;
             Changed?.Invoke();
         }
     }

@@ -77,6 +77,33 @@
                               Checked="ChkDesktopWidget_Changed" Unchecked="ChkDesktopWidget_Changed" Margin="0,0,0,4"/>
                     <TextBlock Text="{tr:Tr Appr_DesktopWidgetDesc}" Style="{StaticResource SubTextStyle}" TextWrapping="Wrap"/>
 
+                    <Separator Margin="0,16,0,14"/>
+                    <!-- ΝΕΟ - ρητό αίτημα χρήστη: ειδοποίηση τύπου Windows πάνω από τη γραμμή εργασιών
+                         όταν υπάρχουν διαθέσιμες ενημερώσεις εφαρμογών/οδηγών, ακόμα κι όταν η εφαρμογή
+                         είναι ελαχιστοποιημένη στο tray - βλ. Services/UpdateNotificationService.cs. -->
+                    <CheckBox x:Name="ChkUpdateNotifications" Content="{tr:Tr Appr_UpdateNotifications}" Foreground="{DynamicResource TextBrush}" FontWeight="Bold"
+                              Checked="ChkUpdateNotifications_Changed" Unchecked="ChkUpdateNotifications_Changed" Margin="0,0,0,4"/>
+                    <TextBlock Text="{tr:Tr Appr_UpdateNotificationsDesc}" Style="{StaticResource SubTextStyle}" TextWrapping="Wrap" Margin="0,0,0,10"/>
+                    <Grid Margin="0,0,0,8">
+                        <Grid.ColumnDefinitions><ColumnDefinition Width="Auto"/><ColumnDefinition Width="*"/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions>
+                        <TextBlock Grid.Column="0" Text="{tr:Tr Appr_UpdateCheckInterval}" Foreground="{DynamicResource TextBrush}" VerticalAlignment="Center" Margin="0,0,10,0"/>
+                        <ComboBox Grid.Column="1" x:Name="ComboUpdateInterval" Width="140" HorizontalAlignment="Left" SelectionChanged="ComboUpdateInterval_SelectionChanged"/>
+                        <Button Grid.Column="2" Content="{tr:Tr Appr_UpdateCheckNow}" Style="{StaticResource FlatButtonStyle}" Padding="12,6" Margin="10,0,0,0" Click="BtnUpdateCheckNow_Click"/>
+                    </Grid>
+                    <TextBlock x:Name="TxtUpdateCheckStatus" Style="{StaticResource SubTextStyle}" TextWrapping="Wrap"/>
+
+                    <!-- ΝΕΟ - roadmap ιδέα #4 (ρητό αίτημα χρήστη: "κάνε τα 4-7") - ίδιο μηχανισμό
+                         ειδοποίησης με τα παραπάνω, βλ. UpdateNotificationService.CheckLowDiskSpace. -->
+                    <Separator Margin="0,16,0,14"/>
+                    <CheckBox x:Name="ChkLowDiskNotifications" Content="{tr:Tr Appr_LowDiskNotifications}" Foreground="{DynamicResource TextBrush}" FontWeight="Bold"
+                              Checked="ChkLowDiskNotifications_Changed" Unchecked="ChkLowDiskNotifications_Changed" Margin="0,0,0,4"/>
+                    <TextBlock Text="{tr:Tr Appr_LowDiskNotificationsDesc}" Style="{StaticResource SubTextStyle}" TextWrapping="Wrap" Margin="0,0,0,10"/>
+                    <Grid>
+                        <Grid.ColumnDefinitions><ColumnDefinition Width="Auto"/><ColumnDefinition Width="*"/></Grid.ColumnDefinitions>
+                        <TextBlock Grid.Column="0" Text="{tr:Tr Appr_LowDiskThreshold}" Foreground="{DynamicResource TextBrush}" VerticalAlignment="Center" Margin="0,0,10,0"/>
+                        <ComboBox Grid.Column="1" x:Name="ComboLowDiskThreshold" Width="120" HorizontalAlignment="Left" SelectionChanged="ComboLowDiskThreshold_SelectionChanged"/>
+                    </Grid>
+
                     <TextBlock Text="{tr:Tr Appr_Note}"
                                Style="{StaticResource SubTextStyle}" TextWrapping="Wrap" Margin="0,16,0,0"/>
                     <!-- ΔΙΟΡΘΩΣΗ (χρήστης ρώτησε: "το μέγεθος των κουμπιών έχει προσαρμοστεί για όλες τις

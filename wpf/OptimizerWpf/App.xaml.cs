@@ -111,6 +111,13 @@ public partial class App : Application
         Services.TrayIconService.Start(main);
         Exit += (_, _) => Services.TrayIconService.Stop();
 
+        // ΝΕΟ - ρητό αίτημα χρήστη: ειδοποιήσεις τύπου Windows πάνω από τη γραμμή εργασιών όταν
+        // υπάρχουν διαθέσιμες ενημερώσεις εφαρμογών/οδηγών, ακόμα κι όταν η εφαρμογή είναι
+        // ελαχιστοποιημένη στο tray - βλ. Services/UpdateNotificationService.cs. Μετά το
+        // TrayIconService.Start παραπάνω, αφού το ShowUpdateBalloon χρειάζεται το NotifyIcon έτοιμο.
+        Services.UpdateNotificationService.Start();
+        Exit += (_, _) => Services.UpdateNotificationService.Stop();
+
         // ΝΕΟ - roadmap "Widget επιφάνειας εργασίας" - ξεκινά ΜΟΝΟ αν ο χρήστης το έχει ενεργοποιήσει
         // ρητά (Ρυθμίσεις Εμφάνισης), ίδιο μοτίβο με το AutoGamingModeEnabled παραπάνω.
         if (Services.AppSettingsService.Current.DesktopWidgetEnabled) Services.DesktopWidgetService.Start();
