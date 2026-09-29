@@ -44,8 +44,8 @@
                 <TextBox x:Name="TxtCustomId" Height="32" Padding="8,4" VerticalContentAlignment="Center"
                          Background="{DynamicResource MainBgBrush}" Foreground="{DynamicResource TextBrush}" BorderBrush="{DynamicResource CardBorderBrush}" Margin="0,0,0,8"/>
                 <StackPanel Orientation="Horizontal">
-                    <Button Content="{tr:Tr Vive_EnableId}" Style="{StaticResource AccentButtonStyle}" Width="180" Height="40" Margin="0,0,10,0" Click="BtnCustomEnable_Click"/>
-                    <Button Content="{tr:Tr Vive_DisableId}" Width="180" Height="40" Click="BtnCustomDisable_Click">
+                    <Button Content="{tr:Tr Vive_EnableId}" Style="{StaticResource AccentButtonStyle}" MinWidth="180" Height="40" Margin="0,0,10,0" Click="BtnCustomEnable_Click"/>
+                    <Button Content="{tr:Tr Vive_DisableId}" MinWidth="180" Height="40" Click="BtnCustomDisable_Click">
                         <Button.Style>
                             <Style TargetType="Button" BasedOn="{StaticResource FlatButtonStyle}">
                                 <Setter Property="Background" Value="#FFD32F2F"/>
@@ -85,7 +85,7 @@
             </ScrollViewer>
         </Border>
 
-        <Button Grid.Row="5" Content="{tr:Tr Close}" Style="{StaticResource FlatButtonStyle}" Width="120" HorizontalAlignment="Right" Margin="0,12,0,0" Click="BtnClose_Click"/>
+        <Button Grid.Row="5" Content="{tr:Tr Close}" Style="{StaticResource FlatButtonStyle}" MinWidth="120" HorizontalAlignment="Right" Margin="0,12,0,0" Click="BtnClose_Click"/>
     </Grid>
     </Grid>
 </Window>

@@ -15,27 +15,29 @@ Name: GearWin - Complete PC Care (WPF port of the original Optimizer.ps1)
 - Repo: `giorstergiopoulos-design/GearWin` on GitHub. `gh release create` works from this environment (has previously needed a retry after an auto-mode permission block).
 
 ## Current Objective
-No single active objective — user drives work in small/medium batches (Greek, terse). Just shipped v5.7.0 (most of the v5.7.0 backlog). Remaining v5.7.0 items need user decisions (see Next Actions). v5.8.0 backlog not yet started.
+No single active objective — user drives work in small/medium batches (Greek, terse). Just shipped v5.8.0 (REQ-570-06/10 + partial v5.8.0 backlog). REQ-570-13 explicitly skipped per user. REQ-580-02/03/05 remain (see Next Actions).
 
 ## Current Phase
 Between releases. Governance docs (CLAUDE.md, PROJECT_STATE.md, ROADMAP.md) adopted 2026-09-29 at user's request.
 
 ## Completed
-- v5.7.0 shipped (2026-09-29): REQ-570-01 (msstore "false success" fix — bucketed as opened-in-Store, not counted success/fail), REQ-570-02 (immediate update check on `--tray` launch), REQ-570-03 (Ultimate Performance toggle moved into Optimization tab), REQ-570-04 (Registry Cleaner card missing top margin, HealthView.xaml), REQ-570-05 (Opera GX browser-cache support added), REQ-570-07 (Brave/OBS/Telegram/Everything/ShareX/LibreOffice added to Recommended apps), REQ-570-08 (ThemedMessageBox icon Foreground now set per icon type — dark-mode visibility fix), REQ-570-09 (Settings sidebar icon Palette → Gear), REQ-570-11 (Skins tab merged into Theme Settings tab), REQ-570-12 (new first "Settings" tab: Desktop Widget + Update/Low-disk notifications + new "Launch with Windows to Tray" toggle, `SystemService.SetLaunchWithWindowsToTray`). See ROADMAP.md for full per-item detail.
-- Committed + pushed + released on GitHub as v5.7.0 with installer attached.
-- v5.6.0 shipped (2026-09-29): Windows-toast update notifications (apps/drivers/Windows Update, via `Services/UpdateNotificationService.cs` + `TrayIconService.ShowNotificationBalloon`), low-disk-space alerts (same mechanism), cumulative "bytes freed" + boot-time-trend card on Home (`Services/ImpactTrackingService.cs`), Health Check PDF export now includes historical score trend (`Services/HealthScoreDailyHistoryService.cs` — NOTE: distinct from the pre-existing, in-memory-only `Services/HealthScoreHistoryService.cs` used for the Home tab's live sparkline; do not conflate the two, see Known Bugs/history below), "Appearance Settings" renamed to "Settings", Run_OptimizerWpf.bat now follows the most recent real build (publish > Release > Debug).
-- Committed + pushed (`6a8a3ca`) + released on GitHub as v5.6.0 with installer attached.
+- v5.8.0 shipped (2026-09-29): REQ-570-06 (unified Chromium-family browser password manager — Chrome/Edge/Brave/Vivaldi/Opera/Opera GX, DPAPI+AES-GCM decrypt of local "Login Data" SQLite, new `Services/PasswordVaultService.cs` + `Views/PasswordManagerWindow.xaml`, opened from Network & Security), REQ-570-10 (ViVeTool curated list expanded 10→15 features, sourced from a current public listing, documented as periodic manual refresh since no live feed exists), a full pop-up text-truncation audit across all 14 secondary windows (7 files fixed, `Width`→`MinWidth` on translated buttons — verified across all 14 languages, not assumed), REQ-580-06 (Chinese/Korean/Indian flag icons fixed — were missing canonical elements, not just "low-res"; other 11 flags audited and already correct), REQ-580-04 (Help window was stale — missing the new password manager entirely and still said "Appearance Settings" instead of "Settings"; both fixed in all 14 languages), REQ-580-01 partial (new `OptimizerWpf.Tests/WindowSmokeTests.cs` — constructs all 12 parameterless secondary windows on a real STA thread, asserts no exception; does NOT click individual buttons or detect leaks/freezes, no UI Automation driver available in this environment). See ROADMAP.md for full per-item detail and honest DONE/PARTIAL rationale.
+- Committed + pushed + released on GitHub as v5.8.0 with installer attached.
+- v5.7.0 shipped (2026-09-29): REQ-570-01 (msstore "false success" fix — bucketed as opened-in-Store, not counted success/fail), REQ-570-02 (immediate update check on `--tray` launch), REQ-570-03 (Ultimate Performance toggle moved into Optimization tab), REQ-570-04 (Registry Cleaner card missing top margin, HealthView.xaml), REQ-570-05 (Opera GX browser-cache support added), REQ-570-07 (Brave/OBS/Telegram/Everything/ShareX/LibreOffice added to Recommended apps), REQ-570-08 (ThemedMessageBox icon Foreground now set per icon type — dark-mode visibility fix), REQ-570-09 (Settings sidebar icon Palette → Gear), REQ-570-11 (Skins tab merged into Theme Settings tab), REQ-570-12 (new first "Settings" tab: Desktop Widget + Update/Low-disk notifications + new "Launch with Windows to Tray" toggle, `SystemService.SetLaunchWithWindowsToTray`).
+- v5.6.0 shipped (2026-09-29): Windows-toast update notifications, low-disk-space alerts, cumulative "bytes freed" + boot-time-trend card on Home, Health Check PDF export historical trend, "Appearance Settings" renamed to "Settings" (first pass), Run_OptimizerWpf.bat build-path fix.
 
 ## In Progress
 Nothing mid-flight.
 
 ## Blocked
-- REQ-570-06 (unified browser password manager) — needs scope decision: Chromium-family only (straightforward, DPAPI+AES-GCM) vs. also Firefox (NSS interop, much bigger lift).
-- REQ-570-10 (ViVeTool auto-sync of "top experimental features") — needs a data-source decision; no official feed exists.
-- REQ-570-13 (code signing) — needs a purchased certificate; not a code task.
+- REQ-580-05 (port MotionDeskStudio's opacity/transparency mechanism) — that codebase isn't in this repo/session; needs its actual project path before anything can be done.
+- REQ-580-03 (Multimedia tab: Spotify/YouTube downloader) — flagged as a policy concern, not a scope/technical blocker: a built-in downloader for copyrighted streaming content (Spotify tracks, YouTube video/audio) would facilitate ToS/copyright infringement. Needs the user to either drop this item or narrow it to something legitimate (e.g. a local media format converter for files the user already has) before implementation.
 
 ## Next Actions
-v5.8.0 backlog (REQ-580-01..06) not started. REQ-580-01 and REQ-580-05 depend on / overlap MotionDeskStudio (separate project) — treat independently, don't assume one fix covers both. Re-confirm with user whether/how to proceed on MotionDeskStudio before touching anything there.
+REQ-580-02 (font management: style preview + free-font suggestions with web preview) not started. REQ-580-01 could be extended further (real UI Automation click-through, memory-leak detection) if a suitable driver/tool becomes available — currently out of reach in this environment.
+
+## MotionDeskStudio note
+Distinct from the REQ-580-05/580-03 items above: earlier in v5.7.0's session the user separately pasted MotionDeskStudio's own roadmap file for awareness (different project, different repo, not resolvable from here) — still unanswered whether/how to act on it. Not part of GearWin's backlog.
 
 ## Important Decisions
 - 2026-09-29: MotionDeskStudio is a **separate project** (its own roadmap, MOTIONDESK STUDIO.MD, was also pasted the same day) — never mix its context with GearWin. Its source is not part of this repo/session; if asked to act on it, need its actual project directory first.
@@ -57,9 +59,9 @@ v5.8.0 backlog (REQ-580-01..06) not started. REQ-580-01 and REQ-580-05 depend on
 
 ## Last Verification
 Build: `dotnet build -c Release` — succeeded, 0 errors (2 pre-existing WFAC010 warnings, unrelated).
-Tests: `dotnet test` (OptimizerWpf.Tests) — 60/60 passed.
-Installer: `ISCC.exe installer/OptimizerWpf.iss` — succeeded, `GearWin-Setup-5.7.0.exe`.
-Date: 2026-09-29 (v5.7.0 release).
+Tests: `dotnet test` (OptimizerWpf.Tests, now 61 incl. new WindowSmokeTests) — 61/61 passed.
+Installer: `ISCC.exe installer/OptimizerWpf.iss` — succeeded, `GearWin-Setup-5.8.0.exe`.
+Date: 2026-09-29 (v5.8.0 release).
 
 ## Last Updated
 2026-09-29

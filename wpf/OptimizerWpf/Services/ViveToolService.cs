@@ -33,6 +33,16 @@ namespace OptimizerWpf.Services
             new ViveFeature(LanguageService.T("Vive_F8Title"), new[] { "45172197", "51406324" }, LanguageService.T("Vive_F8Tip")),
             new ViveFeature(LanguageService.T("Vive_F9Title"), new[] { "57741219" }, LanguageService.T("Vive_F9Tip")),
             new ViveFeature(LanguageService.T("Vive_F10Title"), new[] { "54792954", "55345819" }, LanguageService.T("Vive_F10Tip")),
+            // REQ-570-10: δεν υπάρχει επίσημο feed για ViVeTool IDs (κανένα δεν υπάρχει, δημόσια
+            // τεκμηρίωση/κοινότητα είναι η μόνη πηγή παντού) - "sync" σημαίνει περιοδική ενημέρωση
+            // αυτής της curated λίστας από αξιόπιστη δημόσια πηγή (pureinfotech.com/vivetool-codes,
+            // ενημερώθηκε 2026-09-29), ΟΧΙ αυτόματο live feed. Επιλέχθηκαν GA-track (όχι μόνο
+            // Insider-only) χαρακτηριστικά, μεγαλύτερης εφαρμοσιμότητας.
+            new ViveFeature(LanguageService.T("Vive_F11Title"), new[] { "59213768" }, LanguageService.T("Vive_F11Tip")),
+            new ViveFeature(LanguageService.T("Vive_F12Title"), new[] { "61090762" }, LanguageService.T("Vive_F12Tip")),
+            new ViveFeature(LanguageService.T("Vive_F13Title"), new[] { "60813048" }, LanguageService.T("Vive_F13Tip")),
+            new ViveFeature(LanguageService.T("Vive_F14Title"), new[] { "58989092", "60716524", "48433719", "61391826" }, LanguageService.T("Vive_F14Tip")),
+            new ViveFeature(LanguageService.T("Vive_F15Title"), new[] { "59728252" }, LanguageService.T("Vive_F15Tip")),
         };
 
         private static string ExePath => Path.Combine(AppContext.BaseDirectory, "vivetool.exe");

@@ -70,6 +70,12 @@ namespace OptimizerWpf.Views
         // ΝΕΟ - roadmap "έλεγχος παραβιασμένων κωδικών" - βλ. HibpService. Ο κωδικός διαβάζεται ΜΟΝΟ
         // στη μνήμη για τη διάρκεια αυτής της κλήσης και καθαρίζεται αμέσως μετά - ΔΕΝ καταγράφεται σε
         // κανένα log/αρχείο της εφαρμογής.
+        private void BtnOpenPasswordManager_Click(object sender, RoutedEventArgs e)
+        {
+            var window = new PasswordManagerWindow { Owner = Window.GetWindow(this) };
+            window.ShowDialog();
+        }
+
         private async void BtnHibpCheck_Click(object sender, RoutedEventArgs e)
         {
             var password = PwdHibpCheck.Password;

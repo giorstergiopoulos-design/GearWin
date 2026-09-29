@@ -128,6 +128,16 @@
                         <Button x:Name="BtnHibpCheck" Grid.Column="1" Content="{tr:Tr Hibp_CheckButton}" Style="{StaticResource AccentButtonStyle}" Width="140" Height="34" Click="BtnHibpCheck_Click"/>
                     </Grid>
                     <TextBlock x:Name="TxtHibpResult" Style="{StaticResource SubTextStyle}" TextWrapping="Wrap" Margin="0,8,0,0"/>
+
+                    <Separator Margin="0,16,0,14"/>
+
+                    <!-- REQ-570-06 - ενοποιημένος διαχειριστής κωδικών browser - βλ.
+                         Services/PasswordVaultService.cs + Views/PasswordManagerWindow.xaml. Μόνο
+                         Chromium-family (Chrome/Edge/Brave/Vivaldi/Opera/Opera GX), τοπικά, ίδιος
+                         Windows χρήστης - καμία δικτυακή μετάδοση πουθενά. -->
+                    <TextBlock Text="{tr:Tr Network_PasswordManagerTitle}" FontWeight="Bold" Foreground="{DynamicResource TextBrush}" Margin="0,0,0,6"/>
+                    <TextBlock Text="{tr:Tr Network_PasswordManagerDesc}" Style="{StaticResource SubTextStyle}" TextWrapping="Wrap" Margin="0,0,0,10"/>
+                    <Button Content="{tr:Tr Network_PasswordManagerBtn}" Style="{StaticResource AccentButtonStyle}" MinWidth="220" Height="34" HorizontalAlignment="Left" Click="BtnOpenPasswordManager_Click"/>
                 </StackPanel>
             </Border>
 

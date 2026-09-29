@@ -43,6 +43,6 @@
             </ScrollViewer>
         </Border>
 
-        <Button Grid.Row="2" Content="{tr:Tr Close}" Style="{StaticResource AccentButtonStyle}" Width="120" HorizontalAlignment="Right" Margin="0,12,0,0" Click="BtnClose_Click"/>
+        <Button Grid.Row="2" Content="{tr:Tr Close}" Style="{StaticResource AccentButtonStyle}" MinWidth="120" HorizontalAlignment="Right" Margin="0,12,0,0" Click="BtnClose_Click"/>
     </Grid>
 </Window>

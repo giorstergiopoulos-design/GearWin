@@ -17,8 +17,8 @@
             <ComboBoxItem Content="FolderBackground" Tag="FolderBackground"/>
         </ComboBox>
         <StackPanel Orientation="Horizontal" HorizontalAlignment="Right">
-            <Button Content="{tr:Tr Cancel}" Style="{StaticResource FlatButtonStyle}" Width="100" Margin="0,0,10,0" Click="BtnCancel_Click"/>
-            <Button Content="{tr:Tr Ctx_AddBtn}" Style="{StaticResource AccentButtonStyle}" Width="100" Click="BtnAdd_Click"/>
+            <Button Content="{tr:Tr Cancel}" Style="{StaticResource FlatButtonStyle}" MinWidth="100" Margin="0,0,10,0" Click="BtnCancel_Click"/>
+            <Button Content="{tr:Tr Ctx_AddBtn}" Style="{StaticResource AccentButtonStyle}" MinWidth="100" Click="BtnAdd_Click"/>
         </StackPanel>
     </StackPanel>
 </Window>

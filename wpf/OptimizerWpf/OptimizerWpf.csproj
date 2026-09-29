@@ -41,7 +41,7 @@
          ενημερωμένα OptimizerWpf.dll/.exe - σιωπηλή αποτυχία ενημέρωσης. ΠΡΕΠΕΙ να ενημερώνεται σε
          ΚΑΘΕ έκδοση, μαζί με τα υπόλοιπα 3 σημεία (MainWindow.xaml/SplashWindow.xaml τίτλοι,
          installer/OptimizerWpf.iss's MyAppVersion) - βλ. HANDOFF.md/commit history για το μοτίβο. -->
-    <Version>5.7.0</Version>
+    <Version>5.8.0</Version>
     <!-- ΝΕΟ - βελτίωση απόδοσης: ReadyToRun προ-μεταγλωττίζει τη native εικόνα κατά το publish αντί
          να αφήνει τα πάντα στο JIT κατά την πρώτη εκκίνηση - πιο γρήγορο cold start, χωρίς κανένα
          ρίσκο διαγραφής κώδικα (σε αντίθεση με το trimming, το οποίο ΔΕΝ ενεργοποιείται εδώ σκόπιμα -
@@ -122,6 +122,12 @@
          εγγυημένο ότι υπάρχει σε κάθε σύστημα) - απλό, imperative XGraphics API κατάλληλο για το ήδη
          υπάρχον "=== Τίτλος ===" + γραμμές κειμένου format που παράγει το SystemView. -->
     <PackageReference Include="PdfSharp" Version="6.2.4" />
+    <!-- REQ-570-06: unified browser password manager (Δίκτυο & Ασφάλεια). Το "Login Data" αρχείο
+         κάθε Chromium-based browser (Chrome/Edge/Brave/Vivaldi/Opera/Opera GX) είναι SQLite - δεν
+         υπάρχει τρόπος να διαβαστεί χωρίς πραγματικό SQLite reader (το format της σελίδας δεν είναι
+         hand-parseable αξιόπιστα). Το Microsoft.Data.Sqlite είναι η επίσημη, ελαφριά βιβλιοθήκη της
+         Microsoft γι' αυτό ακριβώς (φέρνει το δικό της native e_sqlite3, καμία εξωτερική εξάρτηση). -->
+    <PackageReference Include="Microsoft.Data.Sqlite" Version="8.0.10" />
   </ItemGroup>
 
 </Project>

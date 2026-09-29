@@ -7,6 +7,10 @@
 
     <IsPackable>false</IsPackable>
     <IsTestProject>true</IsTestProject>
+    <!-- REQ-580-01: χρειάζεται για το νέο WindowSmokeTests.cs (κατασκευάζει πραγματικά WPF Window
+         αντικείμενα σε STA thread) - System.Windows/PresentationFramework types δεν είναι αλλιώς
+         άμεσα διαθέσιμα σε αυτό το project, μόνο μεταβατικά μέσω του ProjectReference. -->
+    <UseWPF>true</UseWPF>
   </PropertyGroup>
 
   <ItemGroup>

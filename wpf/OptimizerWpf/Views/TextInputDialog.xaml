@@ -13,8 +13,8 @@
         <TextBlock x:Name="TxtPrompt" Style="{StaticResource SubTextStyle}" Margin="0,0,0,8" TextWrapping="Wrap"/>
         <TextBox x:Name="TxtValue" Margin="0,0,0,16" Background="{DynamicResource CardBgBrush}" Foreground="{DynamicResource TextBrush}" KeyDown="TxtValue_KeyDown"/>
         <StackPanel Orientation="Horizontal" HorizontalAlignment="Right">
-            <Button x:Name="BtnCancel" Content="{tr:Tr Cancel}" Style="{StaticResource FlatButtonStyle}" Width="100" Margin="0,0,10,0" Click="BtnCancel_Click"/>
-            <Button x:Name="BtnOk" Content="OK" Style="{StaticResource AccentButtonStyle}" Width="100" Click="BtnOk_Click"/>
+            <Button x:Name="BtnCancel" Content="{tr:Tr Cancel}" Style="{StaticResource FlatButtonStyle}" MinWidth="100" Margin="0,0,10,0" Click="BtnCancel_Click"/>
+            <Button x:Name="BtnOk" Content="OK" Style="{StaticResource AccentButtonStyle}" MinWidth="100" Click="BtnOk_Click"/>
         </StackPanel>
     </StackPanel>
 </Window>
