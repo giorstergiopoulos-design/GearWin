@@ -308,9 +308,56 @@
                 </Grid>
             </Border>
 
+            <!-- ΝΕΟ - ROADMAP.md REQ-570-03 (ρητό αίτημα χρήστη: "αυτόματο gaming mode κάτω από
+                 gaming mode & ultimate performance") - το tweak "Ultimate Performance" ζούσε πριν
+                 θαμμένο μέσα στη γενική λίστα tweaks της καρτέλας Επιπλέον Ρυθμίσεις
+                 (TweakService.AllMainTweaks, αφαιρέθηκε από εκεί) - μετακινήθηκε εδώ, δίπλα στο
+                 θεματικά συναφές Gaming Mode (ΙΔΙΕΣ TweakService.UltimatePerformanceOn/Off/DetectState
+                 μέθοδοι, καμία διπλή υλοποίηση - βλ. ToggleUltimatePerformance_Click στο code-behind). -->
+            <Border Style="{StaticResource CardStyle}" Margin="0,16,0,0">
+                <Grid>
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="*"/>
+                        <ColumnDefinition Width="Auto"/>
+                    </Grid.ColumnDefinitions>
+                    <StackPanel Grid.Column="0">
+                        <Grid Margin="0,0,0,6">
+                            <Grid.ColumnDefinitions><ColumnDefinition Width="Auto"/><ColumnDefinition Width="*"/></Grid.ColumnDefinitions>
+                            <views:HeaderGlyphIcon Grid.Column="0" Kind="Bolt" Width="16" Height="16" Margin="0,0,8,0" VerticalAlignment="Center"/>
+                            <TextBlock Grid.Column="1" Text="{tr:Tr Opt_UltimatePerformance}" Style="{StaticResource CardTitleStyle}"/>
+                        </Grid>
+                        <TextBlock Text="{tr:Tr Opt_UltimatePerformanceDesc}" Style="{StaticResource SubTextStyle}" TextWrapping="Wrap"/>
+                    </StackPanel>
+                    <ToggleButton x:Name="ToggleUltimatePerformance" Grid.Column="1" VerticalAlignment="Center"
+                                  Style="{StaticResource ToggleSwitchStyle}" Click="ToggleUltimatePerformance_Click"/>
+                </Grid>
+            </Border>
+
+            <!-- ΝΕΟ - roadmap "Αυτόματο Gaming Mode" - βλ. AutoGamingModeService. Μετακινήθηκε ΕΔΩ
+                 (ρητό αίτημα χρήστη, REQ-570-03) - ακριβώς κάτω από Gaming Mode & Ultimate Performance,
+                 πριν ήταν στο τέλος της καρτέλας μετά την Προγραμματισμένη Συντήρηση. -->
+            <Border Style="{StaticResource CardStyle}" Margin="0,16,0,0">
+                <Grid>
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="*"/>
+                        <ColumnDefinition Width="Auto"/>
+                    </Grid.ColumnDefinitions>
+                    <StackPanel Grid.Column="0">
+                        <StackPanel Orientation="Horizontal" Margin="0,0,0,6">
+                            <views:HeaderGlyphIcon Kind="Gamepad" Width="16" Height="16" Margin="0,0,8,0" VerticalAlignment="Center"/>
+                            <TextBlock Text="{tr:Tr Opt_AutoGamingMode}" Style="{StaticResource CardTitleStyle}"/>
+                        </StackPanel>
+                        <TextBlock Text="{tr:Tr Opt_AutoGamingModeDesc}" Style="{StaticResource SubTextStyle}" TextWrapping="Wrap"/>
+                    </StackPanel>
+                    <ToggleButton x:Name="ToggleAutoGamingMode" Grid.Column="1" VerticalAlignment="Center"
+                                  Style="{StaticResource ToggleSwitchStyle}" Click="ToggleAutoGamingMode_Click"/>
+                </Grid>
+            </Border>
+
             <!-- ΝΕΟ - roadmap "Προγραμματισμένη συντήρηση" - πραγματική εβδομαδιαία εργασία Task
                  Scheduler (ΟΧΙ timer μέσα στην εφαρμογή - δεν χρειάζεται η εφαρμογή να τρέχει συνέχεια),
-                 βλ. AdvancedToolsService.SetScheduledMaintenanceAsync/RunScheduledMaintenance. -->
+                 βλ. AdvancedToolsService.SetScheduledMaintenanceAsync/RunScheduledMaintenance. Μετακινήθηκε
+                 στο τέλος (REQ-570-03) - πριν ήταν ανάμεσα σε Gaming Mode και Αυτόματο Gaming Mode. -->
             <Border Style="{StaticResource CardStyle}" Margin="0,16,0,0">
                 <Grid>
                     <Grid.ColumnDefinitions>
@@ -327,25 +374,6 @@
                     </StackPanel>
                     <ToggleButton x:Name="ToggleScheduledMaintenance" Grid.Column="1" VerticalAlignment="Center"
                                   Style="{StaticResource ToggleSwitchStyle}" Click="ToggleScheduledMaintenance_Click"/>
-                </Grid>
-            </Border>
-
-            <!-- ΝΕΟ - roadmap "Αυτόματο Gaming Mode" - βλ. AutoGamingModeService. -->
-            <Border Style="{StaticResource CardStyle}" Margin="0,16,0,0">
-                <Grid>
-                    <Grid.ColumnDefinitions>
-                        <ColumnDefinition Width="*"/>
-                        <ColumnDefinition Width="Auto"/>
-                    </Grid.ColumnDefinitions>
-                    <StackPanel Grid.Column="0">
-                        <StackPanel Orientation="Horizontal" Margin="0,0,0,6">
-                            <views:HeaderGlyphIcon Kind="Gamepad" Width="16" Height="16" Margin="0,0,8,0" VerticalAlignment="Center"/>
-                            <TextBlock Text="{tr:Tr Opt_AutoGamingMode}" Style="{StaticResource CardTitleStyle}"/>
-                        </StackPanel>
-                        <TextBlock Text="{tr:Tr Opt_AutoGamingModeDesc}" Style="{StaticResource SubTextStyle}" TextWrapping="Wrap"/>
-                    </StackPanel>
-                    <ToggleButton x:Name="ToggleAutoGamingMode" Grid.Column="1" VerticalAlignment="Center"
-                                  Style="{StaticResource ToggleSwitchStyle}" Click="ToggleAutoGamingMode_Click"/>
                 </Grid>
             </Border>
 

@@ -41,7 +41,11 @@ namespace OptimizerWpf
             new SidebarShortcut("📄", LanguageService.T("ActionLog_Title"), "ActionLog_Title", GlyphKind.Document),
             new SidebarShortcut("🧩", LanguageService.T("Sidebar_ViveToolLabel"), "Vive_Title", GlyphKind.Puzzle),
             new SidebarShortcut("📱", LanguageService.T("Sidebar_UwpManagerLabel"), "Uwp_Title", GlyphKind.Phone),
-            new SidebarShortcut("🎨", LanguageService.T("AppearanceSettingsTitle"), "AppearanceSettingsTitle", GlyphKind.Palette),
+            // ΔΙΟΡΘΩΣΗ (ρητό αίτημα χρήστη - ROADMAP.md REQ-570-09: "το εικονίδιο των ρυθμίσεων να
+            // είναι γρανάζι και όχι ζωγραφική παλέτα") - GlyphKind.Palette -> Gear (καθολική αλλαγή
+            // εδώ, αφού ΚΑΙ το πλευρικό μενού ΚΑΙ η οριζόντια μοντέρνα λωρίδα διαβάζουν το ΙΔΙΟ
+            // SidebarShortcuts.All, βλ. MainWindow.xaml).
+            new SidebarShortcut("⚙️", LanguageService.T("AppearanceSettingsTitle"), "AppearanceSettingsTitle", GlyphKind.Gear),
         };
     }
 }

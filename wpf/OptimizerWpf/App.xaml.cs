@@ -96,16 +96,33 @@ public partial class App : Application
             ShutdownMode = ShutdownMode.OnLastWindowClose;
         }
 
+        // ΝΕΟ - ROADMAP.md REQ-570-02/12 (ρητό αίτημα χρήστη: "εκκίνηση εφαρμογής με τα windows στο
+        // tray" + "όταν ανοίγει η εφαρμογή αυτόματα στο tray να γίνεται έλεγχος ενημερώσεων για να
+        // εμφανίζεται αμέσως μήνυμα balloon") - βλ. Views/AppearanceSettingsWindow's "Ρυθμίσεις" tab +
+        // Services/SystemService.SetLaunchWithWindowsToTray (εγγράφει αυτό ακριβώς το όρισμα στο
+        // registry Run key).
+        var startToTray = e.Args.Contains("--tray");
+
         // Χειροκίνητη εκκίνηση (αντί για StartupUri) - χρειάζεται το MainWindow ήδη Show()-αρισμένο
         // (με πραγματικό Left/Top/ActualWidth/ActualHeight) ΠΡΙΝ δημιουργηθεί η οθόνη εκκίνησης, ώστε
         // η SplashWindow να μπορεί να καλύψει ΑΚΡΙΒΩΣ τα ίδια όρια και αργότερα να διαβάσει τη θέση
         // του πραγματικού γραναζιού (TitleGearBorder) για το εφέ "προσγείωσης" - βλ. SplashWindow.
+        // ΔΙΟΡΘΩΣΗ - όταν ξεκινά με --tray, ΔΕΝ εμφανίζεται καθόλου το κύριο παράθυρο/η οθόνη
+        // εκκίνησης (θα ήταν παράλογο ένα εφέ "προσγείωσης" προς ένα παράθυρο που δεν φαίνεται ποτέ) -
+        // Hide() σε ένα ποτέ-μη-Show()-αρισμένο Window είναι ασφαλές στο WPF, ίδιο μοτίβο με κάθε
+        // "ξεκίνα ελαχιστοποιημένο στο tray" εφαρμογή.
         var main = new MainWindow();
         MainWindow = main;
-        main.Show();
-
-        var splash = new Views.SplashWindow(main) { Owner = main };
-        splash.Show();
+        if (startToTray)
+        {
+            main.Hide();
+        }
+        else
+        {
+            main.Show();
+            var splash = new Views.SplashWindow(main) { Owner = main };
+            splash.Show();
+        }
 
         // ΝΕΟ - roadmap "Mini widget / system tray live view" - ενεργό όσο τρέχει η εφαρμογή.
         Services.TrayIconService.Start(main);
@@ -117,6 +134,12 @@ public partial class App : Application
         // TrayIconService.Start παραπάνω, αφού το ShowUpdateBalloon χρειάζεται το NotifyIcon έτοιμο.
         Services.UpdateNotificationService.Start();
         Exit += (_, _) => Services.UpdateNotificationService.Stop();
+
+        // ΝΕΟ - REQ-570-02 - όταν ξεκινά αυτόματα στο tray, άμεσος έλεγχος ενημερώσεων (ΟΧΙ αναμονή
+        // για το πρώτο tick του περιοδικού timer, βλ. UpdateNotificationService.Start) ώστε το
+        // balloon (αν βρεθούν ενημερώσεις) και η κάρτα "Ενημερώσεις Συστήματος" της Αρχικής να
+        // ενημερωθούν αμέσως, ίδιο RunCheckAsync με το κουμπί "Έλεγχος Τώρα" των Ρυθμίσεων.
+        if (startToTray) _ = Services.UpdateNotificationService.RunCheckAsync();
 
         // ΝΕΟ - roadmap "Widget επιφάνειας εργασίας" - ξεκινά ΜΟΝΟ αν ο χρήστης το έχει ενεργοποιήσει
         // ρητά (Ρυθμίσεις Εμφάνισης), ίδιο μοτίβο με το AutoGamingModeEnabled παραπάνω.

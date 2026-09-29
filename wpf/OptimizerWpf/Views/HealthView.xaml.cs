@@ -82,6 +82,11 @@ namespace OptimizerWpf.Views
             {
                 Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "Programs", "Opera", "launcher.exe"),
             },
+            // ΝΕΟ - REQ-570-05 - ίδιο μοτίβο με το Opera παραπάνω, βλ. HealthCleanupService.DetectBrowsers.
+            ["OperaGX"] = new[]
+            {
+                Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "Programs", "Opera GX", "launcher.exe"),
+            },
             ["Firefox"] = new[]
             {
                 Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ProgramFiles), "Mozilla Firefox", "firefox.exe"),

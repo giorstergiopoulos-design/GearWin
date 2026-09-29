@@ -209,6 +209,12 @@ namespace OptimizerWpf.Services
                 ("Edge", "Microsoft Edge", Path.Combine(localAppData, "Microsoft", "Edge", "User Data"), "Cache"),
                 ("Brave", "Brave", Path.Combine(localAppData, "BraveSoftware", "Brave-Browser", "User Data"), "Cache"),
                 ("Opera", "Opera", Path.Combine(appData, "Opera Software", "Opera Stable"), "Cache"),
+                // ΝΕΟ - ROADMAP.md REQ-570-05 (ρητό αίτημα χρήστη: "υποστήριξη όλων των υπαρχόντων
+                // browsers") - Opera GX είναι μια ξεχωριστή εγκατάσταση/φάκελος προφίλ από την κανονική
+                // Opera (πολύ δημοφιλής παραλλαγή για gaming - ταιριάζει και θεματικά με το Gaming Mode
+                // της εφαρμογής) - ίδια ακριβώς μεταχείριση με το ήδη υπάρχον Opera παραπάνω (ίδια
+                // Chromium-derived δομή, απλώς άλλος φάκελος "Opera GX Stable").
+                ("OperaGX", "Opera GX", Path.Combine(appData, "Opera Software", "Opera GX Stable"), "Cache"),
                 // ΔΙΟΡΘΩΣΗ (εξονυχιστικός έλεγχος εντόπισε): έλειπε εντελώς το Vivaldi - το ps1 original
                 // το ανιχνεύει (ίδιο μοτίβο με Chrome/Edge/Brave, ίδια Chromium-based δομή προφίλ).
                 ("Vivaldi", "Vivaldi", Path.Combine(localAppData, "Vivaldi", "User Data"), "Cache"),

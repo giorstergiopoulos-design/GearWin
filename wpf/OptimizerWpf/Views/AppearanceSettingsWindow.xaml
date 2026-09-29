@@ -32,6 +32,59 @@
              TabControl, οπτικά "κομμένη" από το τετράγωνο Background πίσω της. Padding στο ίδιο το
              TabControl δίνει χώρο ΓΥΡΩ από ολόκληρη τη λωρίδα pills. -->
         <TabControl x:Name="MainTabs" Grid.Row="0" Padding="4,4,0,0" Background="{DynamicResource TabBgBrush}" BorderThickness="0" ItemContainerStyle="{StaticResource PillTabItemStyle}">
+            <!-- ΝΕΟ - ROADMAP.md REQ-570-12 (ρητό αίτημα χρήστη: "widget απόδοσης, ειδοποιήσεις
+                 ενημερώσεων, ειδοποιήσεις χαμηλού χώρου δίσκου, εκκίνηση εφαρμογής με τα windows στο
+                 tray σε νέα καρτέλα Ρυθμίσεις, πρώτη στη σειρά") - οι 3 πρώτες ενότητες ζούσαν πριν
+                 μέσα στην καρτέλα Ρυθμίσεις Θεμάτων (μετακινήθηκαν εδώ αυτούσιες, ΚΑΜΙΑ αλλαγή στη
+                 λογική/handlers τους) - η 4η (εκκίνηση στο tray) είναι νέα, βλ.
+                 Services/SystemService.SetLaunchWithWindowsToTray. -->
+            <TabItem Header="{tr:Tr AppearanceSettingsTitle}">
+                <ScrollViewer VerticalScrollBarVisibility="Auto" PreviewMouseWheel="NestedScroll_PreviewMouseWheel">
+                <StackPanel Margin="12">
+                    <!-- ΝΕΟ - roadmap "Widget επιφάνειας εργασίας" - βλ. DesktopWidgetService/
+                         DesktopWidgetWindow. Σε αντίθεση με το tray popup (ανοίγει σε κλικ), αυτό
+                         παραμένει μόνιμα ορατό στην επιφάνεια εργασίας. -->
+                    <CheckBox x:Name="ChkDesktopWidget" Content="{tr:Tr Appr_DesktopWidget}" Foreground="{DynamicResource TextBrush}" FontWeight="Bold"
+                              Checked="ChkDesktopWidget_Changed" Unchecked="ChkDesktopWidget_Changed" Margin="0,0,0,4"/>
+                    <TextBlock Text="{tr:Tr Appr_DesktopWidgetDesc}" Style="{StaticResource SubTextStyle}" TextWrapping="Wrap"/>
+
+                    <Separator Margin="0,16,0,14"/>
+                    <!-- ΝΕΟ - ρητό αίτημα χρήστη: ειδοποίηση τύπου Windows πάνω από τη γραμμή εργασιών
+                         όταν υπάρχουν διαθέσιμες ενημερώσεις εφαρμογών/οδηγών, ακόμα κι όταν η εφαρμογή
+                         είναι ελαχιστοποιημένη στο tray - βλ. Services/UpdateNotificationService.cs. -->
+                    <CheckBox x:Name="ChkUpdateNotifications" Content="{tr:Tr Appr_UpdateNotifications}" Foreground="{DynamicResource TextBrush}" FontWeight="Bold"
+                              Checked="ChkUpdateNotifications_Changed" Unchecked="ChkUpdateNotifications_Changed" Margin="0,0,0,4"/>
+                    <TextBlock Text="{tr:Tr Appr_UpdateNotificationsDesc}" Style="{StaticResource SubTextStyle}" TextWrapping="Wrap" Margin="0,0,0,10"/>
+                    <Grid Margin="0,0,0,8">
+                        <Grid.ColumnDefinitions><ColumnDefinition Width="Auto"/><ColumnDefinition Width="*"/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions>
+                        <TextBlock Grid.Column="0" Text="{tr:Tr Appr_UpdateCheckInterval}" Foreground="{DynamicResource TextBrush}" VerticalAlignment="Center" Margin="0,0,10,0"/>
+                        <ComboBox Grid.Column="1" x:Name="ComboUpdateInterval" Width="140" HorizontalAlignment="Left" SelectionChanged="ComboUpdateInterval_SelectionChanged"/>
+                        <Button Grid.Column="2" Content="{tr:Tr Appr_UpdateCheckNow}" Style="{StaticResource FlatButtonStyle}" Padding="12,6" Margin="10,0,0,0" Click="BtnUpdateCheckNow_Click"/>
+                    </Grid>
+                    <TextBlock x:Name="TxtUpdateCheckStatus" Style="{StaticResource SubTextStyle}" TextWrapping="Wrap"/>
+
+                    <!-- ΝΕΟ - roadmap ιδέα #4 (ρητό αίτημα χρήστη: "κάνε τα 4-7") - ίδιο μηχανισμό
+                         ειδοποίησης με τα παραπάνω, βλ. UpdateNotificationService.CheckLowDiskSpace. -->
+                    <Separator Margin="0,16,0,14"/>
+                    <CheckBox x:Name="ChkLowDiskNotifications" Content="{tr:Tr Appr_LowDiskNotifications}" Foreground="{DynamicResource TextBrush}" FontWeight="Bold"
+                              Checked="ChkLowDiskNotifications_Changed" Unchecked="ChkLowDiskNotifications_Changed" Margin="0,0,0,4"/>
+                    <TextBlock Text="{tr:Tr Appr_LowDiskNotificationsDesc}" Style="{StaticResource SubTextStyle}" TextWrapping="Wrap" Margin="0,0,0,10"/>
+                    <Grid>
+                        <Grid.ColumnDefinitions><ColumnDefinition Width="Auto"/><ColumnDefinition Width="*"/></Grid.ColumnDefinitions>
+                        <TextBlock Grid.Column="0" Text="{tr:Tr Appr_LowDiskThreshold}" Foreground="{DynamicResource TextBrush}" VerticalAlignment="Center" Margin="0,0,10,0"/>
+                        <ComboBox Grid.Column="1" x:Name="ComboLowDiskThreshold" Width="120" HorizontalAlignment="Left" SelectionChanged="ComboLowDiskThreshold_SelectionChanged"/>
+                    </Grid>
+
+                    <!-- ΝΕΟ - ROADMAP.md REQ-570-02/12 (ρητό αίτημα χρήστη) - βλ.
+                         Services/SystemService.SetLaunchWithWindowsToTray + App.xaml.cs's χειρισμό
+                         του ορίσματος εκκίνησης (άμεσος έλεγχος ενημερώσεων + balloon όταν ξεκινά έτσι). -->
+                    <Separator Margin="0,16,0,14"/>
+                    <CheckBox x:Name="ChkLaunchToTray" Content="{tr:Tr Appr_LaunchToTray}" Foreground="{DynamicResource TextBrush}" FontWeight="Bold"
+                              Checked="ChkLaunchToTray_Changed" Unchecked="ChkLaunchToTray_Changed" Margin="0,0,0,4"/>
+                    <TextBlock Text="{tr:Tr Appr_LaunchToTrayDesc}" Style="{StaticResource SubTextStyle}" TextWrapping="Wrap"/>
+                </StackPanel>
+                </ScrollViewer>
+            </TabItem>
             <TabItem Header="{tr:Tr Appr_ThemeSettingsTab}">
                 <ScrollViewer VerticalScrollBarVisibility="Auto" PreviewMouseWheel="NestedScroll_PreviewMouseWheel">
                 <StackPanel Margin="12">
@@ -69,40 +122,20 @@
                     <RadioButton x:Name="RadioOpacityLight" Content="{tr:Tr Appr_OpacityLight}" GroupName="Opacity" Foreground="{DynamicResource TextBrush}" Checked="Opacity_Changed" Margin="0,0,0,6"/>
                     <RadioButton x:Name="RadioOpacityMedium" Content="{tr:Tr Appr_OpacityMedium}" GroupName="Opacity" Foreground="{DynamicResource TextBrush}" Checked="Opacity_Changed"/>
 
+                    <!-- ΝΕΟ - ROADMAP.md REQ-570-11 (ρητό αίτημα χρήστη: "καρτέλα Θέματα & Skins
+                         συγχώνευση με το περιεχόμενο των Skins κάτω από των Θεμάτων") - η πρώην
+                         ξεχωριστή καρτέλα Appr_SkinsTab ενσωματώθηκε εδώ αυτούσια (ΚΑΜΙΑ αλλαγή στη
+                         λογική/handlers - Skin_Changed παραμένει ίδιο). -->
                     <Separator Margin="0,16,0,14"/>
-                    <!-- ΝΕΟ - roadmap "Widget επιφάνειας εργασίας" - βλ. DesktopWidgetService/
-                         DesktopWidgetWindow. Σε αντίθεση με το tray popup (ανοίγει σε κλικ), αυτό
-                         παραμένει μόνιμα ορατό στην επιφάνεια εργασίας. -->
-                    <CheckBox x:Name="ChkDesktopWidget" Content="{tr:Tr Appr_DesktopWidget}" Foreground="{DynamicResource TextBrush}" FontWeight="Bold"
-                              Checked="ChkDesktopWidget_Changed" Unchecked="ChkDesktopWidget_Changed" Margin="0,0,0,4"/>
-                    <TextBlock Text="{tr:Tr Appr_DesktopWidgetDesc}" Style="{StaticResource SubTextStyle}" TextWrapping="Wrap"/>
-
-                    <Separator Margin="0,16,0,14"/>
-                    <!-- ΝΕΟ - ρητό αίτημα χρήστη: ειδοποίηση τύπου Windows πάνω από τη γραμμή εργασιών
-                         όταν υπάρχουν διαθέσιμες ενημερώσεις εφαρμογών/οδηγών, ακόμα κι όταν η εφαρμογή
-                         είναι ελαχιστοποιημένη στο tray - βλ. Services/UpdateNotificationService.cs. -->
-                    <CheckBox x:Name="ChkUpdateNotifications" Content="{tr:Tr Appr_UpdateNotifications}" Foreground="{DynamicResource TextBrush}" FontWeight="Bold"
-                              Checked="ChkUpdateNotifications_Changed" Unchecked="ChkUpdateNotifications_Changed" Margin="0,0,0,4"/>
-                    <TextBlock Text="{tr:Tr Appr_UpdateNotificationsDesc}" Style="{StaticResource SubTextStyle}" TextWrapping="Wrap" Margin="0,0,0,10"/>
-                    <Grid Margin="0,0,0,8">
-                        <Grid.ColumnDefinitions><ColumnDefinition Width="Auto"/><ColumnDefinition Width="*"/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions>
-                        <TextBlock Grid.Column="0" Text="{tr:Tr Appr_UpdateCheckInterval}" Foreground="{DynamicResource TextBrush}" VerticalAlignment="Center" Margin="0,0,10,0"/>
-                        <ComboBox Grid.Column="1" x:Name="ComboUpdateInterval" Width="140" HorizontalAlignment="Left" SelectionChanged="ComboUpdateInterval_SelectionChanged"/>
-                        <Button Grid.Column="2" Content="{tr:Tr Appr_UpdateCheckNow}" Style="{StaticResource FlatButtonStyle}" Padding="12,6" Margin="10,0,0,0" Click="BtnUpdateCheckNow_Click"/>
-                    </Grid>
-                    <TextBlock x:Name="TxtUpdateCheckStatus" Style="{StaticResource SubTextStyle}" TextWrapping="Wrap"/>
-
-                    <!-- ΝΕΟ - roadmap ιδέα #4 (ρητό αίτημα χρήστη: "κάνε τα 4-7") - ίδιο μηχανισμό
-                         ειδοποίησης με τα παραπάνω, βλ. UpdateNotificationService.CheckLowDiskSpace. -->
-                    <Separator Margin="0,16,0,14"/>
-                    <CheckBox x:Name="ChkLowDiskNotifications" Content="{tr:Tr Appr_LowDiskNotifications}" Foreground="{DynamicResource TextBrush}" FontWeight="Bold"
-                              Checked="ChkLowDiskNotifications_Changed" Unchecked="ChkLowDiskNotifications_Changed" Margin="0,0,0,4"/>
-                    <TextBlock Text="{tr:Tr Appr_LowDiskNotificationsDesc}" Style="{StaticResource SubTextStyle}" TextWrapping="Wrap" Margin="0,0,0,10"/>
-                    <Grid>
-                        <Grid.ColumnDefinitions><ColumnDefinition Width="Auto"/><ColumnDefinition Width="*"/></Grid.ColumnDefinitions>
-                        <TextBlock Grid.Column="0" Text="{tr:Tr Appr_LowDiskThreshold}" Foreground="{DynamicResource TextBrush}" VerticalAlignment="Center" Margin="0,0,10,0"/>
-                        <ComboBox Grid.Column="1" x:Name="ComboLowDiskThreshold" Width="120" HorizontalAlignment="Left" SelectionChanged="ComboLowDiskThreshold_SelectionChanged"/>
-                    </Grid>
+                    <TextBlock Text="{tr:Tr Appr_AppSkin}" Style="{StaticResource CardTitleStyle}" Margin="0,0,0,8"/>
+                    <RadioButton x:Name="RadioSkinClassic" Content="{tr:Tr Appr_SkinClassic}" GroupName="Skin" Foreground="{DynamicResource TextBrush}"
+                                 ToolTip="{tr:Tr Appr_SkinClassicTip}" Checked="Skin_Changed" Margin="0,0,0,6"/>
+                    <RadioButton x:Name="RadioSkinPcManager" Content="{tr:Tr Appr_SkinPcManager}" GroupName="Skin" Foreground="{DynamicResource TextBrush}"
+                                 ToolTip="{tr:Tr Appr_SkinPcManagerTip}" Checked="Skin_Changed" Margin="0,0,0,6"/>
+                    <RadioButton x:Name="RadioSkinWindowsClassic" Content="{tr:Tr Appr_SkinWindowsClassic}" GroupName="Skin" Foreground="{DynamicResource TextBrush}"
+                                 ToolTip="{tr:Tr Appr_SkinWindowsClassicTip}" Checked="Skin_Changed"/>
+                    <TextBlock Text="{tr:Tr Appr_SkinDesc}"
+                               Style="{StaticResource SubTextStyle}" TextWrapping="Wrap" Margin="0,14,0,0"/>
 
                     <TextBlock Text="{tr:Tr Appr_Note}"
                                Style="{StaticResource SubTextStyle}" TextWrapping="Wrap" Margin="0,16,0,0"/>
@@ -353,21 +386,6 @@
                                Style="{StaticResource SubTextStyle}" TextWrapping="Wrap" Margin="0,14,0,0"/>
                 </StackPanel>
                 </ScrollViewer>
-            </TabItem>
-            <TabItem Header="{tr:Tr Appr_SkinsTab}">
-                <StackPanel Margin="12">
-                    <TextBlock Text="{tr:Tr Appr_AppSkin}" Style="{StaticResource CardTitleStyle}" Margin="0,0,0,8"/>
-                    <!-- ΔΙΟΡΘΩΣΗ: προστέθηκε ToolTip σε ΚΑΘΕ radio (εξονυχιστικός έλεγχος εντόπισε ότι
-                         έλειπαν εντελώς) + νέα 3η επιλογή "Windows Classic" (ρητό αίτημα χρήστη). -->
-                    <RadioButton x:Name="RadioSkinClassic" Content="{tr:Tr Appr_SkinClassic}" GroupName="Skin" Foreground="{DynamicResource TextBrush}"
-                                 ToolTip="{tr:Tr Appr_SkinClassicTip}" Checked="Skin_Changed" Margin="0,0,0,6"/>
-                    <RadioButton x:Name="RadioSkinPcManager" Content="{tr:Tr Appr_SkinPcManager}" GroupName="Skin" Foreground="{DynamicResource TextBrush}"
-                                 ToolTip="{tr:Tr Appr_SkinPcManagerTip}" Checked="Skin_Changed" Margin="0,0,0,6"/>
-                    <RadioButton x:Name="RadioSkinWindowsClassic" Content="{tr:Tr Appr_SkinWindowsClassic}" GroupName="Skin" Foreground="{DynamicResource TextBrush}"
-                                 ToolTip="{tr:Tr Appr_SkinWindowsClassicTip}" Checked="Skin_Changed"/>
-                    <TextBlock Text="{tr:Tr Appr_SkinDesc}"
-                               Style="{StaticResource SubTextStyle}" TextWrapping="Wrap" Margin="0,14,0,0"/>
-                </StackPanel>
             </TabItem>
         </TabControl>
         <Button x:Name="BtnCloseText" Grid.Row="1" Content="{tr:Tr Close}" Style="{StaticResource AccentButtonStyle}" MinWidth="120" Padding="18,8" HorizontalAlignment="Right" Margin="0,12,0,0" Click="BtnClose_Click"/>

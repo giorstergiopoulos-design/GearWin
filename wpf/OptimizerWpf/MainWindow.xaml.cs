@@ -467,7 +467,9 @@ public partial class MainWindow : Window
     {
         if (!AppSettingsService.Current.SidebarEnabled)
         {
-            new AppearanceSettingsWindow(initialTabIndex: 1) { Owner = this }.ShowDialog();
+            // ΔΙΟΡΘΩΣΗ (ROADMAP.md REQ-570-12) - το Μενού/Γλώσσα μετακινήθηκε από index 1 σε 2 μόλις
+            // προστέθηκε η νέα καρτέλα "Ρυθμίσεις" ως πρώτη (index 0).
+            new AppearanceSettingsWindow(initialTabIndex: 2) { Owner = this }.ShowDialog();
             return;
         }
 

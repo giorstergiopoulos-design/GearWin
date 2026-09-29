@@ -38,6 +38,9 @@ namespace OptimizerWpf.Views
             }
             if (ComboLowDiskThreshold.SelectedItem == null && ComboLowDiskThreshold.Items.Count > 1) ComboLowDiskThreshold.SelectedIndex = 1;
 
+            // ΝΕΟ - ROADMAP.md REQ-570-02/12 - βλ. SystemService.SetLaunchWithWindowsToTray.
+            ChkLaunchToTray.IsChecked = AppSettingsService.Current.LaunchWithWindowsToTray;
+
             var settings = AppSettingsService.Current;
             ChkSidebarEnabled.IsChecked = settings.SidebarEnabled;
             if (settings.SidebarPosition == "Left") RadioLeft.IsChecked = true;
@@ -153,6 +156,17 @@ namespace OptimizerWpf.Views
             if (ComboLowDiskThreshold.SelectedItem is not ComboBoxItem { Tag: int pct }) return;
             AppSettingsService.Current.LowDiskThresholdPercent = pct;
             AppSettingsService.Save();
+        }
+
+        // ΝΕΟ - ROADMAP.md REQ-570-02/12 (ρητό αίτημα χρήστη) - εγγράφει/αφαιρεί ΜΙΑ τιμή στο ίδιο
+        // registry Run key που ήδη χρησιμοποιεί το SystemService για τα startup items ΤΡΙΤΩΝ
+        // εφαρμογών (ξεχωριστό όνομα τιμής, καμία σύγκρουση) - βλ. App.xaml.cs's "--tray" χειρισμό.
+        private void ChkLaunchToTray_Changed(object sender, RoutedEventArgs e)
+        {
+            var enabled = ChkLaunchToTray.IsChecked == true;
+            AppSettingsService.Current.LaunchWithWindowsToTray = enabled;
+            AppSettingsService.Save();
+            SystemService.SetLaunchWithWindowsToTray(enabled);
         }
 
         // ΝΕΟ - roadmap "Widget επιφάνειας εργασίας" - ζωντανή ενεργοποίηση/απενεργοποίηση, ίδιο μοτίβο

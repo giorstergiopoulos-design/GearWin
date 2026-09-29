@@ -88,6 +88,10 @@ namespace OptimizerWpf.Services
         // Services/ImpactTrackingService.cs. Persisted (ΟΧΙ session-only) ακριβώς επειδή ο σκοπός είναι
         // να δείξει το ΣΥΝΟΛΙΚΟ όφελος στον χρόνο, όχι μόνο τη μία τρέχουσα συνεδρία.
         public long TotalBytesFreedAllTime { get; set; }
+
+        // ΝΕΟ - ROADMAP.md REQ-570-02/12 (ρητό αίτημα χρήστη) - βλ.
+        // Services/SystemService.SetLaunchWithWindowsToTray + App.xaml.cs's "--tray" χειρισμό.
+        public bool LaunchWithWindowsToTray { get; set; }
     }
 
     // Port του $global:appSettings / Save-AppSettings του Optimizer.ps1 - JSON persisted ρυθμίσεις

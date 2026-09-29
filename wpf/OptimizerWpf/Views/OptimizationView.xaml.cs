@@ -52,6 +52,26 @@ namespace OptimizerWpf.Views
             ToggleScheduledMaintenance.IsChecked = AppSettingsService.Current.ScheduledMaintenanceEnabled;
             UpdateScheduledMaintenanceStatusText();
             ToggleAutoGamingMode.IsChecked = AppSettingsService.Current.AutoGamingModeEnabled;
+
+            // ΝΕΟ - ROADMAP.md REQ-570-03 - βλ. σχόλιο στο TweakService.IsUltimatePerformanceActive.
+            // Off the UI thread (spawns powercfg.exe) - ίδιο μοτίβο με τις υπόλοιπες αργές
+            // αρχικοποιήσεις κατάστασης σε αυτή την εφαρμογή.
+            _ = InitUltimatePerformanceToggleAsync();
+        }
+
+        private async Task InitUltimatePerformanceToggleAsync()
+        {
+            var isOn = await Task.Run(TweakService.IsUltimatePerformanceActive);
+            ToggleUltimatePerformance.IsChecked = isOn;
+        }
+
+        // ΝΕΟ - ROADMAP.md REQ-570-03 - ίδιες μέθοδοι με το πρώην tweak (TweakService.
+        // UltimatePerformanceOn/Off), απλώς καλούνται πλέον απευθείας από εδώ αντί μέσω SimpleTweak.
+        private void ToggleUltimatePerformance_Click(object sender, RoutedEventArgs e)
+        {
+            var isOn = ToggleUltimatePerformance.IsChecked == true;
+            if (isOn) TweakService.UltimatePerformanceOn();
+            else TweakService.UltimatePerformanceOff();
         }
 
         // ΝΕΟ - roadmap "Αυτόματο Gaming Mode".
@@ -180,6 +200,16 @@ namespace OptimizerWpf.Views
         // WingetService.UpgradeAsync ελέγχει πλέον το πραγματικό exit code, βλ. εκεί - πριν πάντα
         // επέστρεφε "επιτυχία" εκτός αν πετάγονταν exception, ΣΧΕΔΟΝ ΠΟΤΕ, άρα μια πραγματική αποτυχία
         // δεν θα αναφερόταν ποτέ).
+        // ΔΙΟΡΘΩΣΗ (ρητό αίτημα χρήστη - ROADMAP.md REQ-570-01: "οι ενημερώσεις λογισμικού βγάζουν
+        // pop-up εγκατάστασης χωρίς να έχουν εγκατασταθεί") - εντοπίστηκε η πραγματική αιτία: για
+        // πηγή "msstore", το GetUpgradeCommandForSource απλώς ΑΝΟΙΓΕΙ τη σελίδα Downloads & Updates
+        // του Store (καμία CLI δυνατότητα υπάρχει για σιωπηλή εγκατάσταση συγκεκριμένου Store app) -
+        // το "cmd /c start ms-windows-store://..." επιστρέφει exit code 0 ΣΧΕΔΟΝ ΑΜΕΣΩΣ μόλις ανοίξει
+        // το URL, πολύ ΠΡΙΝ προλάβει να ξεκινήσει (πόσο μάλλον να ολοκληρωθεί) η πραγματική ενημέρωση
+        // μέσα στο Store. Πριν, αυτό μετρούσε ΠΑΝΤΑ ως "επιτυχία" - ψευδές. Τα msstore στοιχεία τώρα
+        // ΞΕΧΩΡΙΖΟΥΝ σε δικό τους μήνυμα ("άνοιξαν στο Store"), ΔΕΝ αφαιρούνται από τη λίστα (δεν είναι
+        // γνωστό αν πράγματι ενημερώθηκαν) και ΔΕΝ μετρούν ως επιτυχία/αποτυχία - ίδιο πνεύμα
+        // ειλικρίνειας με τις υπόλοιπες "μόνο ό,τι πραγματικά επιβεβαιώθηκε" ενδείξεις της εφαρμογής.
         private async void BtnUpgradeSelected_Click(object sender, RoutedEventArgs e)
         {
             var selected = _updates.Where(u => u.IsSelected).ToList();
@@ -188,9 +218,21 @@ namespace OptimizerWpf.Views
             SetBusy(true);
             var succeeded = new List<string>();
             var failed = new List<string>();
+            var openedInStore = new List<string>();
+            var triggeredStoreOnce = false;
             foreach (var row in selected)
             {
-                TxtWingetStatus.Text = $"{LanguageService.T("Opt_UpgradingPrefix")}{row.Update.Name}... ({succeeded.Count + failed.Count + 1}/{selected.Count})";
+                TxtWingetStatus.Text = $"{LanguageService.T("Opt_UpgradingPrefix")}{row.Update.Name}... ({succeeded.Count + failed.Count + openedInStore.Count + 1}/{selected.Count})";
+
+                if (row.Update.Source == "msstore")
+                {
+                    // Μία φορά αρκεί - η σελίδα Downloads & Updates καλύπτει ΟΛΑ τα Store apps, όχι
+                    // ένα-ένα (αποφεύγει πολλαπλά ταυτόχρονα ανοίγματα του Store σε bulk επιλογή).
+                    if (!triggeredStoreOnce) { WingetService.TriggerMsStoreUpdateScanAndOpen(); triggeredStoreOnce = true; }
+                    openedInStore.Add(row.Update.Name);
+                    continue;
+                }
+
                 var ok = await WingetService.UpgradeAsync(row.Update.Id, row.Update.Source);
                 if (ok) { succeeded.Add(row.Update.Name); _updates.Remove(row); }
                 else { failed.Add(row.Update.Name); }
@@ -200,6 +242,8 @@ namespace OptimizerWpf.Views
             var summary = failed.Count == 0
                 ? $"{LanguageService.T("Opt_UpgradeAllSucceededPrefix")}{succeeded.Count}{LanguageService.T("Opt_UpgradeAllSucceededSuffix")}"
                 : $"{LanguageService.T("Opt_UpgradePartialPrefix")}{succeeded.Count}{LanguageService.T("Opt_UpgradePartialMid")}{failed.Count}{LanguageService.T("Opt_UpgradePartialSuffix")}{string.Join(", ", failed)}).";
+            if (openedInStore.Count > 0)
+                summary += $" {openedInStore.Count}{LanguageService.T("Opt_UpgradeOpenedInStoreSuffix")}";
             TxtWingetStatus.Text = summary;
             s_wingetStatusCache = summary;
             ThemedMessageBox.Show(summary, LanguageService.T("Opt_UpgradeAppsTitle"), MessageBoxButton.OK,

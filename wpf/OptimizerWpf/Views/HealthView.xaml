@@ -81,7 +81,12 @@
             </Border>
 
             <!-- Registry Cleaner -->
-            <Border Style="{StaticResource CardStyle}">
+            <!-- ΔΙΟΡΘΩΣΗ (ρητό αίτημα χρήστη - ROADMAP.md REQ-570-04: "πλαίσιο Εργαλεία Συντήρησης
+                 Συστήματος μικρό διάστημα με Καθαρισμό Μητρώου") - αυτή η κάρτα ήταν η ΜΟΝΗ σε όλη την
+                 εφαρμογή που έλειπε το καθιερωμένο Margin="0,16,0,0" ανάμεσα σε διαδοχικές κάρτες
+                 (επαληθεύτηκε με έλεγχο ΟΛΩΝ των CardStyle Border σε κάθε Views/*.xaml) - κολλούσε
+                 απευθείας πάνω στην κάρτα "Εργαλεία Υγείας & Συντήρησης Συστήματος" από πάνω. -->
+            <Border Style="{StaticResource CardStyle}" Margin="0,16,0,0">
                 <StackPanel>
                     <Grid Margin="0,0,0,4">
                         <Grid.ColumnDefinitions><ColumnDefinition Width="Auto"/><ColumnDefinition Width="*"/></Grid.ColumnDefinitions>

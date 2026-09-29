@@ -86,6 +86,32 @@ namespace OptimizerWpf.Services
             }
         }
 
+        // ΝΕΟ - ROADMAP.md REQ-570-02/12 (ρητό αίτημα χρήστη: "εκκίνηση εφαρμογής με τα windows στο
+        // tray") - ΞΕΧΩΡΙΣΤΟ όνομα τιμής από τα user-visible startup items παραπάνω (καμία σύγκρουση
+        // με το DisabledPrefix rename-trick - η δική μας εγγραφή απλά υπάρχει ή όχι, ΠΟΤΕ δεν
+        // "απενεργοποιείται" μέσω μετονομασίας). Το "--tray" όρισμα το διαβάζει το App.xaml.cs για να
+        // ξεκινήσει κρυμμένο στο tray αντί να δείξει το κύριο παράθυρο/splash.
+        private const string TrayAutostartValueName = "GearWinTrayAutostart";
+
+        public static void SetLaunchWithWindowsToTray(bool enabled)
+        {
+            try
+            {
+                using var key = Registry.CurrentUser.OpenSubKey(RunKeyPath, writable: true);
+                if (key == null) return;
+                if (enabled)
+                {
+                    var exePath = Environment.ProcessPath ?? System.Reflection.Assembly.GetExecutingAssembly().Location;
+                    key.SetValue(TrayAutostartValueName, $"\"{exePath}\" --tray");
+                }
+                else
+                {
+                    key.DeleteValue(TrayAutostartValueName, throwOnMissingValue: false);
+                }
+            }
+            catch { /* ίδια ανοχή με το SetStartupItemEnabled παραπάνω - honest no-op αν το κλειδί δεν είναι εγγράψιμο */ }
+        }
+
         // ΝΕΟ - roadmap "Εκτίμηση χρόνου εκκίνησης" - "Πόσο καθυστερεί κάθε εφαρμογή εκκίνησης την
         // είσοδο στα Windows, όχι μόνο on/off". ΣΗΜΕΙΩΣΗ ΕΙΛΙΚΡΙΝΕΙΑΣ (ίδιο πνεύμα με το Boot Timeline/
         // S.M.A.R.T. αλλού στην εφαρμογή): καμία επίσημη Windows API εκθέτει το per-app "Startup

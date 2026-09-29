@@ -79,8 +79,10 @@ namespace OptimizerWpf.Views
 
         // ΔΙΟΡΘΩΣΗ - η καρτέλα Γλώσσα ενοποιήθηκε μέσα στην καρτέλα Μενού (index 1, βλ.
         // AppearanceSettingsWindow.xaml) - ο πρώην ξεχωριστός index 3 δεν υπάρχει πια.
+        // ΔΙΟΡΘΩΣΗ (ROADMAP.md REQ-570-12) - το Μενού/Γλώσσα μετακινήθηκε από index 1 σε 2 μόλις
+        // προστέθηκε η νέα καρτέλα "Ρυθμίσεις" ως πρώτη (index 0).
         private void BtnOnbLanguage_Click(object sender, RoutedEventArgs e) =>
-            new AppearanceSettingsWindow(initialTabIndex: 1) { Owner = this }.ShowDialog();
+            new AppearanceSettingsWindow(initialTabIndex: 2) { Owner = this }.ShowDialog();
 
         private void BtnOnbTheme_Click(object sender, RoutedEventArgs e)
         {

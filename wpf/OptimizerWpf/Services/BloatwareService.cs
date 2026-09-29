@@ -154,6 +154,10 @@ try {{
             new RecommendedApp("Browsers", "Mozilla Firefox", "Mozilla.Firefox"),
             new RecommendedApp("Browsers", "Opera", "Opera.Opera"),
             new RecommendedApp("Browsers", "Microsoft Edge", "Microsoft.Edge"),
+            // ΝΕΟ - ROADMAP.md REQ-570-07 (ρητό αίτημα χρήστη: "επιπλέον προτεινόμενες εφαρμογές") -
+            // ήδη ανιχνεύεται/καθαρίζεται στο Health tab's Browser Cache (HealthCleanupService) αλλά
+            // δεν υπήρχε καθόλου εδώ ως επιλογή εγκατάστασης.
+            new RecommendedApp("Browsers", "Brave", "BraveSoftware.BraveBrowser"),
             new RecommendedApp("Compression", "7-Zip", "7zip.7zip"),
             new RecommendedApp("Compression", "WinRAR", "RARLab.WinRAR"),
             new RecommendedApp("Multimedia", "VLC", "VideoLAN.VLC"),
@@ -161,16 +165,25 @@ try {{
             new RecommendedApp("Multimedia", "GOM Player", "GOMLab.GOMPlayer"),
             new RecommendedApp("Multimedia", "Winamp", "Winamp.Winamp"),
             new RecommendedApp("Multimedia", "K-Lite Codec Pack", "CodecGuide.K-LiteCodecPack.Mega"),
+            // ΝΕΟ - REQ-570-07 - δημοφιλές δωρεάν/ανοιχτού κώδικα εργαλείο εγγραφής/streaming οθόνης.
+            new RecommendedApp("Multimedia", "OBS Studio", "OBSProject.OBSStudio"),
             new RecommendedApp("Communication", "Zoom", "Zoom.Zoom"),
             new RecommendedApp("Communication", "Discord", "Discord.Discord"),
             new RecommendedApp("Communication", "Microsoft Teams", "Microsoft.Teams"),
             // ΔΙΟΡΘΩΣΗ (χρήστης ανέφερε: "του viber θέλει διόρθωση") - "Viber.Viber" δεν υπάρχει στο
             // winget repository, η εγκατάσταση απέτυχε πάντα σιωπηλά - το σωστό ID είναι "Rakuten.Viber".
             new RecommendedApp("Communication", "Viber", "Rakuten.Viber"),
+            // ΝΕΟ - REQ-570-07 - πολύ δημοφιλής εφαρμογή μηνυμάτων, έλειπε εντελώς από τη λίστα.
+            new RecommendedApp("Communication", "Telegram Desktop", "Telegram.TelegramDesktop"),
             new RecommendedApp("Tools", "AnyDesk", "AnyDeskSoftwareGmbH.AnyDesk"),
             new RecommendedApp("Tools", "TeamViewer", "TeamViewer.TeamViewer"),
             new RecommendedApp("Tools", "PowerToys", "Microsoft.PowerToys"),
+            // ΝΕΟ - REQ-570-07 - δύο πολύ δημοφιλή δωρεάν εργαλεία (αναζήτηση αρχείων/screenshot).
+            new RecommendedApp("Tools", "Everything", "voidtools.Everything"),
+            new RecommendedApp("Tools", "ShareX", "ShareX.ShareX"),
             new RecommendedApp("Documents", "OpenOffice", "Apache.OpenOffice"),
+            // ΝΕΟ - REQ-570-07 - πιο ενεργά συντηρημένη, πιο δημοφιλής εναλλακτική του OpenOffice σήμερα.
+            new RecommendedApp("Documents", "LibreOffice", "TheDocumentFoundation.LibreOffice"),
             new RecommendedApp("Documents", "Adobe Acrobat Reader", "Adobe.Acrobat.Reader.64-bit"),
             new RecommendedApp("SystemLibs", ".NET Desktop Runtime 8", "Microsoft.DotNet.DesktopRuntime.8"),
             new RecommendedApp("SystemLibs", "DirectX Runtime", "Microsoft.DirectX"),

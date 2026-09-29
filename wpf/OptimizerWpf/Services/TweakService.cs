@@ -107,8 +107,6 @@ namespace OptimizerWpf.Services
                 DetectState: () => { using var k = Registry.CurrentUser.OpenSubKey(@"Control Panel\Mouse"); return k?.GetValue("MouseSpeed")?.ToString() == "0"; }));
             list.Add(new SimpleTweak(LanguageService.T("Tweak_HibernateLabel"), "", HibernateOn, HibernateOff,
                 DetectState: () => { using var k = Registry.LocalMachine.OpenSubKey(@"SYSTEM\CurrentControlSet\Control\Power"); return Convert.ToInt32(k?.GetValue("HibernateEnabled") ?? 0) == 1; }));
-            list.Add(new SimpleTweak(LanguageService.T("Tweak_UltimatePerfLabel"), "", UltimatePerformanceOn, UltimatePerformanceOff,
-                DetectState: () => RunProcessCapture("powercfg.exe", "/list").Contains("e9a42b02-d5df-448d-aa00-03f14749eb61", StringComparison.OrdinalIgnoreCase)));
             list.Add(ToSimple(m[4])); // Remove Recommended
             list.Add(ToSimple(m[5])); // Clipboard history
             list.Add(ToSimple(m[6])); // Network throttling
@@ -212,6 +210,16 @@ namespace OptimizerWpf.Services
 
         public static void HibernateOn() => RunProcess("powercfg.exe", "/hibernate on");
         public static void HibernateOff() => RunProcess("powercfg.exe", "/hibernate off");
+
+        // ΔΙΟΡΘΩΣΗ (ROADMAP.md REQ-570-03, ρητό αίτημα χρήστη: "αυτόματο gaming mode κάτω από gaming
+        // mode & ultimate performance") - το toggle αυτού του tweak μετακινήθηκε από τη γενική λίστα
+        // AllMainTweaks() (καρτέλα Επιπλέον Ρυθμίσεις) στην καρτέλα Βελτιστοποίηση, δίπλα στο Gaming
+        // Mode (βλ. OptimizationView) - πιο σωστή θεματική τοποθέτηση (ίδιο πνεύμα με
+        // feedback_correct_tab_placement). Η ανίχνευση κατάστασης εξήχθη εδώ σε δική της μέθοδο (πριν
+        // ήταν ανώνυμο lambda μέσα στο AllMainTweaks) ώστε να τη χρησιμοποιεί απευθείας το
+        // OptimizationView.xaml.cs χωρίς να περνάει πια από το SimpleTweak/AllMainTweaks μονοπάτι.
+        public static bool IsUltimatePerformanceActive() =>
+            RunProcessCapture("powercfg.exe", "/list").Contains("e9a42b02-d5df-448d-aa00-03f14749eb61", StringComparison.OrdinalIgnoreCase);
 
         public static void UltimatePerformanceOn() => RunProcess("powercfg.exe", "-duplicatescheme e9a42b02-d5df-448d-aa00-03f14749eb61");
 

@@ -1,5 +1,6 @@
 using System.Linq;
 using System.Windows;
+using System.Windows.Media;
 
 namespace OptimizerWpf
 {
@@ -35,6 +36,21 @@ namespace OptimizerWpf
                 _ => string.Empty
             };
             box.TxtIcon.Visibility = icon == MessageBoxImage.None ? Visibility.Collapsed : Visibility.Visible;
+            // ΔΙΟΡΘΩΣΗ (ρητό αίτημα χρήστη - ROADMAP.md REQ-570-08: "το τετράγωνο εικονίδιο του pop-up
+            // παραθύρου για την επιτυχή εγκατάσταση δεν φαίνεται σωστά σε dark mode") - το TxtIcon δεν
+            // είχε ΚΑΘΟΛΟΥ ρητό Foreground (κληρονομούσε το προεπιλεγμένο, σκούρο χρώμα ενός απλού
+            // TextBlock) - το γλυφ "ℹ" (Information) συγκεκριμένα αποδίδεται σε πολλές γραμματοσειρές
+            // ως ένα κοντό "i" μέσα σε τετράγωνο περίγραμμα, ΟΧΙ κύκλο - σκούρο-πάνω-σε-σκούρο σε dark
+            // mode, σχεδόν αόρατο/κακόσχηματο. Ρητό, θεματισμένο χρώμα ανά τύπο εικονιδίου (ίδιο πνεύμα
+            // με τα ήδη υπάρχοντα χρωματιστά status badges αλλού στην εφαρμογή) - ορατό σε ΚΑΘΕ θέμα.
+            box.TxtIcon.Foreground = icon switch
+            {
+                MessageBoxImage.Error => new SolidColorBrush(Color.FromRgb(0xE5, 0x39, 0x35)),
+                MessageBoxImage.Warning => new SolidColorBrush(Color.FromRgb(0xFF, 0x98, 0x00)),
+                MessageBoxImage.Question => (Brush)box.FindResource("AccentBrush"),
+                MessageBoxImage.Information => (Brush)box.FindResource("AccentBrush"),
+                _ => (Brush)box.FindResource("TextBrush"),
+            };
 
             if (button == MessageBoxButton.YesNo)
             {
