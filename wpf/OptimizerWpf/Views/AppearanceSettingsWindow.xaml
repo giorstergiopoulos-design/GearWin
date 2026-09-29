@@ -432,6 +432,60 @@
                 </StackPanel>
                 </ScrollViewer>
             </TabItem>
+            <!-- ΝΕΟ - REQ-580-02: "Διαχείριση Γραμματοσειρών" - προστέθηκε ΩΣ ΤΕΛΕΥΤΑΙΟ tab (όχι ενδιάμεσο)
+                 ώστε να ΜΗΝ μετατοπιστούν οι ήδη υπάρχοντες σταθεροί δείκτες initialTabIndex=2 που
+                 χρησιμοποιούν το MainWindow.xaml.cs/OnboardingWindow.xaml.cs για το tab Μενού (ίδιο
+                 λάθος που έγινε ήδη μία φορά στο REQ-570-11/12 restructuring - βλ. HANDOFF/commit
+                 history). Οι προτεινόμενες γραμματοσειρές ανοίγουν στο επίσημο Google Fonts (OFL/Apache
+                 2.0 όλες) αντί να τις hostάρουμε/διανέμουμε εμείς - καμία δική μας αναδιανομή αρχείων
+                 γραμματοσειράς, άρα καμία δική μας ευθύνη τήρησης άδειας ανά γραμματοσειρά. -->
+            <TabItem Header="{tr:Tr Appr_FontsTab}">
+                <ScrollViewer VerticalScrollBarVisibility="Auto" PreviewMouseWheel="NestedScroll_PreviewMouseWheel">
+                <StackPanel Margin="12">
+                    <TextBlock Text="{tr:Tr Appr_FontsInstalledTitle}" Style="{StaticResource CardTitleStyle}" Margin="0,0,0,8"/>
+                    <TextBlock Text="{tr:Tr Appr_FontsPreviewHint}" Style="{StaticResource SubTextStyle}" TextWrapping="Wrap" Margin="0,0,0,8"/>
+                    <TextBox x:Name="TxtFontPreviewText" Height="34" Padding="8,4" VerticalContentAlignment="Center" Margin="0,0,0,10"
+                             Background="{DynamicResource CardBgBrush}" Foreground="{DynamicResource TextBrush}" BorderBrush="{DynamicResource CardBorderBrush}"/>
+                    <Border Background="{DynamicResource CardBgBrush}" BorderBrush="{DynamicResource CardBorderBrush}" BorderThickness="1" CornerRadius="8" Padding="4" Height="260">
+                        <ListBox x:Name="ListInstalledFonts" Style="{StaticResource VirtualizedListStyle}" PreviewMouseWheel="NestedScroll_PreviewMouseWheel">
+                            <ListBox.ItemTemplate>
+                                <DataTemplate>
+                                    <StackPanel Margin="8,6">
+                                        <TextBlock Text="{Binding Name}" Style="{StaticResource SubTextStyle}" FontSize="10"/>
+                                        <TextBlock Text="{Binding Text, ElementName=TxtFontPreviewText}" FontFamily="{Binding FontFamily}"
+                                                   FontSize="17" Foreground="{DynamicResource TextBrush}" TextTrimming="CharacterEllipsis"/>
+                                    </StackPanel>
+                                </DataTemplate>
+                            </ListBox.ItemTemplate>
+                        </ListBox>
+                    </Border>
+
+                    <Separator Margin="0,20,0,14"/>
+
+                    <TextBlock Text="{tr:Tr Appr_FontsSuggestedTitle}" Style="{StaticResource CardTitleStyle}" Margin="0,0,0,8"/>
+                    <TextBlock Text="{tr:Tr Appr_FontsSuggestedDesc}" Style="{StaticResource SubTextStyle}" TextWrapping="Wrap" Margin="0,0,0,10"/>
+                    <ItemsControl x:Name="ListSuggestedFonts">
+                        <ItemsControl.ItemTemplate>
+                            <DataTemplate>
+                                <Border Style="{StaticResource CardStyle}" Margin="0,0,0,10">
+                                    <Grid>
+                                        <Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions>
+                                        <StackPanel Grid.Column="0" Margin="0,0,10,0">
+                                            <TextBlock Text="{Binding Name}" FontWeight="Bold" Foreground="{DynamicResource TextBrush}"/>
+                                            <TextBlock Foreground="{DynamicResource SubTextBrush}" FontSize="11">
+                                                <Run Text="{Binding Category, Mode=OneWay}"/><Run Text=" · "/><Run Text="{Binding License, Mode=OneWay}"/>
+                                            </TextBlock>
+                                        </StackPanel>
+                                        <Button Grid.Column="1" Content="{tr:Tr Appr_FontsPreviewDownloadBtn}" Style="{StaticResource AccentButtonStyle}"
+                                                MinWidth="170" Padding="10,6" Click="BtnPreviewDownloadFont_Click" Tag="{Binding}"/>
+                                    </Grid>
+                                </Border>
+                            </DataTemplate>
+                        </ItemsControl.ItemTemplate>
+                    </ItemsControl>
+                </StackPanel>
+                </ScrollViewer>
+            </TabItem>
         </TabControl>
         <Button x:Name="BtnCloseText" Grid.Row="1" Content="{tr:Tr Close}" Style="{StaticResource AccentButtonStyle}" MinWidth="120" Padding="18,8" HorizontalAlignment="Right" Margin="0,12,0,0" Click="BtnClose_Click"/>
     </Grid>

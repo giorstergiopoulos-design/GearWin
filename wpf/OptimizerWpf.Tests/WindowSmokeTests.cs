@@ -24,16 +24,14 @@ namespace OptimizerWpf.Tests
             {
                 try
                 {
+                    // See UIAutomationClickThroughTests.cs for why this is App.InitializeComponent(),
+                    // not a plain Application - that's what actually merges Themes/Styles.xaml.
                     if (Application.Current == null)
                     {
-                        var app = new Application();
-                        // Assembly name is "GearWin" (see OptimizerWpf.csproj's <AssemblyName>), not
-                        // the project/namespace name "OptimizerWpf" - pack URIs need the real assembly.
-                        app.Resources.MergedDictionaries.Add(new ResourceDictionary
-                        {
-                            Source = new Uri("pack://application:,,,/GearWin;component/Themes/Styles.xaml")
-                        });
+                        var app = new OptimizerWpf.App();
+                        app.InitializeComponent();
                     }
+                    OptimizerWpf.ThemeManager.LoadPersisted();
 
                     var factories = new List<(string Name, Func<Window> Create)>
                     {

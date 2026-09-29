@@ -1,6 +1,8 @@
+using System.Diagnostics;
 using System.Linq;
 using System.Windows;
 using System.Windows.Controls;
+using System.Windows.Media;
 using OptimizerWpf.Services;
 
 namespace OptimizerWpf.Views
@@ -75,6 +77,8 @@ namespace OptimizerWpf.Views
                 "Medium" => RadioOpacityMedium,
                 _ => RadioOpacityNone,
             }).IsChecked = true;
+
+            InitFontsTab();
 
             MainTabs.SelectedIndex = initialTabIndex;
 
@@ -261,5 +265,31 @@ namespace OptimizerWpf.Views
         }
 
         private void BtnClose_Click(object sender, RoutedEventArgs e) => Close();
+
+        // REQ-580-02: γραμματοσειρές του συστήματος με ζωντανή προεπισκόπηση (TxtFontPreviewText's
+        // Text bindάρεται απευθείας μέσω ElementName σε κάθε γραμμή - καμία χειροκίνητη ανανέωση
+        // χρειάζεται σε κάθε πληκτρολόγηση).
+        private void InitFontsTab()
+        {
+            TxtFontPreviewText.Text = LanguageService.T("Appr_FontsDefaultPreviewText");
+
+            var installedFonts = Fonts.SystemFontFamilies
+                .Select(f => f.Source)
+                .Distinct()
+                .OrderBy(name => name, System.StringComparer.OrdinalIgnoreCase)
+                .Select(name => new InstalledFontRow(name, new FontFamily(name)))
+                .ToList();
+            ListInstalledFonts.ItemsSource = installedFonts;
+
+            ListSuggestedFonts.ItemsSource = FontSuggestionService.SuggestedFonts;
+        }
+
+        private void BtnPreviewDownloadFont_Click(object sender, RoutedEventArgs e)
+        {
+            if (sender is Button { Tag: SuggestedFont font })
+                Process.Start(new ProcessStartInfo(font.Url) { UseShellExecute = true });
+        }
     }
+
+    public record InstalledFontRow(string Name, FontFamily FontFamily);
 }
