@@ -158,5 +158,36 @@ namespace OptimizerWpf.Services
             }
             catch { }
         }
+
+        // ΝΕΟ (πρόταση χρήστη): αντίγραφο ασφαλείας/επαναφορά των ρυθμίσεων της ΙΔΙΑΣ της εφαρμογής -
+        // χρήσιμο σε επανεγκατάσταση Windows/μετακόμιση σε νέο υπολογιστή. Save() πρώτα ώστε το
+        // εξαγόμενο αρχείο να αντανακλά την ΤΡΕΧΟΥΣΑ κατάσταση, όχι μια πιθανώς παλιά αποθηκευμένη.
+        public static bool Export(string destinationPath)
+        {
+            try
+            {
+                Save();
+                File.Copy(StorePath, destinationPath, overwrite: true);
+                return true;
+            }
+            catch { return false; }
+        }
+
+        // Επικυρώνει ότι το αρχείο πραγματικά αποσειριοποιείται σε AppSettings ΠΡΙΝ αντικαταστήσει το
+        // πραγματικό αρχείο ρυθμίσεων - ένα κατεστραμμένο/άσχετο αρχείο δεν πρέπει ποτέ να καταστρέψει
+        // τις υπάρχουσες ρυθμίσεις του χρήστη.
+        public static bool Import(string sourcePath)
+        {
+            try
+            {
+                var text = File.ReadAllText(sourcePath);
+                if (JsonSerializer.Deserialize<AppSettings>(text) == null) return false;
+                Directory.CreateDirectory(Path.GetDirectoryName(StorePath)!);
+                File.WriteAllText(StorePath, text);
+                _cache = null;
+                return true;
+            }
+            catch { return false; }
+        }
     }
 }

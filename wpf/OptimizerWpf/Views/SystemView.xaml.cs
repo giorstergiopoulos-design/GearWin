@@ -70,6 +70,32 @@ namespace OptimizerWpf.Views
 
             _ = LoadMyDeviceAsync();
             _ = LoadBackupTargetDrivesAsync();
+
+            InitFontsSection();
+        }
+
+        // REQ-580-02 follow-up: μεταφέρθηκε εδώ από το Views/AppearanceSettingsWindow.xaml(.cs) -
+        // ζωντανή προεπισκόπηση γραμματοσειρών (TxtFontPreviewText's Text bindάρεται απευθείας μέσω
+        // ElementName σε κάθε γραμμή - καμία χειροκίνητη ανανέωση χρειάζεται σε κάθε πληκτρολόγηση).
+        private void InitFontsSection()
+        {
+            TxtFontPreviewText.Text = LanguageService.T("Appr_FontsDefaultPreviewText");
+
+            var installedFonts = System.Windows.Media.Fonts.SystemFontFamilies
+                .Select(f => f.Source)
+                .Distinct()
+                .OrderBy(name => name, System.StringComparer.OrdinalIgnoreCase)
+                .Select(name => new InstalledFontRow(name, new FontFamily(name)))
+                .ToList();
+            ListInstalledFonts.ItemsSource = installedFonts;
+
+            ListSuggestedFonts.ItemsSource = FontSuggestionService.SuggestedFonts;
+        }
+
+        private void BtnPreviewDownloadFont_Click(object sender, RoutedEventArgs e)
+        {
+            if (sender is Button { Tag: SuggestedFont font })
+                System.Diagnostics.Process.Start(new System.Diagnostics.ProcessStartInfo(font.Url) { UseShellExecute = true });
         }
 
         // ΝΕΟ - roadmap "Backup/imaging" - λίστα υποψήφιων δίσκων-στόχων για το wbadmin system image
@@ -790,4 +816,6 @@ namespace OptimizerWpf.Views
                 group.Paths.Select((p, i) => new DuplicateFileRow(p, i > 0)));
         }
     }
+
+    public record InstalledFontRow(string Name, FontFamily FontFamily);
 }

@@ -138,6 +138,16 @@
                     <TextBlock Text="{tr:Tr Network_PasswordManagerTitle}" FontWeight="Bold" Foreground="{DynamicResource TextBrush}" Margin="0,0,0,6"/>
                     <TextBlock Text="{tr:Tr Network_PasswordManagerDesc}" Style="{StaticResource SubTextStyle}" TextWrapping="Wrap" Margin="0,0,0,10"/>
                     <Button Content="{tr:Tr Network_PasswordManagerBtn}" Style="{StaticResource AccentButtonStyle}" MinWidth="220" Height="34" HorizontalAlignment="Left" Click="BtnOpenPasswordManager_Click"/>
+
+                    <Separator Margin="0,16,0,14"/>
+
+                    <!-- ΝΕΟ (πρόταση χρήστη, ίδιο πνεύμα με τον διαχειριστή κωδικών browser παραπάνω) -
+                         βλ. Services/WifiPasswordService.cs + Views/WifiPasswordWindow.xaml. Native WLAN
+                         API (όχι ανάλυση κειμένου netsh - αξιόπιστο ανεξαρτήτως γλώσσας του OS), μόνο
+                         τοπικά αποθηκευμένα δίκτυα ΑΥΤΟΥ του υπολογιστή. -->
+                    <TextBlock Text="{tr:Tr Network_WifiPasswordsTitle}" FontWeight="Bold" Foreground="{DynamicResource TextBrush}" Margin="0,0,0,6"/>
+                    <TextBlock Text="{tr:Tr Network_WifiPasswordsDesc}" Style="{StaticResource SubTextStyle}" TextWrapping="Wrap" Margin="0,0,0,10"/>
+                    <Button Content="{tr:Tr Network_WifiPasswordsBtn}" Style="{StaticResource AccentButtonStyle}" MinWidth="220" Height="34" HorizontalAlignment="Left" Click="BtnOpenWifiPasswords_Click"/>
                 </StackPanel>
             </Border>
 

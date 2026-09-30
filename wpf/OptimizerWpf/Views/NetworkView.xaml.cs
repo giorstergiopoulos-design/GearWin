@@ -76,6 +76,12 @@ namespace OptimizerWpf.Views
             window.ShowDialog();
         }
 
+        private void BtnOpenWifiPasswords_Click(object sender, RoutedEventArgs e)
+        {
+            var window = new WifiPasswordWindow { Owner = Window.GetWindow(this) };
+            window.ShowDialog();
+        }
+
         private async void BtnHibpCheck_Click(object sender, RoutedEventArgs e)
         {
             var password = PwdHibpCheck.Password;

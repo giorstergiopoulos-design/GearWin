@@ -47,6 +47,7 @@ namespace OptimizerWpf.Tests
                         ("TrayPopupWindow", () => new TrayPopupWindow()),
                         ("UwpAppManagerWindow", () => new UwpAppManagerWindow()),
                         ("ViveToolWindow", () => new ViveToolWindow()),
+                        ("WifiPasswordWindow", () => new WifiPasswordWindow()),
                     };
 
                     var failures = new List<string>();

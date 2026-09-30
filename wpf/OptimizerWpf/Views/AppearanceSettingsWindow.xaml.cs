@@ -1,9 +1,6 @@
 using System;
-using System.Diagnostics;
-using System.Linq;
 using System.Windows;
 using System.Windows.Controls;
-using System.Windows.Media;
 using OptimizerWpf.Services;
 
 namespace OptimizerWpf.Views
@@ -75,8 +72,6 @@ namespace OptimizerWpf.Views
             SliderOpacity.Value = Math.Clamp(settings.WindowOpacityPercent, 60, 100);
             TxtOpacityValue.Text = $"{(int)SliderOpacity.Value}%";
             SliderOpacity.ValueChanged += SliderOpacity_ValueChanged;
-
-            InitFontsTab();
 
             MainTabs.SelectedIndex = initialTabIndex;
 
@@ -262,30 +257,37 @@ namespace OptimizerWpf.Views
 
         private void BtnClose_Click(object sender, RoutedEventArgs e) => Close();
 
-        // REQ-580-02: γραμματοσειρές του συστήματος με ζωντανή προεπισκόπηση (TxtFontPreviewText's
-        // Text bindάρεται απευθείας μέσω ElementName σε κάθε γραμμή - καμία χειροκίνητη ανανέωση
-        // χρειάζεται σε κάθε πληκτρολόγηση).
-        private void InitFontsTab()
+        private void BtnExportSettings_Click(object sender, RoutedEventArgs e)
         {
-            TxtFontPreviewText.Text = LanguageService.T("Appr_FontsDefaultPreviewText");
+            var dialog = new Microsoft.Win32.SaveFileDialog
+            {
+                FileName = $"GearWin-Settings-{DateTime.Now:yyyy-MM-dd}.json",
+                Filter = "JSON (*.json)|*.json"
+            };
+            if (dialog.ShowDialog(this) != true) return;
 
-            var installedFonts = Fonts.SystemFontFamilies
-                .Select(f => f.Source)
-                .Distinct()
-                .OrderBy(name => name, System.StringComparer.OrdinalIgnoreCase)
-                .Select(name => new InstalledFontRow(name, new FontFamily(name)))
-                .ToList();
-            ListInstalledFonts.ItemsSource = installedFonts;
-
-            ListSuggestedFonts.ItemsSource = FontSuggestionService.SuggestedFonts;
+            var ok = AppSettingsService.Export(dialog.FileName);
+            ThemedMessageBox.Show(
+                LanguageService.T(ok ? "Appr_BackupExportOk" : "Appr_BackupExportFail"),
+                LanguageService.T("AppearanceSettingsTitle"), MessageBoxButton.OK, ok ? MessageBoxImage.Information : MessageBoxImage.Error);
         }
 
-        private void BtnPreviewDownloadFont_Click(object sender, RoutedEventArgs e)
+        private void BtnImportSettings_Click(object sender, RoutedEventArgs e)
         {
-            if (sender is Button { Tag: SuggestedFont font })
-                Process.Start(new ProcessStartInfo(font.Url) { UseShellExecute = true });
+            var dialog = new Microsoft.Win32.OpenFileDialog { Filter = "JSON (*.json)|*.json" };
+            if (dialog.ShowDialog(this) != true) return;
+
+            var confirm = ThemedMessageBox.Show(LanguageService.T("Appr_BackupImportConfirm"), LanguageService.T("AppearanceSettingsTitle"), MessageBoxButton.YesNo, MessageBoxImage.Question);
+            if (confirm != MessageBoxResult.Yes) return;
+
+            var ok = AppSettingsService.Import(dialog.FileName);
+            ThemedMessageBox.Show(
+                LanguageService.T(ok ? "Appr_BackupImportOk" : "Appr_BackupImportFail"),
+                LanguageService.T("AppearanceSettingsTitle"), MessageBoxButton.OK, ok ? MessageBoxImage.Information : MessageBoxImage.Error);
+            // ΔΙΟΡΘΩΣΗ: οι νέες ρυθμίσεις (θέμα, γλώσσα, opacity κ.λπ.) απαιτούν επανεκκίνηση για να
+            // εφαρμοστούν πλήρως σε ΟΛΑ τα ήδη ανοιχτά παράθυρα - τίμια ενημέρωση αντί να προσποιούμαστε
+            // ζωντανή εφαρμογή που δεν συμβαίνει στην πραγματικότητα.
+            if (ok) ThemedMessageBox.Show(LanguageService.T("Appr_BackupRestartNeeded"), LanguageService.T("AppearanceSettingsTitle"), MessageBoxButton.OK, MessageBoxImage.Information);
         }
     }
-
-    public record InstalledFontRow(string Name, FontFamily FontFamily);
 }
