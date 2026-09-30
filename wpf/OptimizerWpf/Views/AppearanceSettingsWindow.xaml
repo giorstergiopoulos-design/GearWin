@@ -117,10 +117,20 @@
                     </Border>
 
                     <Separator Margin="0,16,0,14"/>
+                    <!-- ΝΕΟ - REQ-580-05: port του μηχανισμού διαφάνειας του MotionDeskStudio
+                         (ξεχωριστό project - src/UI/MainWindow.cs's BuildOpacityRow) - συνεχές
+                         slider 60-100% με ζωντανό preview καθώς σέρνεις, αντί για 3 σταθερές
+                         επιλογές (None/Light/Medium) που υπήρχαν πριν. -->
                     <TextBlock Text="{tr:Tr Appr_Opacity}" Style="{StaticResource CardTitleStyle}" Margin="0,0,0,8"/>
-                    <RadioButton x:Name="RadioOpacityNone" Content="{tr:Tr Appr_OpacityNone}" GroupName="Opacity" Foreground="{DynamicResource TextBrush}" Checked="Opacity_Changed" Margin="0,0,0,6"/>
-                    <RadioButton x:Name="RadioOpacityLight" Content="{tr:Tr Appr_OpacityLight}" GroupName="Opacity" Foreground="{DynamicResource TextBrush}" Checked="Opacity_Changed" Margin="0,0,0,6"/>
-                    <RadioButton x:Name="RadioOpacityMedium" Content="{tr:Tr Appr_OpacityMedium}" GroupName="Opacity" Foreground="{DynamicResource TextBrush}" Checked="Opacity_Changed"/>
+                    <Grid Margin="0,0,0,4">
+                        <Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions>
+                        <!-- ValueChanged wired in code-behind (not here) - wiring it in XAML fires
+                             during InitializeComponent() itself, when Minimum coerces the initial
+                             Value, before the sibling TxtOpacityValue element exists yet. -->
+                        <Slider x:Name="SliderOpacity" Grid.Column="0" Minimum="60" Maximum="100" TickFrequency="5" IsSnapToTickEnabled="False"
+                                SmallChange="1" LargeChange="5" VerticalAlignment="Center" Margin="0,0,10,0"/>
+                        <TextBlock x:Name="TxtOpacityValue" Grid.Column="1" Foreground="{DynamicResource SubTextBrush}" MinWidth="42" TextAlignment="Right" VerticalAlignment="Center"/>
+                    </Grid>
 
                     <!-- ΝΕΟ - ROADMAP.md REQ-570-11 (ρητό αίτημα χρήστη: "καρτέλα Θέματα & Skins
                          συγχώνευση με το περιεχόμενο των Skins κάτω από των Θεμάτων") - η πρώην

@@ -18,8 +18,12 @@ namespace OptimizerWpf.Services
         // "Theme" (κάθε θέμα το δικό του στυλ, βλ. ThemeBackgroundStyles) | "Gears" | "Orbit" |
         // "Particles" | "Waves" | "GridPulse" - καθολική αντικατάσταση του φόντου ΟΛΩΝ των θεμάτων.
         public string AnimationStyleOverride { get; set; } = "Theme";
-        // "None" | "Light" | "Medium" - διαφάνεια κύριου παραθύρου.
-        public string WindowOpacityMode { get; set; } = "None";
+        // REQ-580-05: αντικατέστησε το προηγούμενο 3-επιλογών (None/Light/Medium) WindowOpacityMode
+        // με ένα συνεχές ποσοστό, port του μηχανισμού του MotionDeskStudio (ξεχωριστό project - βλ.
+        // src/UI/MainWindow.cs's BuildOpacityRow: TrackBar 60-100%, ζωντανό preview καθώς σέρνεις).
+        // 60% κάτω όριο διατηρήθηκε ρητά ίδιο με το MotionDeskStudio - κάτω από αυτό το κείμενο
+        // γίνεται δύσκολα αναγνώσιμο.
+        public int WindowOpacityPercent { get; set; } = 100;
         // "el" | "en" | "de" | "fr" - βλ. Services/LanguageService.cs.
         public string Language { get; set; } = "el";
         // Θυμάται ποιο "πραγματικό" θέμα ίσχυε πριν επιλεγεί το skin "Microsoft PC Manager", ώστε η

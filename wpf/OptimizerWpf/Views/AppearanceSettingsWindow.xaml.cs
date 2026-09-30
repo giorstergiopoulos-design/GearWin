@@ -1,3 +1,4 @@
+using System;
 using System.Diagnostics;
 using System.Linq;
 using System.Windows;
@@ -71,12 +72,9 @@ namespace OptimizerWpf.Views
                 _ => RadioAnimTheme,
             }).IsChecked = true;
 
-            (settings.WindowOpacityMode switch
-            {
-                "Light" => RadioOpacityLight,
-                "Medium" => RadioOpacityMedium,
-                _ => RadioOpacityNone,
-            }).IsChecked = true;
+            SliderOpacity.Value = Math.Clamp(settings.WindowOpacityPercent, 60, 100);
+            TxtOpacityValue.Text = $"{(int)SliderOpacity.Value}%";
+            SliderOpacity.ValueChanged += SliderOpacity_ValueChanged;
 
             InitFontsTab();
 
@@ -199,17 +197,15 @@ namespace OptimizerWpf.Views
             ThemeManager.RefreshBackgrounds();
         }
 
-        private void Opacity_Changed(object sender, RoutedEventArgs e)
+        // REQ-580-05: port του MotionDeskStudio's opacity slider - ζωντανό preview καθώς σέρνεις
+        // (εφαρμόζεται απευθείας στο MainWindow σε κάθε ValueChanged, όχι μόνο στο "Αποθήκευση").
+        private void SliderOpacity_ValueChanged(object sender, RoutedPropertyChangedEventArgs<double> e)
         {
-            var mode = sender switch
-            {
-                var s when s == RadioOpacityLight => "Light",
-                var s when s == RadioOpacityMedium => "Medium",
-                _ => "None",
-            };
-            AppSettingsService.Current.WindowOpacityMode = mode;
+            var percent = (int)Math.Round(SliderOpacity.Value);
+            TxtOpacityValue.Text = $"{percent}%";
+            AppSettingsService.Current.WindowOpacityPercent = percent;
             AppSettingsService.Save();
-            if (Owner is MainWindow main) main.Opacity = mode switch { "Light" => 0.94, "Medium" => 0.85, _ => 1.0 };
+            if (Owner is MainWindow main) main.Opacity = percent / 100.0;
         }
 
         private void ChkSidebarEnabled_Changed(object sender, RoutedEventArgs e)

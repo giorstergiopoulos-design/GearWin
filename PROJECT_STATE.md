@@ -15,12 +15,13 @@ Name: GearWin - Complete PC Care (WPF port of the original Optimizer.ps1)
 - Repo: `giorstergiopoulos-design/GearWin` on GitHub. `gh release create` works from this environment (has previously needed a retry after an auto-mode permission block).
 
 ## Current Objective
-No single active objective — user drives work in small/medium batches (Greek, terse). Just shipped v5.9.0 (font management + hardened UI Automation click-through). REQ-570-13 skipped per user; REQ-580-03 dropped per user (policy concern - see Blocked history, now resolved as dropped). REQ-580-05 remains blocked on MotionDeskStudio access.
+No single active objective — user drives work in small/medium batches (Greek, terse). Just shipped v5.10.0 (opacity mechanism ported from MotionDeskStudio) — this closes out the entire v5.7.0/v5.8.0/v5.9.0 backlog except REQ-570-13 (skipped per user) and REQ-580-03 (dropped per user, policy concern).
 
 ## Current Phase
 Between releases. Governance docs (CLAUDE.md, PROJECT_STATE.md, ROADMAP.md) adopted 2026-09-29 at user's request.
 
 ## Completed
+- v5.10.0 shipped (2026-09-30): REQ-580-05 — ported MotionDeskStudio's opacity mechanism (separate project at `C:\Users\gstrj\Documents\MotionDeskStudio`, per user's explicit request after providing that path). Replaced the old 3-option radio-button opacity (None/Light/Medium) with a continuous 60-100% `Slider` with live drag preview, matching MotionDeskStudio's own `BuildOpacityRow` UX exactly. New `AppSettingsService.WindowOpacityPercent` (int) replaces the old string `WindowOpacityMode`; dead language keys removed. One real bug found and fixed during implementation (XAML-wired `ValueChanged` firing mid-`InitializeComponent()` before a sibling element existed) — caught by the existing passive smoke test.
 - v5.9.0 shipped (2026-09-30): REQ-580-02 (Font management — new "Fonts" tab in Settings: live preview of every installed system font with user-typed text, plus 12 suggested free/open-license fonts linking to their official Google Fonts page — no font files hosted by us, licensing handled by Google Fonts). REQ-580-01 extended significantly: `UIAutomationClickThroughTests.cs` now does genuine UI-Automation-driven click-through (real `System.Windows.Automation` APIs, in-process, opt-in via `GEARWIN_UI_CLICKTHROUGH=1` — NOT part of default `dotnet test`, since it shows real windows and clicks on the live desktop). Getting this safe took several live-debugging rounds, each a real finding: a cross-thread Invoke()-with-timeout design corrupted WPF's native message loop and crashed the test host (~13 min); the automation tree included native title-bar chrome (clicking "System Menu" opened a real blocking Win32 menu); `ThemedMessageBox.Show()` genuinely calls `ShowDialog()` (~108 call sites app-wide) requiring a generic auto-dismiss watcher instead of guessing which sites to skip; `UwpAppManagerWindow`'s "Scan" (real WinRT `PackageManager` enumeration) reproducibly crashed the test host and had to be excluded. Final state: clean ~19s pass, 0 real findings. REQ-580-03 (Spotify/YouTube downloader) dropped entirely per user after declining to build it (DRM circumvention / distributed-piracy-tool concerns) — see ROADMAP.md.
 - Committed + pushed + released on GitHub as v5.9.0 with installer attached.
 - v5.8.0 shipped (2026-09-29): REQ-570-06 (unified Chromium-family browser password manager — Chrome/Edge/Brave/Vivaldi/Opera/Opera GX, DPAPI+AES-GCM decrypt of local "Login Data" SQLite, new `Services/PasswordVaultService.cs` + `Views/PasswordManagerWindow.xaml`, opened from Network & Security), REQ-570-10 (ViVeTool curated list expanded 10→15 features), a full pop-up text-truncation audit across all 14 secondary windows, REQ-580-06 (Chinese/Korean/Indian flag icons fixed — were missing canonical elements), REQ-580-04 (Help window refreshed), REQ-580-01 first pass (`WindowSmokeTests.cs` — passive construction-only smoke test, still kept alongside the newer click-through test).
@@ -31,16 +32,16 @@ Between releases. Governance docs (CLAUDE.md, PROJECT_STATE.md, ROADMAP.md) adop
 Nothing mid-flight.
 
 ## Blocked
-- REQ-580-05 (port MotionDeskStudio's opacity/transparency mechanism) — that codebase isn't in this repo/session; needs its actual project path before anything can be done.
+Nothing currently blocked.
 
 ## Next Actions
-v5.8.0/v5.9.0 backlog otherwise complete. REQ-580-01 could still be extended further (memory-leak detection specifically — the click-through part is now real and working) if worth the effort; `HealthCheckWindow`'s real cleanup action and `ViveToolWindow`'s real feature toggles remain intentionally excluded from automated clicking (genuinely destructive/system-modifying, must never be triggered blindly).
+Full v5.7.0/v5.8.0/v5.9.0/v5.10.0 backlog complete except REQ-570-13 (skipped, needs a purchased code-signing cert) and REQ-580-03 (dropped, policy concern). REQ-580-01 could still be extended further (memory-leak detection specifically — the click-through part is now real and working) if worth the effort; `HealthCheckWindow`'s real cleanup action and `ViveToolWindow`'s real feature toggles remain intentionally excluded from automated clicking (genuinely destructive/system-modifying, must never be triggered blindly). No new user-driven backlog item is currently pending.
 
 ## MotionDeskStudio note
-Distinct from the REQ-580-05/580-03 items above: earlier in v5.7.0's session the user separately pasted MotionDeskStudio's own roadmap file for awareness (different project, different repo, not resolvable from here) — still unanswered whether/how to act on it. Not part of GearWin's backlog.
+Separate project, separate repo, at `C:\Users\gstrj\Documents\MotionDeskStudio` (own `.sln`, own git repo, `MOTIONDESK_MASTER_PROPOSALS_AND_ROADMAP.md`) — path confirmed by the user 2026-09-30 when asked. REQ-580-05 read its opacity mechanism (`src/UI/MainWindow.cs`) and ported the UX into GearWin (see Completed). No other MotionDeskStudio work has been requested or done from this session — still a distinct project with its own state, don't mix contexts without an explicit ask each time.
 
 ## Important Decisions
-- 2026-09-29: MotionDeskStudio is a **separate project** (its own roadmap, MOTIONDESK STUDIO.MD, was also pasted the same day) — never mix its context with GearWin. Its source is not part of this repo/session; if asked to act on it, need its actual project directory first.
+- 2026-09-29/30: MotionDeskStudio is a **separate project** — never mix its context with GearWin by default. Its path is now known (see above) but that doesn't imply standing permission to act on its own backlog; each cross-project task (like REQ-580-05) should still be a specific, confirmed ask.
 - New service files must be checked against existing ones before creation (`Grep` for the class name) — see Known Bugs below for why.
 
 ## Known Bugs
@@ -59,9 +60,9 @@ Distinct from the REQ-580-05/580-03 items above: earlier in v5.7.0's session the
 
 ## Last Verification
 Build: `dotnet build -c Release` — succeeded, 0 errors (2 pre-existing WFAC010 warnings, unrelated).
-Tests: `dotnet test` (OptimizerWpf.Tests, 62 tests) — 62/62 passed (default battery; opt-in `UIAutomationClickThroughTests` separately verified clean with `GEARWIN_UI_CLICKTHROUGH=1`).
-Installer: `ISCC.exe installer/OptimizerWpf.iss` — succeeded, `GearWin-Setup-5.9.0.exe`.
-Date: 2026-09-30 (v5.9.0 release).
+Tests: `dotnet test` (OptimizerWpf.Tests, 62 tests) — 62/62 passed (default battery; opt-in `UIAutomationClickThroughTests` separately re-verified clean with `GEARWIN_UI_CLICKTHROUGH=1` after the opacity slider change).
+Installer: `ISCC.exe installer/OptimizerWpf.iss` — succeeded, `GearWin-Setup-5.10.0.exe`.
+Date: 2026-09-30 (v5.10.0 release).
 
 ## Last Updated
 2026-09-30

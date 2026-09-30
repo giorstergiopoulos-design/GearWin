@@ -51,7 +51,10 @@ public partial class MainWindow : Window
         Closed += (_, _) => ThemeManager.Changed -= ApplyPcManagerSkinLayout;
         ApplyMenuModeVisibility();
 
-        Opacity = AppSettingsService.Current.WindowOpacityMode switch { "Light" => 0.94, "Medium" => 0.85, _ => 1.0 };
+        // REQ-580-05: port του MotionDeskStudio's opacity slider - Math.Clamp(60,100) ίδιο κάτω
+        // όριο, ώστε ένα κατεστραμμένο/παλιό persisted ποσοστό να μην κάνει ποτέ το παράθυρο
+        // αδιάβαστο ή αόρατο.
+        Opacity = Math.Clamp(AppSettingsService.Current.WindowOpacityPercent, 60, 100) / 100.0;
 
         ApplyLanguage();
         LanguageService.Changed += ApplyLanguage;
