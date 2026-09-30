@@ -338,6 +338,25 @@ public partial class MainWindow : Window
         Hide();
     }
 
+    // REQ-580-05 follow-up: υποχρεωτικά τώρα που WindowStyle="None" αφαίρεσε τα εγγενή κουμπιά
+    // παραθύρου του OS (βλ. σχόλιο στο MainWindow.xaml για το γιατί - πραγματική διαφάνεια απαιτεί
+    // AllowsTransparency, το οποίο απαιτεί WindowStyle="None").
+    private void BtnMinimizeWindow_Click(object sender, RoutedEventArgs e) => WindowState = WindowState.Minimized;
+
+    private void BtnMaximizeRestoreWindow_Click(object sender, RoutedEventArgs e) =>
+        WindowState = WindowState == WindowState.Maximized ? WindowState.Normal : WindowState.Maximized;
+
+    private void BtnCloseWindow_Click(object sender, RoutedEventArgs e) => Close();
+
+    // Εναλλαγή γλυφ Μεγιστοποίηση (⬜, E922) / Επαναφορά (⧉, E923) ανάλογα με το τρέχον WindowState -
+    // ίδια σύμβαση με κάθε άλλο Windows app (π.χ. διπλό-κλικ στη γραμμή τίτλου, το οποίο το
+    // shell:WindowChrome's CaptionHeight ήδη υποστηρίζει αυτόματα, χωρίς επιπλέον κώδικα εδώ).
+    private void Window_StateChanged(object sender, EventArgs e)
+    {
+        if (TxtMaximizeGlyph == null) return;
+        TxtMaximizeGlyph.Text = WindowState == WindowState.Maximized ? "" : "";
+    }
+
     private void TabButton_Checked(object sender, RoutedEventArgs e)
     {
         if (sender is not RadioButton rb || rb.Tag is not string tag) return;

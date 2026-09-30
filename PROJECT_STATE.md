@@ -15,12 +15,13 @@ Name: GearWin - Complete PC Care (WPF port of the original Optimizer.ps1)
 - Repo: `giorstergiopoulos-design/GearWin` on GitHub. `gh release create` works from this environment (has previously needed a retry after an auto-mode permission block).
 
 ## Current Objective
-No single active objective — user drives work in small/medium batches (Greek, terse). Just shipped v5.10.0 (opacity mechanism ported from MotionDeskStudio) — this closes out the entire v5.7.0/v5.8.0/v5.9.0 backlog except REQ-570-13 (skipped per user) and REQ-580-03 (dropped per user, policy concern).
+No single active objective — user drives work in small/medium batches (Greek, terse). Just shipped v5.10.1 (real window transparency - fixes v5.10.0's opacity slider, which didn't actually produce transparency). This closes out the entire v5.7.0-v5.10.0 backlog except REQ-570-13 (skipped per user) and REQ-580-03 (dropped per user, policy concern). **Not yet visually verified by the user** - flagged what to test (drag/resize/maximize/snap/transparency) after v5.10.1's install.
 
 ## Current Phase
 Between releases. Governance docs (CLAUDE.md, PROJECT_STATE.md, ROADMAP.md) adopted 2026-09-29 at user's request.
 
 ## Completed
+- v5.10.1 shipped (2026-09-30): fixed v5.10.0's opacity slider, which the user correctly reported produced no real transparency (just darkened/lightened the window's own color). Root cause: WPF's `Window.Opacity` requires `AllowsTransparency="True"` for genuine see-through transparency, which itself requires giving up native OS window chrome (`WindowStyle="None"`). Confirmed via git history that the *original* `Optimizer.ps1` (WinForms) had real transparency natively (WinForms doesn't have this restriction) - lost silently during the pre-session PowerShell→WPF port. Fixed properly, after explicitly asking the user given the real tradeoffs (forced software rendering, losing native chrome): `MainWindow` is now borderless with `shell:WindowChrome` restoring move/resize/maximize/edge-snap and the "maximized covers taskbar" fix automatically, plus new custom-drawn Minimize/Maximize/Close buttons. **Not visually verified by the assistant** (no GUI automation for a native, admin-elevated desktop app in this session) - explicitly flagged for the user to test by hand. Known limitation: Windows 11's snap-layout hover flyout on the maximize button doesn't appear (basic edge/keyboard snapping still works).
 - v5.10.0 shipped (2026-09-30): REQ-580-05 — ported MotionDeskStudio's opacity mechanism (separate project at `C:\Users\gstrj\Documents\MotionDeskStudio`, per user's explicit request after providing that path). Replaced the old 3-option radio-button opacity (None/Light/Medium) with a continuous 60-100% `Slider` with live drag preview, matching MotionDeskStudio's own `BuildOpacityRow` UX exactly. New `AppSettingsService.WindowOpacityPercent` (int) replaces the old string `WindowOpacityMode`; dead language keys removed. One real bug found and fixed during implementation (XAML-wired `ValueChanged` firing mid-`InitializeComponent()` before a sibling element existed) — caught by the existing passive smoke test.
 - v5.9.0 shipped (2026-09-30): REQ-580-02 (Font management — new "Fonts" tab in Settings: live preview of every installed system font with user-typed text, plus 12 suggested free/open-license fonts linking to their official Google Fonts page — no font files hosted by us, licensing handled by Google Fonts). REQ-580-01 extended significantly: `UIAutomationClickThroughTests.cs` now does genuine UI-Automation-driven click-through (real `System.Windows.Automation` APIs, in-process, opt-in via `GEARWIN_UI_CLICKTHROUGH=1` — NOT part of default `dotnet test`, since it shows real windows and clicks on the live desktop). Getting this safe took several live-debugging rounds, each a real finding: a cross-thread Invoke()-with-timeout design corrupted WPF's native message loop and crashed the test host (~13 min); the automation tree included native title-bar chrome (clicking "System Menu" opened a real blocking Win32 menu); `ThemedMessageBox.Show()` genuinely calls `ShowDialog()` (~108 call sites app-wide) requiring a generic auto-dismiss watcher instead of guessing which sites to skip; `UwpAppManagerWindow`'s "Scan" (real WinRT `PackageManager` enumeration) reproducibly crashed the test host and had to be excluded. Final state: clean ~19s pass, 0 real findings. REQ-580-03 (Spotify/YouTube downloader) dropped entirely per user after declining to build it (DRM circumvention / distributed-piracy-tool concerns) — see ROADMAP.md.
 - Committed + pushed + released on GitHub as v5.9.0 with installer attached.
@@ -60,9 +61,10 @@ Separate project, separate repo, at `C:\Users\gstrj\Documents\MotionDeskStudio` 
 
 ## Last Verification
 Build: `dotnet build -c Release` — succeeded, 0 errors (2 pre-existing WFAC010 warnings, unrelated).
-Tests: `dotnet test` (OptimizerWpf.Tests, 62 tests) — 62/62 passed (default battery; opt-in `UIAutomationClickThroughTests` separately re-verified clean with `GEARWIN_UI_CLICKTHROUGH=1` after the opacity slider change).
-Installer: `ISCC.exe installer/OptimizerWpf.iss` — succeeded, `GearWin-Setup-5.10.0.exe`.
-Date: 2026-09-30 (v5.10.0 release).
+Tests: `dotnet test` (OptimizerWpf.Tests, 62 tests) — 62/62 passed.
+Installer: `ISCC.exe installer/OptimizerWpf.iss` — succeeded, `GearWin-Setup-5.10.1.exe`.
+Date: 2026-09-30 (v5.10.1 release).
+**NOT visually/manually verified**: the borderless-window rebuild (drag, resize, maximize, edge-snap, real transparency) has not been tested by a human or any GUI-capable tool yet - only compiles and passes construction-only tests. User was explicitly told this and asked to verify by hand.
 
 ## Last Updated
 2026-09-30
