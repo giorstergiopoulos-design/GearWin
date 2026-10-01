@@ -498,7 +498,7 @@ namespace OptimizerWpf.Services
         {
             try
             {
-                using var searcher = new ManagementObjectSearcher($"SELECT * FROM Win32_Service WHERE Name='{serviceName}'");
+                using var searcher = new ManagementObjectSearcher($"SELECT * FROM Win32_Service WHERE Name='{serviceName.Replace("'", "''")}'");
                 var svc = searcher.Get().Cast<ManagementObject>().FirstOrDefault();
                 if (svc == null) return false;
                 TweakBackupService.BackupIfNeeded($"SVC_{serviceName}", svc["StartMode"]?.ToString() ?? "Auto");
@@ -513,11 +513,16 @@ namespace OptimizerWpf.Services
             try
             {
                 var original = TweakBackupService.GetBackup($"SVC_{serviceName}") ?? "Auto";
-                using var searcher = new ManagementObjectSearcher($"SELECT * FROM Win32_Service WHERE Name='{serviceName}'");
+                // Το Win32_Service.StartMode επιστρέφει "Auto", αλλά η μέθοδος ChangeStartMode δέχεται "Automatic" —
+                // με "Auto" επέστρεφε κωδικό σφάλματος (21) και η υπηρεσία ΠΟΤΕ δεν επανερχόταν σε αυτόματη εκκίνηση.
+                if (original.Equals("Auto", StringComparison.OrdinalIgnoreCase)) original = "Automatic";
+                using var searcher = new ManagementObjectSearcher($"SELECT * FROM Win32_Service WHERE Name='{serviceName.Replace("'", "''")}'");
                 var svc = searcher.Get().Cast<ManagementObject>().FirstOrDefault();
                 if (svc == null) return false;
                 var result = svc.InvokeMethod("ChangeStartMode", new object[] { original });
-                return Convert.ToInt32(result) == 0;
+                var ok = Convert.ToInt32(result) == 0;
+                if (ok) TweakBackupService.Remove($"SVC_{serviceName}");
+                return ok;
             }
             catch { return false; }
         });

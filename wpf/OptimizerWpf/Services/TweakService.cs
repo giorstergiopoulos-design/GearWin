@@ -187,6 +187,7 @@ namespace OptimizerWpf.Services
             if (backup == null) { key?.DeleteValue(tweak.Name, throwOnMissingValue: false); return; }
             object value = tweak.Kind == RegistryValueKind.String ? backup : int.Parse(backup);
             key?.SetValue(tweak.Name, value, tweak.Kind);
+            TweakBackupService.Remove(tweak.BackupKey);
         }
 
         private static RegistryKey OpenHive(RegistryHive hive) => hive == RegistryHive.LocalMachine ? Registry.LocalMachine : Registry.CurrentUser;

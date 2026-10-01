@@ -103,8 +103,8 @@ namespace OptimizerWpf.Services
             if (!File.Exists(exePath)) return false;
             var script = $@"
 try {{
-    $folder = Split-Path '{exePath}' -Parent
-    $fileName = Split-Path '{exePath}' -Leaf
+    $folder = Split-Path '{exePath.Replace("'", "''")}' -Parent
+    $fileName = Split-Path '{exePath.Replace("'", "''")}' -Leaf
     $shellApp = New-Object -ComObject Shell.Application
     $ns = $shellApp.Namespace($folder)
     $item = $ns.ParseName($fileName)
@@ -192,12 +192,19 @@ try {{
 
         public static async Task<bool> IsWingetAppInstalledAsync(string wingetId)
         {
-            using var process = Process.Start(new ProcessStartInfo("winget.exe", $"list --id {wingetId} --exact --accept-source-agreements")
-            { RedirectStandardOutput = true, UseShellExecute = false, CreateNoWindow = true });
-            if (process == null) return false;
-            var output = await process.StandardOutput.ReadToEndAsync();
-            await process.WaitForExitAsync();
-            return process.ExitCode == 0 && !output.Contains("No installed package found");
+            // Αν το winget.exe δεν υπάρχει (παλιό Windows 10 / χωρίς App Installer) το Process.Start πετά Win32Exception —
+            // πριν δεν πιανόταν και τερμάτιζε τον async void handler με διάλογο σφάλματος αντί για "δεν είναι εγκατεστημένο".
+            try
+            {
+                using var process = Process.Start(new ProcessStartInfo("winget.exe", $"list --id {wingetId} --exact --accept-source-agreements")
+                { RedirectStandardOutput = true, RedirectStandardError = true, UseShellExecute = false, CreateNoWindow = true });
+                if (process == null) return false;
+                _ = process.StandardError.ReadToEndAsync(); // drain
+                var output = await process.StandardOutput.ReadToEndAsync();
+                await process.WaitForExitAsync();
+                return process.ExitCode == 0 && !output.Contains("No installed package found");
+            }
+            catch (System.ComponentModel.Win32Exception) { return false; }
         }
 
         public static Task<bool> WingetInstallAsync(string wingetId) => RunProcessForSuccessAsync("winget.exe",
@@ -264,6 +271,9 @@ try {{
         public static IReadOnlyList<string> FindResidualFolders(string appName)
         {
             var safeName = string.Concat(appName.Where(c => !Path.GetInvalidFileNameChars().Contains(c)));
+            // Πολύ σύντομο/γενικό όνομα (π.χ. "Java", "Go", "7") ταίριαζε με δεκάδες άσχετους φακέλους AppData/ProgramData
+            // που προτείνονταν για διαγραφή. Κάτω από 4 χαρακτήρες δεν προτείνουμε τίποτα.
+            if (safeName.Trim().Length < 4) return Array.Empty<string>();
             var roots = new[]
             {
                 Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData),

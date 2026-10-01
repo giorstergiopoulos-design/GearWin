@@ -41,7 +41,9 @@ namespace OptimizerWpf.Services
             {
                 var dir = Path.GetDirectoryName(StorePath)!;
                 Directory.CreateDirectory(dir);
-                File.WriteAllText(StorePath, JsonSerializer.Serialize(_cache));
+                var tmp = StorePath + ".tmp"; // ατομική εγγραφή
+                File.WriteAllText(tmp, JsonSerializer.Serialize(_cache));
+                File.Move(tmp, StorePath, overwrite: true);
             }
             catch { }
         }
@@ -52,6 +54,15 @@ namespace OptimizerWpf.Services
             if (store.ContainsKey(key)) return;
             store[key] = currentValue;
             Save();
+        }
+
+        // Αφαίρεση του backup αφού η αρχική τιμή ΕΠΑΝΑΦΕΡΘΗΚΕ. Πριν, το backup έμενε για πάντα: αν ο χρήστης άλλαζε
+        // μετά την τιμή χειροκίνητα, το επόμενο "Off" επέστρεφε την ΠΑΛΙΑ τιμή, το "restorable tweaks" μετρούσε
+        // ήδη-επαναφερμένα tweaks, και η απεγκατάσταση ξαναέγραφε (ανεπιθύμητα) παλιές τιμές.
+        public static void Remove(string key)
+        {
+            var store = Load();
+            if (store.Remove(key)) Save();
         }
 
         public static string? GetBackup(string key) => Load().TryGetValue(key, out var v) ? v : null;

@@ -45,16 +45,24 @@ namespace OptimizerWpf.Services
             new ViveFeature(LanguageService.T("Vive_F15Title"), new[] { "59728252" }, LanguageService.T("Vive_F15Tip")),
         };
 
-        private static string ExePath => Path.Combine(AppContext.BaseDirectory, "vivetool.exe");
+        // ΔΙΟΡΘΩΣΗ: το ViVeTool κατεβαίνει πλέον σε δικό του φάκελο χρήστη (%LocalAppData%\OptimizerWpf\tools\vivetool).
+        // Πριν αντιγραφόταν στον φάκελο εγκατάστασης της ίδιας της εφαρμογής (Program Files — χωρίς δικαιώματα εγγραφής
+        // σε μη-admin) ΜΑΖΙ με ΟΛΑ τα .dll του zip, που μπορούσαν να αντικαταστήσουν ομώνυμα assemblies του GearWin
+        // (π.χ. System.*.dll) και να το σπάσουν.
+        private static string ToolsDir => Path.Combine(
+            Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "OptimizerWpf", "tools", "vivetool");
+        private static string ExePath => Path.Combine(ToolsDir, "vivetool.exe");
+        private static string LegacyExePath => Path.Combine(AppContext.BaseDirectory, "vivetool.exe");
 
         public static async Task<string?> EnsureAvailableAsync(IProgress<string>? progress = null)
         {
             if (File.Exists(ExePath)) return ExePath;
+            if (File.Exists(LegacyExePath)) return LegacyExePath; // εγκατάσταση από παλιότερη έκδοση
 
             progress?.Report(LanguageService.T("Vive_Downloading"));
             try
             {
-                using var http = new HttpClient();
+                using var http = new HttpClient { Timeout = TimeSpan.FromSeconds(60) }; // χωρίς timeout η λήψη μπορούσε να κρεμάσει για πάντα
                 http.DefaultRequestHeaders.Add("User-Agent", "OptimizerWpf");
                 var json = await http.GetStringAsync("https://api.github.com/repos/thebookisclosed/ViVe/releases/latest");
                 var root = JsonDocument.Parse(json).RootElement;
@@ -73,6 +81,10 @@ namespace OptimizerWpf.Services
                     }
                 }
                 if (assetUrl == null) throw new InvalidOperationException(LanguageService.T("Vive_NoAssetFound"));
+                // Μόνο HTTPS προς το github.com (ή τα δικά του asset hosts) — το URL προέρχεται από απάντηση API.
+                if (!Uri.TryCreate(assetUrl, UriKind.Absolute, out var assetUri) || assetUri.Scheme != Uri.UriSchemeHttps ||
+                    !(assetUri.Host.EndsWith("github.com", StringComparison.OrdinalIgnoreCase) || assetUri.Host.EndsWith("githubusercontent.com", StringComparison.OrdinalIgnoreCase)))
+                    throw new InvalidOperationException(LanguageService.T("Vive_NoAssetFound"));
 
                 var zipPath = Path.Combine(Path.GetTempPath(), "vivetool_dl.zip");
                 var bytes = await http.GetByteArrayAsync(assetUrl);
@@ -84,9 +96,12 @@ namespace OptimizerWpf.Services
 
                 var foundExe = Directory.EnumerateFiles(extractDir, "ViVeTool.exe", SearchOption.AllDirectories).FirstOrDefault();
                 if (foundExe == null) throw new InvalidOperationException(LanguageService.T("Vive_ExeNotFound"));
-                File.Copy(foundExe, ExePath, true);
-                foreach (var dll in Directory.EnumerateFiles(extractDir, "*.dll", SearchOption.AllDirectories))
-                    File.Copy(dll, Path.Combine(AppContext.BaseDirectory, Path.GetFileName(dll)), true);
+                Directory.CreateDirectory(ToolsDir);
+                // Αντιγράφουμε ΜΟΝΟ τα αρχεία του φακέλου όπου βρίσκεται το ViVeTool.exe, στον ιδιωτικό του φάκελο.
+                var exeDir = Path.GetDirectoryName(foundExe)!;
+                foreach (var file in Directory.EnumerateFiles(exeDir))
+                    File.Copy(file, Path.Combine(ToolsDir, Path.GetFileName(file)), true);
+                if (!File.Exists(ExePath)) File.Copy(foundExe, ExePath, true);
 
                 File.Delete(zipPath);
                 Directory.Delete(extractDir, true);
@@ -107,8 +122,12 @@ namespace OptimizerWpf.Services
             using var process = Process.Start(new ProcessStartInfo(exe, arguments)
             { RedirectStandardOutput = true, RedirectStandardError = true, UseShellExecute = false, CreateNoWindow = true });
             if (process == null) return null;
+            var errTask = process.StandardError.ReadToEndAsync(); // drain
             var output = await process.StandardOutput.ReadToEndAsync();
-            await process.WaitForExitAsync();
+            using var cts = new System.Threading.CancellationTokenSource(TimeSpan.FromSeconds(60));
+            try { await process.WaitForExitAsync(cts.Token); }
+            catch (OperationCanceledException) { try { process.Kill(true); } catch { } return null; }
+            _ = errTask;
             return output;
         }
 

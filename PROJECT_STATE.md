@@ -69,3 +69,11 @@ Date: 2026-09-30 (v5.11.0 release).
 
 ## Last Updated
 2026-09-30
+
+## Audit pass (2026-10-01, cloud session, branch `claude/full-audit`, NOT merged, NOT verified on Windows)
+Compile-checked only (Services/* via scratch project on Linux; Views/XAML not buildable there). Needs `dotnet build` + `dotnet test` + manual click-through before release.
+- Data-loss guards: FolderLock verifies the vault (GCM tag) before shredding the original and refuses drive roots/system/profile folders; duplicate delete always keeps one copy per group and skips junctions; registry cleaner aborts if `reg export` fails and uses unique backup names; hosts file written as UTF-8 (ASCII broke the Greek telemetry markers); TweakBackup entries removed after restore; service restore uses `Automatic` (not `Auto`).
+- Hangs/leaks: redirected pipes drained (winget/store/driver/backup/wsl/system/vivetool), `Kill(true)`; HomeView PerformanceCounters disposed; Process objects disposed; ViveTool now installs into %LocalAppData%\OptimizerWpf\tools\vivetool (never into the app dir).
+- App: single-instance mutex (+ installer AppMutex), error dialog throttled (30s), atomic AppSettings/TweakBackup saves, passwords/Wi-Fi keys auto-cleared from clipboard (30s), residual-folder search needs >=4 chars.
+- Locale: added missing `Tweaks_ConfirmTitle`/`Tweaks_VisualEffectsConfirm` (14 languages). Parity script: all 14 languages have identical key sets (License_* intentionally el-only).
+- Not audited: Optimizer.ps1 (legacy), most Views code-behind, TweakService powercfg tweaks, tray popup/widget details.
