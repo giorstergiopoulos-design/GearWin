@@ -90,7 +90,8 @@ namespace OptimizerWpf.Services
             try
             {
                 GetWindowThreadProcessId(hwnd, out var pid);
-                var name = Process.GetProcessById(pid).ProcessName;
+                using var proc = Process.GetProcessById(pid); // Process implements IDisposable — πριν διέρρεε ένα αντικείμενο/handle ανά 5s
+                var name = proc.ProcessName;
                 // ΔΙΟΡΘΩΣΗ - ρητό αίτημα χρήστη: "το όνομα του exe να προσαρμοστεί στο όνομα της
                 // εφαρμογής" - το AssemblyName άλλαξε (βλ. OptimizerWpf.csproj), οπότε το πραγματικό
                 // Process.ProcessName της εγκατεστημένης εφαρμογής είναι πλέον διαφορετικό -

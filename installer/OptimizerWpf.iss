@@ -27,6 +27,8 @@
 [Setup]
 AppId={{B7B4D3B0-7B2A-4B0C-9D5A-2F6C9A1E4D2A}
 AppName={#MyAppName}
+; Ο installer περιμένει/ζητά κλείσιμο της εφαρμογής (single-instance mutex, βλ. App.xaml.cs) αντί να αντικαταστήσει αρχεία σε τρέχουσα διεργασία.
+AppMutex=GearWin.SingleInstance
 AppVersion={#MyAppVersion}
 AppPublisher={#MyAppPublisher}
 DefaultDirName={autopf}\{#MyAppName}

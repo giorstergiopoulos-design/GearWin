@@ -154,7 +154,11 @@ namespace OptimizerWpf.Services
             try
             {
                 Directory.CreateDirectory(Path.GetDirectoryName(StorePath)!);
-                File.WriteAllText(StorePath, JsonSerializer.Serialize(Current));
+                // Ατομική εγγραφή (tmp + move): το απλό WriteAllText κόβει πρώτα το αρχείο — μια διακοπή/crash στη
+                // μέση άφηνε κενό/μισό JSON, και η επόμενη εκκίνηση έπεφτε σιωπηλά σε ΠΡΟΕΠΙΛΕΓΜΕΝΕΣ ρυθμίσεις.
+                var tmp = StorePath + ".tmp";
+                File.WriteAllText(tmp, JsonSerializer.Serialize(Current));
+                File.Move(tmp, StorePath, overwrite: true);
             }
             catch { }
         }
@@ -183,7 +187,9 @@ namespace OptimizerWpf.Services
                 var text = File.ReadAllText(sourcePath);
                 if (JsonSerializer.Deserialize<AppSettings>(text) == null) return false;
                 Directory.CreateDirectory(Path.GetDirectoryName(StorePath)!);
-                File.WriteAllText(StorePath, text);
+                var tmpImport = StorePath + ".tmp";
+                File.WriteAllText(tmpImport, text);
+                File.Move(tmpImport, StorePath, overwrite: true);
                 _cache = null;
                 return true;
             }

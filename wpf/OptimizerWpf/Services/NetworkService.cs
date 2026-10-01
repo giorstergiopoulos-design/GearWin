@@ -168,7 +168,19 @@ namespace OptimizerWpf.Services
             try
             {
                 File.Copy(HostsFilePath, $"{HostsFilePath}_backup_{DateTime.Now:yyyyMMdd_HHmmss}.bak", overwrite: true);
-                File.WriteAllText(HostsFilePath, content, System.Text.Encoding.ASCII);
+                // ΔΙΟΡΘΩΣΗ: με ASCII, οι ελληνικοί χαρακτήρες των markers του Αποκλεισμού Τηλεμετρίας (BEGIN/END)
+                // γράφονταν ως "?" — μετά το save τα markers δεν ταίριαζαν ποτέ ξανά, οπότε το block δεν μπορούσε να
+                // αφαιρεθεί (toggle off) και μια νέα ενεργοποίηση το διπλασίαζε. Τα Windows διαβάζουν σωστά το hosts
+                // ως UTF-8 χωρίς BOM (το BOM θα έσπαγε την πρώτη γραμμή).
+                File.WriteAllText(HostsFilePath, content, new System.Text.UTF8Encoding(false));
+                // Κρατάμε μόνο τα 5 πιο πρόσφατα backups — πριν συσσωρεύονταν επ' άπειρον στο drivers\etc.
+                try
+                {
+                    var dir = Path.GetDirectoryName(HostsFilePath)!;
+                    foreach (var old in Directory.GetFiles(dir, "hosts_backup_*.bak").OrderByDescending(f => f).Skip(5))
+                        File.Delete(old);
+                }
+                catch { }
                 return true;
             }
             catch { return false; }

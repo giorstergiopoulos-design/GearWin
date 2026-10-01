@@ -18,6 +18,9 @@ public partial class App : Application
     // ξαναμείνει stale σε μελλοντικά version bumps.
     public static string DisplayVersion { get; } = $"v{System.Reflection.Assembly.GetExecutingAssembly().GetName().Version!.ToString(3)}";
 
+    private static System.Threading.Mutex? _singleInstanceMutex;
+    private static DateTime _lastErrorDialog = DateTime.MinValue;
+
     protected override void OnStartup(StartupEventArgs e)
     {
         base.OnStartup(e);
@@ -49,8 +52,22 @@ public partial class App : Application
         // χρησιμοποιείται σχεδόν παντού στην εφαρμογή για Click handlers) τερματίζει ΣΙΩΠΗΛΑ ολόκληρη
         // την εφαρμογή - προεπιλεγμένη συμπεριφορά του WPF. Τώρα δείχνεται ένα μήνυμα σφάλματος και η
         // εφαρμογή συνεχίζει να τρέχει αντί να κλείνει απότομα.
+        // Single-instance: η αυτόματη εκκίνηση με τα Windows (--tray) + μια χειροκίνητη εκκίνηση έδιναν ΔΥΟ
+        // διεργασίες — διπλά tray icons, διπλά timers/ειδοποιήσεις, και σύγκρουση στο ETW "NT Kernel Logger".
+        // Τα headless modes παραπάνω (--reset-tweaks/--auto-maintenance) δεν επηρεάζονται — έχουν ήδη επιστρέψει.
+        _singleInstanceMutex = new System.Threading.Mutex(true, @"Local\GearWin.SingleInstance", out bool isFirstInstance);
+        if (!isFirstInstance)
+        {
+            Shutdown();
+            return;
+        }
+
         DispatcherUnhandledException += (_, args) =>
         {
+            // Ένα exception μέσα σε timer tick (π.χ. το 1s refresh της Αρχικής) επαναλαμβάνεται σε κάθε tick —
+            // χωρίς όριο ο χρήστης έβλεπε ατέλειωτη αλληλουχία modal διαλόγων. Ένας διάλογος ανά 30s.
+            if ((DateTime.Now - _lastErrorDialog).TotalSeconds < 30) { args.Handled = true; return; }
+            _lastErrorDialog = DateTime.Now;
             ThemedMessageBox.Show($"{Services.LanguageService.T("App_UnhandledErrorPrefix")}{args.Exception.Message}{Services.LanguageService.T("App_UnhandledErrorSuffix")}",
                 Services.LanguageService.T("App_ErrorTitle"), MessageBoxButton.OK, MessageBoxImage.Error);
             args.Handled = true;
