@@ -542,10 +542,15 @@ namespace OptimizerWpf.Views
                             var temp = Environment.GetEnvironmentVariable("TEMP");
                             if (!string.IsNullOrEmpty(temp))
                             {
-                                foreach (var f in Directory.EnumerateFileSystemEntries(temp))
+                                // Εκτός UI thread: ο βρόχος διαγραφής χιλιάδων αρχείων/φακέλων έτρεχε πάνω στο UI thread
+                                // (μετά το await) και πάγωνε ολόκληρο το παράθυρο όσο διαρκούσε ο καθαρισμός.
+                                await Task.Run(() =>
                                 {
-                                    try { if (Directory.Exists(f)) Directory.Delete(f, true); else File.Delete(f); } catch { }
-                                }
+                                    foreach (var f in Directory.EnumerateFileSystemEntries(temp))
+                                    {
+                                        try { if (Directory.Exists(f)) Directory.Delete(f, true); else File.Delete(f); } catch { }
+                                    }
+                                });
                             }
                             fixedSomething = true;
                         }

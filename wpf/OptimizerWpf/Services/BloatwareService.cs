@@ -306,13 +306,19 @@ try {{
 
         // ===== helpers =====
 
+        // Win32Exception (λείπει το εκτελέσιμο, π.χ. winget.exe) → false αντί για exception: οι handlers των Views δεν
+        // είχαν try/finally, οπότε μια εξαίρεση άφηνε τη γραμμή κατάστασης "busy" και τα κουμπιά απενεργοποιημένα.
         private static async Task<bool> RunPsForSuccessAsync(string command)
         {
-            using var process = Process.Start(new ProcessStartInfo("powershell.exe", $"-NoProfile -ExecutionPolicy Bypass -Command \"{command.Replace("\"", "\\\"")}\"")
-            { UseShellExecute = false, CreateNoWindow = true });
-            if (process == null) return false;
-            await process.WaitForExitAsync();
-            return process.ExitCode == 0;
+            try
+            {
+                using var process = Process.Start(new ProcessStartInfo("powershell.exe", $"-NoProfile -ExecutionPolicy Bypass -Command \"{command.Replace("\"", "\\\"")}\"")
+                { UseShellExecute = false, CreateNoWindow = true });
+                if (process == null) return false;
+                await process.WaitForExitAsync();
+                return process.ExitCode == 0;
+            }
+            catch (System.ComponentModel.Win32Exception) { return false; }
         }
 
         private static async Task<string> RunPsCaptureAsync(string command)
@@ -327,10 +333,14 @@ try {{
 
         private static async Task<bool> RunProcessForSuccessAsync(string fileName, string arguments)
         {
-            using var process = Process.Start(new ProcessStartInfo(fileName, arguments) { UseShellExecute = false, CreateNoWindow = true });
-            if (process == null) return false;
-            await process.WaitForExitAsync();
-            return process.ExitCode == 0;
+            try
+            {
+                using var process = Process.Start(new ProcessStartInfo(fileName, arguments) { UseShellExecute = false, CreateNoWindow = true });
+                if (process == null) return false;
+                await process.WaitForExitAsync();
+                return process.ExitCode == 0;
+            }
+            catch (System.ComponentModel.Win32Exception) { return false; }
         }
     }
 }

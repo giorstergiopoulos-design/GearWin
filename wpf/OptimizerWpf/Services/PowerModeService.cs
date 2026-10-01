@@ -69,6 +69,7 @@ namespace OptimizerWpf.Services
             foreach (var p in Process.GetProcessesByName("explorer"))
             {
                 try { p.Kill(); } catch { }
+                finally { p.Dispose(); } // τα Process objects του GetProcessesByName δεν γίνονταν ποτέ Dispose
             }
         }
 
@@ -103,8 +104,11 @@ namespace OptimizerWpf.Services
                     RedirectStandardError = true,
                 };
                 using var process = Process.Start(psi);
-                process?.WaitForExit(5000);
-                return process?.ExitCode == 0;
+                if (process == null) return false;
+                _ = process.StandardOutput.ReadToEndAsync(); // drain — redirected αλλά δεν διαβάζονταν
+                _ = process.StandardError.ReadToEndAsync();
+                if (!process.WaitForExit(5000)) { try { process.Kill(true); } catch { } return false; }
+                return process.ExitCode == 0;
             }
             catch
             {

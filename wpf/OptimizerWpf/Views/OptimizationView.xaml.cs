@@ -67,11 +67,18 @@ namespace OptimizerWpf.Views
 
         // ΝΕΟ - ROADMAP.md REQ-570-03 - ίδιες μέθοδοι με το πρώην tweak (TweakService.
         // UltimatePerformanceOn/Off), απλώς καλούνται πλέον απευθείας από εδώ αντί μέσω SimpleTweak.
-        private void ToggleUltimatePerformance_Click(object sender, RoutedEventArgs e)
+        private async void ToggleUltimatePerformance_Click(object sender, RoutedEventArgs e)
         {
             var isOn = ToggleUltimatePerformance.IsChecked == true;
-            if (isOn) TweakService.UltimatePerformanceOn();
-            else TweakService.UltimatePerformanceOff();
+            ToggleUltimatePerformance.IsEnabled = false;
+            try
+            {
+                // Εκτός UI thread: καλεί πολλές φορές το powercfg.exe σύγχρονα (πάγωνε το παράθυρο).
+                await Task.Run(() => { if (isOn) TweakService.UltimatePerformanceOn(); else TweakService.UltimatePerformanceOff(); });
+                // Ο διακόπτης αντικατοπτρίζει την ΠΡΑΓΜΑΤΙΚΗ κατάσταση (το template μπορεί να λείπει σε κάποια builds).
+                ToggleUltimatePerformance.IsChecked = await Task.Run(TweakService.IsUltimatePerformanceActive);
+            }
+            finally { ToggleUltimatePerformance.IsEnabled = true; }
         }
 
         // ΝΕΟ - roadmap "Αυτόματο Gaming Mode".
@@ -114,40 +121,54 @@ namespace OptimizerWpf.Views
         // Optimizer.ps1) αντί για μόνο powercfg - βλ. PowerModeService.cs. Επανεκκίνηση Explorer
         // (Απενεργοποίηση και των δύο modes) προκαλεί σύντομο "τρεμόπαιγμα" της επιφάνειας εργασίας -
         // αναμενόμενο, ίδιο με το WinForms original.
-        private void ToggleOfficeMode_Click(object sender, RoutedEventArgs e)
+        // Εκτός UI thread: τα Set/Disable Office/Gaming Mode τρέχουν πολλές εξωτερικές εντολές (powercfg, sc,
+        // επανεκκίνηση Explorer, αναμονές) σύγχρονα — πάγωναν το παράθυρο για αρκετά δευτερόλεπτα στο κλικ.
+        private async void ToggleOfficeMode_Click(object sender, RoutedEventArgs e)
         {
             var isOn = ToggleOfficeMode.IsChecked == true;
             if (isOn && ToggleGamingMode.IsChecked == true) ToggleGamingMode.IsChecked = false;
-            if (isOn)
+            ToggleOfficeMode.IsEnabled = false;
+            try
             {
-                StatusService.SetBusy(LanguageService.T("Opt_EnablingOfficeMode"));
-                PowerModeService.SetOfficeMode();
-                StatusService.SetIdle(LanguageService.T("Opt_OfficeModeEnabled"));
+                if (isOn)
+                {
+                    StatusService.SetBusy(LanguageService.T("Opt_EnablingOfficeMode"));
+                    await Task.Run(PowerModeService.SetOfficeMode);
+                    StatusService.SetIdle(LanguageService.T("Opt_OfficeModeEnabled"));
+                }
+                else
+                {
+                    StatusService.SetBusy(LanguageService.T("Opt_DisablingOfficeMode"));
+                    await Task.Run(PowerModeService.DisableOfficeMode);
+                    StatusService.SetIdle(LanguageService.T("Opt_OfficeModeDisabled"));
+                }
             }
-            else
-            {
-                StatusService.SetBusy(LanguageService.T("Opt_DisablingOfficeMode"));
-                PowerModeService.DisableOfficeMode();
-                StatusService.SetIdle(LanguageService.T("Opt_OfficeModeDisabled"));
-            }
+            catch { StatusService.SetIdle(LanguageService.T("Ready")); }
+            finally { ToggleOfficeMode.IsEnabled = true; }
         }
 
-        private void ToggleGamingMode_Click(object sender, RoutedEventArgs e)
+        private async void ToggleGamingMode_Click(object sender, RoutedEventArgs e)
         {
             var isOn = ToggleGamingMode.IsChecked == true;
-            if (isOn)
+            ToggleGamingMode.IsEnabled = false;
+            try
             {
-                if (ToggleOfficeMode.IsChecked == true) ToggleOfficeMode.IsChecked = false;
-                StatusService.SetBusy(LanguageService.T("Opt_EnablingGamingMode"));
-                PowerModeService.SetGamingMode();
-                StatusService.SetIdle(LanguageService.T("Opt_GamingModeEnabled"));
+                if (isOn)
+                {
+                    if (ToggleOfficeMode.IsChecked == true) ToggleOfficeMode.IsChecked = false;
+                    StatusService.SetBusy(LanguageService.T("Opt_EnablingGamingMode"));
+                    await Task.Run(PowerModeService.SetGamingMode);
+                    StatusService.SetIdle(LanguageService.T("Opt_GamingModeEnabled"));
+                }
+                else
+                {
+                    StatusService.SetBusy(LanguageService.T("Opt_DisablingGamingMode"));
+                    await Task.Run(PowerModeService.DisableGamingMode);
+                    StatusService.SetIdle(LanguageService.T("Opt_GamingModeDisabled"));
+                }
             }
-            else
-            {
-                StatusService.SetBusy(LanguageService.T("Opt_DisablingGamingMode"));
-                PowerModeService.DisableGamingMode();
-                StatusService.SetIdle(LanguageService.T("Opt_GamingModeDisabled"));
-            }
+            catch { StatusService.SetIdle(LanguageService.T("Ready")); }
+            finally { ToggleGamingMode.IsEnabled = true; }
         }
 
         private async void BtnScanWinget_Click(object sender, RoutedEventArgs e)
@@ -220,6 +241,10 @@ namespace OptimizerWpf.Views
             var failed = new List<string>();
             var openedInStore = new List<string>();
             var triggeredStoreOnce = false;
+            // try/finally: μια εξαίρεση στη μέση του βρόχου άφηνε το progress bar μόνιμα ορατό και τα κουμπιά
+            // απενεργοποιημένα (ίδιο μοτίβο που ήδη διορθώθηκε στο BtnScanWinget_Click).
+            try
+            {
             foreach (var row in selected)
             {
                 TxtWingetStatus.Text = $"{LanguageService.T("Opt_UpgradingPrefix")}{row.Update.Name}... ({succeeded.Count + failed.Count + openedInStore.Count + 1}/{selected.Count})";
@@ -233,11 +258,14 @@ namespace OptimizerWpf.Views
                     continue;
                 }
 
-                var ok = await WingetService.UpgradeAsync(row.Update.Id, row.Update.Source);
+                bool ok;
+                try { ok = await WingetService.UpgradeAsync(row.Update.Id, row.Update.Source); }
+                catch { ok = false; } // ένα προβληματικό πακέτο δεν πρέπει να σταματά τα υπόλοιπα
                 if (ok) { succeeded.Add(row.Update.Name); _updates.Remove(row); }
                 else { failed.Add(row.Update.Name); }
             }
-            SetBusy(false);
+            }
+            finally { SetBusy(false); }
 
             var summary = failed.Count == 0
                 ? $"{LanguageService.T("Opt_UpgradeAllSucceededPrefix")}{succeeded.Count}{LanguageService.T("Opt_UpgradeAllSucceededSuffix")}"
@@ -301,7 +329,21 @@ namespace OptimizerWpf.Views
         // port του cardOpt4 (~11847, Windows Update) με το Catalog integration (HANDOFF.md §0.4ιε).
         // ΣΗΜΕΙΩΣΗ ΕΙΛΙΚΡΙΝΕΙΑΣ: καμία αξιόπιστη αποδιπλότυπηση ανάμεσα στις 2 πηγές - βλ. σχόλιο XAML.
 
+        // try/catch/finally: οι 4 διαδοχικές σαρώσεις (vendor/WU/devices/Catalog) δεν είχαν καμία προστασία — μια εξαίρεση
+        // άφηνε το κουμπί σάρωσης να "γυρίζει" και να μένει απενεργοποιημένο μέχρι επανεκκίνηση της εφαρμογής.
         private async void BtnScanDrivers_Click(object sender, RoutedEventArgs e)
+        {
+            try { await ScanDriversCoreAsync(); }
+            catch (Exception ex) { TxtDriverStatus.Text = $"{LanguageService.T("Opt_ScanFailed")}{ex.Message}"; }
+            finally
+            {
+                StatusService.SetIdle(LanguageService.T("Ready"));
+                BtnScanDrivers.SetScanning(false);
+                BtnScanDrivers.IsEnabled = true;
+            }
+        }
+
+        private async Task ScanDriversCoreAsync()
         {
             BtnScanDrivers.SetScanning(true);
             BtnScanDrivers.IsEnabled = false;
@@ -523,10 +565,15 @@ namespace OptimizerWpf.Views
             BtnDriverBackup.IsEnabled = false;
             BtnDriverRestore.IsEnabled = false;
 
-            var ok = await DriverService.BackupAsync(destPath);
-            StatusService.SetIdle(LanguageService.T("Ready"));
-            BtnDriverBackup.IsEnabled = true;
-            BtnDriverRestore.IsEnabled = true;
+            bool ok = false;
+            try { ok = await DriverService.BackupAsync(destPath); }
+            catch { /* αποτυχία → μήνυμα παρακάτω */ }
+            finally
+            {
+                StatusService.SetIdle(LanguageService.T("Ready"));
+                BtnDriverBackup.IsEnabled = true;
+                BtnDriverRestore.IsEnabled = true;
+            }
             TxtDriverBackupStatus.Text = ok
                 ? $"{LanguageService.T("Opt_BackupCompletedPrefix")}{destPath}"
                 : LanguageService.T("Opt_BackupFailedOrCancelled");
@@ -547,10 +594,15 @@ namespace OptimizerWpf.Views
             BtnDriverBackup.IsEnabled = false;
             BtnDriverRestore.IsEnabled = false;
 
-            var ok = await DriverService.RestoreAsync(dialog.FolderName);
-            StatusService.SetIdle(LanguageService.T("Ready"));
-            BtnDriverBackup.IsEnabled = true;
-            BtnDriverRestore.IsEnabled = true;
+            bool ok = false;
+            try { ok = await DriverService.RestoreAsync(dialog.FolderName); }
+            catch { /* αποτυχία → μήνυμα παρακάτω */ }
+            finally
+            {
+                StatusService.SetIdle(LanguageService.T("Ready"));
+                BtnDriverBackup.IsEnabled = true;
+                BtnDriverRestore.IsEnabled = true;
+            }
             TxtDriverBackupStatus.Text = ok ? LanguageService.T("Opt_RestoreCompleted") : LanguageService.T("Opt_RestoreFailed");
         }
 

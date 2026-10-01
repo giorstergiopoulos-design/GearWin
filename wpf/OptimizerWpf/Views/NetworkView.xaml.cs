@@ -221,7 +221,11 @@ namespace OptimizerWpf.Views
         {
             if (sender is not ToggleButton { Tag: FirewallRuleRow row }) return;
             var ok = await NetworkService.SetFirewallRuleEnabledAsync(row.Rule.Name, row.IsEnabled);
-            if (!ok) ThemedMessageBox.Show(LanguageService.T("Net_ChangeFailed"), LanguageService.T("Net_ErrorTitle"), MessageBoxButton.OK, MessageBoxImage.Warning);
+            if (!ok)
+            {
+                row.IsEnabled = !row.IsEnabled; // η αλλαγή ΑΠΕΤΥΧΕ — ο διακόπτης δεν πρέπει να δείχνει κατάσταση που δεν εφαρμόστηκε
+                ThemedMessageBox.Show(LanguageService.T("Net_ChangeFailed"), LanguageService.T("Net_ErrorTitle"), MessageBoxButton.OK, MessageBoxImage.Warning);
+            }
         }
 
         private async void BtnExportFirewallPolicy_Click(object sender, RoutedEventArgs e)

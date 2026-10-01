@@ -399,7 +399,7 @@ namespace OptimizerWpf.Views
             if (ThemedMessageBox.Show($"{LanguageService.T("Sys_KillConfirmPrefix")}{row.Row.Name}{LanguageService.T("Sys_KillConfirmMid")}{row.Row.Pid}{LanguageService.T("Sys_KillConfirmSuffix")}",
                     LanguageService.T("Sys_ConfirmTitle"), MessageBoxButton.YesNo, MessageBoxImage.Warning) != MessageBoxResult.Yes) return;
             // ΔΙΟΡΘΩΣΗ (εξονυχιστικός έλεγχος εντόπισε): σιωπηλό no-op σε αποτυχία.
-            if (SystemService.KillProcess(row.Row.Pid)) _processes.Remove(row);
+            if (SystemService.KillProcess(row.Row.Pid, row.Row.Name)) _processes.Remove(row);
             else ThemedMessageBox.Show($"{LanguageService.T("Sys_KillFailedPrefix")}{row.Row.Name}{LanguageService.T("Sys_KillConfirmMid")}{row.Row.Pid}{LanguageService.T("Sys_KillFailedSuffix")}", LanguageService.T("Sys_ErrorTitle"), MessageBoxButton.OK, MessageBoxImage.Error);
         }
 

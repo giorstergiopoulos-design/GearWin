@@ -57,7 +57,14 @@ namespace OptimizerWpf.Views
         private void ToggleTweak_Click(object sender, RoutedEventArgs e)
         {
             if (sender is not ToggleButton { Tag: TweakRowVm row }) return;
-            if (row.IsOn) row.Tweak.OnAction(); else row.Tweak.OffAction();
+            // Μια εξαίρεση (π.χ. μπλοκάρισμα registry από πολιτική/antivirus) άφηνε τον διακόπτη να δείχνει κατάσταση που
+            // ΔΕΝ εφαρμόστηκε και έσκαγε στον global handler. Επαναφέρουμε τον διακόπτη και ενημερώνουμε τον χρήστη.
+            try { if (row.IsOn) row.Tweak.OnAction(); else row.Tweak.OffAction(); }
+            catch
+            {
+                row.IsOn = !row.IsOn;
+                ThemedMessageBox.Show(LanguageService.T("Net_ChangeFailed"), LanguageService.T("Net_ErrorTitle"), MessageBoxButton.OK, MessageBoxImage.Warning);
+            }
         }
 
         // ΝΕΟ - roadmap "Καρφιτσωμένες συντομεύσεις" - καρφίτσωμα/ξεκαρφίτσωμα ενός tweak για γρήγορη

@@ -169,6 +169,7 @@ namespace OptimizerWpf.Services
                 // ΑΣΦΑΛΕΙΑ ΔΕΔΟΜΕΝΩΝ: (1) το όνομα του backup περιλαμβάνει μοναδικό αύξοντα αριθμό — πριν, δύο ευρήματα
                 // με ίδιο Display έγραφαν στο ίδιο .reg με /y και το πρώτο backup χανόταν· (2) αν το export ΑΠΟΤΥΧΕΙ δεν
                 // διαγράφουμε ΤΙΠΟΤΑ (πριν το αποτέλεσμα του export αγνοούνταν και η διαγραφή προχωρούσε χωρίς backup).
+                Directory.CreateDirectory(backupPath); // το reg export αποτυγχάνει αν ο φάκελος δεν υπάρχει — τώρα αυτό ακυρώνει τη διαγραφή
                 int exportIndex = 0;
                 foreach (var finding in findings)
                 {

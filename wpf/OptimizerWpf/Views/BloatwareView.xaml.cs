@@ -242,8 +242,14 @@ namespace OptimizerWpf.Views
                     LanguageService.T("Bloatware_ConfirmTitle"), MessageBoxButton.YesNo, MessageBoxImage.Warning) != MessageBoxResult.Yes) return;
 
             StatusService.SetBusy($"{LanguageService.T("Bloatware_Uninstall")} {row.App.DisplayName}...");
-            await BloatwareService.UninstallAppAsync(row.App.UninstallString);
+            int exitCode;
+            try { exitCode = await BloatwareService.UninstallAppAsync(row.App.UninstallString); }
+            catch { exitCode = -1; }
             StatusService.SetIdle(LanguageService.T("Ready"));
+            // Μόνο αν η απεγκατάσταση ΟΛΟΚΛΗΡΩΘΗΚΕ (0 ή 3010 = χρειάζεται επανεκκίνηση). Πριν, ακόμη κι αν ο χρήστης
+            // ΑΚΥΡΩΝΕ τον uninstaller, η εφαρμογή αφαιρούνταν από τη λίστα και η εφαρμογή πρότεινε διαγραφή των
+            // φακέλων δεδομένων της ΕΝΩ ΕΙΝΑΙ ΑΚΟΜΑ ΕΓΚΑΤΕΣΤΗΜΕΝΗ.
+            if (exitCode != 0 && exitCode != 3010) return;
             _installedApps.Remove(row);
 
             var residuals = BloatwareService.FindResidualFolders(row.App.DisplayName);

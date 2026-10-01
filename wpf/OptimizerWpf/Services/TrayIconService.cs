@@ -17,6 +17,7 @@ namespace OptimizerWpf.Services
     {
         private static NotifyIcon? _icon;
         private static TrayPopupWindow? _popup;
+        private static DateTime _popupClosedAt = DateTime.MinValue;
         private static Window? _mainWindow;
         private static ToolStripMenuItem? _widgetMenuItem;
         private static ToolStripMenuItem? _quickCleanMenuItem;
@@ -43,7 +44,7 @@ namespace OptimizerWpf.Services
         public static void Start(Window mainWindow)
         {
             _mainWindow = mainWindow;
-            var appIcon = System.Drawing.Icon.ExtractAssociatedIcon(Process.GetCurrentProcess().MainModule!.FileName!);
+            var appIcon = System.Drawing.Icon.ExtractAssociatedIcon(Environment.ProcessPath!);
 
             var menu = new ContextMenuStrip();
             _openMainItem = new ToolStripMenuItem(LanguageService.T("Tray_OpenMain"), null, (_, _) => RestoreMainWindow());
@@ -120,6 +121,7 @@ namespace OptimizerWpf.Services
                 _icon.ShowBalloonTip(4000, "GearWin - Complete PC Care",
                     $"{LanguageService.T("Tray_QuickCleanDonePrefix")}{QuickCleanService.FormatSize(freed)}", ToolTipIcon.Info);
             }
+            catch { /* ένα exception εδώ (handler WinForms μενού, εκτός WPF Dispatcher) θα τερμάτιζε την εφαρμογή */ }
             finally
             {
                 _icon.Text = "GearWin - Complete PC Care";
@@ -163,8 +165,12 @@ namespace OptimizerWpf.Services
                 return;
             }
 
+            // Το κλικ στο tray icon αφαιρεί το focus από το popup → Window_Deactivated το κλείνει ΠΡΙΝ φτάσει το MouseClick,
+            // οπότε το ίδιο κλικ το ξανάνοιγε αμέσως (άνοιγε/έκλεινε σε βρόχο αντί να κλείνει). Αγνοούμε κλικ αμέσως μετά το κλείσιμο.
+            if ((DateTime.UtcNow - _popupClosedAt).TotalMilliseconds < 400) return;
+
             _popup = new TrayPopupWindow();
-            _popup.Closed += (_, _) => _popup = null;
+            _popup.Closed += (_, _) => { _popup = null; _popupClosedAt = DateTime.UtcNow; };
             _popup.Show();
             _popup.Activate();
         }

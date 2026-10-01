@@ -79,15 +79,15 @@ namespace OptimizerWpf.Services
                 DetectState: () => GetPowercfgIndex("SUB_ENERGYSAVER", "ESBATTTHRESHOLD", ac: false) is int i0 ? i0 == 0 : null),
             new SimpleTweak(LanguageService.T("Tweak_P1Label"), LanguageService.T("Tweak_P1Desc"),
                 () => RunPowercfg("/setacvalueindex SCHEME_CURRENT 2a737441-1930-4402-8d77-b2bebba308a3 48e6b7a6-50f5-4782-a5d4-53bb8f07e226 0",
-                                   "/setdcvalueindex SCHEME_CURRENT 2a737441-1930-4402-8d77-b2bebba308a3 48e6b7a6-50f5-4782-a5d4-53bb8f07e226 0"),
+                                   "/setdcvalueindex SCHEME_CURRENT 2a737441-1930-4402-8d77-b2bebba308a3 48e6b7a6-50f5-4782-a5d4-53bb8f07e226 0", "/S SCHEME_CURRENT"),
                 () => RunPowercfg("/setacvalueindex SCHEME_CURRENT 2a737441-1930-4402-8d77-b2bebba308a3 48e6b7a6-50f5-4782-a5d4-53bb8f07e226 1",
-                                   "/setdcvalueindex SCHEME_CURRENT 2a737441-1930-4402-8d77-b2bebba308a3 48e6b7a6-50f5-4782-a5d4-53bb8f07e226 1"),
+                                   "/setdcvalueindex SCHEME_CURRENT 2a737441-1930-4402-8d77-b2bebba308a3 48e6b7a6-50f5-4782-a5d4-53bb8f07e226 1", "/S SCHEME_CURRENT"),
                 DetectState: () => GetPowercfgIndex("2a737441-1930-4402-8d77-b2bebba308a3", "48e6b7a6-50f5-4782-a5d4-53bb8f07e226", ac: true) is int i1 ? i1 == 0 : null),
             new SimpleTweak(LanguageService.T("Tweak_P2Label"), LanguageService.T("Tweak_P2Desc"),
                 () => RunPowercfg("/setacvalueindex SCHEME_CURRENT 501a4d13-42af-4429-9fd1-a8218c268e20 ee12f906-d277-404b-b6da-e5fa1a576df5 0",
-                                   "/setdcvalueindex SCHEME_CURRENT 501a4d13-42af-4429-9fd1-a8218c268e20 ee12f906-d277-404b-b6da-e5fa1a576df5 0"),
+                                   "/setdcvalueindex SCHEME_CURRENT 501a4d13-42af-4429-9fd1-a8218c268e20 ee12f906-d277-404b-b6da-e5fa1a576df5 0", "/S SCHEME_CURRENT"),
                 () => RunPowercfg("/setacvalueindex SCHEME_CURRENT 501a4d13-42af-4429-9fd1-a8218c268e20 ee12f906-d277-404b-b6da-e5fa1a576df5 1",
-                                   "/setdcvalueindex SCHEME_CURRENT 501a4d13-42af-4429-9fd1-a8218c268e20 ee12f906-d277-404b-b6da-e5fa1a576df5 1"),
+                                   "/setdcvalueindex SCHEME_CURRENT 501a4d13-42af-4429-9fd1-a8218c268e20 ee12f906-d277-404b-b6da-e5fa1a576df5 1", "/S SCHEME_CURRENT"),
                 DetectState: () => GetPowercfgIndex("501a4d13-42af-4429-9fd1-a8218c268e20", "ee12f906-d277-404b-b6da-e5fa1a576df5", ac: true) is int i2 ? i2 == 0 : null),
         };
 
@@ -219,17 +219,58 @@ namespace OptimizerWpf.Services
         // feedback_correct_tab_placement). Η ανίχνευση κατάστασης εξήχθη εδώ σε δική της μέθοδο (πριν
         // ήταν ανώνυμο lambda μέσα στο AllMainTweaks) ώστε να τη χρησιμοποιεί απευθείας το
         // OptimizationView.xaml.cs χωρίς να περνάει πια από το SimpleTweak/AllMainTweaks μονοπάτι.
-        public static bool IsUltimatePerformanceActive() =>
-            RunProcessCapture("powercfg.exe", "/list").Contains("e9a42b02-d5df-448d-aa00-03f14749eb61", StringComparison.OrdinalIgnoreCase);
+        private const string UltimateTemplateGuid = "e9a42b02-d5df-448d-aa00-03f14749eb61";
+        private static readonly System.Text.RegularExpressions.Regex GuidRegex =
+            new(@"[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}");
 
-        public static void UltimatePerformanceOn() => RunProcess("powercfg.exe", "-duplicatescheme e9a42b02-d5df-448d-aa00-03f14749eb61");
+        // ΔΙΟΡΘΩΣΗ: το "powercfg -duplicatescheme <template>" φτιάχνει ΝΕΟ σχέδιο με ΤΥΧΑΙΟ GUID (όχι το e9a42b02…) —
+        // η παλιά ανίχνευση (αναζήτηση του template GUID στο /list) δεν το έβρισκε ποτέ, το σχέδιο δεν ΕΝΕΡΓΟΠΟΙΟΥΝΤΑΝ
+        // (καμία /setactive), και κάθε νέο "On" δημιουργούσε ένα ακόμη διπλότυπο. Το Off έβρισκε το σχέδιο μόνο με το
+        // αγγλικό όνομα "Ultimate Performance" (αποτυχία σε ελληνικά/άλλα Windows). Τώρα αποθηκεύουμε το GUID που
+        // δημιουργήσαμε και το προηγούμενο ενεργό σχέδιο, και ανιχνεύουμε/επαναφέρουμε με βάση αυτά.
+        private const string UltimateCreatedKey = "UP_CREATED_SCHEME";
+        private const string UltimatePreviousKey = "UP_PREVIOUS_SCHEME";
+
+        public static bool IsUltimatePerformanceActive()
+        {
+            var active = GuidRegex.Match(RunProcessCapture("powercfg.exe", "/getactivescheme")).Value;
+            if (string.IsNullOrEmpty(active)) return false;
+            if (active.Equals(UltimateTemplateGuid, StringComparison.OrdinalIgnoreCase)) return true;
+            var created = TweakBackupService.GetBackup(UltimateCreatedKey);
+            return created != null && active.Equals(created, StringComparison.OrdinalIgnoreCase);
+        }
+
+        public static void UltimatePerformanceOn()
+        {
+            if (IsUltimatePerformanceActive()) return;
+            var previous = GuidRegex.Match(RunProcessCapture("powercfg.exe", "/getactivescheme")).Value;
+            // Ξαναχρησιμοποιούμε ήδη δημιουργημένο σχέδιο αν υπάρχει ακόμα (όχι διπλότυπα σε κάθε ενεργοποίηση).
+            var list = RunProcessCapture("powercfg.exe", "/list");
+            var created = TweakBackupService.GetBackup(UltimateCreatedKey);
+            if (created == null || !list.Contains(created, StringComparison.OrdinalIgnoreCase))
+            {
+                created = GuidRegex.Match(RunProcessCapture("powercfg.exe", $"-duplicatescheme {UltimateTemplateGuid}")).Value;
+                if (string.IsNullOrEmpty(created)) return; // το template δεν υπάρχει σε αυτό το Windows build
+                TweakBackupService.Remove(UltimateCreatedKey);
+                TweakBackupService.BackupIfNeeded(UltimateCreatedKey, created);
+            }
+            if (!string.IsNullOrEmpty(previous) && !previous.Equals(created, StringComparison.OrdinalIgnoreCase))
+            {
+                TweakBackupService.Remove(UltimatePreviousKey);
+                TweakBackupService.BackupIfNeeded(UltimatePreviousKey, previous);
+            }
+            RunProcess("powercfg.exe", $"/setactive {created}");
+        }
 
         public static void UltimatePerformanceOff()
         {
-            RunProcess("powercfg.exe", "/setactive SCHEME_BALANCED");
-            var list = RunProcessCapture("powercfg.exe", "/list");
-            var match = System.Text.RegularExpressions.Regex.Match(list, @"([0-9a-fA-F\-]{36}).*Ultimate Performance");
-            if (match.Success) RunProcess("powercfg.exe", $"-delete {match.Groups[1].Value}");
+            var created = TweakBackupService.GetBackup(UltimateCreatedKey);
+            var previous = TweakBackupService.GetBackup(UltimatePreviousKey);
+            // Επιστροφή στο σχέδιο που ήταν ενεργό ΠΡΙΝ (π.χ. High performance) — πριν γινόταν πάντα Balanced.
+            RunProcess("powercfg.exe", string.IsNullOrEmpty(previous) ? "/setactive SCHEME_BALANCED" : $"/setactive {previous}");
+            if (!string.IsNullOrEmpty(created)) RunProcess("powercfg.exe", $"-delete {created}");
+            TweakBackupService.Remove(UltimateCreatedKey);
+            TweakBackupService.Remove(UltimatePreviousKey);
         }
 
         // ===== Απενεργοποίηση Game Bar / Game DVR (ξεχωριστό από Gaming Mode) =====
@@ -521,7 +562,7 @@ namespace OptimizerWpf.Services
 
         private static void RestartExplorer()
         {
-            foreach (var p in Process.GetProcessesByName("explorer")) { try { p.Kill(); } catch { } }
+            foreach (var p in Process.GetProcessesByName("explorer")) { try { p.Kill(); } catch { } finally { p.Dispose(); } }
         }
 
         private static void RunProcess(string fileName, string arguments)

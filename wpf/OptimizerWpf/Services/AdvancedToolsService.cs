@@ -281,7 +281,7 @@ namespace OptimizerWpf.Services
         // ΔΙΟΡΘΩΣΗ (βλ. HANDOFF.md §0.4ιβ - ο ps1 original ΔΕΝ έχει confirm dialog εδώ, το πιο
         // επικίνδυνο, ανεπιβεβαίωτο σημείο όλης της καρτέλας) - το confirm dialog είναι στο UI layer.
         public static Task<bool> RemoveGhostDeviceAsync(string instanceId) =>
-            RunPsForSuccessAsync($"Remove-PnpDevice -InstanceId '{instanceId}' -Confirm:$false -ErrorAction Stop");
+            RunPsForSuccessAsync($"Remove-PnpDevice -InstanceId '{instanceId.Replace("'", "''")}' -Confirm:$false -ErrorAction Stop");
 
         // ===== Χρονοδιάγραμμα Εκκίνησης (roadmap "Χρονοδιάγραμμα εκκίνησης") =====
         // Event ID 100 στο "Microsoft-Windows-Diagnostics-Performance/Operational" log είναι το

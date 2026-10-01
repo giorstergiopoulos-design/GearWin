@@ -786,8 +786,16 @@ $result | ConvertTo-Json -Depth 4 -Compress
 
         // pnputil αρνείται από μόνο του να διαγράψει driver που βρίσκεται ενεργά σε χρήση - καμία
         // πρόσθετη προστασία χρειάζεται εδώ (ίδια λογική με το ps1 original).
-        public static Task<bool> DeleteStoreDriverAsync(string driverOemName) =>
-            RunProcessAsync("pnputil.exe", $"/delete-driver {driverOemName} /uninstall /force", TimeSpan.FromMinutes(2));
+        // ΑΣΦΑΛΕΙΑ: το "παλιότερο" πακέτο (κατά ημερομηνία) μπορεί να είναι ο ΕΝΕΡΓΟΣ οδηγός μιας συσκευής (π.χ. ο
+        // χρήστης έκανε rollback ενός προβληματικού νέου οδηγού GPU/δικτύου). Με "/uninstall /force" το pnputil τον
+        // αφαιρούσε ΚΑΙ από τη συσκευή (μαύρη οθόνη / χωρίς δίκτυο). Χωρίς αυτά τα flags το pnputil αρνείται να διαγράψει
+        // οδηγό που χρησιμοποιείται — η αποτυχία εμφανίζεται στον χρήστη αντί για βλάβη. Επίσης ελέγχουμε το όνομα (oemNN.inf).
+        public static Task<bool> DeleteStoreDriverAsync(string driverOemName)
+        {
+            if (!System.Text.RegularExpressions.Regex.IsMatch(driverOemName ?? "", @"^oem\d+\.inf$", System.Text.RegularExpressions.RegexOptions.IgnoreCase))
+                return Task.FromResult(false);
+            return RunProcessAsync("pnputil.exe", $"/delete-driver {driverOemName}", TimeSpan.FromMinutes(2));
+        }
 
         private static async Task<string> RunPowerShellScriptAsync(string script, TimeSpan timeout)
         {

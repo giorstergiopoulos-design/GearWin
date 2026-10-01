@@ -92,6 +92,11 @@ namespace OptimizerWpf.Services
             try
             {
                 if (!Clipboard.ContainsText()) return;
+                // ΙΔΙΩΤΙΚΟΤΗΤΑ: οι password managers (και το δικό μας Password Manager/Wi-Fi viewer) σημαίνουν ό,τι
+                // αντιγράφουν με τα επίσημα formats "ExcludeClipboardContentFromMonitorProcessing" /
+                // "CanIncludeInClipboardHistory"=0 ώστε να ΜΗΝ καταγράφεται. Το ιστορικό μας τα αγνοούσε και έγραφε
+                // κωδικούς σε απλό κείμενο στο δίσκο (ClipboardHistory.json). Τώρα τα σέβεται.
+                if (IsMarkedSensitive()) return;
                 var text = Clipboard.GetText();
                 if (string.IsNullOrWhiteSpace(text) || text == _lastSeen) return;
                 _lastSeen = text;
@@ -106,6 +111,18 @@ namespace OptimizerWpf.Services
                 HistoryChanged?.Invoke();
             }
             catch { }
+        }
+
+        private static bool IsMarkedSensitive()
+        {
+            try
+            {
+                if (Clipboard.ContainsData("ExcludeClipboardContentFromMonitorProcessing")) return true;
+                if (Clipboard.GetData("CanIncludeInClipboardHistory") is System.IO.MemoryStream ms && ms.Length >= 4)
+                    return BitConverter.ToInt32(ms.ToArray(), 0) == 0;
+            }
+            catch { }
+            return false;
         }
 
         public static void CopyToClipboard(string text)
@@ -133,7 +150,11 @@ namespace OptimizerWpf.Services
             try
             {
                 if (!File.Exists(StorePath)) return;
-                var items = System.Text.Json.JsonSerializer.Deserialize<List<string>>(File.ReadAllText(StorePath));
+                var bytes = File.ReadAllBytes(StorePath);
+                string json;
+                try { json = System.Text.Encoding.UTF8.GetString(System.Security.Cryptography.ProtectedData.Unprotect(bytes, null, System.Security.Cryptography.DataProtectionScope.CurrentUser)); }
+                catch (System.Security.Cryptography.CryptographicException) { json = System.Text.Encoding.UTF8.GetString(bytes); } // παλιό (μη κρυπτογραφημένο) αρχείο
+                var items = System.Text.Json.JsonSerializer.Deserialize<List<string>>(json);
                 if (items == null) return;
                 lock (Lock) { _history.Clear(); _history.AddRange(items.Take(MaxHistory)); }
             }
@@ -147,7 +168,14 @@ namespace OptimizerWpf.Services
                 Directory.CreateDirectory(Path.GetDirectoryName(StorePath)!);
                 List<string> snapshot;
                 lock (Lock) snapshot = _history.ToList();
-                File.WriteAllText(StorePath, System.Text.Json.JsonSerializer.Serialize(snapshot));
+                // Κρυπτογράφηση DPAPI (μόνο ο τρέχων χρήστης Windows) + ατομική εγγραφή — το ιστορικό μπορεί να περιέχει
+                // ευαίσθητο κείμενο και πριν αποθηκευόταν σε καθαρό JSON.
+                var protectedBytes = System.Security.Cryptography.ProtectedData.Protect(
+                    System.Text.Encoding.UTF8.GetBytes(System.Text.Json.JsonSerializer.Serialize(snapshot)), null,
+                    System.Security.Cryptography.DataProtectionScope.CurrentUser);
+                var tmp = StorePath + ".tmp";
+                File.WriteAllBytes(tmp, protectedBytes);
+                File.Move(tmp, StorePath, overwrite: true);
             }
             catch { }
         }

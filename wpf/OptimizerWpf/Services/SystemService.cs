@@ -175,18 +175,31 @@ namespace OptimizerWpf.Services
         public static Task<IReadOnlyList<ProcessRow>> LoadProcessesAsync() => Task.Run(() =>
         {
             var rows = new List<ProcessRow>();
-            foreach (var p in Process.GetProcesses().OrderByDescending(p => SafeWorkingSet(p)).Take(25))
+            // Ένα snapshot της μνήμης ανά διεργασία (πριν: SafeWorkingSet καλούνταν πολλές φορές ανά διεργασία μέσα στο
+            // sort) και ΟΛΑ τα Process objects γίνονται Dispose (πριν διέρρεαν εκατοντάδες handles σε κάθε ανανέωση).
+            var all = Process.GetProcesses();
+            var ranked = all.Select(p => (Proc: p, Ws: SafeWorkingSet(p))).OrderByDescending(x => x.Ws).Take(25).ToList();
+            foreach (var (p, _) in ranked)
             {
                 rows.Add(new ProcessRow(p.Id, p.ProcessName, Math.Round(SafeWorkingSet(p) / 1024.0 / 1024.0, 1), CriticalProcessNames.Contains(p.ProcessName)));
             }
+            foreach (var p in all) { try { p.Dispose(); } catch { } }
             return (IReadOnlyList<ProcessRow>)rows;
         });
 
         private static long SafeWorkingSet(Process p) { try { return p.WorkingSet64; } catch { return 0; } }
 
-        public static bool KillProcess(int pid)
+        // expectedName: το PID μπορεί να έχει ξαναχρησιμοποιηθεί από ΑΛΛΗ διεργασία αν η αρχική τερμάτισε ενώ ο χρήστης
+        // κοιτούσε τη λίστα — ελέγχουμε ότι το όνομα ταιριάζει πριν σκοτώσουμε οτιδήποτε.
+        public static bool KillProcess(int pid, string? expectedName = null)
         {
-            try { Process.GetProcessById(pid).Kill(); return true; }
+            try
+            {
+                using var proc = Process.GetProcessById(pid);
+                if (expectedName != null && !proc.ProcessName.Equals(expectedName, StringComparison.OrdinalIgnoreCase)) return false;
+                proc.Kill();
+                return true;
+            }
             catch { return false; }
         }
 

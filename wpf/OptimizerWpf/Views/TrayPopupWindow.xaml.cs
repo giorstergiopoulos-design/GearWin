@@ -10,6 +10,8 @@ namespace OptimizerWpf.Views
     {
         private PerformanceCounter? _cpuCounter;
         private readonly DispatcherTimer _timer;
+        private bool _networkCheckInFlight;
+        private DateTime _lastNetworkCheck = DateTime.MinValue;
 
         public TrayPopupWindow()
         {
@@ -39,7 +41,16 @@ namespace OptimizerWpf.Views
             if (NativeMethods.GlobalMemoryStatusEx(out var mem) && mem.ullTotalPhys > 0)
                 TxtRam.Text = $"{mem.dwMemoryLoad}%";
 
-            var (connected, latency) = await NetworkService.CheckInternetAsync();
+            // Το ping τρέχει το πολύ ανά 10s και ΠΟΤΕ επικαλυπτόμενο — πριν γινόταν σε κάθε tick (1.5s) χωρίς φρένο, και
+            // με αργό δίκτυο συσσωρεύονταν ταυτόχρονα pings που έγραφαν αποτελέσματα εκτός σειράς.
+            if (_networkCheckInFlight || (DateTime.UtcNow - _lastNetworkCheck).TotalSeconds < 10) return;
+            _networkCheckInFlight = true;
+            bool connected; int? latency;
+            try { (connected, latency) = await NetworkService.CheckInternetAsync(); }
+            catch { return; }
+            finally { _networkCheckInFlight = false; }
+            _lastNetworkCheck = DateTime.UtcNow;
+            if (!IsLoaded) return; // το παράθυρο έκλεισε όσο περιμέναμε
             TxtNetwork.Text = connected
                 ? $"{LanguageService.T("Tray_Connected")}{(latency.HasValue ? $" ({latency} ms)" : "")}"
                 : LanguageService.T("Tray_Disconnected");
