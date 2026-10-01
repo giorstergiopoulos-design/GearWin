@@ -64,7 +64,7 @@ namespace OptimizerWpf.Views
         private void BtnCopyPassword_Click(object sender, RoutedEventArgs e)
         {
             if (sender is not System.Windows.Controls.Button { Tag: PasswordRow row }) return;
-            Clipboard.SetText(row.Password);
+            SecureClipboardService.SetSensitiveText(row.Password);
             StatusService.SetIdle(LanguageService.T("PwdMgr_Copied"));
         }
 

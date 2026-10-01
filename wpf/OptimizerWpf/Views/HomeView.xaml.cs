@@ -138,6 +138,12 @@ namespace OptimizerWpf.Views
             {
                 _refreshTimer.Stop();
                 _diskRefreshTimer.Stop();
+                // Κάθε επίσκεψη στην Αρχική δημιουργεί ΝΕΟ HomeView με νέα PerformanceCounter (CPU + ένα ανά GPU
+                // engine instance, δεκάδες/εκατοντάδες PDH handles) που ΔΕΝ γίνονταν ποτέ Dispose — διαρροή native
+                // handles σε κάθε εναλλαγή καρτελών. Dispose εδώ· το _unloaded προστατεύει από το background init
+                // που μπορεί να τελειώσει ΜΕΤΑ το Unloaded.
+                _unloaded = true;
+                DisposeCounters();
                 ActionLogService.Changed -= RefreshRecentActivity;
                 UpdatesHubService.Changed -= RefreshUpdatesSummary;
                 ImpactTrackingService.Changed -= RefreshImpactSummary;
@@ -233,8 +239,10 @@ namespace OptimizerWpf.Views
         {
             try
             {
-                _cpuCounter = new PerformanceCounter("Processor", "% Processor Time", "_Total");
-                _cpuCounter.NextValue(); // first call always returns 0 - prime it
+                var cpu = new PerformanceCounter("Processor", "% Processor Time", "_Total");
+                cpu.NextValue(); // first call always returns 0 - prime it
+                if (_unloaded) { cpu.Dispose(); return; }
+                _cpuCounter = cpu;
             }
             catch
             {
@@ -244,7 +252,21 @@ namespace OptimizerWpf.Views
             }
         }
 
-        private void TryInitGpuCounters() => _gpuCounters = GpuInfoService.CreateUsageCounters();
+        private bool _unloaded;
+
+        private void TryInitGpuCounters()
+        {
+            var counters = GpuInfoService.CreateUsageCounters();
+            if (_unloaded && counters != null) { foreach (var c in counters) c.Dispose(); return; }
+            _gpuCounters = counters;
+        }
+
+        private void DisposeCounters()
+        {
+            var cpu = _cpuCounter; _cpuCounter = null; cpu?.Dispose();
+            var gpu = _gpuCounters; _gpuCounters = null;
+            if (gpu != null) foreach (var c in gpu) { try { c.Dispose(); } catch { } }
+        }
 
         // ΝΕΟ v3.2.0 (χρήστης ζήτησε: "δείκτης κατάστασης δικτύου στην Αρχική") - βλ.
         // NetworkService.CheckInternetAsync για το πλήρες σκεπτικό (τοπική σύνδεση vs πραγματικό
@@ -491,7 +513,7 @@ namespace OptimizerWpf.Views
                 var usedPct = (int)Math.Round(100.0 * (1 - drive.TotalFreeSpace / (double)drive.TotalSize));
                 TxtDiskPercent.Text = $"{usedPct}%";
                 AnimateBar(BarDisk, usedPct);
-                TxtDiskDetail.Text = $"{freeGb:0.0} GB ελεύθερα από {totalGb:0.0} GB";
+                TxtDiskDetail.Text = $"{freeGb:0.0} GB {LanguageService.T("Sys_DrivesFreeOf")} {totalGb:0.0} GB";
             }
             catch { /* drive can become unready (removable media ejected mid-run) */ }
         }

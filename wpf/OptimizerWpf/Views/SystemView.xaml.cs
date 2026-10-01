@@ -519,7 +519,15 @@ namespace OptimizerWpf.Views
 
         private async void BtnDeleteDuplicates_Click(object sender, RoutedEventArgs e)
         {
-            var selected = _duplicateGroups.SelectMany(g => g.Files).Where(f => f.IsSelected).Select(f => f.Path).ToList();
+            // ΑΣΦΑΛΕΙΑ ΔΕΔΟΜΕΝΩΝ: αν ο χρήστης έχει επιλέξει ΟΛΑ τα αντίγραφα μιας ομάδας, η διαγραφή θα έσβηνε και το
+            // τελευταίο αντίτυπο (η διαγραφή είναι μόνιμη). Σε κάθε τέτοια ομάδα κρατάμε πάντα το πρώτο αρχείο.
+            var selected = new List<string>();
+            foreach (var g in _duplicateGroups)
+            {
+                var picked = g.Files.Where(f => f.IsSelected).Select(f => f.Path).ToList();
+                if (picked.Count == g.Files.Count && picked.Count > 0) picked.RemoveAt(0);
+                selected.AddRange(picked);
+            }
             if (selected.Count == 0)
             {
                 ThemedMessageBox.Show(LanguageService.T("Health_NoSelectionMsg"), LanguageService.T("Advanced_DuplicateFinder"), MessageBoxButton.OK, MessageBoxImage.Information);

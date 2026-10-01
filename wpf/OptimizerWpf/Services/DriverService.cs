@@ -808,9 +808,10 @@ $result | ConvertTo-Json -Depth 4 -Compress
                 using var process = Process.Start(psi);
                 if (process == null) return "";
                 var stdoutTask = process.StandardOutput.ReadToEndAsync();
+                _ = process.StandardError.ReadToEndAsync(); // drain — αλλιώς το PowerShell μπλοκάρει όταν γεμίσει το stderr pipe
                 using var cts = new System.Threading.CancellationTokenSource(timeout);
                 try { await process.WaitForExitAsync(cts.Token); }
-                catch (OperationCanceledException) { try { process.Kill(); } catch { } return ""; }
+                catch (OperationCanceledException) { try { process.Kill(true); } catch { } return ""; }
                 return await stdoutTask;
             }
             finally
@@ -854,9 +855,13 @@ $result | ConvertTo-Json -Depth 4 -Compress
                 };
                 using var process = Process.Start(psi);
                 if (process == null) return false;
+                // Και τα δύο pipes ήταν redirected αλλά ΠΟΤΕ δεν διαβάζονταν — pnputil/expand/wusa με πολλή έξοδο
+                // μπλόκαραν για πάντα μέχρι το timeout και αναφέρονταν ως αποτυχία.
+                _ = process.StandardOutput.ReadToEndAsync();
+                _ = process.StandardError.ReadToEndAsync();
                 using var cts = new System.Threading.CancellationTokenSource(timeout);
                 try { await process.WaitForExitAsync(cts.Token); }
-                catch (OperationCanceledException) { try { process.Kill(); } catch { } return false; }
+                catch (OperationCanceledException) { try { process.Kill(true); } catch { } return false; }
                 return process.ExitCode == 0;
             }
             catch

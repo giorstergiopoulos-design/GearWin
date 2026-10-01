@@ -185,19 +185,25 @@ namespace OptimizerWpf.Services
             try { process = Process.Start(psi); }
             catch (Win32Exception) { return list; } // "store" CLI δεν υπάρχει σε αυτό το build Windows
 
+            // Ανάγνωση stdout/stderr ΤΑΥΤΟΧΡΟΝΑ με την αναμονή: πριν περιμέναμε πρώτα το exit και διαβάζαμε μετά —
+            // αν η έξοδος ξεπερνούσε το buffer του pipe το store.exe μπλόκαρε και το scan κατέληγε σε timeout.
+            Task<string> stdoutTask, stderrTask;
             try
             {
-                try { await process!.StandardInput.WriteLineAsync("n"); process.StandardInput.Close(); } catch { }
+                stdoutTask = process!.StandardOutput.ReadToEndAsync();
+                stderrTask = process.StandardError.ReadToEndAsync();
+                try { await process.StandardInput.WriteLineAsync("n"); process.StandardInput.Close(); } catch { }
                 using var cts = new CancellationTokenSource(TimeSpan.FromSeconds(60));
-                await process!.WaitForExitAsync(cts.Token);
+                await process.WaitForExitAsync(cts.Token);
             }
             catch (OperationCanceledException)
             {
-                try { process!.Kill(); } catch { }
+                try { process!.Kill(true); } catch { }
                 return list;
             }
 
-            var raw = await process!.StandardOutput.ReadToEndAsync();
+            var raw = await stdoutTask;
+            _ = stderrTask;
             var clean = Regex.Replace(raw, @"\x1B\[[0-9;]*[a-zA-Z]", "");
             const char vertical = '│';
             string[]? headers = null;
@@ -477,6 +483,7 @@ $out | ConvertTo-Json -Compress";
             using (process)
             {
                 var stdoutTask = process.StandardOutput.ReadToEndAsync();
+                _ = process.StandardError.ReadToEndAsync(); // το stderr δεν διαβαζόταν ποτέ → block αν γέμιζε το pipe
                 try
                 {
                     using var cts = new CancellationTokenSource(timeout);
@@ -484,7 +491,7 @@ $out | ConvertTo-Json -Compress";
                 }
                 catch (OperationCanceledException)
                 {
-                    try { process.Kill(); } catch { }
+                    try { process.Kill(true); } catch { } // ολόκληρο το δέντρο (winget/powershell παιδιά)
                     return ("", -1, true);
                 }
                 var stdout = await stdoutTask;

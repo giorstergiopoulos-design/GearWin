@@ -39,6 +39,10 @@ namespace OptimizerWpf.Services
         public static async Task LockFolderAsync(string folderPath, string password, IProgress<string>? progress = null)
         {
             if (!Directory.Exists(folderPath)) throw new DirectoryNotFoundException(folderPath);
+            // Μετά την κρυπτογράφηση ο ΑΡΧΙΚΟΣ φάκελος καταστρέφεται (shred). Μια λάθος επιλογή ρίζας δίσκου ή
+            // φακέλου συστήματος/προφίλ θα έσβηνε όλο το σύστημα — αρνούμαστε ρητά τέτοιους φακέλους.
+            if (IsProtectedFolder(folderPath))
+                throw new InvalidOperationException("This folder is a system or user-profile location and cannot be locked/shredded.");
             var vaultPath = folderPath.TrimEnd('\\', '/') + VaultExtension;
             if (File.Exists(vaultPath)) throw new IOException("Vault file already exists.");
 
@@ -67,8 +71,7 @@ namespace OptimizerWpf.Services
             var tag = new byte[TagSize];
             using (var aes = new AesGcm(key, TagSize))
                 aes.Encrypt(nonce, zipBytes, ciphertext, tag);
-            Array.Clear(key);
-            Array.Clear(zipBytes);
+            Array.Clear(zipBytes); // το κλειδί καθαρίζεται ΜΕΤΑ την επαλήθευση του vault, παρακάτω
 
             await using (var outFile = File.Create(vaultPath))
             {
@@ -77,7 +80,30 @@ namespace OptimizerWpf.Services
                 await outFile.WriteAsync(nonce);
                 await outFile.WriteAsync(tag);
                 await outFile.WriteAsync(ciphertext);
+                await outFile.FlushAsync();
             }
+
+            // ΕΠΑΛΗΘΕΥΣΗ ΠΡΙΝ ΤΗΝ ΚΑΤΑΣΤΡΟΦΗ: το αρχικό περιεχόμενο shred-άρεται αμέσως μετά — αν το .vault που γράφτηκε
+            // είναι ελλιπές/κατεστραμμένο (γεμάτος δίσκος, antivirus, διακοπή) τα δεδομένα θα χάνονταν οριστικά.
+            // Ξαναδιαβάζουμε το αρχείο από τον δίσκο και ελέγχουμε το GCM tag με το ΙΔΙΟ κλειδί.
+            try
+            {
+                var written = await File.ReadAllBytesAsync(vaultPath);
+                var headerLen = Magic.Length + SaltSize + NonceSize + TagSize;
+                if (written.Length != headerLen + ciphertext.Length) throw new IOException("Vault size mismatch.");
+                var scratch = new byte[ciphertext.Length];
+                using var verifyAes = new AesGcm(key, TagSize);
+                verifyAes.Decrypt(written.AsSpan(Magic.Length + SaltSize, NonceSize),
+                    written.AsSpan(headerLen),
+                    written.AsSpan(Magic.Length + SaltSize + NonceSize, TagSize), scratch);
+                Array.Clear(scratch);
+            }
+            catch (Exception ex) when (ex is IOException or CryptographicException)
+            {
+                try { File.Delete(vaultPath); } catch { }
+                throw new IOException("The vault could not be verified after writing; the original folder was NOT deleted.", ex);
+            }
+            finally { Array.Clear(key); }
 
             progress?.Report(LanguageService.T("FolderLock_Shredding"));
             await ShredDirectoryAsync(folderPath);
@@ -122,6 +148,26 @@ namespace OptimizerWpf.Services
             // Το vault file ΔΕΝ διαγράφεται αυτόματα εδώ - ο χρήστης το κρατάει σαν το "κλειδωμένο"
             // αντίγραφο, το εξάγει όποτε το χρειάζεται. Ρητή, ξεχωριστή ενέργεια "Διαγραφή vault"
             // στο UI αν το θέλει.
+        }
+
+        private static bool IsProtectedFolder(string folderPath)
+        {
+            var full = Path.GetFullPath(folderPath).TrimEnd('\\', '/');
+            if (Path.GetPathRoot(full)?.TrimEnd('\\', '/').Equals(full, StringComparison.OrdinalIgnoreCase) == true) return true; // ρίζα δίσκου
+            foreach (var special in new[]
+            {
+                Environment.SpecialFolder.Windows, Environment.SpecialFolder.System, Environment.SpecialFolder.ProgramFiles,
+                Environment.SpecialFolder.ProgramFilesX86, Environment.SpecialFolder.UserProfile, Environment.SpecialFolder.CommonApplicationData,
+                Environment.SpecialFolder.ApplicationData, Environment.SpecialFolder.LocalApplicationData,
+            })
+            {
+                var sp = Environment.GetFolderPath(special).TrimEnd('\\', '/');
+                if (sp.Length == 0) continue;
+                // ίδιος φάκελος Ή γονικός του (θα περιείχε τον προστατευμένο)
+                if (full.Equals(sp, StringComparison.OrdinalIgnoreCase)) return true;
+                if (sp.StartsWith(full + "\\", StringComparison.OrdinalIgnoreCase)) return true;
+            }
+            return false;
         }
 
         private static async Task ShredDirectoryAsync(string folderPath)

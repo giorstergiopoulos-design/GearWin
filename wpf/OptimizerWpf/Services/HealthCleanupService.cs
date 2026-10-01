@@ -166,10 +166,15 @@ namespace OptimizerWpf.Services
         {
             try
             {
+                // ΑΣΦΑΛΕΙΑ ΔΕΔΟΜΕΝΩΝ: (1) το όνομα του backup περιλαμβάνει μοναδικό αύξοντα αριθμό — πριν, δύο ευρήματα
+                // με ίδιο Display έγραφαν στο ίδιο .reg με /y και το πρώτο backup χανόταν· (2) αν το export ΑΠΟΤΥΧΕΙ δεν
+                // διαγράφουμε ΤΙΠΟΤΑ (πριν το αποτέλεσμα του export αγνοούνταν και η διαγραφή προχωρούσε χωρίς backup).
+                int exportIndex = 0;
                 foreach (var finding in findings)
                 {
-                    var exportArgs = $"export \"{finding.RegPath}\" \"{Path.Combine(backupPath, SafeFileName(finding.Display) + ".reg")}\" /y";
-                    RunAndWait("reg.exe", exportArgs);
+                    var backupFile = Path.Combine(backupPath, $"{++exportIndex:D4}_{SafeFileName(finding.Display)}.reg");
+                    var exportArgs = $"export \"{finding.RegPath}\" \"{backupFile}\" /y";
+                    if (RunAndWait("reg.exe", exportArgs) != 0) return false;
                 }
 
                 foreach (var finding in findings)

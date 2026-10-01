@@ -582,6 +582,7 @@ namespace OptimizerWpf.Services
             };
             using var process = Process.Start(psi);
             if (process == null) return "";
+            _ = process.StandardError.ReadToEndAsync(); // drain — redirected αλλά δεν διαβαζόταν (block σε μεγάλη έξοδο σφάλματος)
             var output = await process.StandardOutput.ReadToEndAsync();
             await process.WaitForExitAsync();
             return output;
@@ -600,6 +601,9 @@ namespace OptimizerWpf.Services
             };
             using var process = Process.Start(psi);
             if (process == null) return false;
+            // Και τα δύο pipes redirected χωρίς ανάγνωση → το PowerShell μπλοκάρει όταν γεμίσει το buffer (~4KB).
+            _ = process.StandardOutput.ReadToEndAsync();
+            _ = process.StandardError.ReadToEndAsync();
             await process.WaitForExitAsync();
             return process.ExitCode == 0;
         }

@@ -89,6 +89,7 @@ namespace OptimizerWpf.Services
             using (process)
             {
                 var stdoutTask = process.StandardOutput.ReadToEndAsync();
+                _ = process.StandardError.ReadToEndAsync(); // drain
                 try
                 {
                     using var cts = new System.Threading.CancellationTokenSource(timeout ?? TimeSpan.FromSeconds(15));
@@ -96,7 +97,7 @@ namespace OptimizerWpf.Services
                 }
                 catch (OperationCanceledException)
                 {
-                    try { process.Kill(); } catch { }
+                    try { process.Kill(true); } catch { }
                     return ("", -1, true);
                 }
                 var stdout = await stdoutTask;

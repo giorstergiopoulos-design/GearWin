@@ -101,7 +101,13 @@ namespace OptimizerWpf.Services
 
                 string[] subdirs;
                 try { subdirs = Directory.GetDirectories(dir); } catch { subdirs = Array.Empty<string>(); }
-                foreach (var d in subdirs) stack.Push(d);
+                foreach (var d in subdirs)
+                {
+                    // Junctions/symlinks (π.χ. "Application Data" μέσα στο προφίλ χρήστη) δημιουργούν κύκλους → άπειρη
+                    // σάρωση και διπλές εγγραφές των ίδιων αρχείων. Δεν ακολουθούνται.
+                    try { if ((File.GetAttributes(d) & FileAttributes.ReparsePoint) != 0) continue; } catch { continue; }
+                    stack.Push(d);
+                }
             }
         }
 

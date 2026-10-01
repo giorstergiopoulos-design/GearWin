@@ -28,8 +28,11 @@ namespace OptimizerWpf.Services
             };
             using var proc = Process.Start(psi);
             if (proc == null) return (false, "");
-            var stdout = await proc.StandardOutput.ReadToEndAsync();
-            var stderr = await proc.StandardError.ReadToEndAsync();
+            // Ταυτόχρονη ανάγνωση — η διαδοχική (πρώτα stdout μετά stderr) μπλοκάρει αν γεμίσει πρώτα το stderr pipe.
+            var stdoutTask = proc.StandardOutput.ReadToEndAsync();
+            var stderrTask = proc.StandardError.ReadToEndAsync();
+            var stdout = await stdoutTask;
+            var stderr = await stderrTask;
             await proc.WaitForExitAsync();
             return (proc.ExitCode == 0, stdout + stderr);
         }
@@ -45,6 +48,7 @@ namespace OptimizerWpf.Services
             };
             using var proc = Process.Start(psi);
             if (proc == null) return Array.Empty<string>();
+            _ = proc.StandardError.ReadToEndAsync(); // drain (redirected αλλά δεν διαβαζόταν)
             var output = await proc.StandardOutput.ReadToEndAsync();
             await proc.WaitForExitAsync();
             return output.Replace("\r", "").Split('\n')
