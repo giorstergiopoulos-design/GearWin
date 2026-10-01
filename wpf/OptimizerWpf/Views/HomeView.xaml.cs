@@ -198,7 +198,7 @@ namespace OptimizerWpf.Views
                 .Concat(TweakService.AiCopilotTweaksSimple().Select(t => new TweakRowVm(t, "Ai")))
                 .Concat(TweakService.PerfTweaksSimple().Select(t => new TweakRowVm(t, "Perf")))
                 .Concat(TweakService.LighterWindowsTweaksSimple().Select(t => new TweakRowVm(t, "Lighter")))
-                .Where(r => pins.Contains(r.PinKey))
+                .Where(r => pins.Contains(r.PinKey) || pins.Contains(r.LegacyPinKey))
                 .ToList();
 
             ListPinnedTweaks.ItemsSource = all;

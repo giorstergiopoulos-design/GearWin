@@ -9,6 +9,12 @@ namespace OptimizerWpf.Views
     {
         private void NestedScroll_PreviewMouseWheel(object sender, System.Windows.Input.MouseWheelEventArgs e) => NestedScrollHelper.Forward(sender, e);
 
+        // Τα event handlers είναι δεσμευμένα στο XAML, άρα ενεργοποιούνται ήδη κατά την αρχικοποίηση των
+        // controls στον constructor - το _loading τα αδρανοποιεί ώστε το άνοιγμα του παραθύρου να μην
+        // γράφει ρυθμίσεις/εκκινεί υπηρεσίες/αλλάζει γλώσσα.
+        private bool _loading = true;
+        private System.Windows.Threading.DispatcherTimer? _opacitySaveTimer;
+
         public AppearanceSettingsWindow(int initialTabIndex = 0)
         {
             InitializeComponent();
@@ -75,10 +81,19 @@ namespace OptimizerWpf.Views
 
             MainTabs.SelectedIndex = initialTabIndex;
 
-            ComboLanguage.SelectedIndex = LanguageService.Current switch { "en" => 1, "de" => 2, "fr" => 3, _ => 0 };
+            // ΔΙΟΡΘΩΣΗ: η επιλογή γινόταν με σκληρό index μόνο για el/en/de/fr - για οποιαδήποτε από τις
+            // άλλες 10 γλώσσες (es, it, ru, zh, ja, pt, ko, tr, ar, hi) επιλεγόταν η Ελληνική και το
+            // SelectionChanged ΕΠΑΝΕΦΕΡΕ σιωπηλά τη γλώσσα της εφαρμογής στα Ελληνικά στο άνοιγμα.
+            foreach (var item in ComboLanguage.Items)
+                if (item is ComboBoxItem { Tag: string code } && code == LanguageService.Current) { ComboLanguage.SelectedItem = item; break; }
             ApplyTranslations();
             LanguageService.Changed += ApplyTranslations;
-            Closed += (_, _) => LanguageService.Changed -= ApplyTranslations;
+            Closed += (_, _) =>
+            {
+                LanguageService.Changed -= ApplyTranslations;
+                if (_opacitySaveTimer != null) { _opacitySaveTimer.Stop(); _opacitySaveTimer = null; AppSettingsService.Save(); }
+            };
+            _loading = false;
         }
 
         // Ρητό αίτημα χρήστη: "εισάγαγε τις μεταφράσεις" - μηχανισμός i18n (βλ. LanguageService),
@@ -91,6 +106,7 @@ namespace OptimizerWpf.Views
 
         private void ComboLanguage_SelectionChanged(object sender, SelectionChangedEventArgs e)
         {
+            if (_loading) return;
             if (ComboLanguage.SelectedItem is ComboBoxItem { Tag: string code }) LanguageService.SetLanguage(code);
         }
 
@@ -99,6 +115,7 @@ namespace OptimizerWpf.Views
         // persisted ρυθμίσεις - στην επόμενη εκκίνηση επανέρχεται το πραγματικά αποθηκευμένο θέμα).
         private void ComboTheme_SelectionChanged(object sender, SelectionChangedEventArgs e)
         {
+            if (_loading) return;
             if (ComboTheme.SelectedItem is not ThemePair pair) return;
             if (ChkSetDefaultTheme.IsChecked == true) ThemeManager.SelectTheme(pair);
             else ThemeManager.PreviewTheme(pair);
@@ -109,17 +126,23 @@ namespace OptimizerWpf.Views
             (Owner as MainWindow)?.ApplyMenuModeVisibility();
         }
 
-        private void ChkAnimatedBg_Changed(object sender, RoutedEventArgs e) => ThemeManager.SetAnimatedBackgrounds(ChkAnimatedBg.IsChecked == true);
+        private void ChkAnimatedBg_Changed(object sender, RoutedEventArgs e)
+        {
+            if (_loading) return;
+            ThemeManager.SetAnimatedBackgrounds(ChkAnimatedBg.IsChecked == true);
+        }
 
         // ΝΕΟ - βλ. σχόλιο στο XAML/UpdateNotificationService.cs.
         private void ChkUpdateNotifications_Changed(object sender, RoutedEventArgs e)
         {
+            if (_loading) return;
             AppSettingsService.Current.UpdateNotificationsEnabled = ChkUpdateNotifications.IsChecked == true;
             AppSettingsService.Save();
         }
 
         private void ComboUpdateInterval_SelectionChanged(object sender, SelectionChangedEventArgs e)
         {
+            if (_loading) return;
             if (ComboUpdateInterval.SelectedItem is not ComboBoxItem { Tag: int hours }) return;
             AppSettingsService.Current.UpdateCheckIntervalHours = hours;
             AppSettingsService.Save();
@@ -129,8 +152,9 @@ namespace OptimizerWpf.Views
         {
             TxtUpdateCheckStatus.Text = LanguageService.T("Appr_UpdateChecking");
             StatusService.SetBusy(LanguageService.T("Appr_UpdateChecking"));
-            await UpdateNotificationService.RunCheckAsync();
-            StatusService.SetIdle(LanguageService.T("Ready"));
+            try { await UpdateNotificationService.RunCheckAsync(); }
+            catch { /* δίκτυο/API - η κατάσταση ανανεώνεται παρακάτω με ό,τι είναι γνωστό */ }
+            finally { StatusService.SetIdle(LanguageService.T("Ready")); }
             RefreshUpdateCheckStatus();
         }
 
@@ -144,12 +168,14 @@ namespace OptimizerWpf.Views
         // ΝΕΟ - roadmap ιδέα #4 - βλ. σχόλιο στο XAML.
         private void ChkLowDiskNotifications_Changed(object sender, RoutedEventArgs e)
         {
+            if (_loading) return;
             AppSettingsService.Current.LowDiskNotificationsEnabled = ChkLowDiskNotifications.IsChecked == true;
             AppSettingsService.Save();
         }
 
         private void ComboLowDiskThreshold_SelectionChanged(object sender, SelectionChangedEventArgs e)
         {
+            if (_loading) return;
             if (ComboLowDiskThreshold.SelectedItem is not ComboBoxItem { Tag: int pct }) return;
             AppSettingsService.Current.LowDiskThresholdPercent = pct;
             AppSettingsService.Save();
@@ -160,25 +186,29 @@ namespace OptimizerWpf.Views
         // εφαρμογών (ξεχωριστό όνομα τιμής, καμία σύγκρουση) - βλ. App.xaml.cs's "--tray" χειρισμό.
         private void ChkLaunchToTray_Changed(object sender, RoutedEventArgs e)
         {
+            if (_loading) return;
             var enabled = ChkLaunchToTray.IsChecked == true;
             AppSettingsService.Current.LaunchWithWindowsToTray = enabled;
             AppSettingsService.Save();
-            SystemService.SetLaunchWithWindowsToTray(enabled);
+            try { SystemService.SetLaunchWithWindowsToTray(enabled); }
+            catch (Exception ex) { ThemedMessageBox.Show(ex.Message, LanguageService.T("AppearanceSettingsTitle"), MessageBoxButton.OK, MessageBoxImage.Warning); }
         }
 
         // ΝΕΟ - roadmap "Widget επιφάνειας εργασίας" - ζωντανή ενεργοποίηση/απενεργοποίηση, ίδιο μοτίβο
         // με το ChkAnimatedBg_Changed παραπάνω.
         private void ChkDesktopWidget_Changed(object sender, RoutedEventArgs e)
         {
+            if (_loading) return;
             var enabled = ChkDesktopWidget.IsChecked == true;
             AppSettingsService.Current.DesktopWidgetEnabled = enabled;
             AppSettingsService.Save();
-            if (enabled) DesktopWidgetService.Start();
-            else DesktopWidgetService.Stop();
+            try { if (enabled) DesktopWidgetService.Start(); else DesktopWidgetService.Stop(); }
+            catch (Exception ex) { ThemedMessageBox.Show(ex.Message, LanguageService.T("AppearanceSettingsTitle"), MessageBoxButton.OK, MessageBoxImage.Warning); }
         }
 
         private void AnimationStyle_Changed(object sender, RoutedEventArgs e)
         {
+            if (_loading) return;
             AppSettingsService.Current.AnimationStyleOverride = sender switch
             {
                 var s when s == RadioAnimGears => "Gears",
@@ -199,12 +229,19 @@ namespace OptimizerWpf.Views
             var percent = (int)Math.Round(SliderOpacity.Value);
             TxtOpacityValue.Text = $"{percent}%";
             AppSettingsService.Current.WindowOpacityPercent = percent;
-            AppSettingsService.Save();
+            // Αποθήκευση με debounce (όχι εγγραφή στο δίσκο σε κάθε tick του slider)
+            if (_opacitySaveTimer == null)
+            {
+                _opacitySaveTimer = new System.Windows.Threading.DispatcherTimer { Interval = TimeSpan.FromMilliseconds(400) };
+                _opacitySaveTimer.Tick += (_, _) => { _opacitySaveTimer?.Stop(); _opacitySaveTimer = null; AppSettingsService.Save(); };
+            }
+            _opacitySaveTimer.Stop(); _opacitySaveTimer.Start();
             if (Owner is MainWindow main) main.Opacity = percent / 100.0;
         }
 
         private void ChkSidebarEnabled_Changed(object sender, RoutedEventArgs e)
         {
+            if (_loading) return;
             AppSettingsService.Current.SidebarEnabled = ChkSidebarEnabled.IsChecked == true;
             AppSettingsService.Save();
             (Owner as MainWindow)?.ApplyMenuModeVisibility();
@@ -212,6 +249,7 @@ namespace OptimizerWpf.Views
 
         private void SidebarPosition_Changed(object sender, RoutedEventArgs e)
         {
+            if (_loading) return;
             AppSettingsService.Current.SidebarPosition = RadioLeft.IsChecked == true ? "Left" : "Right";
             AppSettingsService.Save();
             (Owner as MainWindow)?.ApplyMenuModeVisibility();
@@ -219,6 +257,7 @@ namespace OptimizerWpf.Views
 
         private void MenuMode_Changed(object sender, RoutedEventArgs e)
         {
+            if (_loading) return;
             AppSettingsService.Current.MenuMode = RadioMenuSidebar.IsChecked == true ? "Sidebar" : "HorizontalModern";
             AppSettingsService.Save();
             (Owner as MainWindow)?.ApplyMenuModeVisibility();
@@ -230,6 +269,7 @@ namespace OptimizerWpf.Views
         // Επεκτάθηκε σε 3-way (ρητό αίτημα χρήστη) - προστέθηκε το "Windows Classic" skin, ίδιο μοτίβο.
         private void Skin_Changed(object sender, RoutedEventArgs e)
         {
+            if (_loading) return;
             var currentName = ThemeManager.CurrentPair.DisplayName;
             if (RadioSkinPcManager.IsChecked == true && currentName != "Microsoft PC Manager")
             {

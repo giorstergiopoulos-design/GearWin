@@ -95,12 +95,18 @@ namespace OptimizerWpf.Views
 
         // ===== Εργαλεία Υγείας & Συντήρησης Συστήματος (ρητό αίτημα χρήστη - βλ. σχόλιο στο XAML) =====
 
+        private bool _toolRunning;
+
         private async void RunHealthToolAsync(string busyLabel, System.Func<System.Threading.Tasks.Task<(bool Success, string Output)>> action)
         {
+            if (_toolRunning) return; // SFC/DISM/chkdsk δεν πρέπει να τρέξουν ταυτόχρονα
+            _toolRunning = true;
             TxtHealthToolsStatus.Text = $"{busyLabel}...";
-            StatusService.SetBusy(busyLabel);
-            var (success, output) = await action();
-            StatusService.SetIdle(LanguageService.T("Ready"));
+            using var busy = BusyScope.Begin(busyLabel);
+            bool success; string output;
+            try { (success, output) = await action(); }
+            catch (Exception ex) { success = false; output = ex.Message; }
+            finally { _toolRunning = false; busy.Dispose(); }
             TxtHealthToolsStatus.Text = success ? $"{busyLabel}{LanguageService.T("Health_ToolCompletedSuffix")}" : $"{busyLabel}{LanguageService.T("Health_ToolFailedSuffix")}";
             var shown = output.Length > 3000 ? output[..3000] + LanguageService.T("Health_OutputTruncatedSuffix") : output;
             ThemedMessageBox.Show(string.IsNullOrWhiteSpace(shown) ? LanguageService.T("Health_NoOutput") : shown, busyLabel, MessageBoxButton.OK,
@@ -129,18 +135,16 @@ namespace OptimizerWpf.Views
         private async void BtnRetrim_Click(object sender, RoutedEventArgs e)
         {
             TxtHealthToolsStatus.Text = LanguageService.T("Health_RunningRetrim");
-            StatusService.SetBusy(LanguageService.T("Health_OptimizingRetrim"));
+            using var busy = BusyScope.Begin(LanguageService.T("Health_OptimizingRetrim"));
             var ok = await HealthCleanupService.OptimizeSsdRetrimAsync();
-            StatusService.SetIdle(LanguageService.T("Ready"));
             TxtHealthToolsStatus.Text = ok ? LanguageService.T("Health_RetrimDone") : LanguageService.T("Health_RetrimFailed");
         }
 
         private async void BtnFixShortcuts_Click(object sender, RoutedEventArgs e)
         {
             TxtHealthToolsStatus.Text = LanguageService.T("Health_ScanningShortcuts");
-            StatusService.SetBusy(LanguageService.T("Health_FindingBrokenShortcuts"));
+            using var busy = BusyScope.Begin(LanguageService.T("Health_FindingBrokenShortcuts"));
             var count = await HealthCleanupService.FixBrokenShortcutsAsync();
-            StatusService.SetIdle(LanguageService.T("Ready"));
             TxtHealthToolsStatus.Text = $"{LanguageService.T("Health_ShortcutsFoundPrefix")}{count}{LanguageService.T("Health_ShortcutsFoundSuffix")}";
         }
 
@@ -150,11 +154,10 @@ namespace OptimizerWpf.Views
         private async void BtnRegCleanScan_Click(object sender, RoutedEventArgs e)
         {
             TxtRegCleanStatus.Text = LanguageService.T("Health_ScanInProgress");
-            StatusService.SetBusy(LanguageService.T("Health_ScanningRegistry"));
+            using var busy = BusyScope.Begin(LanguageService.T("Health_ScanningRegistry"));
             _findings.Clear();
 
             var results = await HealthCleanupService.ScanRegistryAsync();
-            StatusService.SetIdle(LanguageService.T("Ready"));
             foreach (var f in results) _findings.Add(new RegistryFindingRow(f));
             TxtRegCleanStatus.Text = results.Count == 0
                 ? LanguageService.T("Health_NoCleanupItems")
@@ -187,9 +190,8 @@ namespace OptimizerWpf.Views
             var backupDir = HealthCleanupService.RegistryBackupsDir;
             Directory.CreateDirectory(backupDir);
 
-            StatusService.SetBusy(LanguageService.T("Health_DeletingRegistryItems"));
+            using var busy = BusyScope.Begin(LanguageService.T("Health_DeletingRegistryItems"));
             var ok = await HealthCleanupService.DeleteFindingsAsync(selected, backupDir);
-            StatusService.SetIdle(LanguageService.T("Ready"));
 
             TxtRegCleanStatus.Text = ok
                 ? $"{LanguageService.T("Health_DeletedItemsPrefix")}{selected.Count}{LanguageService.T("Health_DeletedItemsMid")}{backupDir}"
@@ -201,7 +203,9 @@ namespace OptimizerWpf.Views
 
         private async System.Threading.Tasks.Task RefreshRegBackupsAsync()
         {
-            var backups = await HealthCleanupService.ListRegistryBackupsAsync();
+            IReadOnlyList<RegistryBackupEntry> backups;
+            try { backups = await HealthCleanupService.ListRegistryBackupsAsync(); }
+            catch { return; }
             _regBackups.Clear();
             foreach (var b in backups) _regBackups.Add(new RegistryBackupRow(b));
             TxtRegBackupStatus.Text = backups.Count == 0
@@ -213,7 +217,7 @@ namespace OptimizerWpf.Views
 
         private void BtnOpenRegBackupFolder_Click(object sender, RoutedEventArgs e)
         {
-            Directory.CreateDirectory(HealthCleanupService.RegistryBackupsDir);
+            try { Directory.CreateDirectory(HealthCleanupService.RegistryBackupsDir); } catch { return; }
             System.Diagnostics.Process.Start(new System.Diagnostics.ProcessStartInfo("explorer.exe", $"\"{HealthCleanupService.RegistryBackupsDir}\"") { UseShellExecute = true });
         }
 
@@ -225,9 +229,8 @@ namespace OptimizerWpf.Views
                 LanguageService.T("Health_ConfirmTitle"), MessageBoxButton.YesNo, MessageBoxImage.Warning);
             if (confirm != MessageBoxResult.Yes) return;
 
-            StatusService.SetBusy(LanguageService.T("Health_RestoringBackup"));
+            using var busy = BusyScope.Begin(LanguageService.T("Health_RestoringBackup"));
             var ok = await HealthCleanupService.RestoreRegistryBackupAsync(row.FullPath);
-            StatusService.SetIdle(LanguageService.T("Ready"));
             TxtRegBackupStatus.Text = ok ? LanguageService.T("Health_RestoreDone") : LanguageService.T("Health_RestoreFailed");
             if (ok) (Window.GetWindow(this) as OptimizerWpf.MainWindow)?.ShowToast(LanguageService.T("Health_RestoreDone"));
         }
@@ -240,9 +243,8 @@ namespace OptimizerWpf.Views
             // πριν/μετά τον καθαρισμό, ώστε ο χρήστης να βλέπει το πραγματικό όφελος, όχι μόνο "έγινε".
             var freeBefore = GetSystemDriveFreeGb();
             TxtBrowserCacheStatus.Text = $"{LanguageService.T("Health_ClearingCacheForPrefix")}{browser.Label}...";
-            StatusService.SetBusy($"{LanguageService.T("Health_ClearingCachePrefix")}{browser.Label}...");
+            using var busy = BusyScope.Begin($"{LanguageService.T("Health_ClearingCachePrefix")}{browser.Label}...");
             await HealthCleanupService.ClearBrowserCacheAsync(browser);
-            StatusService.SetIdle(LanguageService.T("Ready"));
             var freed = GetSystemDriveFreeGb() - freeBefore;
             if (freed > 0.05) ImpactTrackingService.RecordBytesFreed((long)(freed * 1024 * 1024 * 1024));
             var freedText = freed > 0.05 ? $" (+{freed:0.0} GB)" : "";
@@ -264,18 +266,16 @@ namespace OptimizerWpf.Views
                 LanguageService.T("Health_ConfirmTitle"), MessageBoxButton.YesNo, MessageBoxImage.Warning);
             if (confirm != MessageBoxResult.Yes) return;
 
-            StatusService.SetBusy(LanguageService.T("Health_EnablingWinRE"));
+            using var busy = BusyScope.Begin(LanguageService.T("Health_EnablingWinRE"));
             await HealthCleanupService.EnableWinREAsync();
-            StatusService.SetIdle(LanguageService.T("Ready"));
             await RefreshWinREAsync();
         }
 
         // ΝΕΟ - roadmap "Αναφορά μπαταρίας".
         private async void BtnBatteryReport_Click(object sender, RoutedEventArgs e)
         {
-            StatusService.SetBusy(LanguageService.T("Health_GeneratingBatteryReport"));
+            using var busy = BusyScope.Begin(LanguageService.T("Health_GeneratingBatteryReport"));
             var ok = await HealthCleanupService.GenerateBatteryReportAsync();
-            StatusService.SetIdle(LanguageService.T("Ready"));
             TxtBatteryReportStatus.Text = ok ? LanguageService.T("Health_BatteryReportOpened") : LanguageService.T("Health_BatteryReportFailed");
             if (ok) (Window.GetWindow(this) as OptimizerWpf.MainWindow)?.ShowToast(LanguageService.T("Health_BatteryReportOpened"));
         }
@@ -283,9 +283,8 @@ namespace OptimizerWpf.Views
         // ΝΕΟ - roadmap "Διαγνωστική αναφορά με ένα κλικ".
         private async void BtnDiagnosticsZip_Click(object sender, RoutedEventArgs e)
         {
-            StatusService.SetBusy(LanguageService.T("Health_GeneratingDiagnosticsZip"));
+            using var busy = BusyScope.Begin(LanguageService.T("Health_GeneratingDiagnosticsZip"));
             var path = await HealthCleanupService.GenerateDiagnosticsZipAsync();
-            StatusService.SetIdle(LanguageService.T("Ready"));
             TxtDiagnosticsZipStatus.Text = path != null
                 ? $"{LanguageService.T("Health_DiagnosticsZipSavedPrefix")}{path}"
                 : LanguageService.T("Health_DiagnosticsZipFailed");
@@ -296,7 +295,9 @@ namespace OptimizerWpf.Views
 
         private async System.Threading.Tasks.Task RefreshWinREAsync()
         {
-            var result = await HealthCleanupService.GetWinREStatusAsync();
+            WinREStatus result;
+            try { result = await HealthCleanupService.GetWinREStatusAsync(); }
+            catch { result = new WinREStatus(false, false); }
             if (!result.Success)
             {
                 TxtWinREStatus.Text = LanguageService.T("Health_WinREStatusUnknownAdmin");
@@ -313,6 +314,14 @@ namespace OptimizerWpf.Views
                 TxtWinREStatus.Foreground = new SolidColorBrush(Color.FromRgb(230, 90, 90));
             }
         }
+    }
+
+    // Εγγυάται SetIdle ακόμα κι αν ο handler πετάξει εξαίρεση (αλλιώς η status bar έμενε "busy").
+    internal sealed class BusyScope : IDisposable
+    {
+        private BusyScope() { }
+        public static BusyScope Begin(string label) { StatusService.SetBusy(label); return new BusyScope(); }
+        public void Dispose() => StatusService.SetIdle(LanguageService.T("Ready"));
     }
 
     public class RegistryFindingRow : INotifyPropertyChanged

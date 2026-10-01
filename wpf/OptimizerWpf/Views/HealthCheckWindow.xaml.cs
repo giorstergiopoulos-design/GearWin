@@ -42,6 +42,8 @@ namespace OptimizerWpf.Views
             ListScanChecklist.ItemsSource = _checklist;
             ListResultCards.ItemsSource = _results;
             Loaded += async (_, _) => await RunScanAsync();
+            // Κλείσιμο με το X (όχι μόνο το Ακύρωση) πρέπει επίσης να σταματά τη σάρωση/ενημέρωση UI.
+            Closed += (_, _) => _cancelled = true;
         }
 
         private void SetPillState(FrameworkElement pill, bool active)
@@ -114,12 +116,14 @@ namespace OptimizerWpf.Views
             }
 
             if (_cancelled) return;
-            _scoreResult = await Task.Run(HealthScoreService.Compute);
+            try { _scoreResult = await Task.Run(HealthScoreService.Compute); }
+            catch { _scoreResult = null; }
+            if (_cancelled) return;
             // ΝΕΟ - roadmap ιδέα #7 (ρητό αίτημα χρήστη: "κάνε τα 4-7") - βλ.
             // Services/HealthScoreDailyHistoryService.cs (ΞΕΧΩΡΙΣΤΟ από το ήδη υπάρχον, in-memory
             // HealthScoreHistoryService που τροφοδοτεί το sparkline της Αρχικής), ίδιο μοτίβο με το
             // Disk Trend (Health tab).
-            HealthScoreDailyHistoryService.RecordIfNeeded(_scoreResult.Score, _scoreResult.Issues?.Count ?? 0);
+            if (_scoreResult != null) HealthScoreDailyHistoryService.RecordIfNeeded(_scoreResult.Score, _scoreResult.Issues?.Count ?? 0);
             BuildResults();
             ScanPanel.Visibility = Visibility.Collapsed;
             ResultPanel.Visibility = Visibility.Visible;
@@ -262,6 +266,8 @@ namespace OptimizerWpf.Views
             TxtOptimizeResult.Text = LanguageService.T("HealthCheck_Optimizing");
             StatusService.SetBusy(LanguageService.T("HealthCheck_Optimizing"));
 
+            try
+            {
             var summary = new List<string>();
             var spaceCleaned = false;
             var tracesCleaned = false;
@@ -326,10 +332,18 @@ namespace OptimizerWpf.Views
                 BuildResults();
             }
 
-            StatusService.SetIdle(LanguageService.T("Ready"));
             TxtOptimizeResult.Text = summary.Count > 0 ? string.Join("  •  ", summary) : LanguageService.T("HealthCheck_NothingSelected");
             BtnOptimizeNow.Content = LanguageService.T("HealthCheck_Done");
-            BtnOptimizeNow.IsEnabled = true;
+            }
+            catch (Exception ex)
+            {
+                TxtOptimizeResult.Text = $"{LanguageService.T("HealthCheck_ExportReportFailed")} {ex.Message}";
+            }
+            finally
+            {
+                StatusService.SetIdle(LanguageService.T("Ready"));
+                BtnOptimizeNow.IsEnabled = true;
+            }
         }
 
         private void ResultCardAction_Click(object sender, RoutedEventArgs e)

@@ -75,7 +75,7 @@ namespace OptimizerWpf.Views
             row.IsPinned = !row.IsPinned;
             var pins = AppSettingsService.Current.PinnedTweakKeys;
             if (row.IsPinned) { if (!pins.Contains(row.PinKey)) pins.Add(row.PinKey); }
-            else pins.Remove(row.PinKey);
+            else { pins.Remove(row.PinKey); pins.Remove(row.LegacyPinKey); }
             AppSettingsService.Save();
         }
 
@@ -194,7 +194,7 @@ namespace OptimizerWpf.Views
             var applied = 0;
             foreach (var row in AllTweakRows())
             {
-                if (!full.Tweaks.TryGetValue(row.PinKey, out var desired) || row.IsOn == desired) continue;
+                if (!(full.Tweaks.TryGetValue(row.PinKey, out var desired) || full.Tweaks.TryGetValue(row.LegacyPinKey, out desired)) || row.IsOn == desired) continue;
                 try { if (desired) row.Tweak.OnAction(); else row.Tweak.OffAction(); applied++; }
                 catch { /* ένα μεμονωμένο tweak μπορεί να αποτύχει (π.χ. δεν υποστηρίζεται σε αυτό το build) - τα υπόλοιπα συνεχίζουν */ }
             }
@@ -217,7 +217,7 @@ namespace OptimizerWpf.Views
             if (full.SidebarEnabled.HasValue) settings.SidebarEnabled = full.SidebarEnabled.Value;
             if (full.SidebarPosition != null) settings.SidebarPosition = full.SidebarPosition;
             if (full.MenuMode != null) settings.MenuMode = full.MenuMode;
-            if (full.PinnedTweakKeys != null) settings.PinnedTweakKeys = full.PinnedTweakKeys;
+            if (full.PinnedTweakKeys != null) settings.PinnedTweakKeys = full.PinnedTweakKeys.ToList();
             AppSettingsService.Save();
 
             return applied;
@@ -317,6 +317,7 @@ namespace OptimizerWpf.Views
     {
         public SimpleTweak Tweak { get; }
         public string PinKey { get; }
+        public string LegacyPinKey { get; }
         private bool _isOn;
         public bool IsOn { get => _isOn; set { _isOn = value; PropertyChanged?.Invoke(this, new(nameof(IsOn))); } }
 
@@ -337,9 +338,15 @@ namespace OptimizerWpf.Views
         public TweakRowVm(SimpleTweak tweak, string listKey)
         {
             Tweak = tweak;
-            PinKey = $"{listKey}:{tweak.Label}";
+            // Σταθερό ID (αν υπάρχει) αντί για τη μεταφρασμένη ετικέτα, ώστε pins/προφίλ να μην εξαρτώνται από
+            // τη γλώσσα. LegacyPinKey = παλιό κλειδί βασισμένο στο label, για συμβατότητα με υπάρχοντα δεδομένα.
+            LegacyPinKey = $"{listKey}:{tweak.Label}";
+            PinKey = tweak.Id != null ? $"{listKey}:{tweak.Id}" : LegacyPinKey;
             try { _isOn = tweak.DetectState?.Invoke() ?? false; } catch { _isOn = false; }
-            _isPinned = AppSettingsService.Current.PinnedTweakKeys.Contains(PinKey);
+            var pins = AppSettingsService.Current.PinnedTweakKeys;
+            _isPinned = pins.Contains(PinKey) || pins.Contains(LegacyPinKey);
+            // Μετανάστευση παλιού pin στο σταθερό κλειδί
+            if (PinKey != LegacyPinKey && pins.Remove(LegacyPinKey)) { if (!pins.Contains(PinKey)) pins.Add(PinKey); }
         }
 
         public event PropertyChangedEventHandler? PropertyChanged;

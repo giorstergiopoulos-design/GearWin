@@ -17,7 +17,7 @@ namespace OptimizerWpf.Services
     // φθηνός/αξιόπιστος τρόπος ανίχνευσης" (π.χ. καμία τέτοια περίπτωση προς το παρόν - βλ. παρακάτω,
     // όλα τα 25 tweaks έχουν πλέον πραγματική ανίχνευση). Προαιρετική παράμετρος (=null προεπιλογή)
     // ώστε τα ήδη υπάρχοντα 4-args call sites να μη χρειάζονται αλλαγή.
-    public record SimpleTweak(string Label, string Description, Action OnAction, Action OffAction, Func<bool?>? DetectState = null);
+    public record SimpleTweak(string Label, string Description, Action OnAction, Action OffAction, Func<bool?>? DetectState = null, string? Id = null);
 
     // Port του Optimizer.ps1's Επιπλέον Ρυθμίσεις καρτέλα (~16519-17573) - η πυκνότερη καρτέλα της
     // εφαρμογής. Βλ. HANDOFF.md §0.4ιβ για πλήρη τεκμηρίωση όλων των 25 tweaks.
@@ -76,19 +76,19 @@ namespace OptimizerWpf.Services
             new SimpleTweak(LanguageService.T("Tweak_P0Label"), LanguageService.T("Tweak_P0Desc"),
                 () => RunPowercfg("/setdcvalueindex SCHEME_CURRENT SUB_ENERGYSAVER ESBATTTHRESHOLD 0", "/S SCHEME_CURRENT"),
                 () => RunPowercfg("/setdcvalueindex SCHEME_CURRENT SUB_ENERGYSAVER ESBATTTHRESHOLD 20", "/S SCHEME_CURRENT"),
-                DetectState: () => GetPowercfgIndex("SUB_ENERGYSAVER", "ESBATTTHRESHOLD", ac: false) is int i0 ? i0 == 0 : null),
+                Id: "PowerSaverThreshold", DetectState: () => GetPowercfgIndex("SUB_ENERGYSAVER", "ESBATTTHRESHOLD", ac: false) is int i0 ? i0 == 0 : null),
             new SimpleTweak(LanguageService.T("Tweak_P1Label"), LanguageService.T("Tweak_P1Desc"),
                 () => RunPowercfg("/setacvalueindex SCHEME_CURRENT 2a737441-1930-4402-8d77-b2bebba308a3 48e6b7a6-50f5-4782-a5d4-53bb8f07e226 0",
                                    "/setdcvalueindex SCHEME_CURRENT 2a737441-1930-4402-8d77-b2bebba308a3 48e6b7a6-50f5-4782-a5d4-53bb8f07e226 0", "/S SCHEME_CURRENT"),
                 () => RunPowercfg("/setacvalueindex SCHEME_CURRENT 2a737441-1930-4402-8d77-b2bebba308a3 48e6b7a6-50f5-4782-a5d4-53bb8f07e226 1",
                                    "/setdcvalueindex SCHEME_CURRENT 2a737441-1930-4402-8d77-b2bebba308a3 48e6b7a6-50f5-4782-a5d4-53bb8f07e226 1", "/S SCHEME_CURRENT"),
-                DetectState: () => GetPowercfgIndex("2a737441-1930-4402-8d77-b2bebba308a3", "48e6b7a6-50f5-4782-a5d4-53bb8f07e226", ac: true) is int i1 ? i1 == 0 : null),
+                Id: "PowerThrottling", DetectState: () => GetPowercfgIndex("2a737441-1930-4402-8d77-b2bebba308a3", "48e6b7a6-50f5-4782-a5d4-53bb8f07e226", ac: true) is int i1 ? i1 == 0 : null),
             new SimpleTweak(LanguageService.T("Tweak_P2Label"), LanguageService.T("Tweak_P2Desc"),
                 () => RunPowercfg("/setacvalueindex SCHEME_CURRENT 501a4d13-42af-4429-9fd1-a8218c268e20 ee12f906-d277-404b-b6da-e5fa1a576df5 0",
                                    "/setdcvalueindex SCHEME_CURRENT 501a4d13-42af-4429-9fd1-a8218c268e20 ee12f906-d277-404b-b6da-e5fa1a576df5 0", "/S SCHEME_CURRENT"),
                 () => RunPowercfg("/setacvalueindex SCHEME_CURRENT 501a4d13-42af-4429-9fd1-a8218c268e20 ee12f906-d277-404b-b6da-e5fa1a576df5 1",
                                    "/setdcvalueindex SCHEME_CURRENT 501a4d13-42af-4429-9fd1-a8218c268e20 ee12f906-d277-404b-b6da-e5fa1a576df5 1", "/S SCHEME_CURRENT"),
-                DetectState: () => GetPowercfgIndex("501a4d13-42af-4429-9fd1-a8218c268e20", "ee12f906-d277-404b-b6da-e5fa1a576df5", ac: true) is int i2 ? i2 == 0 : null),
+                Id: "PowerPerfBoost", DetectState: () => GetPowercfgIndex("501a4d13-42af-4429-9fd1-a8218c268e20", "ee12f906-d277-404b-b6da-e5fa1a576df5", ac: true) is int i2 ? i2 == 0 : null),
         };
 
         // Ενιαία λίστα των 14 κύριων tweaks σε μια μορφή (RegTweak + ειδικές περιπτώσεις μαζί) -
@@ -100,24 +100,24 @@ namespace OptimizerWpf.Services
             list.Add(ToSimple(m[0])); // Storage Sense
             list.Add(ToSimple(m[1])); // Fast Startup
             list.Add(new SimpleTweak(LanguageService.T("Tweak_ClassicMenuLabel"), LanguageService.T("Tweak_ClassicMenuDesc"), EnableClassicContextMenu, DisableClassicContextMenu,
-                DetectState: () => { using var k = Registry.CurrentUser.OpenSubKey(@"Software\Classes\CLSID\{86ca1aa0-34aa-4e8b-a509-50c905bae2a2}"); return k != null; }));
+                Id: "ClassicMenu", DetectState: () => { using var k = Registry.CurrentUser.OpenSubKey(@"Software\Classes\CLSID\{86ca1aa0-34aa-4e8b-a509-50c905bae2a2}"); return k != null; }));
             list.Add(ToSimple(m[2])); // File extensions
             list.Add(ToSimple(m[3])); // Delivery Optimization
             list.Add(new SimpleTweak(LanguageService.T("Tweak_MouseAccelLabel"), LanguageService.T("Tweak_MouseAccelDesc"), MouseAccelOff, MouseAccelOn,
-                DetectState: () => { using var k = Registry.CurrentUser.OpenSubKey(@"Control Panel\Mouse"); return k?.GetValue("MouseSpeed")?.ToString() == "0"; }));
+                Id: "MouseAccel", DetectState: () => { using var k = Registry.CurrentUser.OpenSubKey(@"Control Panel\Mouse"); return k?.GetValue("MouseSpeed")?.ToString() == "0"; }));
             list.Add(new SimpleTweak(LanguageService.T("Tweak_HibernateLabel"), "", HibernateOn, HibernateOff,
-                DetectState: () => { using var k = Registry.LocalMachine.OpenSubKey(@"SYSTEM\CurrentControlSet\Control\Power"); return Convert.ToInt32(k?.GetValue("HibernateEnabled") ?? 0) == 1; }));
+                Id: "Hibernate", DetectState: () => { using var k = Registry.LocalMachine.OpenSubKey(@"SYSTEM\CurrentControlSet\Control\Power"); return Convert.ToInt32(k?.GetValue("HibernateEnabled") ?? 0) == 1; }));
             list.Add(ToSimple(m[4])); // Remove Recommended
             list.Add(ToSimple(m[5])); // Clipboard history
             list.Add(ToSimple(m[6])); // Network throttling
             list.Add(ToSimple(m[7])); // System responsiveness
             list.Add(new SimpleTweak(LanguageService.T("Tweak_GameBarLabel"), LanguageService.T("Tweak_GameBarDesc"), DisableGameBar, EnableGameBar,
-                DetectState: () => { using var k = Registry.CurrentUser.OpenSubKey(@"System\GameConfigStore"); return Convert.ToInt32(k?.GetValue("GameDVR_Enabled") ?? 1) == 0; }));
+                Id: "GameBar", DetectState: () => { using var k = Registry.CurrentUser.OpenSubKey(@"System\GameConfigStore"); return Convert.ToInt32(k?.GetValue("GameDVR_Enabled") ?? 1) == 0; }));
             list.Add(ToSimple(m[8])); // Telemetry
             return list;
         }
 
-        private static SimpleTweak ToSimple(RegTweak t) => new(t.Label, t.Description, () => ApplyOn(t), () => ApplyOff(t), DetectState: () => IsRegTweakOn(t));
+        private static SimpleTweak ToSimple(RegTweak t) => new(t.Label, t.Description, () => ApplyOn(t), () => ApplyOff(t), DetectState: () => IsRegTweakOn(t), Id: t.BackupKey);
 
         // ΔΙΟΡΘΩΣΗ (γνωστό κενό #01) - διαβάζει την ΠΡΑΓΜΑΤΙΚΗ τρέχουσα τιμή του κάθε RegTweak από το
         // μητρώο και τη συγκρίνει με το OnValue, αντί το UI να υποθέτει πάντα "ανενεργό". Απούσα τιμή
@@ -150,9 +150,9 @@ namespace OptimizerWpf.Services
         public static IReadOnlyList<SimpleTweak> LighterWindowsTweaksSimple() => new[]
         {
             new SimpleTweak(LanguageService.T("Tweak_BgAppsLabel"), LanguageService.T("Tweak_BgAppsDesc"),
-                DisableBackgroundApps, EnableBackgroundApps, DetectState: DetectBackgroundAppsOff),
+                DisableBackgroundApps, EnableBackgroundApps, Id: "BackgroundApps", DetectState: DetectBackgroundAppsOff),
             new SimpleTweak(LanguageService.T("Tweak_SysMainLabel"), LanguageService.T("Tweak_SysMainDesc"),
-                DisableSysMain, EnableSysMain, DetectState: DetectSysMainOff),
+                DisableSysMain, EnableSysMain, Id: "SysMain", DetectState: DetectSysMainOff),
         };
 
         public static IReadOnlyList<SimpleTweak> PerfTweaksSimple() =>
