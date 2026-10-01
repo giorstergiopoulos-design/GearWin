@@ -118,9 +118,26 @@ namespace OptimizerWpf
         // ΔΙΟΡΘΩΣΗ (ρητό αίτημα χρήστη: "ολοκλήρωσε τη μεταφορά") - το θέμα επανερχόταν πάντα σε
         // Windows 11 Fluent/Dark σε κάθε εκκίνηση, καμία επιμονή δεν υπήρχε πριν. Καλείται από
         // App.xaml.cs στο startup, ΠΡΙΝ την πρώτη Apply().
+        // ΝΕΟ (6.1.0) - κοινή εμφάνιση με το MotionDesk Studio (βλ. SharedAppearanceService).
+        public static void PublishSharedAppearance() =>
+            SharedAppearanceService.Write(new SharedAppearance(SharedAppearanceService.AppName,
+                CurrentPair.DisplayName, IsDarkMode, DateTime.UtcNow));
+
         public static void LoadPersisted()
         {
             var settings = AppSettingsService.Current;
+            // Αν είναι ενεργή η κοινή εμφάνιση και την έγραψε πιο πρόσφατα η άλλη εφαρμογή, την ακολουθούμε
+            // (μόνο αν το θέμα υπάρχει στον κατάλογο του GearWin - διαφορετικά αγνοείται).
+            if (settings.ShareAppearanceWithMotionDesk)
+            {
+                var shared = SharedAppearanceService.Read();
+                if (SharedAppearanceService.ShouldFollow(shared, settings.ThemeName, settings.IsDarkMode)
+                    && ThemeCatalog.AllIncludingSkins.Any(p => p.DisplayName == shared!.ThemeName))
+                {
+                    settings.ThemeName = shared!.ThemeName;
+                    settings.IsDarkMode = shared.IsDarkMode;
+                }
+            }
             // ΔΙΟΡΘΩΣΗ - ThemeCatalog.All δεν περιλαμβάνει πια τα skins (Microsoft PC Manager/Windows
             // Classic, βλ. σχόλιο εκεί) - AllIncludingSkins εδώ ώστε ένα αποθηκευμένο skin ως
             // προεπιλογή εκκίνησης να συνεχίζει να αναγνωρίζεται σωστά.
@@ -165,6 +182,7 @@ namespace OptimizerWpf
         {
             AppSettingsService.Current.ThemeName = CurrentPair.DisplayName;
             AppSettingsService.Current.IsDarkMode = IsDarkMode;
+            if (AppSettingsService.Current.ShareAppearanceWithMotionDesk) PublishSharedAppearance();
             if (CurrentPair.DisplayName != "Microsoft PC Manager" && CurrentPair.DisplayName != "Windows Classic")
                 AppSettingsService.Current.LastNonPcManagerTheme = CurrentPair.DisplayName;
             AppSettingsService.Save();

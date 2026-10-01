@@ -6,9 +6,13 @@ available inside the app itself, via Help/Instructions → the "Version History"
 
 Format loosely follows [Keep a Changelog](https://keepachangelog.com/).
 
-## v6.1.0 — Per-theme animated backgrounds & Appearance Settings
+## v6.1.0 — Maintenance & Security Center, per-theme backgrounds, safety nets
 
-Ten themes now have their own animated background; "Theme Settings" renamed "Appearance Settings"; Home's per-category space analysis has its own drive selector.
+- **Maintenance & Security Center** (Ctrl+J / Tools menu): security status panel (antivirus, firewall, UAC, Secure Boot, TPM, BitLocker, pending restart), session change list with one-click undo, restore point button, temperature / S.M.A.R.T. alert settings, startup program delay (scheduled task, reversible), one-click system report (.txt/.pdf), shared appearance with MotionDesk Studio.
+- **Safety nets:** restore point is ensured before importing tweak profiles, "Optimize" with registry/tweaks, and app uninstall; "Optimize" now shows a preview (dry run) of what will run; every tweak toggle is recorded in the change list.
+- **Cancel buttons:** SFC/DISM/chkdsk/WinSxS, driver scan, duplicate finder and disk analysis can be cancelled.
+- 🛡 badge on tweaks that change the system (HKLM/services); Ctrl+K opens the global search.
+- Ten themes got their own animated background; "Theme Settings" is now "Appearance Settings"; Home's per-category space analysis has its own drive selector.
 
 ## v5.3.0 — Renamed to GearWin
 

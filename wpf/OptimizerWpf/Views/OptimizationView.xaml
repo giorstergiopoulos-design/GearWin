@@ -161,6 +161,7 @@
                     <TextBlock x:Name="TxtDriverStatus" Text="" Style="{StaticResource SubTextStyle}" TextWrapping="Wrap" Margin="0,8,0,0"/>
 
                     <views:DriverScanButton x:Name="BtnScanDrivers" HorizontalAlignment="Center" Margin="0,16,0,10" Click="BtnScanDrivers_Click"/>
+                    <Button x:Name="BtnCancelDriverScan" Content="{tr:Tr Cancel}" Style="{StaticResource FlatButtonStyle}" Padding="14,6" HorizontalAlignment="Center" Margin="0,0,0,10" Visibility="Collapsed" Click="BtnCancelDriverScan_Click"/>
                     <TextBlock Text="{tr:Tr Opt_DriversScanHint}" Style="{StaticResource SubTextStyle}" HorizontalAlignment="Center" TextAlignment="Center" Margin="0,0,0,4"/>
 
                     <Border x:Name="BorderDriverResults" Visibility="Collapsed" Background="{DynamicResource MainBgBrush}" CornerRadius="6" MinHeight="80" MaxHeight="280" Padding="4" Margin="0,10,0,0">

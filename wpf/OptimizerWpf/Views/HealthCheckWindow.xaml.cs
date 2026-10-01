@@ -262,12 +262,27 @@ namespace OptimizerWpf.Views
 
         private async void BtnOptimizeNow_Click(object sender, RoutedEventArgs e)
         {
+            // ΝΕΟ (6.1.0) - dry-run/προεπισκόπηση: πριν αλλάξει οτιδήποτε, ο χρήστης βλέπει ακριβώς τι θα
+            // γίνει (επιλεγμένες κάρτες + μεγέθη/πλήθη από την ήδη ολοκληρωμένη σάρωση) και επιβεβαιώνει.
+            var planned = _results.Where(r => r.IsSelected && (r.Key == "Space" || r.Key == "Traces" || r.Key == "Restore")).ToList();
+            if (planned.Count > 0)
+            {
+                var preview = new System.Text.StringBuilder(LanguageService.T("DryRun_Intro")).AppendLine().AppendLine();
+                foreach (var card in planned) preview.AppendLine($"• {card.Headline}").AppendLine($"   {card.Description}");
+                preview.AppendLine().Append(LanguageService.T("DryRun_Footer"));
+                if (ThemedMessageBox.Show(preview.ToString(), LanguageService.T("DryRun_Title"), MessageBoxButton.YesNo, MessageBoxImage.Question) != MessageBoxResult.Yes) return;
+            }
+
             BtnOptimizeNow.IsEnabled = false;
             TxtOptimizeResult.Text = LanguageService.T("HealthCheck_Optimizing");
             StatusService.SetBusy(LanguageService.T("HealthCheck_Optimizing"));
 
             try
             {
+            // Σημείο επαναφοράς ΜΟΝΟ όταν αλλάζουν registry/tweaks (όχι για καθαρισμό χώρου).
+            if (_results.Any(r => r.IsSelected && (r.Key == "Traces" || r.Key == "Restore")))
+                await RestoreGuardService.EnsureRecentAsync();
+
             var summary = new List<string>();
             var spaceCleaned = false;
             var tracesCleaned = false;

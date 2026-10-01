@@ -1,0 +1,122 @@
+<Window x:Class="OptimizerWpf.Views.MaintenanceCenterWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:tr="clr-namespace:OptimizerWpf"
+        mc:Ignorable="d"
+        Title="{tr:Tr Center_Title}" Height="580" Width="760" MinHeight="460" MinWidth="620"
+        WindowStartupLocation="CenterOwner" ResizeMode="CanResizeWithGrip"
+        Background="{DynamicResource MainBgBrush}" Closed="Window_Closed">
+    <!-- ΝΕΟ (6.1.0) - Κέντρο Συντήρησης & Ασφάλειας (Ctrl+J / μενού Εργαλεία): συγκεντρώνει τις νέες
+         λειτουργίες 6.1.0 σε ένα παράθυρο - πίνακας ασφάλειας, λίστα αλλαγών με αναίρεση + σημείο
+         επαναφοράς, ειδοποιήσεις/ασφάλεια, καθυστέρηση εκκίνησης προγραμμάτων, αναφορά συστήματος.
+         Η λογική βρίσκεται σε Services (SecurityStatusService, ChangeJournalService, RestoreGuardService,
+         AlertService, StartupDelayService, SystemReportService, SharedAppearanceService). -->
+    <Grid Margin="16">
+        <TabControl x:Name="Tabs">
+            <!-- 1. Ασφάλεια -->
+            <TabItem Header="{tr:Tr Center_TabSecurity}">
+                <Grid Margin="12">
+                    <Grid.RowDefinitions><RowDefinition Height="Auto"/><RowDefinition Height="*"/></Grid.RowDefinitions>
+                    <StackPanel Orientation="Horizontal" Margin="0,0,0,10">
+                        <Button x:Name="BtnRefreshSecurity" Content="{tr:Tr Center_Refresh}" Style="{StaticResource AccentButtonStyle}" Padding="14,6" Click="BtnRefreshSecurity_Click"/>
+                        <TextBlock x:Name="TxtSecurityStatus" Style="{StaticResource SubTextStyle}" VerticalAlignment="Center" Margin="12,0,0,0"/>
+                    </StackPanel>
+                    <ScrollViewer Grid.Row="1" VerticalScrollBarVisibility="Auto" PreviewMouseWheel="NestedScroll_PreviewMouseWheel">
+                        <ItemsControl x:Name="ListSecurity">
+                            <ItemsControl.ItemTemplate>
+                                <DataTemplate>
+                                    <Border Background="{DynamicResource CardBgBrush}" BorderBrush="{DynamicResource CardBorderBrush}" BorderThickness="1" CornerRadius="8" Padding="12,8" Margin="0,0,0,6">
+                                        <Grid>
+                                            <Grid.ColumnDefinitions><ColumnDefinition Width="28"/><ColumnDefinition Width="170"/><ColumnDefinition Width="*"/></Grid.ColumnDefinitions>
+                                            <TextBlock Text="{Binding Glyph}" Foreground="{Binding Color}" FontSize="16" VerticalAlignment="Center"/>
+                                            <TextBlock Grid.Column="1" Text="{Binding Label}" Foreground="{DynamicResource TextBrush}" FontWeight="SemiBold" VerticalAlignment="Center"/>
+                                            <TextBlock Grid.Column="2" Text="{Binding Detail}" Style="{StaticResource SubTextStyle}" TextWrapping="Wrap" VerticalAlignment="Center"/>
+                                        </Grid>
+                                    </Border>
+                                </DataTemplate>
+                            </ItemsControl.ItemTemplate>
+                        </ItemsControl>
+                    </ScrollViewer>
+                </Grid>
+            </TabItem>
+
+            <!-- 2. Αλλαγές & Επαναφορά -->
+            <TabItem Header="{tr:Tr Center_TabChanges}">
+                <Grid Margin="12">
+                    <Grid.RowDefinitions><RowDefinition Height="Auto"/><RowDefinition Height="*"/><RowDefinition Height="Auto"/></Grid.RowDefinitions>
+                    <TextBlock Text="{tr:Tr Center_ChangesDesc}" Style="{StaticResource SubTextStyle}" TextWrapping="Wrap" Margin="0,0,0,8"/>
+                    <ListBox Grid.Row="1" x:Name="ListChanges" Background="{DynamicResource CardBgBrush}" Foreground="{DynamicResource TextBrush}"
+                             BorderBrush="{DynamicResource CardBorderBrush}" SelectionChanged="ListChanges_SelectionChanged"/>
+                    <StackPanel Grid.Row="2" Margin="0,10,0,0">
+                        <StackPanel Orientation="Horizontal">
+                            <Button x:Name="BtnUndoChange" Content="{tr:Tr Center_Undo}" Style="{StaticResource AccentButtonStyle}" Padding="14,6" Margin="0,0,10,0" IsEnabled="False" Click="BtnUndoChange_Click"/>
+                            <Button x:Name="BtnCreateRestorePoint" Content="{tr:Tr Center_CreateRestorePoint}" Style="{StaticResource FlatButtonStyle}" Padding="14,6" Click="BtnCreateRestorePoint_Click"/>
+                        </StackPanel>
+                        <TextBlock x:Name="TxtChangesStatus" Style="{StaticResource SubTextStyle}" TextWrapping="Wrap" Margin="0,8,0,0"/>
+                    </StackPanel>
+                </Grid>
+            </TabItem>
+
+            <!-- 3. Ειδοποιήσεις & Ασφάλεια ενεργειών -->
+            <TabItem Header="{tr:Tr Center_TabAlerts}">
+                <ScrollViewer VerticalScrollBarVisibility="Auto" PreviewMouseWheel="NestedScroll_PreviewMouseWheel">
+                    <StackPanel Margin="12">
+                        <CheckBox x:Name="ChkAutoRestorePoint" Content="{tr:Tr Center_AutoRestorePoint}" Foreground="{DynamicResource TextBrush}" Margin="0,0,0,2" Click="Setting_Changed"/>
+                        <TextBlock Text="{tr:Tr Center_AutoRestorePointDesc}" Style="{StaticResource SubTextStyle}" TextWrapping="Wrap" Margin="22,0,0,14"/>
+
+                        <CheckBox x:Name="ChkTempAlerts" Content="{tr:Tr Center_TempAlerts}" Foreground="{DynamicResource TextBrush}" Margin="0,0,0,6" Click="Setting_Changed"/>
+                        <StackPanel Orientation="Horizontal" Margin="22,0,0,14">
+                            <TextBlock Text="{tr:Tr Center_TempThreshold}" Foreground="{DynamicResource TextBrush}" VerticalAlignment="Center" Margin="0,0,8,0"/>
+                            <TextBox x:Name="TxtTempThreshold" Width="60" LostFocus="Setting_Changed"/>
+                            <TextBlock Text="°C" Foreground="{DynamicResource TextBrush}" VerticalAlignment="Center" Margin="6,0,0,0"/>
+                        </StackPanel>
+
+                        <CheckBox x:Name="ChkSmartAlerts" Content="{tr:Tr Center_SmartAlerts}" Foreground="{DynamicResource TextBrush}" Margin="0,0,0,2" Click="Setting_Changed"/>
+                        <TextBlock Text="{tr:Tr Center_SmartAlertsDesc}" Style="{StaticResource SubTextStyle}" TextWrapping="Wrap" Margin="22,0,0,14"/>
+
+                        <CheckBox x:Name="ChkShareAppearance" Content="{tr:Tr Center_ShareAppearance}" Foreground="{DynamicResource TextBrush}" Margin="0,0,0,2" Click="Setting_Changed"/>
+                        <TextBlock Text="{tr:Tr Center_ShareAppearanceDesc}" Style="{StaticResource SubTextStyle}" TextWrapping="Wrap" Margin="22,0,0,14"/>
+
+                        <Button Content="{tr:Tr Center_CheckAlertsNow}" Style="{StaticResource FlatButtonStyle}" Padding="14,6" HorizontalAlignment="Left" Click="BtnCheckAlertsNow_Click"/>
+                    </StackPanel>
+                </ScrollViewer>
+            </TabItem>
+
+            <!-- 4. Καθυστέρηση εκκίνησης -->
+            <TabItem Header="{tr:Tr Center_TabStartup}">
+                <Grid Margin="12">
+                    <Grid.RowDefinitions><RowDefinition Height="Auto"/><RowDefinition Height="Auto"/><RowDefinition Height="*"/></Grid.RowDefinitions>
+                    <TextBlock Text="{tr:Tr Center_StartupDesc}" Style="{StaticResource SubTextStyle}" TextWrapping="Wrap" Margin="0,0,0,10"/>
+                    <Grid Grid.Row="1" Margin="0,0,0,8">
+                        <Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="Auto"/><ColumnDefinition Width="Auto"/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions>
+                        <ComboBox x:Name="CmbStartupItems" DisplayMemberPath="Name" Margin="0,0,10,0"/>
+                        <TextBox x:Name="TxtDelaySeconds" Grid.Column="1" Width="60" Text="30" VerticalAlignment="Center"/>
+                        <TextBlock Grid.Column="2" Text="{tr:Tr Center_Seconds}" Foreground="{DynamicResource TextBrush}" VerticalAlignment="Center" Margin="6,0,10,0"/>
+                        <StackPanel Grid.Column="3" Orientation="Horizontal">
+                            <Button x:Name="BtnApplyDelay" Content="{tr:Tr Center_ApplyDelay}" Style="{StaticResource AccentButtonStyle}" Padding="12,6" Margin="0,0,8,0" Click="BtnApplyDelay_Click"/>
+                            <Button x:Name="BtnRemoveDelay" Content="{tr:Tr Center_RemoveDelay}" Style="{StaticResource FlatButtonStyle}" Padding="12,6" Click="BtnRemoveDelay_Click"/>
+                        </StackPanel>
+                    </Grid>
+                    <StackPanel Grid.Row="2">
+                        <TextBlock x:Name="TxtStartupStatus" Style="{StaticResource SubTextStyle}" TextWrapping="Wrap" Margin="0,0,0,8"/>
+                        <TextBlock x:Name="TxtDelayedList" Foreground="{DynamicResource TextBrush}" TextWrapping="Wrap"/>
+                    </StackPanel>
+                </Grid>
+            </TabItem>
+
+            <!-- 5. Αναφορά -->
+            <TabItem Header="{tr:Tr Center_TabReport}">
+                <StackPanel Margin="12">
+                    <TextBlock Text="{tr:Tr Center_ReportDesc}" Style="{StaticResource SubTextStyle}" TextWrapping="Wrap" Margin="0,0,0,12"/>
+                    <StackPanel Orientation="Horizontal">
+                        <Button x:Name="BtnReportTxt" Content="{tr:Tr Center_ExportTxt}" Style="{StaticResource AccentButtonStyle}" Padding="14,6" Margin="0,0,10,0" Click="BtnReportTxt_Click"/>
+                        <Button x:Name="BtnReportPdf" Content="{tr:Tr Center_ExportPdf}" Style="{StaticResource FlatButtonStyle}" Padding="14,6" Click="BtnReportPdf_Click"/>
+                    </StackPanel>
+                    <TextBlock x:Name="TxtReportStatus" Style="{StaticResource SubTextStyle}" TextWrapping="Wrap" Margin="0,10,0,0"/>
+                </StackPanel>
+            </TabItem>
+        </TabControl>
+    </Grid>
+</Window>

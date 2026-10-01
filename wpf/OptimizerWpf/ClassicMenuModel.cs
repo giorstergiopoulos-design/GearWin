@@ -40,6 +40,8 @@ namespace OptimizerWpf
                 // ΝΕΟ - πρόσθεσε πρόσβαση από το κλασικό/πλευρικό μενού, βλ. σχόλιο στο
                 // MainWindow.xaml.cs's OpenDestination.
                 new MenuLeaf("", $"{LanguageService.T("HealthCheck_Title")}...", new MenuAction(null, "HealthCheck_Title"), "Ctrl+H"),
+                // ΝΕΟ (6.1.0) - βλ. Views/MaintenanceCenterWindow.xaml.
+                new MenuLeaf("", $"{LanguageService.T("Center_Title")}...", new MenuAction(null, "Center_Title"), "Ctrl+J"),
             }),
             new MenuGroup("👁️", LanguageService.T("Menu_View"), NavItems.All
                 .Select((n, i) => new MenuLeaf(n.Icon, n.Label, new MenuAction(n.Tag, null), i < 8 ? $"Ctrl+{i + 1}" : null))

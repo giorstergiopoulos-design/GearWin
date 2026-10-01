@@ -281,7 +281,17 @@ public partial class MainWindow : Window
         // IDEs, κ.λπ.) και έλειπε εντελώς - πριν ο χρήστης έπρεπε πάντα να κάνει κλικ με το ποντίκι
         // στο πεδίο. SelectAll ώστε μια ήδη υπάρχουσα αναζήτηση να αντικαθίσταται αμέσως πληκτρολογώντας,
         // όχι να προστίθεται στο τέλος της.
-        if (e.Key == Key.F)
+        // ΝΕΟ (6.1.0) - Ctrl+K: παλέτα εντολών (ίδιο καθολικό πεδίο αναζήτησης - βρίσκει καρτέλες, εργαλεία
+        // και ρυθμίσεις από το ενιαίο ευρετήριο μενού) - συνήθης σύμβαση σε εφαρμογές/IDEs.
+        // Ctrl+J: Κέντρο Συντήρησης & Ασφάλειας.
+        if (e.Key == Key.J)
+        {
+            OpenDestination("Center_Title");
+            e.Handled = true;
+            return;
+        }
+
+        if (e.Key == Key.F || e.Key == Key.K)
         {
             TxtSearch.Focus();
             TxtSearch.SelectAll();
@@ -597,6 +607,7 @@ public partial class MainWindow : Window
             // Ctrl+H) - πρόσθεσε εδώ ώστε να είναι προσβάσιμος ΚΑΙ από το κλασικό μενού/πλευρικό
             // μενού, ίδιο μοτίβο με τα υπόλοιπα δευτερεύοντα παράθυρα.
             "HealthCheck_Title" => new HealthCheckWindow { Owner = this },
+            "Center_Title" => new MaintenanceCenterWindow { Owner = this },
             "AppearanceSettingsTitle" => new AppearanceSettingsWindow { Owner = this },
             // ΔΙΟΡΘΩΣΗ (ρητό αίτημα χρήστη: "ενσωμάτωσε το ιστορικό εκδόσεων στο ίδιο δευτερεύον
             // παράθυρο σε tab") - δεν υπάρχει πια ξεχωριστό VersionHistoryWindow, ανοίγει το ίδιο

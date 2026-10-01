@@ -496,18 +496,36 @@ namespace OptimizerWpf.Views
             BtnScanDuplicates.IsEnabled = true;
         }
 
+        private System.Threading.CancellationTokenSource? _duplicateCts;
+
+        // Το κουμπί σάρωσης λειτουργεί ως "Ακύρωση" όσο τρέχει η σάρωση.
         private async void BtnScanDuplicates_Click(object sender, RoutedEventArgs e)
         {
+            if (_duplicateCts != null) { _duplicateCts.Cancel(); return; }
             if (s_duplicateFolder == null) return;
-            BtnScanDuplicates.IsEnabled = false;
+            var scanLabel = BtnScanDuplicates.Content;
+            BtnScanDuplicates.Content = LanguageService.T("Cancel");
             BtnDeleteDuplicates.IsEnabled = false;
             _duplicateGroups.Clear();
             TxtDuplicateStatus.Text = LanguageService.T("Advanced_ScanningDuplicates");
             StatusService.SetBusy(LanguageService.T("Advanced_ScanningDuplicates"));
+            _duplicateCts = new System.Threading.CancellationTokenSource();
 
-            var groups = await DuplicateFileService.ScanAsync(s_duplicateFolder);
-            StatusService.SetIdle(LanguageService.T("Ready"));
-            BtnScanDuplicates.IsEnabled = true;
+            IReadOnlyList<DuplicateGroup> groups;
+            try { groups = await DuplicateFileService.ScanAsync(s_duplicateFolder, null, _duplicateCts.Token); }
+            catch (OperationCanceledException)
+            {
+                TxtDuplicateStatus.Text = LanguageService.T("Health_ToolCancelled");
+                s_duplicateStatusCache = TxtDuplicateStatus.Text;
+                return;
+            }
+            finally
+            {
+                StatusService.SetIdle(LanguageService.T("Ready"));
+                _duplicateCts.Dispose();
+                _duplicateCts = null;
+                BtnScanDuplicates.Content = scanLabel;
+            }
 
             foreach (var g in groups) _duplicateGroups.Add(new DuplicateGroupVm(g));
             TxtDuplicateStatus.Text = groups.Count == 0

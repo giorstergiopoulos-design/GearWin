@@ -241,6 +241,8 @@ namespace OptimizerWpf.Views
             if (ThemedMessageBox.Show($"{LanguageService.T("Bloatware_UninstallConfirmPrefix")}{row.App.DisplayName}{LanguageService.T("Bloatware_UninstallConfirmSuffix")}",
                     LanguageService.T("Bloatware_ConfirmTitle"), MessageBoxButton.YesNo, MessageBoxImage.Warning) != MessageBoxResult.Yes) return;
 
+            StatusService.SetBusy(LanguageService.T("Sys_CreatingRestorePoint"));
+            await RestoreGuardService.EnsureRecentAsync(); // ΝΕΟ (6.1.0) - ασφάλεια πριν από απεγκατάσταση
             StatusService.SetBusy($"{LanguageService.T("Bloatware_Uninstall")} {row.App.DisplayName}...");
             int exitCode;
             try { exitCode = await BloatwareService.UninstallAppAsync(row.App.UninstallString); }

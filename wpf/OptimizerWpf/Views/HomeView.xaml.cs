@@ -209,6 +209,7 @@ namespace OptimizerWpf.Views
         {
             if (sender is not ToggleButton { Tag: TweakRowVm row }) return;
             if (row.IsOn) row.Tweak.OnAction(); else row.Tweak.OffAction();
+            row.RecordChange(row.IsOn);
         }
 
         // ΝΕΟ - ρητό αίτημα χρήστη: "Γρήγορος Καθαρισμός & Έλεγχος Υγείας πρέπει να συγχωνευθούν" - η
@@ -617,8 +618,12 @@ namespace OptimizerWpf.Views
             ["Other"] = LanguageService.T("Home_CatOther"),
         };
 
+        private System.Threading.CancellationTokenSource? _analysisCts;
+
+        // Το ίδιο κουμπί λειτουργεί ως "Ακύρωση" όσο τρέχει η ανάλυση (δεν χρειάζεται δεύτερο κουμπί).
         private async void BtnAnalyzeDisk_Click(object sender, System.Windows.RoutedEventArgs e)
         {
+            if (_analysisCts != null) { _analysisCts.Cancel(); return; }
             if (AnalysisDrive is not string driveName) return;
 
             TxtDiskAnalysisStatus.Text = $"{LanguageService.T("Home_DiskAnalysisRunningPrefix")}{driveName}{LanguageService.T("Home_DiskAnalysisRunningSuffix")}";
@@ -626,11 +631,17 @@ namespace OptimizerWpf.Views
             DiskBarGrid.ColumnDefinitions.Clear();
             DiskBarGrid.Children.Clear();
             ListDiskLegend.ItemsSource = null;
-            BtnAnalyzeDisk.IsEnabled = false;
+            BtnAnalyzeDisk.Content = LanguageService.T("Cancel");
             CmbAnalysisDrive.IsEnabled = false;
+            _analysisCts = new System.Threading.CancellationTokenSource();
 
             DiskAnalysisResult result;
-            try { result = await DiskAnalysisService.AnalyzeAsync(driveName); }
+            try { result = await DiskAnalysisService.AnalyzeAsync(driveName, _analysisCts.Token); }
+            catch (OperationCanceledException)
+            {
+                TxtDiskAnalysisStatus.Text = LanguageService.T("Home_DiskAnalysisPrompt");
+                return;
+            }
             catch (Exception ex)
             {
                 TxtDiskAnalysisStatus.Text = ex.Message;
@@ -639,7 +650,9 @@ namespace OptimizerWpf.Views
             finally
             {
                 StatusService.SetIdle(LanguageService.T("Ready"));
-                BtnAnalyzeDisk.IsEnabled = true;
+                _analysisCts.Dispose();
+                _analysisCts = null;
+                BtnAnalyzeDisk.Content = LanguageService.T("Home_Analyze");
                 CmbAnalysisDrive.IsEnabled = true;
             }
 

@@ -21,15 +21,16 @@ namespace OptimizerWpf.Services
     {
         private const long MaxFileSizeBytes = 2L * 1024 * 1024 * 1024; // 2GB - αποφυγή εξαιρετικά αργού hashing σε τεράστια αρχεία (π.χ. ISO/VM images)
 
-        public static Task<IReadOnlyList<DuplicateGroup>> ScanAsync(string rootFolder, IProgress<int>? progress = null) =>
-            Task.Run(() => Scan(rootFolder, progress));
+        public static Task<IReadOnlyList<DuplicateGroup>> ScanAsync(string rootFolder, IProgress<int>? progress = null, System.Threading.CancellationToken ct = default) =>
+            Task.Run(() => Scan(rootFolder, progress, ct), ct);
 
-        private static IReadOnlyList<DuplicateGroup> Scan(string rootFolder, IProgress<int>? progress)
+        private static IReadOnlyList<DuplicateGroup> Scan(string rootFolder, IProgress<int>? progress, System.Threading.CancellationToken ct)
         {
             var bySize = new Dictionary<long, List<string>>();
             var scanned = 0;
             foreach (var file in SafeEnumerateFiles(rootFolder))
             {
+                ct.ThrowIfCancellationRequested();
                 long size;
                 try { size = new FileInfo(file).Length; } catch { continue; }
                 if (size <= 0 || size > MaxFileSizeBytes) continue;
@@ -49,7 +50,7 @@ namespace OptimizerWpf.Services
             // hashing είναι το πιο ακριβό βήμα της σάρωσης και επωφελείται σημαντικά από πολλαπλούς
             // πυρήνες, ειδικά σε φακέλους με πολλά υποψήφια αρχεία.
             var hashes = new System.Collections.Concurrent.ConcurrentDictionary<string, string>();
-            Parallel.ForEach(candidates, path =>
+            Parallel.ForEach(candidates, new ParallelOptions { CancellationToken = ct }, path =>
             {
                 var hash = TryComputeHash(path);
                 if (hash != null) hashes[path] = hash;

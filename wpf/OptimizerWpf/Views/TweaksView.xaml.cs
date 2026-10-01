@@ -59,7 +59,7 @@ namespace OptimizerWpf.Views
             if (sender is not ToggleButton { Tag: TweakRowVm row }) return;
             // Μια εξαίρεση (π.χ. μπλοκάρισμα registry από πολιτική/antivirus) άφηνε τον διακόπτη να δείχνει κατάσταση που
             // ΔΕΝ εφαρμόστηκε και έσκαγε στον global handler. Επαναφέρουμε τον διακόπτη και ενημερώνουμε τον χρήστη.
-            try { if (row.IsOn) row.Tweak.OnAction(); else row.Tweak.OffAction(); }
+            try { if (row.IsOn) row.Tweak.OnAction(); else row.Tweak.OffAction(); row.RecordChange(row.IsOn); }
             catch
             {
                 row.IsOn = !row.IsOn;
@@ -195,7 +195,7 @@ namespace OptimizerWpf.Views
             foreach (var row in AllTweakRows())
             {
                 if (!(full.Tweaks.TryGetValue(row.PinKey, out var desired) || full.Tweaks.TryGetValue(row.LegacyPinKey, out desired)) || row.IsOn == desired) continue;
-                try { if (desired) row.Tweak.OnAction(); else row.Tweak.OffAction(); applied++; }
+                try { if (desired) row.Tweak.OnAction(); else row.Tweak.OffAction(); row.RecordChange(desired); applied++; }
                 catch { /* ένα μεμονωμένο tweak μπορεί να αποτύχει (π.χ. δεν υποστηρίζεται σε αυτό το build) - τα υπόλοιπα συνεχίζουν */ }
             }
 
@@ -235,7 +235,21 @@ namespace OptimizerWpf.Views
             catch { TxtTweakProfileStatus.Text = LanguageService.T("Tweaks_ProfileExportFailed"); }
         }
 
-        private void BtnImportTweakProfile_Click(object sender, RoutedEventArgs e)
+        // Μαζική αλλαγή ρυθμίσεων => πρώτα εξασφαλίζουμε πρόσφατο σημείο επαναφοράς (RestoreGuardService).
+        // Η αποτυχία ΔΕΝ μπλοκάρει την εισαγωγή - ο χρήστης απλώς ενημερώνεται στο status.
+        private async System.Threading.Tasks.Task EnsureRestorePointAsync()
+        {
+            TxtTweakProfileStatus.Text = LanguageService.T("Sys_CreatingRestorePoint");
+            var result = await RestoreGuardService.EnsureRecentAsync();
+            TxtTweakProfileStatus.Text = result switch
+            {
+                RestoreGuardResult.Created => LanguageService.T("Sys_RestorePointCreated"),
+                RestoreGuardResult.Failed => LanguageService.T("Guard_PointFailedContinue"),
+                _ => "",
+            };
+        }
+
+        private async void BtnImportTweakProfile_Click(object sender, RoutedEventArgs e)
         {
             var dlg = new OpenFileDialog { Filter = "App Profile (*.json)|*.json" };
             if (dlg.ShowDialog() != true) return;
@@ -259,6 +273,7 @@ namespace OptimizerWpf.Views
             catch { ThemedMessageBox.Show(LanguageService.T("Tweaks_ProfileImportFailed"), LanguageService.T("Adv_ErrorTitle"), MessageBoxButton.OK, MessageBoxImage.Warning); return; }
             if (full == null) return;
 
+            await EnsureRestorePointAsync();
             var applied = ApplyProfile(full);
             TxtTweakProfileStatus.Text = string.Format(LanguageService.T("Tweaks_ProfileImportDone"), applied);
         }
@@ -291,7 +306,7 @@ namespace OptimizerWpf.Views
             }
         }
 
-        private void BtnLoadNamedProfile_Click(object sender, RoutedEventArgs e)
+        private async void BtnLoadNamedProfile_Click(object sender, RoutedEventArgs e)
         {
             if (ListNamedProfiles.SelectedItem is not string name) return;
             if (ThemedMessageBox.Show(LanguageService.T("Tweaks_ProfileImportConfirm"), LanguageService.T("Tweaks_ConfirmTitle"), MessageBoxButton.YesNo, MessageBoxImage.Warning) != MessageBoxResult.Yes) return;
@@ -299,6 +314,7 @@ namespace OptimizerWpf.Views
             var full = NamedProfileService.Load(name);
             if (full == null) { TxtTweakProfileStatus.Text = LanguageService.T("Tweaks_ProfileImportFailed"); return; }
 
+            await EnsureRestorePointAsync();
             var applied = ApplyProfile(full);
             TxtTweakProfileStatus.Text = string.Format(LanguageService.T("Tweaks_ProfileImportDone"), applied);
         }
@@ -329,6 +345,20 @@ namespace OptimizerWpf.Views
             set { _isPinned = value; PropertyChanged?.Invoke(this, new(nameof(IsPinned))); PropertyChanged?.Invoke(this, new(nameof(PinGlyph))); }
         }
         public string PinGlyph => IsPinned ? "★" : "☆";
+
+        // ΝΕΟ (6.1.0) - ένδειξη "απαιτεί διαχειριστή" (αλλαγή σε επίπεδο συστήματος) και καταγραφή στην
+        // ενιαία λίστα αλλαγών (ChangeJournalService) με αντίθετη ενέργεια για αναίρεση.
+        public System.Windows.Visibility AdminBadgeVisibility => Tweak.RequiresAdmin ? System.Windows.Visibility.Visible : System.Windows.Visibility.Collapsed;
+        public string AdminBadgeTip => LanguageService.T("Tweak_RequiresAdminTip");
+
+        public void RecordChange(bool turnedOn) =>
+            ChangeJournalService.Record(
+                $"{Tweak.Label}: {LanguageService.T(turnedOn ? "Journal_On" : "Journal_Off")}",
+                () =>
+                {
+                    if (turnedOn) Tweak.OffAction(); else Tweak.OnAction();
+                    IsOn = !turnedOn;
+                });
 
         // ΔΙΟΡΘΩΣΗ (γνωστό κενό #01 του roadmap: "οι διακόπτες δεν διαβάζουν την πραγματική τρέχουσα
         // τιμή - ξεκινούν πάντα ανενεργοί") - το DetectState (αν υπάρχει για αυτό το tweak) διαβάζει

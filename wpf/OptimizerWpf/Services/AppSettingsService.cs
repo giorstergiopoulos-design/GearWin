@@ -37,6 +37,20 @@ namespace OptimizerWpf.Services
         // ΝΕΟ - roadmap "Προγραμματισμένη συντήρηση" - βλ. AdvancedToolsService.SetScheduledMaintenanceAsync.
         public bool ScheduledMaintenanceEnabled { get; set; }
 
+        // ΝΕΟ (6.1.0) - σημείο επαναφοράς πριν από ριψοκίνδυνες ενέργειες (βλ. RestoreGuardService).
+        public bool AutoRestorePointBeforeRiskyActions { get; set; } = true;
+
+        // ΝΕΟ (6.1.0) - ειδοποιήσεις θερμοκρασίας / S.M.A.R.T. (βλ. AlertService).
+        public bool TempAlertsEnabled { get; set; } = true;
+        public int TempAlertThresholdC { get; set; } = 85;
+        public bool SmartAlertsEnabled { get; set; } = true;
+
+        // ΝΕΟ (6.1.0) - κοινή εμφάνιση με το MotionDesk Studio (βλ. SharedAppearanceService).
+        public bool ShareAppearanceWithMotionDesk { get; set; }
+
+        // ΝΕΟ (6.1.0) - καθυστερημένη εκκίνηση προγραμμάτων: όνομα καταχώρησης -> δευτερόλεπτα.
+        public System.Collections.Generic.Dictionary<string, int> DelayedStartupSeconds { get; set; } = new();
+
         // ΝΕΟ - roadmap "Αυτόματο Gaming Mode" - βλ. AutoGamingModeService.
         public bool AutoGamingModeEnabled { get; set; }
 

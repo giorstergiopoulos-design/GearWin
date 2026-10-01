@@ -23,7 +23,12 @@ namespace OptimizerWpf.Services
     // WinForms version runs it as a whole separate headless process.
     public static class DiskAnalysisService
     {
-        public static Task<DiskAnalysisResult> AnalyzeAsync(string driveLetter) => Task.Run(() => Analyze(driveLetter));
+        public static Task<DiskAnalysisResult> AnalyzeAsync(string driveLetter, System.Threading.CancellationToken ct = default) =>
+            Task.Run(() => { _ct = ct; try { return Analyze(driveLetter); } finally { _ct = default; } }, ct);
+
+        // Ακύρωση: το token ισχύει για το νήμα της ανάλυσης (ThreadStatic) ώστε οι βαθιές αναδρομικές
+        // σαρώσεις να το ελέγχουν ανά αρχείο χωρίς να αλλάξουν όλες οι υπογραφές.
+        [ThreadStatic] private static System.Threading.CancellationToken _ct;
 
         private static DiskAnalysisResult Analyze(string driveLetter)
         {
@@ -126,6 +131,7 @@ namespace OptimizerWpf.Services
             long sum = 0;
             foreach (var file in SafeEnumerateFiles(path))
             {
+                _ct.ThrowIfCancellationRequested();
                 try { sum += new FileInfo(file).Length; } catch { /* file can vanish mid-scan */ }
             }
             return sum;

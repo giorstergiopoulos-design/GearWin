@@ -10,16 +10,18 @@
     <UserControl.Resources>
         <DataTemplate x:Key="TweakRowTemplate">
             <Grid Margin="0,0,0,10">
-                <Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="Auto"/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions>
+                <Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="Auto"/><ColumnDefinition Width="Auto"/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions>
                 <StackPanel Grid.Column="0" Margin="0,0,10,0">
                     <TextBlock Text="{Binding Tweak.Label}" Foreground="{DynamicResource TextBrush}" TextWrapping="Wrap"/>
                     <TextBlock Text="{Binding Tweak.Description}" Style="{StaticResource SubTextStyle}" TextWrapping="Wrap"/>
                 </StackPanel>
                 <!-- ΝΕΟ - roadmap "Καρφιτσωμένες συντομεύσεις" - καρφίτσωμα για γρήγορη πρόσβαση από την Αρχική. -->
-                <Button Grid.Column="1" Content="{Binding PinGlyph}" Style="{StaticResource FlatButtonStyle}" Width="32" Padding="0" FontSize="15"
+                <TextBlock Grid.Column="1" Text="🛡" FontSize="13" VerticalAlignment="Center" Margin="0,0,8,0" Opacity="0.75"
+                           Visibility="{Binding AdminBadgeVisibility}" ToolTip="{Binding AdminBadgeTip}"/>
+                <Button Grid.Column="2" Content="{Binding PinGlyph}" Style="{StaticResource FlatButtonStyle}" Width="32" Padding="0" FontSize="15"
                         Click="BtnPinTweak_Click" Tag="{Binding}" Margin="0,0,8,0"
                         AutomationProperties.Name="{tr:Tr Home_PinTweakAuto}"/>
-                <ToggleButton Grid.Column="2" IsChecked="{Binding IsOn}" Style="{StaticResource ToggleSwitchStyle}" Click="ToggleTweak_Click" Tag="{Binding}"/>
+                <ToggleButton Grid.Column="3" IsChecked="{Binding IsOn}" Style="{StaticResource ToggleSwitchStyle}" Click="ToggleTweak_Click" Tag="{Binding}"/>
             </Grid>
         </DataTemplate>
     </UserControl.Resources>

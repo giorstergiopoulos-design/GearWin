@@ -331,19 +331,40 @@ namespace OptimizerWpf.Views
 
         // try/catch/finally: οι 4 διαδοχικές σαρώσεις (vendor/WU/devices/Catalog) δεν είχαν καμία προστασία — μια εξαίρεση
         // άφηνε το κουμπί σάρωσης να "γυρίζει" και να μένει απενεργοποιημένο μέχρι επανεκκίνηση της εφαρμογής.
+        private System.Threading.CancellationTokenSource? _driverCts;
+
+        // Αναμονή μιας εργασίας που δεν υποστηρίζει ακύρωση: ο χρήστης επιστρέφει αμέσως, η εργασία
+        // παρασκηνίου απλώς τελειώνει και το αποτέλεσμά της απορρίπτεται.
+        private static async Task<T> OrCancelAsync<T>(Task<T> work, System.Threading.CancellationToken ct)
+        {
+            using var gate = System.Threading.CancellationTokenSource.CreateLinkedTokenSource(ct);
+            var done = await Task.WhenAny(work, Task.Delay(System.Threading.Timeout.Infinite, gate.Token));
+            gate.Cancel(); // απελευθερώνει το Delay όταν τελείωσε πρώτη η πραγματική εργασία
+            if (done != work) throw new OperationCanceledException(ct);
+            return await work;
+        }
+
+        private void BtnCancelDriverScan_Click(object sender, RoutedEventArgs e) => _driverCts?.Cancel();
+
         private async void BtnScanDrivers_Click(object sender, RoutedEventArgs e)
         {
-            try { await ScanDriversCoreAsync(); }
+            _driverCts = new System.Threading.CancellationTokenSource();
+            BtnCancelDriverScan.Visibility = Visibility.Visible;
+            try { await ScanDriversCoreAsync(_driverCts.Token); }
+            catch (OperationCanceledException) { TxtDriverStatus.Text = LanguageService.T("Health_ToolCancelled"); }
             catch (Exception ex) { TxtDriverStatus.Text = $"{LanguageService.T("Opt_ScanFailed")}{ex.Message}"; }
             finally
             {
+                BtnCancelDriverScan.Visibility = Visibility.Collapsed;
+                _driverCts.Dispose();
+                _driverCts = null;
                 StatusService.SetIdle(LanguageService.T("Ready"));
                 BtnScanDrivers.SetScanning(false);
                 BtnScanDrivers.IsEnabled = true;
             }
         }
 
-        private async Task ScanDriversCoreAsync()
+        private async Task ScanDriversCoreAsync(System.Threading.CancellationToken ct)
         {
             BtnScanDrivers.SetScanning(true);
             BtnScanDrivers.IsEnabled = false;
@@ -357,7 +378,7 @@ namespace OptimizerWpf.Views
             // trust-overlap πριν προστεθούν τα WU αποτελέσματα.
             TxtDriverStatus.Text = LanguageService.T("Opt_CheckingVendorSources");
             StatusService.SetBusy(LanguageService.T("Opt_ScanningVendorSources"));
-            var vendor = await DriverService.ScanVendorSourcesAsync();
+            var vendor = await OrCancelAsync(DriverService.ScanVendorSourcesAsync(), ct);
             var confirmedGpuNames = new List<string>();
 
             foreach (var a in vendor.Amd.Where(a => a.IsNewer))
@@ -387,7 +408,7 @@ namespace OptimizerWpf.Views
 
             TxtDriverStatus.Text = LanguageService.T("Opt_CheckingWuDrivers");
             StatusService.SetBusy(LanguageService.T("Opt_ScanningWuDrivers"));
-            var wuResult = await DriverService.ScanAsync();
+            var wuResult = await OrCancelAsync(DriverService.ScanAsync(), ct);
             foreach (var u in wuResult.Updates)
             {
                 // Trust/stability scoring (port του Test-DriverSourceOverlap) - όταν η AMD/NVIDIA
@@ -404,9 +425,9 @@ namespace OptimizerWpf.Views
 
             TxtDriverStatus.Text = LanguageService.T("Opt_EnumeratingDevices");
             StatusService.SetBusy(LanguageService.T("Opt_EnumeratingDevicesShort"));
-            var devices = await DriverService.GetSystemDevicesAsync();
+            var devices = await OrCancelAsync(DriverService.GetSystemDevicesAsync(), ct);
             var progress = new Progress<string>(name => StatusService.SetBusy($"{LanguageService.T("Opt_CheckingCatalogPrefix")}{name}..."));
-            var (candidates, looksBlocked) = await DriverService.ScanCatalogAsync(devices, progress);
+            var (candidates, looksBlocked) = await DriverService.ScanCatalogAsync(devices, progress, ct);
             foreach (var c in candidates)
                 _driverUpdates.Add(new UnifiedDriverRow
                 {

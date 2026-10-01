@@ -152,6 +152,10 @@ public partial class App : Application
         Services.UpdateNotificationService.Start();
         Exit += (_, _) => Services.UpdateNotificationService.Stop();
 
+        // ΝΕΟ (6.1.0) - ειδοποιήσεις θερμοκρασίας/S.M.A.R.T. (ρυθμίζονται στο Κέντρο Συντήρησης).
+        Services.AlertService.Start();
+        Exit += (_, _) => Services.AlertService.Stop();
+
         // ΝΕΟ - REQ-570-02 - όταν ξεκινά αυτόματα στο tray, άμεσος έλεγχος ενημερώσεων (ΟΧΙ αναμονή
         // για το πρώτο tick του περιοδικού timer, βλ. UpdateNotificationService.Start) ώστε το
         // balloon (αν βρεθούν ενημερώσεις) και η κάρτα "Ενημερώσεις Συστήματος" της Αρχικής να

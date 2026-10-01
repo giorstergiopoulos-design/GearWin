@@ -329,11 +329,11 @@ namespace OptimizerWpf.Services
         // ~63), εδώ η έξοδος καταγράφεται και εμφανίζεται σε MessageBox μέσα στην ίδια την εφαρμογή -
         // πιο καθαρό WPF-native αποτέλεσμα, καμία λειτουργική διαφορά.
 
-        public static Task<(bool Success, string Output)> RunSfcScanAsync() => RunCommandCaptureAsync("sfc.exe", "/scannow");
-        public static Task<(bool Success, string Output)> RunDismCheckHealthAsync() => RunCommandCaptureAsync("Dism.exe", "/Online /Cleanup-Image /CheckHealth");
-        public static Task<(bool Success, string Output)> RunDismRestoreHealthAsync() => RunCommandCaptureAsync("Dism.exe", "/Online /Cleanup-Image /RestoreHealth");
-        public static Task<(bool Success, string Output)> RunChkdskAsync() => RunCommandCaptureAsync("chkdsk.exe", "C: /f", stdin: "Y\r\n");
-        public static Task<(bool Success, string Output)> RunWinSxsCleanupAsync() => RunCommandCaptureAsync("Dism.exe", "/online /Cleanup-Image /StartComponentCleanup");
+        public static Task<(bool Success, string Output)> RunSfcScanAsync(System.Threading.CancellationToken ct = default) => RunCommandCaptureAsync("sfc.exe", "/scannow", ct: ct);
+        public static Task<(bool Success, string Output)> RunDismCheckHealthAsync(System.Threading.CancellationToken ct = default) => RunCommandCaptureAsync("Dism.exe", "/Online /Cleanup-Image /CheckHealth", ct: ct);
+        public static Task<(bool Success, string Output)> RunDismRestoreHealthAsync(System.Threading.CancellationToken ct = default) => RunCommandCaptureAsync("Dism.exe", "/Online /Cleanup-Image /RestoreHealth", ct: ct);
+        public static Task<(bool Success, string Output)> RunChkdskAsync(System.Threading.CancellationToken ct = default) => RunCommandCaptureAsync("chkdsk.exe", "C: /f", stdin: "Y\r\n", ct: ct);
+        public static Task<(bool Success, string Output)> RunWinSxsCleanupAsync(System.Threading.CancellationToken ct = default) => RunCommandCaptureAsync("Dism.exe", "/online /Cleanup-Image /StartComponentCleanup", ct: ct);
 
         // ΝΕΟ - roadmap "Διαγνωστική αναφορά με ένα κλικ" - συμπίεση βασικών logs/πληροφοριών σε ένα
         // .zip, έτοιμο να μοιραστεί όταν κάποιος ζητά βοήθεια. Μαζεύει systeminfo (ίδια πηγή με το ήδη
@@ -525,7 +525,7 @@ Write-Output $brokenCount
         // Χρησιμοποιείται από τα εργαλεία υγείας (SFC/DISM/CHKDSK/WinSxS) - μπορεί να πάρει αρκετά
         // λεπτά (ειδικά DISM RestoreHealth), γι' αυτό Task.Run + καμία timeout εδώ (ο καλών code-behind
         // δείχνει StatusService.SetBusy όσο περιμένει).
-        private static Task<(bool Success, string Output)> RunCommandCaptureAsync(string fileName, string arguments, string? stdin = null) =>
+        private static Task<(bool Success, string Output)> RunCommandCaptureAsync(string fileName, string arguments, string? stdin = null, System.Threading.CancellationToken ct = default) =>
             Task.Run(() =>
             {
                 try
@@ -545,8 +545,12 @@ Write-Output $brokenCount
                         process.StandardInput.Write(stdin);
                         process.StandardInput.Close();
                     }
+                    // Ακύρωση χρήστη: τερματίζει ΟΛΟ το δέντρο διεργασιών (sfc/DISM ξεκινούν παιδιά) - το
+                    // ReadToEnd επιστρέφει μόλις κλείσει το pipe.
+                    using var cancelReg = ct.Register(() => { try { process.Kill(entireProcessTree: true); } catch { } });
                     var output = process.StandardOutput.ReadToEnd();
                     process.WaitForExit();
+                    if (ct.IsCancellationRequested) return (false, LanguageService.T("Health_ToolCancelled"));
                     return (process.ExitCode == 0, output);
                 }
                 catch (Exception ex)

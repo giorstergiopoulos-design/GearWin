@@ -17,7 +17,7 @@ namespace OptimizerWpf.Services
     // φθηνός/αξιόπιστος τρόπος ανίχνευσης" (π.χ. καμία τέτοια περίπτωση προς το παρόν - βλ. παρακάτω,
     // όλα τα 25 tweaks έχουν πλέον πραγματική ανίχνευση). Προαιρετική παράμετρος (=null προεπιλογή)
     // ώστε τα ήδη υπάρχοντα 4-args call sites να μη χρειάζονται αλλαγή.
-    public record SimpleTweak(string Label, string Description, Action OnAction, Action OffAction, Func<bool?>? DetectState = null, string? Id = null);
+    public record SimpleTweak(string Label, string Description, Action OnAction, Action OffAction, Func<bool?>? DetectState = null, string? Id = null, bool RequiresAdmin = false);
 
     // Port του Optimizer.ps1's Επιπλέον Ρυθμίσεις καρτέλα (~16519-17573) - η πυκνότερη καρτέλα της
     // εφαρμογής. Βλ. HANDOFF.md §0.4ιβ για πλήρη τεκμηρίωση όλων των 25 tweaks.
@@ -106,7 +106,7 @@ namespace OptimizerWpf.Services
             list.Add(new SimpleTweak(LanguageService.T("Tweak_MouseAccelLabel"), LanguageService.T("Tweak_MouseAccelDesc"), MouseAccelOff, MouseAccelOn,
                 Id: "MouseAccel", DetectState: () => { using var k = Registry.CurrentUser.OpenSubKey(@"Control Panel\Mouse"); return k?.GetValue("MouseSpeed")?.ToString() == "0"; }));
             list.Add(new SimpleTweak(LanguageService.T("Tweak_HibernateLabel"), "", HibernateOn, HibernateOff,
-                Id: "Hibernate", DetectState: () => { using var k = Registry.LocalMachine.OpenSubKey(@"SYSTEM\CurrentControlSet\Control\Power"); return Convert.ToInt32(k?.GetValue("HibernateEnabled") ?? 0) == 1; }));
+                Id: "Hibernate", RequiresAdmin: true, DetectState: () => { using var k = Registry.LocalMachine.OpenSubKey(@"SYSTEM\CurrentControlSet\Control\Power"); return Convert.ToInt32(k?.GetValue("HibernateEnabled") ?? 0) == 1; }));
             list.Add(ToSimple(m[4])); // Remove Recommended
             list.Add(ToSimple(m[5])); // Clipboard history
             list.Add(ToSimple(m[6])); // Network throttling
@@ -117,7 +117,8 @@ namespace OptimizerWpf.Services
             return list;
         }
 
-        private static SimpleTweak ToSimple(RegTweak t) => new(t.Label, t.Description, () => ApplyOn(t), () => ApplyOff(t), DetectState: () => IsRegTweakOn(t), Id: t.BackupKey);
+        private static SimpleTweak ToSimple(RegTweak t) => new(t.Label, t.Description, () => ApplyOn(t), () => ApplyOff(t), DetectState: () => IsRegTweakOn(t), Id: t.BackupKey,
+            RequiresAdmin: t.Hive == RegistryHive.LocalMachine);
 
         // ΔΙΟΡΘΩΣΗ (γνωστό κενό #01) - διαβάζει την ΠΡΑΓΜΑΤΙΚΗ τρέχουσα τιμή του κάθε RegTweak από το
         // μητρώο και τη συγκρίνει με το OnValue, αντί το UI να υποθέτει πάντα "ανενεργό". Απούσα τιμή
@@ -152,7 +153,7 @@ namespace OptimizerWpf.Services
             new SimpleTweak(LanguageService.T("Tweak_BgAppsLabel"), LanguageService.T("Tweak_BgAppsDesc"),
                 DisableBackgroundApps, EnableBackgroundApps, Id: "BackgroundApps", DetectState: DetectBackgroundAppsOff),
             new SimpleTweak(LanguageService.T("Tweak_SysMainLabel"), LanguageService.T("Tweak_SysMainDesc"),
-                DisableSysMain, EnableSysMain, Id: "SysMain", DetectState: DetectSysMainOff),
+                DisableSysMain, EnableSysMain, Id: "SysMain", DetectState: DetectSysMainOff, RequiresAdmin: true),
         };
 
         public static IReadOnlyList<SimpleTweak> PerfTweaksSimple() =>

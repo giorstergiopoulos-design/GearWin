@@ -97,40 +97,54 @@ namespace OptimizerWpf.Views
 
         private bool _toolRunning;
 
-        private async void RunHealthToolAsync(string busyLabel, System.Func<System.Threading.Tasks.Task<(bool Success, string Output)>> action)
+        private System.Threading.CancellationTokenSource? _toolCts;
+
+        private async void RunHealthToolAsync(string busyLabel, System.Func<System.Threading.CancellationToken, System.Threading.Tasks.Task<(bool Success, string Output)>> action)
         {
             if (_toolRunning) return; // SFC/DISM/chkdsk δεν πρέπει να τρέξουν ταυτόχρονα
             _toolRunning = true;
             TxtHealthToolsStatus.Text = $"{busyLabel}...";
+            _toolCts = new System.Threading.CancellationTokenSource();
+            BtnCancelHealthTool.Visibility = Visibility.Visible;
             using var busy = BusyScope.Begin(busyLabel);
             bool success; string output;
-            try { (success, output) = await action(); }
+            try { (success, output) = await action(_toolCts.Token); }
             catch (Exception ex) { success = false; output = ex.Message; }
-            finally { _toolRunning = false; busy.Dispose(); }
+            finally
+            {
+                _toolRunning = false;
+                BtnCancelHealthTool.Visibility = Visibility.Collapsed;
+                busy.Dispose();
+            }
+            var cancelled = _toolCts.IsCancellationRequested;
+            _toolCts.Dispose(); _toolCts = null;
+            if (cancelled) { TxtHealthToolsStatus.Text = $"{busyLabel}: {LanguageService.T("Health_ToolCancelled")}"; return; }
             TxtHealthToolsStatus.Text = success ? $"{busyLabel}{LanguageService.T("Health_ToolCompletedSuffix")}" : $"{busyLabel}{LanguageService.T("Health_ToolFailedSuffix")}";
             var shown = output.Length > 3000 ? output[..3000] + LanguageService.T("Health_OutputTruncatedSuffix") : output;
             ThemedMessageBox.Show(string.IsNullOrWhiteSpace(shown) ? LanguageService.T("Health_NoOutput") : shown, busyLabel, MessageBoxButton.OK,
                 success ? MessageBoxImage.Information : MessageBoxImage.Warning);
         }
 
-        private void BtnSfc_Click(object sender, RoutedEventArgs e) => RunHealthToolAsync(LanguageService.T("Health_SfcBtn"), HealthCleanupService.RunSfcScanAsync);
-        private void BtnDismCheckHealth_Click(object sender, RoutedEventArgs e) => RunHealthToolAsync("DISM CheckHealth", HealthCleanupService.RunDismCheckHealthAsync);
+        private void BtnCancelHealthTool_Click(object sender, RoutedEventArgs e) => _toolCts?.Cancel();
+
+        private void BtnSfc_Click(object sender, RoutedEventArgs e) => RunHealthToolAsync(LanguageService.T("Health_SfcBtn"), ct => HealthCleanupService.RunSfcScanAsync(ct));
+        private void BtnDismCheckHealth_Click(object sender, RoutedEventArgs e) => RunHealthToolAsync("DISM CheckHealth", ct => HealthCleanupService.RunDismCheckHealthAsync(ct));
 
         private void BtnDismRestoreHealth_Click(object sender, RoutedEventArgs e)
         {
             if (ThemedMessageBox.Show(LanguageService.T("Health_DismRestoreConfirm"),
                     LanguageService.T("Health_ConfirmTitle"), MessageBoxButton.YesNo, MessageBoxImage.Warning) != MessageBoxResult.Yes) return;
-            RunHealthToolAsync(LanguageService.T("Health_DismRestoreFullBtn"), HealthCleanupService.RunDismRestoreHealthAsync);
+            RunHealthToolAsync(LanguageService.T("Health_DismRestoreFullBtn"), ct => HealthCleanupService.RunDismRestoreHealthAsync(ct));
         }
 
         private void BtnChkdsk_Click(object sender, RoutedEventArgs e)
         {
             if (ThemedMessageBox.Show(LanguageService.T("Health_ChkdskConfirm"),
                     LanguageService.T("Health_ConfirmTitle"), MessageBoxButton.YesNo, MessageBoxImage.Warning) != MessageBoxResult.Yes) return;
-            RunHealthToolAsync(LanguageService.T("Health_ChkdskBtn"), HealthCleanupService.RunChkdskAsync);
+            RunHealthToolAsync(LanguageService.T("Health_ChkdskBtn"), ct => HealthCleanupService.RunChkdskAsync(ct));
         }
 
-        private void BtnWinSxsCleanup_Click(object sender, RoutedEventArgs e) => RunHealthToolAsync(LanguageService.T("Health_WinSxsBtn"), HealthCleanupService.RunWinSxsCleanupAsync);
+        private void BtnWinSxsCleanup_Click(object sender, RoutedEventArgs e) => RunHealthToolAsync(LanguageService.T("Health_WinSxsBtn"), ct => HealthCleanupService.RunWinSxsCleanupAsync(ct));
 
         private async void BtnRetrim_Click(object sender, RoutedEventArgs e)
         {
