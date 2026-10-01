@@ -734,7 +734,7 @@ namespace OptimizerWpf.Services
                 ["Ctx_Command"] = "Εντολή (χρησιμοποιήστε %1 ή %V για τη διαδρομή)",
                 ["Ctx_Scope"] = "Εμβέλεια",
                 ["Ctx_AddBtn"] = "Προσθήκη",
-                ["Appr_ThemeSettingsTab"] = "Ρυθμίσεις Θεμάτων",
+                ["Appr_ThemeSettingsTab"] = "Ρυθμίσεις Εμφάνισης",
                 ["Appr_AppTheme"] = "Θέμα Εφαρμογής:",
                 ["Appr_SetDefaultTheme"] = "Ορισμός ως προεπιλεγμένο θέμα εκκίνησης",
                 ["Appr_AnimatedBg"] = "Κινούμενο φόντο",
@@ -1420,6 +1420,9 @@ namespace OptimizerWpf.Services
                 ["Tray_QuickClean"] = "Γρήγορος Καθαρισμός",
                 ["Tray_QuickCleanRunning"] = "Γρήγορος καθαρισμός σε εξέλιξη...",
                 ["Tray_QuickCleanDonePrefix"] = "Ο γρήγορος καθαρισμός ολοκληρώθηκε - ελευθερώθηκαν ",
+                ["Home_AnalysisDriveTip"] = "Δίσκος προς ανάλυση",
+                ["VerHist_610Title"] = "Έκδοση 6.1.0: Νέα Κινούμενα Φόντα & Ρυθμίσεις Εμφάνισης",
+                ["VerHist_610Desc"] = "Δέκα θέματα (GitHub Dark, VS Code Dark+, Terminal DOS Green, Discord Blurple, Steam Deck Dark, RGB Gaming Rig, Circuit Board PCB, Synthwave Outrun, Windows 11 Fluent, Retro DOS Blue) απέκτησαν το δικό τους κινούμενο φόντο αντί να μοιράζονται στυλ με άλλα. Οι «Ρυθμίσεις Θεμάτων» μετονομάστηκαν σε «Ρυθμίσεις Εμφάνισης». Η ανάλυση χώρου ανά κατηγορία στην Αρχική έχει πλέον δική της επιλογή δίσκου, ανεξάρτητη από το πλακίδιο δίσκου.",
             },
             ["en"] = new()
             {
@@ -2102,7 +2105,7 @@ namespace OptimizerWpf.Services
                 ["Ctx_Command"] = "Command (use %1 or %V for the path)",
                 ["Ctx_Scope"] = "Scope",
                 ["Ctx_AddBtn"] = "Add",
-                ["Appr_ThemeSettingsTab"] = "Theme Settings",
+                ["Appr_ThemeSettingsTab"] = "Appearance Settings",
                 ["Appr_AppTheme"] = "App Theme:",
                 ["Appr_SetDefaultTheme"] = "Set as default startup theme",
                 ["Appr_AnimatedBg"] = "Animated background",
@@ -2786,6 +2789,9 @@ namespace OptimizerWpf.Services
                 ["Tray_QuickClean"] = "Quick Clean",
                 ["Tray_QuickCleanRunning"] = "Quick Clean in progress...",
                 ["Tray_QuickCleanDonePrefix"] = "Quick Clean completed - freed up ",
+                ["Home_AnalysisDriveTip"] = "Drive to analyze",
+                ["VerHist_610Title"] = "Version 6.1.0: New Animated Backgrounds & Appearance Settings",
+                ["VerHist_610Desc"] = "Ten themes (GitHub Dark, VS Code Dark+, Terminal DOS Green, Discord Blurple, Steam Deck Dark, RGB Gaming Rig, Circuit Board PCB, Synthwave Outrun, Windows 11 Fluent, Retro DOS Blue) now have their own animated background instead of sharing one. \"Theme Settings\" was renamed \"Appearance Settings\". The per-category space analysis on Home now has its own drive selector, independent of the disk tile.",
             },
             ["de"] = new()
             {
@@ -3468,7 +3474,7 @@ namespace OptimizerWpf.Services
                 ["Ctx_Command"] = "Befehl (verwenden Sie %1 oder %V für den Pfad)",
                 ["Ctx_Scope"] = "Geltungsbereich",
                 ["Ctx_AddBtn"] = "Hinzufügen",
-                ["Appr_ThemeSettingsTab"] = "Theme-Einstellungen",
+                ["Appr_ThemeSettingsTab"] = "Darstellungseinstellungen",
                 ["Appr_AppTheme"] = "App-Theme:",
                 ["Appr_SetDefaultTheme"] = "Als Standard-Startthema festlegen",
                 ["Appr_AnimatedBg"] = "Animierter Hintergrund",
@@ -4152,6 +4158,9 @@ namespace OptimizerWpf.Services
                 ["Tray_QuickClean"] = "Schnellbereinigung",
                 ["Tray_QuickCleanRunning"] = "Schnellbereinigung läuft...",
                 ["Tray_QuickCleanDonePrefix"] = "Schnellbereinigung abgeschlossen - freigegeben: ",
+                ["Home_AnalysisDriveTip"] = "Zu analysierendes Laufwerk",
+                ["VerHist_610Title"] = "Version 6.1.0: New Animated Backgrounds & Appearance Settings",
+                ["VerHist_610Desc"] = "Ten themes (GitHub Dark, VS Code Dark+, Terminal DOS Green, Discord Blurple, Steam Deck Dark, RGB Gaming Rig, Circuit Board PCB, Synthwave Outrun, Windows 11 Fluent, Retro DOS Blue) now have their own animated background instead of sharing one. \"Theme Settings\" was renamed \"Appearance Settings\". The per-category space analysis on Home now has its own drive selector, independent of the disk tile.",
             },
             ["fr"] = new()
             {
@@ -4834,7 +4843,7 @@ namespace OptimizerWpf.Services
                 ["Ctx_Command"] = "Commande (utilisez %1 ou %V pour le chemin)",
                 ["Ctx_Scope"] = "Portée",
                 ["Ctx_AddBtn"] = "Ajouter",
-                ["Appr_ThemeSettingsTab"] = "Paramètres des Thèmes",
+                ["Appr_ThemeSettingsTab"] = "Paramètres d'apparence",
                 ["Appr_AppTheme"] = "Thème de l'Application :",
                 ["Appr_SetDefaultTheme"] = "Définir comme thème de démarrage par défaut",
                 ["Appr_AnimatedBg"] = "Arrière-plan animé",
@@ -5518,6 +5527,9 @@ namespace OptimizerWpf.Services
                 ["Tray_QuickClean"] = "Nettoyage Rapide",
                 ["Tray_QuickCleanRunning"] = "Nettoyage rapide en cours...",
                 ["Tray_QuickCleanDonePrefix"] = "Nettoyage rapide terminé - espace libéré : ",
+                ["Home_AnalysisDriveTip"] = "Lecteur à analyser",
+                ["VerHist_610Title"] = "Version 6.1.0: New Animated Backgrounds & Appearance Settings",
+                ["VerHist_610Desc"] = "Ten themes (GitHub Dark, VS Code Dark+, Terminal DOS Green, Discord Blurple, Steam Deck Dark, RGB Gaming Rig, Circuit Board PCB, Synthwave Outrun, Windows 11 Fluent, Retro DOS Blue) now have their own animated background instead of sharing one. \"Theme Settings\" was renamed \"Appearance Settings\". The per-category space analysis on Home now has its own drive selector, independent of the disk tile.",
             },
             ["es"] = new()
             {
@@ -6200,7 +6212,7 @@ namespace OptimizerWpf.Services
                 ["Ctx_Command"] = "Comando (usa %1 o %V para la ruta)",
                 ["Ctx_Scope"] = "Ámbito",
                 ["Ctx_AddBtn"] = "Añadir",
-                ["Appr_ThemeSettingsTab"] = "Configuración del Tema",
+                ["Appr_ThemeSettingsTab"] = "Configuración de apariencia",
                 ["Appr_AppTheme"] = "Tema de la App:",
                 ["Appr_SetDefaultTheme"] = "Establecer como tema de inicio predeterminado",
                 ["Appr_AnimatedBg"] = "Fondo animado",
@@ -6884,6 +6896,9 @@ namespace OptimizerWpf.Services
                 ["Tray_QuickClean"] = "Limpieza Rápida",
                 ["Tray_QuickCleanRunning"] = "Limpieza rápida en curso...",
                 ["Tray_QuickCleanDonePrefix"] = "Limpieza rápida completada - espacio liberado: ",
+                ["Home_AnalysisDriveTip"] = "Unidad a analizar",
+                ["VerHist_610Title"] = "Version 6.1.0: New Animated Backgrounds & Appearance Settings",
+                ["VerHist_610Desc"] = "Ten themes (GitHub Dark, VS Code Dark+, Terminal DOS Green, Discord Blurple, Steam Deck Dark, RGB Gaming Rig, Circuit Board PCB, Synthwave Outrun, Windows 11 Fluent, Retro DOS Blue) now have their own animated background instead of sharing one. \"Theme Settings\" was renamed \"Appearance Settings\". The per-category space analysis on Home now has its own drive selector, independent of the disk tile.",
             },
             ["ko"] = new()
             {
@@ -7566,7 +7581,7 @@ namespace OptimizerWpf.Services
                 ["Ctx_Command"] = "명령(경로에는 %1 또는 %V 사용)",
                 ["Ctx_Scope"] = "범위",
                 ["Ctx_AddBtn"] = "추가",
-                ["Appr_ThemeSettingsTab"] = "테마 설정",
+                ["Appr_ThemeSettingsTab"] = "화면 설정",
                 ["Appr_AppTheme"] = "앱 테마:",
                 ["Appr_SetDefaultTheme"] = "기본 시작 테마로 설정",
                 ["Appr_AnimatedBg"] = "애니메이션 배경",
@@ -8249,6 +8264,9 @@ namespace OptimizerWpf.Services
                 ["Tray_QuickClean"] = "빠른 정리",
                 ["Tray_QuickCleanRunning"] = "빠른 정리 진행 중...",
                 ["Tray_QuickCleanDonePrefix"] = "빠른 정리 완료 - 확보된 공간: ",
+                ["Home_AnalysisDriveTip"] = "분석할 드라이브",
+                ["VerHist_610Title"] = "Version 6.1.0: New Animated Backgrounds & Appearance Settings",
+                ["VerHist_610Desc"] = "Ten themes (GitHub Dark, VS Code Dark+, Terminal DOS Green, Discord Blurple, Steam Deck Dark, RGB Gaming Rig, Circuit Board PCB, Synthwave Outrun, Windows 11 Fluent, Retro DOS Blue) now have their own animated background instead of sharing one. \"Theme Settings\" was renamed \"Appearance Settings\". The per-category space analysis on Home now has its own drive selector, independent of the disk tile.",
             },
             ["zh"] = new()
             {
@@ -8931,7 +8949,7 @@ namespace OptimizerWpf.Services
                 ["Ctx_Command"] = "命令（使用 %1 或 %V 表示路径）",
                 ["Ctx_Scope"] = "作用范围",
                 ["Ctx_AddBtn"] = "添加",
-                ["Appr_ThemeSettingsTab"] = "主题设置",
+                ["Appr_ThemeSettingsTab"] = "外观设置",
                 ["Appr_AppTheme"] = "应用主题：",
                 ["Appr_SetDefaultTheme"] = "设为默认启动主题",
                 ["Appr_AnimatedBg"] = "动画背景",
@@ -9615,6 +9633,9 @@ namespace OptimizerWpf.Services
                 ["Tray_QuickClean"] = "快速清理",
                 ["Tray_QuickCleanRunning"] = "快速清理进行中...",
                 ["Tray_QuickCleanDonePrefix"] = "快速清理完成 - 已释放：",
+                ["Home_AnalysisDriveTip"] = "要分析的驱动器",
+                ["VerHist_610Title"] = "Version 6.1.0: New Animated Backgrounds & Appearance Settings",
+                ["VerHist_610Desc"] = "Ten themes (GitHub Dark, VS Code Dark+, Terminal DOS Green, Discord Blurple, Steam Deck Dark, RGB Gaming Rig, Circuit Board PCB, Synthwave Outrun, Windows 11 Fluent, Retro DOS Blue) now have their own animated background instead of sharing one. \"Theme Settings\" was renamed \"Appearance Settings\". The per-category space analysis on Home now has its own drive selector, independent of the disk tile.",
             },
             ["it"] = new()
             {
@@ -10297,7 +10318,7 @@ namespace OptimizerWpf.Services
                 ["Ctx_Command"] = "Comando (usa %1 o %V per il percorso)",
                 ["Ctx_Scope"] = "Ambito",
                 ["Ctx_AddBtn"] = "Aggiungi",
-                ["Appr_ThemeSettingsTab"] = "Impostazioni Tema",
+                ["Appr_ThemeSettingsTab"] = "Impostazioni aspetto",
                 ["Appr_AppTheme"] = "Tema App:",
                 ["Appr_SetDefaultTheme"] = "Imposta come tema di avvio predefinito",
                 ["Appr_AnimatedBg"] = "Sfondo animato",
@@ -10981,6 +11002,9 @@ namespace OptimizerWpf.Services
                 ["Tray_QuickClean"] = "Pulizia Rapida",
                 ["Tray_QuickCleanRunning"] = "Pulizia rapida in corso...",
                 ["Tray_QuickCleanDonePrefix"] = "Pulizia rapida completata - spazio liberato: ",
+                ["Home_AnalysisDriveTip"] = "Unità da analizzare",
+                ["VerHist_610Title"] = "Version 6.1.0: New Animated Backgrounds & Appearance Settings",
+                ["VerHist_610Desc"] = "Ten themes (GitHub Dark, VS Code Dark+, Terminal DOS Green, Discord Blurple, Steam Deck Dark, RGB Gaming Rig, Circuit Board PCB, Synthwave Outrun, Windows 11 Fluent, Retro DOS Blue) now have their own animated background instead of sharing one. \"Theme Settings\" was renamed \"Appearance Settings\". The per-category space analysis on Home now has its own drive selector, independent of the disk tile.",
             },
             ["ru"] = new()
             {
@@ -11663,7 +11687,7 @@ namespace OptimizerWpf.Services
                 ["Ctx_Command"] = "Команда (используйте %1 или %V для пути)",
                 ["Ctx_Scope"] = "Область",
                 ["Ctx_AddBtn"] = "Добавить",
-                ["Appr_ThemeSettingsTab"] = "Настройки Темы",
+                ["Appr_ThemeSettingsTab"] = "Настройки внешнего вида",
                 ["Appr_AppTheme"] = "Тема Приложения:",
                 ["Appr_SetDefaultTheme"] = "Установить как тему по умолчанию при запуске",
                 ["Appr_AnimatedBg"] = "Анимированный фон",
@@ -12347,6 +12371,9 @@ namespace OptimizerWpf.Services
                 ["Tray_QuickClean"] = "Быстрая Очистка",
                 ["Tray_QuickCleanRunning"] = "Быстрая очистка выполняется...",
                 ["Tray_QuickCleanDonePrefix"] = "Быстрая очистка завершена - освобождено: ",
+                ["Home_AnalysisDriveTip"] = "Диск для анализа",
+                ["VerHist_610Title"] = "Version 6.1.0: New Animated Backgrounds & Appearance Settings",
+                ["VerHist_610Desc"] = "Ten themes (GitHub Dark, VS Code Dark+, Terminal DOS Green, Discord Blurple, Steam Deck Dark, RGB Gaming Rig, Circuit Board PCB, Synthwave Outrun, Windows 11 Fluent, Retro DOS Blue) now have their own animated background instead of sharing one. \"Theme Settings\" was renamed \"Appearance Settings\". The per-category space analysis on Home now has its own drive selector, independent of the disk tile.",
             },
             ["ja"] = new()
             {
@@ -13029,7 +13056,7 @@ namespace OptimizerWpf.Services
                 ["Ctx_Command"] = "コマンド（パスには%1または%Vを使用）",
                 ["Ctx_Scope"] = "適用範囲",
                 ["Ctx_AddBtn"] = "追加",
-                ["Appr_ThemeSettingsTab"] = "テーマ設定",
+                ["Appr_ThemeSettingsTab"] = "外観設定",
                 ["Appr_AppTheme"] = "アプリテーマ:",
                 ["Appr_SetDefaultTheme"] = "起動時の既定テーマに設定",
                 ["Appr_AnimatedBg"] = "アニメーション背景",
@@ -13713,6 +13740,9 @@ namespace OptimizerWpf.Services
                 ["Tray_QuickClean"] = "クイッククリーン",
                 ["Tray_QuickCleanRunning"] = "クイッククリーン実行中...",
                 ["Tray_QuickCleanDonePrefix"] = "クイッククリーンが完了しました - 解放された容量: ",
+                ["Home_AnalysisDriveTip"] = "分析するドライブ",
+                ["VerHist_610Title"] = "Version 6.1.0: New Animated Backgrounds & Appearance Settings",
+                ["VerHist_610Desc"] = "Ten themes (GitHub Dark, VS Code Dark+, Terminal DOS Green, Discord Blurple, Steam Deck Dark, RGB Gaming Rig, Circuit Board PCB, Synthwave Outrun, Windows 11 Fluent, Retro DOS Blue) now have their own animated background instead of sharing one. \"Theme Settings\" was renamed \"Appearance Settings\". The per-category space analysis on Home now has its own drive selector, independent of the disk tile.",
             },
             ["pt"] = new()
             {
@@ -14395,7 +14425,7 @@ namespace OptimizerWpf.Services
                 ["Ctx_Command"] = "Comando (utilize %1 ou %V para o caminho)",
                 ["Ctx_Scope"] = "Âmbito",
                 ["Ctx_AddBtn"] = "Adicionar",
-                ["Appr_ThemeSettingsTab"] = "Definições de Tema",
+                ["Appr_ThemeSettingsTab"] = "Definições de aparência",
                 ["Appr_AppTheme"] = "Tema da Aplicação:",
                 ["Appr_SetDefaultTheme"] = "Definir como tema de arranque predefinido",
                 ["Appr_AnimatedBg"] = "Fundo animado",
@@ -15079,6 +15109,9 @@ namespace OptimizerWpf.Services
                 ["Tray_QuickClean"] = "Limpeza Rápida",
                 ["Tray_QuickCleanRunning"] = "Limpeza rápida em curso...",
                 ["Tray_QuickCleanDonePrefix"] = "Limpeza rápida concluída - espaço libertado: ",
+                ["Home_AnalysisDriveTip"] = "Unidade a analisar",
+                ["VerHist_610Title"] = "Version 6.1.0: New Animated Backgrounds & Appearance Settings",
+                ["VerHist_610Desc"] = "Ten themes (GitHub Dark, VS Code Dark+, Terminal DOS Green, Discord Blurple, Steam Deck Dark, RGB Gaming Rig, Circuit Board PCB, Synthwave Outrun, Windows 11 Fluent, Retro DOS Blue) now have their own animated background instead of sharing one. \"Theme Settings\" was renamed \"Appearance Settings\". The per-category space analysis on Home now has its own drive selector, independent of the disk tile.",
             },
             ["tr"] = new()
             {
@@ -15761,7 +15794,7 @@ namespace OptimizerWpf.Services
                 ["Ctx_Command"] = "Komut (yol için %1 veya %V kullanın)",
                 ["Ctx_Scope"] = "Kapsam",
                 ["Ctx_AddBtn"] = "Ekle",
-                ["Appr_ThemeSettingsTab"] = "Tema Ayarları",
+                ["Appr_ThemeSettingsTab"] = "Görünüm Ayarları",
                 ["Appr_AppTheme"] = "Uygulama Teması:",
                 ["Appr_SetDefaultTheme"] = "Varsayılan başlangıç teması olarak ayarla",
                 ["Appr_AnimatedBg"] = "Animasyonlu arka plan",
@@ -16445,6 +16478,9 @@ namespace OptimizerWpf.Services
                 ["Tray_QuickClean"] = "Hızlı Temizlik",
                 ["Tray_QuickCleanRunning"] = "Hızlı temizlik devam ediyor...",
                 ["Tray_QuickCleanDonePrefix"] = "Hızlı temizlik tamamlandı - boşaltılan alan: ",
+                ["Home_AnalysisDriveTip"] = "Analiz edilecek sürücü",
+                ["VerHist_610Title"] = "Version 6.1.0: New Animated Backgrounds & Appearance Settings",
+                ["VerHist_610Desc"] = "Ten themes (GitHub Dark, VS Code Dark+, Terminal DOS Green, Discord Blurple, Steam Deck Dark, RGB Gaming Rig, Circuit Board PCB, Synthwave Outrun, Windows 11 Fluent, Retro DOS Blue) now have their own animated background instead of sharing one. \"Theme Settings\" was renamed \"Appearance Settings\". The per-category space analysis on Home now has its own drive selector, independent of the disk tile.",
             },
             ["ar"] = new()
             {
@@ -17127,7 +17163,7 @@ namespace OptimizerWpf.Services
                 ["Ctx_Command"] = "الأمر (استخدم %1 أو %V للمسار)",
                 ["Ctx_Scope"] = "النطاق",
                 ["Ctx_AddBtn"] = "إضافة",
-                ["Appr_ThemeSettingsTab"] = "إعدادات السمة",
+                ["Appr_ThemeSettingsTab"] = "إعدادات المظهر",
                 ["Appr_AppTheme"] = "سمة التطبيق:",
                 ["Appr_SetDefaultTheme"] = "تعيين كسمة بدء التشغيل الافتراضية",
                 ["Appr_AnimatedBg"] = "خلفية متحركة",
@@ -17810,6 +17846,9 @@ namespace OptimizerWpf.Services
                 ["Tray_QuickClean"] = "تنظيف سريع",
                 ["Tray_QuickCleanRunning"] = "التنظيف السريع قيد التقدم...",
                 ["Tray_QuickCleanDonePrefix"] = "اكتمل التنظيف السريع - تم تحرير ",
+                ["Home_AnalysisDriveTip"] = "محرك الأقراص المراد تحليله",
+                ["VerHist_610Title"] = "Version 6.1.0: New Animated Backgrounds & Appearance Settings",
+                ["VerHist_610Desc"] = "Ten themes (GitHub Dark, VS Code Dark+, Terminal DOS Green, Discord Blurple, Steam Deck Dark, RGB Gaming Rig, Circuit Board PCB, Synthwave Outrun, Windows 11 Fluent, Retro DOS Blue) now have their own animated background instead of sharing one. \"Theme Settings\" was renamed \"Appearance Settings\". The per-category space analysis on Home now has its own drive selector, independent of the disk tile.",
             },
             ["hi"] = new()
             {
@@ -18492,7 +18531,7 @@ namespace OptimizerWpf.Services
                 ["Ctx_Command"] = "कमांड (पथ के लिए %1 या %V का उपयोग करें)",
                 ["Ctx_Scope"] = "दायरा",
                 ["Ctx_AddBtn"] = "जोड़ें",
-                ["Appr_ThemeSettingsTab"] = "थीम सेटिंग्स",
+                ["Appr_ThemeSettingsTab"] = "दिखावट सेटिंग्स",
                 ["Appr_AppTheme"] = "ऐप थीम:",
                 ["Appr_SetDefaultTheme"] = "डिफ़ॉल्ट स्टार्टअप थीम के रूप में सेट करें",
                 ["Appr_AnimatedBg"] = "एनिमेटेड पृष्ठभूमि",
@@ -19175,6 +19214,9 @@ namespace OptimizerWpf.Services
                 ["Tray_QuickClean"] = "त्वरित सफ़ाई",
                 ["Tray_QuickCleanRunning"] = "त्वरित सफ़ाई प्रगति पर है...",
                 ["Tray_QuickCleanDonePrefix"] = "त्वरित सफ़ाई पूर्ण हुई - मुक्त किया गया: ",
+                ["Home_AnalysisDriveTip"] = "विश्लेषण के लिए ड्राइव",
+                ["VerHist_610Title"] = "Version 6.1.0: New Animated Backgrounds & Appearance Settings",
+                ["VerHist_610Desc"] = "Ten themes (GitHub Dark, VS Code Dark+, Terminal DOS Green, Discord Blurple, Steam Deck Dark, RGB Gaming Rig, Circuit Board PCB, Synthwave Outrun, Windows 11 Fluent, Retro DOS Blue) now have their own animated background instead of sharing one. \"Theme Settings\" was renamed \"Appearance Settings\". The per-category space analysis on Home now has its own drive selector, independent of the disk tile.",
             },
         };
 

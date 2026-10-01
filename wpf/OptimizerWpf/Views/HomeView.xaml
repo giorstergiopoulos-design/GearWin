@@ -363,7 +363,13 @@
                             </StackPanel>
                             <TextBlock x:Name="TxtDiskAnalysisStatus" Text="{tr:Tr Home_DiskAnalysisPrompt}" Style="{StaticResource SubTextStyle}"/>
                         </StackPanel>
-                        <Button Grid.Column="1" Content="{tr:Tr Home_Analyze}" Style="{StaticResource AccentButtonStyle}" Width="130" VerticalAlignment="Center" Click="BtnAnalyzeDisk_Click"/>
+                        <!-- Η ανάλυση χώρου έχει ΔΙΚΗ ΤΗΣ επιλογή δίσκου (ανεξάρτητη από το πλακίδιο Disk παραπάνω, που
+                             κυκλώνει δίσκους με τα βελάκια) - ο δίσκος που αναλύεται επιλέγεται εδώ, δίπλα στο κουμπί. -->
+                        <StackPanel Grid.Column="1" Orientation="Horizontal" VerticalAlignment="Center">
+                            <ComboBox x:Name="CmbAnalysisDrive" Width="96" Margin="0,0,10,0" VerticalAlignment="Center"
+                                      ToolTip="{tr:Tr Home_AnalysisDriveTip}" SelectionChanged="CmbAnalysisDrive_SelectionChanged"/>
+                            <Button x:Name="BtnAnalyzeDisk" Content="{tr:Tr Home_Analyze}" Style="{StaticResource AccentButtonStyle}" Width="130" VerticalAlignment="Center" Click="BtnAnalyzeDisk_Click"/>
+                        </StackPanel>
                     </Grid>
 
                     <!-- Port του ps1's $global:diskAnalysisBarWrap/$diskAnalysisLegendPanel (ρητό αίτημα

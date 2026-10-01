@@ -15,7 +15,7 @@ Name: GearWin - Complete PC Care (WPF port of the original Optimizer.ps1)
 - Repo: `giorstergiopoulos-design/GearWin` on GitHub. `gh release create` works from this environment (has previously needed a retry after an auto-mode permission block).
 
 ## Current Objective
-User asked for feature proposals, then said implement all of them (tracked as REQ-590-xx). Just shipped v5.11.0 (Fonts relocation, Wi-Fi password viewer, settings backup/restore). Still to do: system health timeline, app-usage bloatware suggestions, per-game Tweaks profiles, and a new Multimedia tab (photo/video/audio tools) - see ROADMAP.md's "v5.11.0+" section. The v5.10.1 borderless-window/transparency change is **still not confirmed working by the user** - re-check on next contact.
+User asked for feature proposals, then said implement all of them (tracked as REQ-590-xx). v6.1.0 (2026-10-01, NOT built on Windows): 10 new per-theme animated backgrounds (ThemeBackgroundStyles/ThemedBackgroundControl), 'Appearance Settings' rename, Home disk-analysis drive selector decoupled from disk tile. Earlier: shipped v5.11.0 (Fonts relocation, Wi-Fi password viewer, settings backup/restore). Still to do: system health timeline, app-usage bloatware suggestions, per-game Tweaks profiles, and a new Multimedia tab (photo/video/audio tools) - see ROADMAP.md's "v5.11.0+" section. The v5.10.1 borderless-window/transparency change is **still not confirmed working by the user** - re-check on next contact.
 
 ## Current Phase
 Between releases. Governance docs (CLAUDE.md, PROJECT_STATE.md, ROADMAP.md) adopted 2026-09-29 at user's request.

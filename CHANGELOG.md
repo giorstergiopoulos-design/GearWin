@@ -6,6 +6,10 @@ available inside the app itself, via Help/Instructions → the "Version History"
 
 Format loosely follows [Keep a Changelog](https://keepachangelog.com/).
 
+## v6.1.0 — Per-theme animated backgrounds & Appearance Settings
+
+Ten themes now have their own animated background; "Theme Settings" renamed "Appearance Settings"; Home's per-category space analysis has its own drive selector.
+
 ## v5.3.0 — Renamed to GearWin
 
 The app was renamed to "GearWin" with the subtitle "Complete PC Care" (after checking app-store

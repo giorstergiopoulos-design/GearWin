@@ -379,6 +379,25 @@ namespace OptimizerWpf.Views
             }
             _driveIndex = 0;
             if (_drives.Count > 0) TxtDriveLabel.Text = _drives[_driveIndex];
+
+            // Ο δίσκος της Ανάλυσης Χώρου επιλέγεται ΞΕΧΩΡΙΣΤΑ (δίπλα στο κουμπί "Ανάλυση"), ανεξάρτητα από το πλακίδιο Disk.
+            // Προεπιλογή: ο δίσκος του συστήματος.
+            CmbAnalysisDrive.ItemsSource = _drives.ToList();
+            var sysRoot = (System.IO.Path.GetPathRoot(Environment.SystemDirectory) ?? "C:\\").TrimEnd('\\');
+            var preferred = _drives.FirstOrDefault(d => string.Equals(d, sysRoot, StringComparison.OrdinalIgnoreCase)) ?? _drives.FirstOrDefault();
+            if (preferred != null) CmbAnalysisDrive.SelectedItem = preferred;
+        }
+
+        private string? AnalysisDrive => CmbAnalysisDrive.SelectedItem as string;
+
+        // Άλλος δίσκος = το προηγούμενο αποτέλεσμα δεν ισχύει πια: καθαρίζει τη μπάρα/το legend ώστε να μη δείχνει δεδομένα άλλου δίσκου.
+        private void CmbAnalysisDrive_SelectionChanged(object sender, System.Windows.Controls.SelectionChangedEventArgs e)
+        {
+            if (!IsLoaded && DiskBarGrid == null) return;
+            DiskBarGrid.ColumnDefinitions.Clear();
+            DiskBarGrid.Children.Clear();
+            ListDiskLegend.ItemsSource = null;
+            TxtDiskAnalysisStatus.Text = LanguageService.T("Home_DiskAnalysisPrompt");
         }
 
         private string? CurrentDrive => _drives.Count > 0 ? _drives[_driveIndex] : null;
@@ -600,16 +619,29 @@ namespace OptimizerWpf.Views
 
         private async void BtnAnalyzeDisk_Click(object sender, System.Windows.RoutedEventArgs e)
         {
-            if (CurrentDrive is not string driveName) return;
+            if (AnalysisDrive is not string driveName) return;
 
             TxtDiskAnalysisStatus.Text = $"{LanguageService.T("Home_DiskAnalysisRunningPrefix")}{driveName}{LanguageService.T("Home_DiskAnalysisRunningSuffix")}";
             StatusService.SetBusy($"{LanguageService.T("Home_DiskAnalysisBusyPrefix")}{driveName}...");
             DiskBarGrid.ColumnDefinitions.Clear();
             DiskBarGrid.Children.Clear();
             ListDiskLegend.ItemsSource = null;
+            BtnAnalyzeDisk.IsEnabled = false;
+            CmbAnalysisDrive.IsEnabled = false;
 
-            var result = await DiskAnalysisService.AnalyzeAsync(driveName);
-            StatusService.SetIdle(LanguageService.T("Ready"));
+            DiskAnalysisResult result;
+            try { result = await DiskAnalysisService.AnalyzeAsync(driveName); }
+            catch (Exception ex)
+            {
+                TxtDiskAnalysisStatus.Text = ex.Message;
+                return;
+            }
+            finally
+            {
+                StatusService.SetIdle(LanguageService.T("Ready"));
+                BtnAnalyzeDisk.IsEnabled = true;
+                CmbAnalysisDrive.IsEnabled = true;
+            }
 
             TxtDiskAnalysisStatus.Text = $"{LanguageService.T("Home_DiskAnalysisTotalPrefix")}{result.TotalUsedGb:0.0} GB ({driveName})";
 
