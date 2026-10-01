@@ -270,6 +270,8 @@
                 </StackPanel>
             </Border>
 
+            <views:RecoveryCards Margin="0,16,0,0"/>
+
         </StackPanel>
     </ScrollViewer>
 </UserControl>

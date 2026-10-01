@@ -286,6 +286,8 @@
                 </StackPanel>
             </Border>
 
+            <views:PowerToolsCards Margin="0,16,0,0"/>
+
         </StackPanel>
     </ScrollViewer>
 </UserControl>

@@ -1,0 +1,67 @@
+<UserControl x:Class="OptimizerWpf.Views.RecoveryCards"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:tr="clr-namespace:OptimizerWpf"
+             xmlns:views="clr-namespace:OptimizerWpf.Views"
+             mc:Ignorable="d">
+    <!-- Σημεία επαναφοράς + System Image Backup - μετακινήθηκαν από την καρτέλα Σύστημα στην Υγεία (6.1.0). -->
+    <UserControl.Resources>
+        <BooleanToVisibilityConverter x:Key="BoolToVis"/>
+    </UserControl.Resources>
+    <StackPanel>
+            <!-- Σημεία Επαναφοράς -->
+            <Border Style="{StaticResource CardStyle}" Margin="0,16,0,0">
+                <StackPanel>
+                    <Grid Margin="0,0,0,10">
+                        <Grid.ColumnDefinitions><ColumnDefinition Width="Auto"/><ColumnDefinition Width="*"/></Grid.ColumnDefinitions>
+                        <views:HeaderGlyphIcon Grid.Column="0" Kind="Shield" Width="16" Height="16" Margin="0,0,8,0" VerticalAlignment="Center"/>
+                        <TextBlock Grid.Column="1" Text="{tr:Tr System_RestorePoints}" Style="{StaticResource CardTitleStyle}"/>
+                    </Grid>
+                    <StackPanel Orientation="Horizontal" Margin="0,0,0,10">
+                        <Button Content="{tr:Tr System_CreatePoint}" Style="{StaticResource AccentButtonStyle}" Width="220" Height="40" Margin="0,0,10,0" Click="BtnCreateRestorePoint_Click"/>
+                        <Button Content="{tr:Tr Refresh}" Style="{StaticResource FlatButtonStyle}" Width="150" Height="40" Margin="0,0,10,0" Click="BtnRefreshRestorePoints_Click"/>
+                        <Button Content="{tr:Tr System_OpenProtectionSettings}" Style="{StaticResource FlatButtonStyle}" Width="230" Height="40" Click="BtnOpenProtectionSettings_Click"/>
+                    </StackPanel>
+                    <TextBlock x:Name="TxtRestorePointsStatus" Text="" Style="{StaticResource SubTextStyle}" Margin="0,0,0,8"/>
+                    <ItemsControl x:Name="ListRestorePoints">
+                        <ItemsControl.ItemTemplate>
+                            <DataTemplate>
+                                <Grid Margin="0,0,0,8">
+                                    <Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions>
+                                    <StackPanel Grid.Column="0">
+                                        <TextBlock Text="{Binding Description}" Foreground="{DynamicResource TextBrush}" FontWeight="SemiBold"/>
+                                        <TextBlock Text="{Binding CreationTime}" Style="{StaticResource SubTextStyle}"/>
+                                    </StackPanel>
+                                    <Button Grid.Column="1" Content="{tr:Tr System_RestoreAction}" Style="{StaticResource FlatButtonStyle}" Click="BtnRestoreToPoint_Click" Tag="{Binding}"/>
+                                </Grid>
+                            </DataTemplate>
+                        </ItemsControl.ItemTemplate>
+                    </ItemsControl>
+                </StackPanel>
+            </Border>
+
+            <!-- ΝΕΟ - roadmap "Backup/imaging" - GUI wrapper γύρω από το ενσωματωμένο wbadmin.exe
+                 των Windows, βλ. BackupService.cs για λεπτομέρειες scope. -->
+            <Border Style="{StaticResource CardStyle}" Margin="0,16,0,0">
+                <StackPanel>
+                    <Grid Margin="0,0,0,10">
+                        <Grid.ColumnDefinitions><ColumnDefinition Width="Auto"/><ColumnDefinition Width="*"/></Grid.ColumnDefinitions>
+                        <views:HeaderGlyphIcon Grid.Column="0" Kind="Shield" Width="16" Height="16" Margin="0,0,8,0" VerticalAlignment="Center"/>
+                        <TextBlock Grid.Column="1" Text="{tr:Tr Backup_Title}" Style="{StaticResource CardTitleStyle}"/>
+                    </Grid>
+                    <TextBlock Text="{tr:Tr Backup_Desc}" Style="{StaticResource SubTextStyle}" TextWrapping="Wrap" Margin="0,0,0,10"/>
+                    <Grid Margin="0,0,0,10">
+                        <Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="Auto"/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions>
+                        <ComboBox x:Name="ListBackupTargetDrives" Grid.Column="0" Margin="0,0,8,0"/>
+                        <Button Grid.Column="1" Content="{tr:Tr Backup_StartButton}" Style="{StaticResource AccentButtonStyle}" Padding="16,8" Margin="0,0,8,0" Click="BtnStartBackup_Click"/>
+                        <Button Grid.Column="2" Content="{tr:Tr Backup_ViewVersionsButton}" Style="{StaticResource FlatButtonStyle}" Padding="16,8" Click="BtnViewBackupVersions_Click"/>
+                    </Grid>
+                    <TextBlock x:Name="TxtBackupStatus" Style="{StaticResource SubTextStyle}" TextWrapping="Wrap" Margin="0,0,0,8"/>
+                    <ItemsControl x:Name="ListBackupVersions"/>
+                </StackPanel>
+            </Border>
+
+    </StackPanel>
+</UserControl>

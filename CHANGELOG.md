@@ -12,6 +12,7 @@ Format loosely follows [Keep a Changelog](https://keepachangelog.com/).
 - **Safety nets:** restore point is ensured before importing tweak profiles, "Optimize" with registry/tweaks, and app uninstall; "Optimize" now shows a preview (dry run) of what will run; every tweak toggle is recorded in the change list.
 - **Cancel buttons:** SFC/DISM/chkdsk/WinSxS, driver scan, duplicate finder and disk analysis can be cancelled.
 - 🛡 badge on tweaks that change the system (HKLM/services); Ctrl+K opens the global search.
+- **Tab reorganisation:** System Restore Points and System Image Backup moved from System to Health; Startup Apps, System Services, Duplicate Finder, Folder Lock and Disk Benchmark moved from System to Advanced (hosted as `RecoveryCards` / `PowerToolsCards` user controls). System now only shows information, processes, storage and fonts.
 - Ten themes got their own animated background; "Theme Settings" is now "Appearance Settings"; Home's per-category space analysis has its own drive selector.
 
 ## v5.3.0 — Renamed to GearWin
