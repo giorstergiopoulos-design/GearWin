@@ -10,7 +10,12 @@ $publish = Join-Path $root 'wpf\OptimizerWpf\publish\win-x64'
 $iss = Join-Path $root 'installer\OptimizerWpf.iss'
 
 # GearWin.exe may be running (single instance) and lock files in publish\
-Get-Process GearWin -ErrorAction SilentlyContinue | Stop-Process -Force
+# GearWin runs elevated (requireAdministrator), so a normal PowerShell cannot kill it ("access denied").
+Get-Process GearWin -ErrorAction SilentlyContinue | Stop-Process -Force -ErrorAction SilentlyContinue
+Start-Sleep -Milliseconds 500
+if (Get-Process GearWin -ErrorAction SilentlyContinue) {
+    throw 'GearWin is still running. Close it first (tray icon > Exit) or run this script from an elevated (Run as administrator) PowerShell.'
+}
 
 if (-not $SkipTests) {
     Write-Host '== dotnet test ==' -ForegroundColor Cyan
