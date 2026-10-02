@@ -1602,6 +1602,9 @@ namespace OptimizerWpf.Services
                 ["Media_Converting"] = "Μετατροπή σε εξέλιξη...",
                 ["Media_ConvertDone"] = "Αποθηκεύτηκε: {0}",
                 ["Media_ConvertFailed"] = "Η μετατροπή απέτυχε: ",
+                ["Appr_Borderless"] = "Παράθυρο χωρίς πλαίσιο (borderless)",
+                ["Appr_BorderlessDesc"] = "Δική μας γραμμή τίτλου και κουμπιά ελαχιστοποίησης/μεγιστοποίησης/κλεισίματος αντί για το πλαίσιο των Windows. Η διαφάνεια εφαρμόζεται με Window.Opacity. Ισχύει μετά από επανεκκίνηση.",
+                ["Appr_BorderlessRestart"] = "Η αλλαγή θα ισχύσει στην επόμενη εκκίνηση της εφαρμογής.",
             },
             ["en"] = new()
             {
@@ -3150,6 +3153,9 @@ namespace OptimizerWpf.Services
                 ["Media_Converting"] = "Converting...",
                 ["Media_ConvertDone"] = "Saved: {0}",
                 ["Media_ConvertFailed"] = "Conversion failed: ",
+                ["Appr_Borderless"] = "Borderless window",
+                ["Appr_BorderlessDesc"] = "Our own title bar and minimize/maximize/close buttons instead of the Windows frame. Transparency uses Window.Opacity. Takes effect after a restart.",
+                ["Appr_BorderlessRestart"] = "The change will take effect the next time the app starts.",
             },
             ["de"] = new()
             {
@@ -4698,6 +4704,9 @@ namespace OptimizerWpf.Services
                 ["Media_Converting"] = "Konvertierung läuft...",
                 ["Media_ConvertDone"] = "Gespeichert: {0}",
                 ["Media_ConvertFailed"] = "Konvertierung fehlgeschlagen: ",
+                ["Appr_Borderless"] = "Fenster ohne Rahmen",
+                ["Appr_BorderlessDesc"] = "Eigene Titelleiste und Schaltflächen statt des Windows-Rahmens. Transparenz über Window.Opacity. Gilt nach einem Neustart.",
+                ["Appr_BorderlessRestart"] = "Die Änderung wird beim nächsten Start der App wirksam.",
             },
             ["fr"] = new()
             {
@@ -6246,6 +6255,9 @@ namespace OptimizerWpf.Services
                 ["Media_Converting"] = "Conversion en cours...",
                 ["Media_ConvertDone"] = "Enregistré : {0}",
                 ["Media_ConvertFailed"] = "Échec de la conversion : ",
+                ["Appr_Borderless"] = "Fenêtre sans bordure",
+                ["Appr_BorderlessDesc"] = "Barre de titre et boutons réduire/agrandir/fermer personnalisés au lieu du cadre Windows. Transparence via Window.Opacity. Effet après redémarrage.",
+                ["Appr_BorderlessRestart"] = "Le changement prendra effet au prochain démarrage de l'application.",
             },
             ["es"] = new()
             {
@@ -7794,6 +7806,9 @@ namespace OptimizerWpf.Services
                 ["Media_Converting"] = "Convirtiendo...",
                 ["Media_ConvertDone"] = "Guardado: {0}",
                 ["Media_ConvertFailed"] = "Falló la conversión: ",
+                ["Appr_Borderless"] = "Ventana sin bordes",
+                ["Appr_BorderlessDesc"] = "Barra de título y botones minimizar/maximizar/cerrar propios en lugar del marco de Windows. Transparencia con Window.Opacity. Se aplica tras reiniciar.",
+                ["Appr_BorderlessRestart"] = "El cambio se aplicará la próxima vez que se inicie la aplicación.",
             },
             ["ko"] = new()
             {
@@ -9341,6 +9356,9 @@ namespace OptimizerWpf.Services
                 ["Media_Converting"] = "변환 중...",
                 ["Media_ConvertDone"] = "저장됨: {0}",
                 ["Media_ConvertFailed"] = "변환 실패: ",
+                ["Appr_Borderless"] = "테두리 없는 창",
+                ["Appr_BorderlessDesc"] = "Windows 프레임 대신 자체 제목 표시줄과 최소화/최대화/닫기 버튼을 사용합니다. 투명도는 Window.Opacity로 적용됩니다. 다시 시작 후 적용됩니다.",
+                ["Appr_BorderlessRestart"] = "변경 사항은 앱을 다음에 시작할 때 적용됩니다.",
             },
             ["zh"] = new()
             {
@@ -10889,6 +10907,9 @@ namespace OptimizerWpf.Services
                 ["Media_Converting"] = "正在转换...",
                 ["Media_ConvertDone"] = "已保存：{0}",
                 ["Media_ConvertFailed"] = "转换失败：",
+                ["Appr_Borderless"] = "无边框窗口",
+                ["Appr_BorderlessDesc"] = "使用自绘标题栏和最小化/最大化/关闭按钮，而非 Windows 边框。透明度通过 Window.Opacity 实现。重启后生效。",
+                ["Appr_BorderlessRestart"] = "更改将在应用下次启动时生效。",
             },
             ["it"] = new()
             {
@@ -12437,6 +12458,9 @@ namespace OptimizerWpf.Services
                 ["Media_Converting"] = "Conversione in corso...",
                 ["Media_ConvertDone"] = "Salvato: {0}",
                 ["Media_ConvertFailed"] = "Conversione non riuscita: ",
+                ["Appr_Borderless"] = "Finestra senza bordi",
+                ["Appr_BorderlessDesc"] = "Barra del titolo e pulsanti riduci/ingrandisci/chiudi propri al posto del frame di Windows. Trasparenza con Window.Opacity. Valido dopo il riavvio.",
+                ["Appr_BorderlessRestart"] = "La modifica sarà applicata al prossimo avvio dell'app.",
             },
             ["ru"] = new()
             {
@@ -13985,6 +14009,9 @@ namespace OptimizerWpf.Services
                 ["Media_Converting"] = "Конвертация...",
                 ["Media_ConvertDone"] = "Сохранено: {0}",
                 ["Media_ConvertFailed"] = "Не удалось конвертировать: ",
+                ["Appr_Borderless"] = "Окно без рамки",
+                ["Appr_BorderlessDesc"] = "Собственная строка заголовка и кнопки свернуть/развернуть/закрыть вместо рамки Windows. Прозрачность через Window.Opacity. Вступает в силу после перезапуска.",
+                ["Appr_BorderlessRestart"] = "Изменение вступит в силу при следующем запуске приложения.",
             },
             ["ja"] = new()
             {
@@ -15533,6 +15560,9 @@ namespace OptimizerWpf.Services
                 ["Media_Converting"] = "変換中...",
                 ["Media_ConvertDone"] = "保存しました: {0}",
                 ["Media_ConvertFailed"] = "変換に失敗しました: ",
+                ["Appr_Borderless"] = "枠なしウィンドウ",
+                ["Appr_BorderlessDesc"] = "Windowsの枠の代わりに独自のタイトルバーと最小化/最大化/閉じるボタンを使います。透明度はWindow.Opacityで適用されます。再起動後に有効になります。",
+                ["Appr_BorderlessRestart"] = "変更は次回のアプリ起動時に有効になります。",
             },
             ["pt"] = new()
             {
@@ -17081,6 +17111,9 @@ namespace OptimizerWpf.Services
                 ["Media_Converting"] = "A converter...",
                 ["Media_ConvertDone"] = "Guardado: {0}",
                 ["Media_ConvertFailed"] = "Falha na conversão: ",
+                ["Appr_Borderless"] = "Janela sem moldura",
+                ["Appr_BorderlessDesc"] = "Barra de título e botões minimizar/maximizar/fechar próprios em vez da moldura do Windows. Transparência com Window.Opacity. Aplica-se após reiniciar.",
+                ["Appr_BorderlessRestart"] = "A alteração será aplicada na próxima vez que a aplicação iniciar.",
             },
             ["tr"] = new()
             {
@@ -18629,6 +18662,9 @@ namespace OptimizerWpf.Services
                 ["Media_Converting"] = "Dönüştürülüyor...",
                 ["Media_ConvertDone"] = "Kaydedildi: {0}",
                 ["Media_ConvertFailed"] = "Dönüştürme başarısız: ",
+                ["Appr_Borderless"] = "Çerçevesiz pencere",
+                ["Appr_BorderlessDesc"] = "Windows çerçevesi yerine kendi başlık çubuğumuz ve küçült/büyüt/kapat düğmeleri. Saydamlık Window.Opacity ile uygulanır. Yeniden başlatınca etkinleşir.",
+                ["Appr_BorderlessRestart"] = "Değişiklik uygulama bir sonraki açıldığında etkinleşir.",
             },
             ["ar"] = new()
             {
@@ -20176,6 +20212,9 @@ namespace OptimizerWpf.Services
                 ["Media_Converting"] = "جارٍ التحويل...",
                 ["Media_ConvertDone"] = "تم الحفظ: {0}",
                 ["Media_ConvertFailed"] = "فشل التحويل: ",
+                ["Appr_Borderless"] = "نافذة بلا إطار",
+                ["Appr_BorderlessDesc"] = "شريط عنوان وأزرار تصغير/تكبير/إغلاق خاصة بدل إطار Windows. الشفافية عبر Window.Opacity. يسري بعد إعادة التشغيل.",
+                ["Appr_BorderlessRestart"] = "سيسري التغيير عند التشغيل التالي للتطبيق.",
             },
             ["hi"] = new()
             {
@@ -21723,6 +21762,9 @@ namespace OptimizerWpf.Services
                 ["Media_Converting"] = "कन्वर्ट हो रहा है...",
                 ["Media_ConvertDone"] = "सहेजा गया: {0}",
                 ["Media_ConvertFailed"] = "कन्वर्ज़न विफल: ",
+                ["Appr_Borderless"] = "बिना बॉर्डर वाली विंडो",
+                ["Appr_BorderlessDesc"] = "Windows फ़्रेम की जगह अपना टाइटल बार और छोटा/बड़ा/बंद बटन। पारदर्शिता Window.Opacity से लागू होती है। रीस्टार्ट के बाद प्रभावी।",
+                ["Appr_BorderlessRestart"] = "बदलाव ऐप के अगली बार शुरू होने पर लागू होगा।",
             },
         };
 

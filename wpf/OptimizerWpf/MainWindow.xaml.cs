@@ -17,9 +17,26 @@ namespace OptimizerWpf;
 /// </summary>
 public partial class MainWindow : Window
 {
+    // 6.1.0 - προαιρετικό παράθυρο χωρίς πλαίσιο (Ρυθμίσεις Εμφάνισης). Το WindowStyle/AllowsTransparency πρέπει
+    // να οριστούν ΠΡΙΝ το πρώτο Show() - γι' αυτό διαβάζεται η ρύθμιση εδώ και η αλλαγή ισχύει στην επόμενη εκκίνηση.
+    private readonly bool _borderless = AppSettingsService.Current.BorderlessWindow;
+
+    private void ApplyBorderlessChrome()
+    {
+        AllowsTransparency = true;
+        WindowStyle = WindowStyle.None;
+        System.Windows.Shell.WindowChrome.SetWindowChrome(this, new System.Windows.Shell.WindowChrome
+        {
+            CaptionHeight = 84, ResizeBorderThickness = new Thickness(6), GlassFrameThickness = new Thickness(0),
+            CornerRadius = new CornerRadius(0), UseAeroCaptionButtons = false,
+        });
+        BorderlessButtons.Visibility = Visibility.Visible;
+    }
+
     public MainWindow()
     {
         InitializeComponent();
+        if (_borderless) ApplyBorderlessChrome();
         // Set the initial selected tab AFTER InitializeComponent, not via IsChecked="True" in XAML -
         // XAML-set IsChecked fires the Checked event synchronously WHILE the rest of the window's
         // named elements (ContentHost, declared later in the document) are still being wired up by
@@ -422,8 +439,27 @@ public partial class MainWindow : Window
     // Εφαρμόζεται όταν δημιουργηθεί το HWND και ξανά από τις Ρυθμίσεις Εμφάνισης (slider).
     private void Window_SourceInitialized(object? sender, EventArgs e) => ApplyWindowOpacity();
 
-    public void ApplyWindowOpacity() =>
-        WindowOpacityService.Apply(this, AppSettingsService.Current.WindowOpacityPercent);
+    // Κανονικό πλαίσιο: native layered window (όπως το MotionDesk). Borderless (AllowsTransparency): Window.Opacity.
+    public void ApplyWindowOpacity()
+    {
+        var percent = WindowOpacityService.ClampPercent(AppSettingsService.Current.WindowOpacityPercent);
+        if (_borderless) Opacity = percent / 100.0;
+        else WindowOpacityService.Apply(this, percent);
+    }
+
+    private void BtnMinimizeWindow_Click(object sender, RoutedEventArgs e) => WindowState = WindowState.Minimized;
+
+    private void BtnMaximizeRestoreWindow_Click(object sender, RoutedEventArgs e) =>
+        WindowState = WindowState == WindowState.Maximized ? WindowState.Normal : WindowState.Maximized;
+
+    private void BtnCloseWindow_Click(object sender, RoutedEventArgs e) => Close();
+
+    // Γλυφ Μεγιστοποίηση/Επαναφορά στη λειτουργία χωρίς πλαίσιο.
+    private void Window_StateChanged(object? sender, EventArgs e)
+    {
+        if (TxtMaximizeGlyph == null) return;
+        TxtMaximizeGlyph.Text = WindowState == WindowState.Maximized ? "\uE923" : "\uE922";
+    }
 
     private void TabButton_Checked(object sender, RoutedEventArgs e)
     {

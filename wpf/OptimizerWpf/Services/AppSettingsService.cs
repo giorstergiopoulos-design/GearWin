@@ -48,6 +48,10 @@ namespace OptimizerWpf.Services
         // ΝΕΟ (6.1.0) - κοινή εμφάνιση με το MotionDesk Studio (βλ. SharedAppearanceService).
         public bool ShareAppearanceWithMotionDesk { get; set; }
 
+        // 6.1.0 - παράθυρο χωρίς πλαίσιο (custom γραμμή τίτλου + κουμπιά, Window.Opacity). Προεπιλογή: κανονικό
+        // πλαίσιο Windows. Αλλαγή ισχύει μετά από επανεκκίνηση (το στυλ παραθύρου δεν αλλάζει μετά το Show).
+        public bool BorderlessWindow { get; set; }
+
         // ΝΕΟ (6.1.0) - καθυστερημένη εκκίνηση προγραμμάτων: όνομα καταχώρησης -> δευτερόλεπτα.
         public System.Collections.Generic.Dictionary<string, int> DelayedStartupSeconds { get; set; } = new();
 

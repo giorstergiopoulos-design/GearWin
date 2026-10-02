@@ -19,7 +19,8 @@
         Background="{DynamicResource MainBgBrush}"
         PreviewKeyDown="Window_PreviewKeyDown"
         Closing="Window_Closing"
-        SourceInitialized="Window_SourceInitialized">
+        SourceInitialized="Window_SourceInitialized"
+        StateChanged="Window_StateChanged">
     <!-- 6.1.0 (ρητό αίτημα χρήστη): το παράθυρο έχει ξανά ΚΑΝΟΝΙΚΟ πλαίσιο/γραμμή τίτλου των Windows
          (όχι πια WindowStyle="None" + AllowsTransparency + custom κουμπιά). Η διαφάνεια εφαρμόζεται
          όπως στο MotionDesk Studio: native layered window (WS_EX_LAYERED + LWA_ALPHA) - βλ.
@@ -98,7 +99,7 @@
              Classic" skin, όπου θα είναι μέρος του χαρακτηριστικού κλασικού παραθύρου. -->
         <!-- Ρητό αίτημα χρήστη: "το κλασικό μενού να είναι κρυμμένο κατά το άνοιγμα" - Ctrl+M
              (Window_PreviewKeyDown) το εμφανίζει/κρύβει κανονικά κατά τη διάρκεια της συνεδρίας. -->
-        <Menu x:Name="ClassicMenu" Grid.Row="0" Visibility="Collapsed" Background="{DynamicResource TabBgBrush}" Foreground="{DynamicResource TextBrush}"/>
+        <Menu x:Name="ClassicMenu" Grid.Row="0" Visibility="Collapsed" shell:WindowChrome.IsHitTestVisibleInChrome="True" Background="{DynamicResource TabBgBrush}" Foreground="{DynamicResource TextBrush}"/>
 
         <!-- ===== Title bar =====
              ΔΙΟΡΘΩΣΗ (χρήστης ζήτησε: "μεγάλωσε το ύψος του παραθύρου για να αυξήσεις το κενό μεταξύ
@@ -461,6 +462,33 @@
                 <Button x:Name="BtnThemeToggle" Width="120" Height="36" Style="{StaticResource FlatButtonStyle}" Click="BtnThemeToggle_Click" shell:WindowChrome.IsHitTestVisibleInChrome="True">
                     <TextBlock x:Name="TxtThemeToggle"/>
                 </Button>
+
+                <!-- 6.1.0 - custom κουμπιά παραθύρου: ορατά ΜΟΝΟ στην προαιρετική λειτουργία "Παράθυρο χωρίς πλαίσιο"
+                     (Ρυθμίσεις Εμφάνισης) - με το κανονικό πλαίσιο τα παρέχουν τα Windows. -->
+                <StackPanel x:Name="BorderlessButtons" Orientation="Horizontal" Visibility="Collapsed">
+                    <Border Width="1" Height="24" Background="{DynamicResource CardBorderBrush}" Margin="12,0,12,0" VerticalAlignment="Center"/>
+                    <Button x:Name="BtnMinimizeWindow" Width="40" Height="36" Style="{StaticResource FlatButtonStyle}" Click="BtnMinimizeWindow_Click"
+                            shell:WindowChrome.IsHitTestVisibleInChrome="True" AutomationProperties.Name="{local:Tr Main_MinimizeAuto}">
+                        <TextBlock Text="&#xE921;" FontFamily="Segoe MDL2 Assets" FontSize="11" Foreground="{DynamicResource TextBrush}"/>
+                    </Button>
+                    <Button x:Name="BtnMaximizeRestoreWindow" Width="40" Height="36" Style="{StaticResource FlatButtonStyle}" Click="BtnMaximizeRestoreWindow_Click"
+                            shell:WindowChrome.IsHitTestVisibleInChrome="True" AutomationProperties.Name="{local:Tr Main_MaximizeAuto}">
+                        <TextBlock x:Name="TxtMaximizeGlyph" Text="&#xE922;" FontFamily="Segoe MDL2 Assets" FontSize="11" Foreground="{DynamicResource TextBrush}"/>
+                    </Button>
+                    <Button x:Name="BtnCloseWindow" Width="40" Height="36" Click="BtnCloseWindow_Click"
+                            shell:WindowChrome.IsHitTestVisibleInChrome="True" AutomationProperties.Name="{local:Tr Main_CloseWindowAuto}">
+                        <Button.Style>
+                            <Style TargetType="Button" BasedOn="{StaticResource FlatButtonStyle}">
+                                <Style.Triggers>
+                                    <Trigger Property="IsMouseOver" Value="True">
+                                        <Setter Property="Background" Value="#FFE81123"/>
+                                    </Trigger>
+                                </Style.Triggers>
+                            </Style>
+                        </Button.Style>
+                        <TextBlock Text="&#xE8BB;" FontFamily="Segoe MDL2 Assets" FontSize="11" Foreground="{DynamicResource TextBrush}"/>
+                    </Button>
+                </StackPanel>
 
 
             </StackPanel>

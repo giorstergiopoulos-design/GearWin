@@ -23,6 +23,7 @@ namespace OptimizerWpf.Views
             ComboTheme.ItemsSource = ThemeCatalog.All;
             ComboTheme.SelectedItem = ThemeManager.CurrentPair;
             ChkAnimatedBg.IsChecked = ThemeManager.AnimatedBackgrounds;
+            ChkBorderless.IsChecked = AppSettingsService.Current.BorderlessWindow;
             ChkDesktopWidget.IsChecked = AppSettingsService.Current.DesktopWidgetEnabled;
 
             ChkUpdateNotifications.IsChecked = AppSettingsService.Current.UpdateNotificationsEnabled;
@@ -129,6 +130,15 @@ namespace OptimizerWpf.Views
         {
             if (_loading) return;
             ThemeManager.SetAnimatedBackgrounds(ChkAnimatedBg.IsChecked == true);
+        }
+
+        // 6.1.0 - παράθυρο χωρίς πλαίσιο: ισχύει στην επόμενη εκκίνηση (το στυλ παραθύρου δεν αλλάζει μετά το Show).
+        private void ChkBorderless_Changed(object sender, RoutedEventArgs e)
+        {
+            if (_loading) return;
+            AppSettingsService.Current.BorderlessWindow = ChkBorderless.IsChecked == true;
+            AppSettingsService.Save();
+            ThemedMessageBox.Show(LanguageService.T("Appr_BorderlessRestart"), LanguageService.T("AppearanceSettingsTitle"), MessageBoxButton.OK, MessageBoxImage.Information);
         }
 
         // ΝΕΟ - βλ. σχόλιο στο XAML/UpdateNotificationService.cs.
