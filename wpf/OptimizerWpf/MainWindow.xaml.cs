@@ -150,6 +150,8 @@ public partial class MainWindow : Window
         LblTabHealth.Text = LanguageService.T("TabHealth");
         LblTabNetwork.Text = LanguageService.T("TabNetwork");
         LblTabTweaks.Text = LanguageService.T("TabTweaks");
+        LblTabGames.Text = LanguageService.T("TabGames");
+        LblTabMultimedia.Text = LanguageService.T("TabMultimedia");
         LblTabBloatware.Text = LanguageService.T("TabBloatware");
         LblTabAdvanced.Text = LanguageService.T("TabAdvanced");
         LblTabSystem.Text = LanguageService.T("TabSystem");
@@ -381,9 +383,11 @@ public partial class MainWindow : Window
             Key.D3 or Key.NumPad3 => "Health",
             Key.D4 or Key.NumPad4 => "Network",
             Key.D5 or Key.NumPad5 => "Tweaks",
-            Key.D6 or Key.NumPad6 => "Bloatware",
-            Key.D7 or Key.NumPad7 => "Advanced",
-            Key.D8 or Key.NumPad8 => "System",
+            Key.D6 or Key.NumPad6 => "Games",
+            Key.D7 or Key.NumPad7 => "Multimedia",
+            Key.D8 or Key.NumPad8 => "Bloatware",
+            Key.D9 or Key.NumPad9 => "Advanced",
+            Key.D0 or Key.NumPad0 => "System",
             _ => null,
         };
         if (tag == null) return;
@@ -447,6 +451,8 @@ public partial class MainWindow : Window
             "Health" => new HealthView(),
             "System" => new SystemView(),
             "Network" => new NetworkView(),
+            "Games" => new GamesView(),
+            "Multimedia" => new MultimediaView(),
             "Bloatware" => new BloatwareView(),
             "Tweaks" => new TweaksView(),
             "Advanced" => new AdvancedView(),

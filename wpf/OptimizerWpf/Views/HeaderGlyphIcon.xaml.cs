@@ -8,7 +8,7 @@ namespace OptimizerWpf.Views
         Monitor, Disk, SignalBars, Battery, Tools, Wrench, Broom,
         Shield, Lock, Dial, Brain, Gamepad, Package, Phone,
         Gear, Home, Bolt, Heart, Globe, Check, Palette,
-        Question, Clock, Document, Puzzle
+        Question, Clock, Document, Puzzle, Play
     }
 
     public partial class HeaderGlyphIcon : UserControl
@@ -59,6 +59,7 @@ namespace OptimizerWpf.Views
             PartClock.Visibility = Kind == GlyphKind.Clock ? Visibility.Visible : Visibility.Collapsed;
             PartDocument.Visibility = Kind == GlyphKind.Document ? Visibility.Visible : Visibility.Collapsed;
             PartPuzzle.Visibility = Kind == GlyphKind.Puzzle ? Visibility.Visible : Visibility.Collapsed;
+            PartPlay.Visibility = Kind == GlyphKind.Play ? Visibility.Visible : Visibility.Collapsed;
         }
     }
 }

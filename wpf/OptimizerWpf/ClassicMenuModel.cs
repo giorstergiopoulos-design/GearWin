@@ -58,7 +58,7 @@ namespace OptimizerWpf
                 new MenuLeaf("", LanguageService.T("Tray_Exit"), new MenuAction(null, "App_Exit")),
             }),
             new MenuGroup("👁️", LanguageService.T("Menu_View"), NavItems.All
-                .Select((n, i) => new MenuLeaf(n.Icon, n.Label, new MenuAction(n.Tag, null), i < 8 ? $"Ctrl+{i + 1}" : null))
+                .Select((n, i) => new MenuLeaf(n.Icon, n.Label, new MenuAction(n.Tag, null), i < 9 ? $"Ctrl+{i + 1}" : i == 9 ? "Ctrl+0" : null))
                 .ToList()),
             // 6.1.0 (ρητό αίτημα χρήστη): το μενού Ρυθμίσεις έδειχνε ΜΟΝΟ "Ρυθμίσεις" - τώρα έχει και
             // Ρυθμίσεις Εμφάνισης, Ρυθμίσεις Μενού και υπομενού Γλώσσας (ανοίγουν το ίδιο παράθυρο στο

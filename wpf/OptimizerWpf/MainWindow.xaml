@@ -507,6 +507,12 @@
             <RadioButton Tag="Tweaks" Style="{StaticResource TabPillStyle}" Checked="TabButton_Checked">
                 <StackPanel Orientation="Horizontal"><views:HeaderGlyphIcon Kind="Wrench" Width="20" Height="20" Margin="0,0,7,0"/><TextBlock x:Name="LblTabTweaks" Text="Επιπλέον Ρυθμίσεις"/></StackPanel>
             </RadioButton>
+            <RadioButton Tag="Games" Style="{StaticResource TabPillStyle}" Checked="TabButton_Checked">
+                <StackPanel Orientation="Horizontal"><views:HeaderGlyphIcon Kind="Gamepad" Width="20" Height="20" Margin="0,0,7,0"/><TextBlock x:Name="LblTabGames" Text="Παιχνίδια"/></StackPanel>
+            </RadioButton>
+            <RadioButton Tag="Multimedia" Style="{StaticResource TabPillStyle}" Checked="TabButton_Checked">
+                <StackPanel Orientation="Horizontal"><views:HeaderGlyphIcon Kind="Play" Width="20" Height="20" Margin="0,0,7,0"/><TextBlock x:Name="LblTabMultimedia" Text="Πολυμέσα"/></StackPanel>
+            </RadioButton>
             <RadioButton Tag="Bloatware" Style="{StaticResource TabPillStyle}" Checked="TabButton_Checked">
                 <StackPanel Orientation="Horizontal"><views:HeaderGlyphIcon Kind="Broom" Width="20" Height="20" Margin="0,0,7,0"/><TextBlock x:Name="LblTabBloatware" Text="Εφαρμογές &amp; Bloat"/></StackPanel>
             </RadioButton>

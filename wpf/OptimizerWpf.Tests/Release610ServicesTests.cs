@@ -270,6 +270,8 @@ public class Release610LanguageTests
         "DryRun_Title", "DryRun_Intro", "DryRun_Footer", "Health_ToolCancelled", "Guard_PointFailedContinue",
         "Journal_On", "Journal_Off", "Tweak_RequiresAdminTip", "Report_Title", "Sec_Firewall", "Sec_UacOff",
         "VerHist_610Title", "VerHist_610Desc", "Home_AnalysisDriveTip", "Appr_ThemeSettingsTab",
+        "TabGames", "TabMultimedia", "Games_Summary", "Games_Scan", "Gaming_HagsLabel", "Media_ConverterTitle", "Media_ConvertDone", "Media_FfmpegMissing",
+        "PcmHome_Boost", "PcmHome_BoostDone", "Appr_SkinSettings11", "Appr_SkinGamingHub", "Appr_SkinOfficeRibbon", "Menu_Language", "Sidebar_CenterLabel", "Autostart_Failed",
     };
 
     [Fact]
@@ -286,6 +288,13 @@ public class Release610LanguageTests
     [InlineData("Alert_TempBody")]
     [InlineData("Alert_SmartTitle")]
     [InlineData("Alert_SmartBody")]
+    [InlineData("Games_Summary")]
+    [InlineData("Games_UninstallConfirm")]
+    [InlineData("Games_LastPlayed")]
+    [InlineData("Games_ShaderDone")]
+    [InlineData("Media_LastUsed")]
+    [InlineData("Media_ConvertDone")]
+    [InlineData("PcmHome_BoostDone")]
     public void FormatKeys_HaveSamePlaceholdersInEveryLanguage(string key)
     {
         string Placeholders(string s) => string.Join(",", System.Text.RegularExpressions.Regex.Matches(s, @"\{\d+\}").Select(m => m.Value).OrderBy(x => x));

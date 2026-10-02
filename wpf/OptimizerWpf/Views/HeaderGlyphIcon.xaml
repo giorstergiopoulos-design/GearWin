@@ -274,6 +274,13 @@
                 <Line X1="6.5" Y1="15" X2="11" Y2="15" Stroke="{DynamicResource AccentBrush}" StrokeThickness="1.1"/>
             </Canvas>
 
+            <!-- 6.1.0 - Πολυμέσα: στρογγυλεμένο πλαίσιο οθόνης με τρίγωνο αναπαραγωγής. -->
+            <Canvas x:Name="PartPlay" Width="20" Height="20" Visibility="Collapsed">
+                <Rectangle Canvas.Left="2" Canvas.Top="3.5" Width="16" Height="13" RadiusX="3" RadiusY="3"
+                           Stroke="{DynamicResource AccentBrush}" StrokeThickness="1.5" Fill="Transparent"/>
+                <Polygon Points="8.5,7 8.5,13 13.5,10" Fill="{DynamicResource AccentBrush}"/>
+            </Canvas>
+
             <Canvas x:Name="PartPuzzle" Width="20" Height="20" Visibility="Collapsed">
                 <Path Fill="Transparent" Stroke="{DynamicResource AccentBrush}" StrokeThickness="1.4" StrokeLineJoin="Round">
                     <Path.Data>
