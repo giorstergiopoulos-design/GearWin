@@ -19,6 +19,22 @@ namespace OptimizerWpf.Services
         [DllImport("dwmapi.dll", PreserveSig = true)]
         private static extern int DwmSetWindowAttribute(IntPtr hwnd, int attribute, ref int value, int size);
 
+        private const int DWMWA_USE_IMMERSIVE_DARK_MODE = 20;
+
+        // 6.1.0 - με κανονικό πλαίσιο παραθύρου (όχι πια borderless) η γραμμή τίτλου των Windows
+        // ακολουθεί το σκούρο/φωτεινό θέμα της εφαρμογής (Windows 10 build 18985+/11 - αλλού αγνοείται).
+        public static void SetDarkTitleBar(Window window, bool dark)
+        {
+            try
+            {
+                var hwnd = new WindowInteropHelper(window).Handle;
+                if (hwnd == IntPtr.Zero) return;
+                var v = dark ? 1 : 0;
+                DwmSetWindowAttribute(hwnd, DWMWA_USE_IMMERSIVE_DARK_MODE, ref v, sizeof(int));
+            }
+            catch { }
+        }
+
         public static void SetSquareCorners(Window window, bool square)
         {
             try

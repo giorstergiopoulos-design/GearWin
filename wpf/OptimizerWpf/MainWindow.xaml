@@ -16,28 +16,15 @@
         Icon="AppIcon.ico"
         Height="800" Width="1360" MinHeight="600" MinWidth="1000"
         WindowStartupLocation="CenterScreen"
-        WindowStyle="None" AllowsTransparency="True"
         Background="{DynamicResource MainBgBrush}"
         PreviewKeyDown="Window_PreviewKeyDown"
         Closing="Window_Closing"
-        StateChanged="Window_StateChanged">
-    <!-- REQ-580-05 follow-up (ρητό αίτημα χρήστη μετά από αναφορά: "δεν υπάρχει διαφάνεια, σκουραίνει
-         ή γίνεται πιο ανοιχτό το χρώμα") - επιβεβαιώθηκε: το WPF Window.Opacity δεν παράγει ΚΑΝΟΝΙΚΗ
-         διαφάνεια (βλέπεις τι υπάρχει πίσω από το παράθυρο) εκτός αν AllowsTransparency="True" - χωρίς
-         αυτό απλά "ξεθωριάζει" προς μαύρο. Το original Optimizer.ps1 (WinForms) είχε ΠΡΑΓΜΑΤΙΚΗ
-         διαφάνεια εγγενώς μέσω $mainForm.Opacity (native Win32 layered window, δουλεύει ΚΑΙ με κανονικό
-         περίγραμμα σε WinForms) - χάθηκε σιωπηλά κατά το WPF port, πριν από αυτή τη συνεδρία.
-         AllowsTransparency="True" ΑΠΑΙΤΕΙ WindowStyle="None" (καμία native OS γραμμή τίτλου/περίγραμμα
-         πλέον) - το shell:WindowChrome παρακάτω αναπληρώνει: μετακίνηση/αλλαγή μεγέθους/maximize σε
-         διπλό-κλικ/snap σε άκρη οθόνης, ΚΑΙ διορθώνει αυτόματα το γνωστό "maximized borderless window
-         καλύπτει τη γραμμή εργασιών" bug (χωρίς αυτό θα χρειαζόταν χειροκίνητο WM_GETMINMAXINFO hook).
-         ΓΝΩΣΤΟΣ περιορισμός: το Windows 11 "flyout προεπισκόπησης snap layouts" όταν κρατάς το ποντίκι
-         πάνω από το κουμπί Μεγιστοποίησης ΔΕΝ εμφανίζεται πια (απαιτεί το κουμπί να αναφέρεται ως
-         HTMAXBUTTON σε επίπεδο WM_NCHITTEST, πολύ πέρα από το scope εδώ) - drag-to-edge snap και
-         Win+βέλη εξακολουθούν να δουλεύουν κανονικά (είναι OS-level, ανεξάρτητα από custom chrome). -->
-    <shell:WindowChrome.WindowChrome>
-        <shell:WindowChrome CaptionHeight="84" ResizeBorderThickness="6" GlassFrameThickness="0" CornerRadius="0" UseAeroCaptionButtons="False"/>
-    </shell:WindowChrome.WindowChrome>
+        SourceInitialized="Window_SourceInitialized">
+    <!-- 6.1.0 (ρητό αίτημα χρήστη): το παράθυρο έχει ξανά ΚΑΝΟΝΙΚΟ πλαίσιο/γραμμή τίτλου των Windows
+         (όχι πια WindowStyle="None" + AllowsTransparency + custom κουμπιά). Η διαφάνεια εφαρμόζεται
+         όπως στο MotionDesk Studio: native layered window (WS_EX_LAYERED + LWA_ALPHA) - βλ.
+         Services/WindowOpacityService.cs και Window_SourceInitialized. Τα custom κουμπιά
+         Ελαχιστοποίησης/Μεγιστοποίησης/Κλεισίματος αφαιρέθηκαν (τα παρέχουν τα Windows). -->
     <Window.Resources>
         <local:NewlineToSpaceConverter x:Key="NewlineToSpace"/>
         <!-- ΝΕΟ - roadmap "Παλλόμενο κόκκινο dot προσοχής" - το DotHealthAttention ήταν στατικό·
@@ -456,31 +443,7 @@
                     <TextBlock x:Name="TxtThemeToggle"/>
                 </Button>
 
-                <!-- REQ-580-05 follow-up: custom κουμπιά παραθύρου (Ελαχιστοποίηση/Μεγιστοποίηση-
-                     Επαναφορά/Κλείσιμο) - υποχρεωτικά τώρα που WindowStyle="None" αφαίρεσε τα εγγενή
-                     του OS. Το Κλείσιμο παίρνει κόκκινο hover (ίδια σύμβαση με κάθε άλλο Windows app). -->
-                <Border Width="1" Height="24" Background="{DynamicResource CardBorderBrush}" Margin="12,0,12,0" VerticalAlignment="Center"/>
-                <Button x:Name="BtnMinimizeWindow" Width="40" Height="36" Style="{StaticResource FlatButtonStyle}" Click="BtnMinimizeWindow_Click"
-                        shell:WindowChrome.IsHitTestVisibleInChrome="True" AutomationProperties.Name="{local:Tr Main_MinimizeAuto}">
-                    <TextBlock Text="&#xE921;" FontFamily="Segoe MDL2 Assets" FontSize="11" Foreground="{DynamicResource TextBrush}"/>
-                </Button>
-                <Button x:Name="BtnMaximizeRestoreWindow" Width="40" Height="36" Style="{StaticResource FlatButtonStyle}" Click="BtnMaximizeRestoreWindow_Click"
-                        shell:WindowChrome.IsHitTestVisibleInChrome="True" AutomationProperties.Name="{local:Tr Main_MaximizeAuto}">
-                    <TextBlock x:Name="TxtMaximizeGlyph" Text="&#xE922;" FontFamily="Segoe MDL2 Assets" FontSize="11" Foreground="{DynamicResource TextBrush}"/>
-                </Button>
-                <Button x:Name="BtnCloseWindow" Width="40" Height="36" Click="BtnCloseWindow_Click"
-                        shell:WindowChrome.IsHitTestVisibleInChrome="True" AutomationProperties.Name="{local:Tr Main_CloseWindowAuto}">
-                    <Button.Style>
-                        <Style TargetType="Button" BasedOn="{StaticResource FlatButtonStyle}">
-                            <Style.Triggers>
-                                <Trigger Property="IsMouseOver" Value="True">
-                                    <Setter Property="Background" Value="#FFE81123"/>
-                                </Trigger>
-                            </Style.Triggers>
-                        </Style>
-                    </Button.Style>
-                    <TextBlock Text="&#xE8BB;" FontFamily="Segoe MDL2 Assets" FontSize="11" Foreground="{DynamicResource TextBrush}"/>
-                </Button>
+
             </StackPanel>
         </Grid>
 

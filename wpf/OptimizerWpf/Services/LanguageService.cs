@@ -1496,6 +1496,9 @@ namespace OptimizerWpf.Services
                 ["Journal_On"] = "ενεργό",
                 ["Journal_Off"] = "ανενεργό",
                 ["Tweak_RequiresAdminTip"] = "Αλλαγή σε επίπεδο συστήματος - απαιτεί δικαιώματα διαχειριστή",
+                ["Menu_Language"] = "Γλώσσα",
+                ["Sidebar_CenterLabel"] = "Συντήρηση &\nΑσφάλεια",
+                ["Autostart_Failed"] = "Δεν ήταν δυνατή η ρύθμιση της εκκίνησης με τα Windows (η εργασία δεν δημιουργήθηκε). Βεβαιωθείτε ότι η εφαρμογή τρέχει ως διαχειριστής.",
             },
             ["en"] = new()
             {
@@ -2938,6 +2941,9 @@ namespace OptimizerWpf.Services
                 ["Journal_On"] = "on",
                 ["Journal_Off"] = "off",
                 ["Tweak_RequiresAdminTip"] = "System-wide change - requires administrator rights",
+                ["Menu_Language"] = "Language",
+                ["Sidebar_CenterLabel"] = "Maintenance &\nSecurity",
+                ["Autostart_Failed"] = "Couldn't set up start with Windows (the scheduled task wasn't created). Make sure the app is running as administrator.",
             },
             ["de"] = new()
             {
@@ -4380,6 +4386,9 @@ namespace OptimizerWpf.Services
                 ["Journal_On"] = "an",
                 ["Journal_Off"] = "aus",
                 ["Tweak_RequiresAdminTip"] = "Systemweite Änderung - erfordert Administratorrechte",
+                ["Menu_Language"] = "Sprache",
+                ["Sidebar_CenterLabel"] = "Wartung &\nSicherheit",
+                ["Autostart_Failed"] = "Der Start mit Windows konnte nicht eingerichtet werden (die geplante Aufgabe wurde nicht erstellt). Stellen Sie sicher, dass die App als Administrator läuft.",
             },
             ["fr"] = new()
             {
@@ -5822,6 +5831,9 @@ namespace OptimizerWpf.Services
                 ["Journal_On"] = "activé",
                 ["Journal_Off"] = "désactivé",
                 ["Tweak_RequiresAdminTip"] = "Modification système - nécessite les droits administrateur",
+                ["Menu_Language"] = "Langue",
+                ["Sidebar_CenterLabel"] = "Maintenance &\nSécurité",
+                ["Autostart_Failed"] = "Impossible de configurer le démarrage avec Windows (la tâche planifiée n'a pas été créée). Vérifiez que l'application s'exécute en administrateur.",
             },
             ["es"] = new()
             {
@@ -7264,6 +7276,9 @@ namespace OptimizerWpf.Services
                 ["Journal_On"] = "activado",
                 ["Journal_Off"] = "desactivado",
                 ["Tweak_RequiresAdminTip"] = "Cambio a nivel de sistema: requiere derechos de administrador",
+                ["Menu_Language"] = "Idioma",
+                ["Sidebar_CenterLabel"] = "Mantenimiento &\nSeguridad",
+                ["Autostart_Failed"] = "No se pudo configurar el inicio con Windows (no se creó la tarea programada). Asegúrese de que la app se ejecuta como administrador.",
             },
             ["ko"] = new()
             {
@@ -8705,6 +8720,9 @@ namespace OptimizerWpf.Services
                 ["Journal_On"] = "켜짐",
                 ["Journal_Off"] = "꺼짐",
                 ["Tweak_RequiresAdminTip"] = "시스템 전체 변경 - 관리자 권한 필요",
+                ["Menu_Language"] = "언어",
+                ["Sidebar_CenterLabel"] = "유지 관리 &\n보안",
+                ["Autostart_Failed"] = "Windows와 함께 시작을 설정하지 못했습니다(예약 작업이 만들어지지 않음). 앱이 관리자 권한으로 실행 중인지 확인하세요.",
             },
             ["zh"] = new()
             {
@@ -10147,6 +10165,9 @@ namespace OptimizerWpf.Services
                 ["Journal_On"] = "开",
                 ["Journal_Off"] = "关",
                 ["Tweak_RequiresAdminTip"] = "系统级更改 - 需要管理员权限",
+                ["Menu_Language"] = "语言",
+                ["Sidebar_CenterLabel"] = "维护与\n安全",
+                ["Autostart_Failed"] = "无法设置随 Windows 启动（未创建计划任务）。请确认应用以管理员身份运行。",
             },
             ["it"] = new()
             {
@@ -11589,6 +11610,9 @@ namespace OptimizerWpf.Services
                 ["Journal_On"] = "attivo",
                 ["Journal_Off"] = "disattivato",
                 ["Tweak_RequiresAdminTip"] = "Modifica a livello di sistema: richiede privilegi di amministratore",
+                ["Menu_Language"] = "Lingua",
+                ["Sidebar_CenterLabel"] = "Manutenzione &\nSicurezza",
+                ["Autostart_Failed"] = "Impossibile impostare l'avvio con Windows (l'attività pianificata non è stata creata). Verifica che l'app sia eseguita come amministratore.",
             },
             ["ru"] = new()
             {
@@ -13031,6 +13055,9 @@ namespace OptimizerWpf.Services
                 ["Journal_On"] = "вкл.",
                 ["Journal_Off"] = "выкл.",
                 ["Tweak_RequiresAdminTip"] = "Изменение на уровне системы - нужны права администратора",
+                ["Menu_Language"] = "Язык",
+                ["Sidebar_CenterLabel"] = "Обслуживание &\nБезопасность",
+                ["Autostart_Failed"] = "Не удалось настроить запуск с Windows (задача не создана). Убедитесь, что приложение запущено от имени администратора.",
             },
             ["ja"] = new()
             {
@@ -14473,6 +14500,9 @@ namespace OptimizerWpf.Services
                 ["Journal_On"] = "オン",
                 ["Journal_Off"] = "オフ",
                 ["Tweak_RequiresAdminTip"] = "システム全体の変更 - 管理者権限が必要",
+                ["Menu_Language"] = "言語",
+                ["Sidebar_CenterLabel"] = "メンテナンス＆\nセキュリティ",
+                ["Autostart_Failed"] = "Windowsと同時に起動する設定に失敗しました（タスクが作成されませんでした）。アプリが管理者として実行されているか確認してください。",
             },
             ["pt"] = new()
             {
@@ -15915,6 +15945,9 @@ namespace OptimizerWpf.Services
                 ["Journal_On"] = "ligado",
                 ["Journal_Off"] = "desligado",
                 ["Tweak_RequiresAdminTip"] = "Alteração ao nível do sistema - requer direitos de administrador",
+                ["Menu_Language"] = "Idioma",
+                ["Sidebar_CenterLabel"] = "Manutenção &\nSegurança",
+                ["Autostart_Failed"] = "Não foi possível configurar o arranque com o Windows (a tarefa agendada não foi criada). Verifique se a aplicação está a ser executada como administrador.",
             },
             ["tr"] = new()
             {
@@ -17357,6 +17390,9 @@ namespace OptimizerWpf.Services
                 ["Journal_On"] = "açık",
                 ["Journal_Off"] = "kapalı",
                 ["Tweak_RequiresAdminTip"] = "Sistem genelinde değişiklik - yönetici hakları gerekir",
+                ["Menu_Language"] = "Dil",
+                ["Sidebar_CenterLabel"] = "Bakım &\nGüvenlik",
+                ["Autostart_Failed"] = "Windows ile başlatma ayarlanamadı (zamanlanmış görev oluşturulamadı). Uygulamanın yönetici olarak çalıştığından emin olun.",
             },
             ["ar"] = new()
             {
@@ -18798,6 +18834,9 @@ namespace OptimizerWpf.Services
                 ["Journal_On"] = "تشغيل",
                 ["Journal_Off"] = "إيقاف",
                 ["Tweak_RequiresAdminTip"] = "تغيير على مستوى النظام - يتطلب صلاحيات المسؤول",
+                ["Menu_Language"] = "اللغة",
+                ["Sidebar_CenterLabel"] = "الصيانة &\nالأمان",
+                ["Autostart_Failed"] = "تعذّر إعداد التشغيل مع Windows (لم تُنشأ المهمة المجدولة). تأكد من تشغيل التطبيق كمسؤول.",
             },
             ["hi"] = new()
             {
@@ -20239,6 +20278,9 @@ namespace OptimizerWpf.Services
                 ["Journal_On"] = "चालू",
                 ["Journal_Off"] = "बंद",
                 ["Tweak_RequiresAdminTip"] = "सिस्टम-स्तर का बदलाव - व्यवस्थापक अधिकार आवश्यक",
+                ["Menu_Language"] = "भाषा",
+                ["Sidebar_CenterLabel"] = "रखरखाव &\nसुरक्षा",
+                ["Autostart_Failed"] = "Windows के साथ शुरू करना सेट नहीं हो सका (शेड्यूल्ड टास्क नहीं बना)। सुनिश्चित करें कि ऐप व्यवस्थापक के रूप में चल रहा है।",
             },
         };
 

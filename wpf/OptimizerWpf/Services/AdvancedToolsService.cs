@@ -328,31 +328,14 @@ namespace OptimizerWpf.Services
 
         public static async Task<bool> SetScheduledMaintenanceAsync(bool enabled)
         {
-            // Απευθείας κλήση του schtasks.exe (ΟΧΙ μέσω PowerShell -Command) - το ήδη υπάρχον
-            // RunPsForSuccessAsync εφαρμόζει ένα γενικό .Replace("\"","\\\"") σε ΟΛΗ την εντολή, που θα
-            // σπάσει εδώ (πολλαπλά, εμφωλευμένα ζεύγη εισαγωγικών στο /TN και /TR) - το ProcessStartInfo.
-            // ArgumentList παρακάτω περνάει κάθε όρισμα ως ξεχωριστό πίνακα, χωρίς κανένα quoting/escaping.
-            string fileName; string[] args;
-            if (!enabled)
-            {
-                fileName = "schtasks.exe";
-                args = new[] { "/Delete", "/TN", ScheduledMaintenanceTaskName, "/F" };
-            }
-            else
-            {
-                var exePath = Process.GetCurrentProcess().MainModule?.FileName ?? "";
-                if (string.IsNullOrEmpty(exePath)) return false;
-                fileName = "schtasks.exe";
-                args = new[] { "/Create", "/TN", ScheduledMaintenanceTaskName, "/TR", $"\"{exePath}\" --auto-maintenance",
-                    "/SC", "WEEKLY", "/D", "SUN", "/ST", "03:00", "/RL", "HIGHEST", "/F" };
-            }
+            // 6.1.0 - XML εργασία (TaskSchedulerService) αντί για `schtasks /Create` ορίσματα: οι εργασίες
+            // του CLI δεν τρέχουν σε laptop με μπαταρία (προεπιλεγμένος περιορισμός).
+            if (!enabled) { await TaskSchedulerService.DeleteAsync(ScheduledMaintenanceTaskName); return true; }
 
-            var psi = new ProcessStartInfo(fileName) { UseShellExecute = false, CreateNoWindow = true };
-            foreach (var a in args) psi.ArgumentList.Add(a);
-            using var process = Process.Start(psi);
-            if (process == null) return false;
-            await process.WaitForExitAsync();
-            return process.ExitCode == 0;
+            var exePath = Process.GetCurrentProcess().MainModule?.FileName ?? "";
+            if (string.IsNullOrEmpty(exePath)) return false;
+            var xml = TaskSchedulerService.BuildWeeklyTaskXml(exePath, "--auto-maintenance", TaskSchedulerService.CurrentUserId(), "GearWin - weekly maintenance");
+            return await TaskSchedulerService.CreateAsync(ScheduledMaintenanceTaskName, xml);
         }
 
         // Καλείται ΜΟΝΟ από το App.xaml.cs όταν η εφαρμογή ξεκινά με --auto-maintenance (headless, καμία

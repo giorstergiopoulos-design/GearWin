@@ -116,15 +116,51 @@ public class Release610ServicesTests
         Assert.StartsWith(@"GearWinDelayed\", StartupDelayService.BuildTaskName("???"));
     }
 
+    // ── TaskSchedulerService ────────────────────────────────────────────────────────────────
     [Fact]
-    public void StartupDelay_CreateArgsContainLogonTriggerAndDelay()
+    public void TaskXml_LogonTaskIsWellFormedElevatedAndBatteryFriendly()
     {
-        var args = StartupDelayService.BuildCreateArgs(@"GearWinDelayed\App", "\"C:\\Program Files\\App\\app.exe\" -min", 45);
-        Assert.Contains("ONLOGON", args);
-        Assert.Equal("0000:45", args[args.ToList().IndexOf("/DELAY") + 1]);
-        Assert.Equal("\"C:\\Program Files\\App\\app.exe\" -min", args[args.ToList().IndexOf("/TR") + 1]);
-        Assert.Contains("/F", args);
+        var xml = TaskSchedulerService.BuildLogonTaskXml(@"C:\Program Files\GearWin\GearWin.exe", "--tray", 15, @"PC\gstrj", "A & B <test>");
+        var doc = System.Xml.Linq.XDocument.Parse(xml); // πετά αν δεν είναι well-formed (π.χ. & δεν έγινε escape)
+        System.Xml.Linq.XNamespace ns = "http://schemas.microsoft.com/windows/2004/02/mit/task";
+        Assert.Equal("HighestAvailable", doc.Descendants(ns + "RunLevel").Single().Value);
+        Assert.Equal("false", doc.Descendants(ns + "DisallowStartIfOnBatteries").Single().Value);
+        Assert.Equal("false", doc.Descendants(ns + "StopIfGoingOnBatteries").Single().Value);
+        Assert.Equal("PT15S", doc.Descendants(ns + "Delay").Single().Value);
+        Assert.Equal("--tray", doc.Descendants(ns + "Arguments").Single().Value);
+        Assert.Equal(@"C:\Program Files\GearWin\GearWin.exe", doc.Descendants(ns + "Command").Single().Value);
+        Assert.Equal("A & B <test>", doc.Descendants(ns + "Description").Single().Value);
+        Assert.Single(doc.Descendants(ns + "LogonTrigger"));
     }
+
+    [Fact]
+    public void TaskXml_WeeklyTaskHasSundayCalendarTriggerAndNoArgumentsElementWhenEmpty()
+    {
+        var xml = TaskSchedulerService.BuildWeeklyTaskXml(@"C:\x.exe", "", "u", "d");
+        var doc = System.Xml.Linq.XDocument.Parse(xml);
+        System.Xml.Linq.XNamespace ns = "http://schemas.microsoft.com/windows/2004/02/mit/task";
+        Assert.Single(doc.Descendants(ns + "Sunday"));
+        Assert.Empty(doc.Descendants(ns + "Arguments"));
+        Assert.Empty(doc.Descendants(ns + "LogonTrigger"));
+    }
+
+    [Theory]
+    [InlineData("\"C:\\Program Files\\App\\app.exe\" -min", "C:\\Program Files\\App\\app.exe", "-min")]
+    [InlineData("C:\\Tools\\x.exe /silent /x", "C:\\Tools\\x.exe", "/silent /x")]
+    [InlineData("C:\\Program Files\\App\\app.exe --flag", "C:\\Program Files\\App\\app.exe", "--flag")]
+    [InlineData("notepad", "notepad", "")]
+    [InlineData("", "", "")]
+    public void TaskScheduler_SplitCommand(string command, string exe, string args) =>
+        Assert.Equal((exe, args), TaskSchedulerService.SplitCommand(command));
+
+    // ── WindowOpacityService ────────────────────────────────────────────────────────────────
+    [Theory]
+    [InlineData(100, 255)]
+    [InlineData(60, 153)]
+    [InlineData(10, 153)]   // κάτω όριο 60% - ποτέ αόρατο παράθυρο
+    [InlineData(250, 255)]
+    public void WindowOpacity_AlphaIsClamped(int percent, int alpha) =>
+        Assert.Equal((byte)alpha, WindowOpacityService.ToAlpha(percent));
 
     // ── SharedAppearanceService ─────────────────────────────────────────────────────────────
     [Fact]

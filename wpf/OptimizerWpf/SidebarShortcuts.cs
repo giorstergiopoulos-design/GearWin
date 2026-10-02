@@ -45,6 +45,8 @@ namespace OptimizerWpf
             // είναι γρανάζι και όχι ζωγραφική παλέτα") - GlyphKind.Palette -> Gear (καθολική αλλαγή
             // εδώ, αφού ΚΑΙ το πλευρικό μενού ΚΑΙ η οριζόντια μοντέρνα λωρίδα διαβάζουν το ΙΔΙΟ
             // SidebarShortcuts.All, βλ. MainWindow.xaml).
+            // 6.1.0 - 7η επιλογή (πλευρικό + οριζόντιο μενού): Κέντρο Συντήρησης & Ασφάλειας (Ctrl+J).
+            new SidebarShortcut("🛡️", LanguageService.T("Sidebar_CenterLabel"), "Center_Title", GlyphKind.Shield),
             new SidebarShortcut("⚙️", LanguageService.T("AppearanceSettingsTitle"), "AppearanceSettingsTitle", GlyphKind.Gear),
         };
     }

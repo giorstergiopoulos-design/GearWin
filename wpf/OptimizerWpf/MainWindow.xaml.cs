@@ -37,7 +37,7 @@ public partial class MainWindow : Window
         ListThemes.SelectedItem = ThemeManager.CurrentPair;
 
         _searchIndex = ClassicMenuModel.Groups
-            .SelectMany(g => g.Items.Select(leaf => new SearchResultRow(leaf.Icon, leaf.Label, g.Header, leaf)))
+            .SelectMany(g => g.Items.SelectMany(l => l.Children ?? new[] { l }).Select(leaf => new SearchResultRow(leaf.Icon, leaf.Label, g.Header, leaf)))
             .ToList();
 
         StatusService.Changed += OnStatusChanged;
@@ -54,7 +54,6 @@ public partial class MainWindow : Window
         // REQ-580-05: port του MotionDeskStudio's opacity slider - Math.Clamp(60,100) ίδιο κάτω
         // όριο, ώστε ένα κατεστραμμένο/παλιό persisted ποσοστό να μην κάνει ποτέ το παράθυρο
         // αδιάβαστο ή αόρατο.
-        Opacity = Math.Clamp(AppSettingsService.Current.WindowOpacityPercent, 60, 100) / 100.0;
 
         ApplyLanguage();
         LanguageService.Changed += ApplyLanguage;
@@ -158,7 +157,7 @@ public partial class MainWindow : Window
 
         PopulateClassicMenu();
         _searchIndex = ClassicMenuModel.Groups
-            .SelectMany(g => g.Items.Select(leaf => new SearchResultRow(leaf.Icon, leaf.Label, g.Header, leaf)))
+            .SelectMany(g => g.Items.SelectMany(l => l.Children ?? new[] { l }).Select(leaf => new SearchResultRow(leaf.Icon, leaf.Label, g.Header, leaf)))
             .ToList();
         ListPcManagerRail.ItemsSource = NavItems.All;
 
@@ -348,24 +347,12 @@ public partial class MainWindow : Window
         Hide();
     }
 
-    // REQ-580-05 follow-up: υποχρεωτικά τώρα που WindowStyle="None" αφαίρεσε τα εγγενή κουμπιά
-    // παραθύρου του OS (βλ. σχόλιο στο MainWindow.xaml για το γιατί - πραγματική διαφάνεια απαιτεί
-    // AllowsTransparency, το οποίο απαιτεί WindowStyle="None").
-    private void BtnMinimizeWindow_Click(object sender, RoutedEventArgs e) => WindowState = WindowState.Minimized;
+    // 6.1.0 - διαφάνεια με native layered window (όπως το MotionDesk Studio) - βλ. WindowOpacityService.
+    // Εφαρμόζεται όταν δημιουργηθεί το HWND και ξανά από τις Ρυθμίσεις Εμφάνισης (slider).
+    private void Window_SourceInitialized(object? sender, EventArgs e) => ApplyWindowOpacity();
 
-    private void BtnMaximizeRestoreWindow_Click(object sender, RoutedEventArgs e) =>
-        WindowState = WindowState == WindowState.Maximized ? WindowState.Normal : WindowState.Maximized;
-
-    private void BtnCloseWindow_Click(object sender, RoutedEventArgs e) => Close();
-
-    // Εναλλαγή γλυφ Μεγιστοποίηση (⬜, E922) / Επαναφορά (⧉, E923) ανάλογα με το τρέχον WindowState -
-    // ίδια σύμβαση με κάθε άλλο Windows app (π.χ. διπλό-κλικ στη γραμμή τίτλου, το οποίο το
-    // shell:WindowChrome's CaptionHeight ήδη υποστηρίζει αυτόματα, χωρίς επιπλέον κώδικα εδώ).
-    private void Window_StateChanged(object sender, EventArgs e)
-    {
-        if (TxtMaximizeGlyph == null) return;
-        TxtMaximizeGlyph.Text = WindowState == WindowState.Maximized ? "" : "";
-    }
+    public void ApplyWindowOpacity() =>
+        WindowOpacityService.Apply(this, AppSettingsService.Current.WindowOpacityPercent);
 
     private void TabButton_Checked(object sender, RoutedEventArgs e)
     {
@@ -428,18 +415,24 @@ public partial class MainWindow : Window
 
             var groupItem = new MenuItem { Header = $"{group.Icon} {group.Header}" };
             foreach (var leaf in group.Items)
-            {
-                var mi = new MenuItem
-                {
-                    Header = BuildLeafHeader(leaf),
-                    Tag = leaf,
-                    InputGestureText = leaf.Shortcut ?? "",
-                };
-                mi.Click += (_, _) => HandleLeafClick(leaf);
-                groupItem.Items.Add(mi);
-            }
+                groupItem.Items.Add(BuildMenuItem(leaf));
             ClassicMenu.Items.Add(groupItem);
         }
+    }
+
+    private MenuItem BuildMenuItem(MenuLeaf leaf)
+    {
+        var mi = new MenuItem
+        {
+            Header = BuildLeafHeader(leaf),
+            Tag = leaf,
+            InputGestureText = leaf.Shortcut ?? "",
+        };
+        if (leaf.Children != null)
+            foreach (var child in leaf.Children) mi.Items.Add(BuildMenuItem(child));
+        else
+            mi.Click += (_, _) => HandleLeafClick(leaf);
+        return mi;
     }
 
     private static object BuildLeafHeader(MenuLeaf leaf)
@@ -598,8 +591,19 @@ public partial class MainWindow : Window
     // μετά τη μετάφραση των μενού (ClassicMenuModel.cs/SidebarShortcuts.cs).
     private void OpenDestination(string key)
     {
+        // 6.1.0 - γλώσσα από το κλασικό μενού (Ρυθμίσεις > Γλώσσα).
+        if (key == "App_Exit") { TrayIconService.ExitApplication(); return; }
+        if (key.StartsWith("Lang:", StringComparison.Ordinal))
+        {
+            LanguageService.SetLanguage(key[5..]);
+            return;
+        }
+
         Window? window = key switch
         {
+            // 6.1.0 - Ρυθμίσεις / Ρυθμίσεις Εμφάνισης / Ρυθμίσεις Μενού = tabs 0/1/2 του ίδιου παραθύρου.
+            _ when key.StartsWith("AppearanceSettings:", StringComparison.Ordinal) && int.TryParse(key[19..], out var tabIndex)
+                => new AppearanceSettingsWindow(tabIndex) { Owner = this },
             "Vive_Title" => new ViveToolWindow { Owner = this },
             "Uwp_Title" => new UwpAppManagerWindow { Owner = this },
             // ΝΕΟ - roadmap "έλεγξε αν χρειάζονται ανανεώσεις σε δευτερεύοντα παράθυρα/μενού" - ο

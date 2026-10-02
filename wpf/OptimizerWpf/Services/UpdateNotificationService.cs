@@ -32,6 +32,25 @@ namespace OptimizerWpf.Services
             _timer.Start();
         }
 
+        // 6.1.0 - ΑΥΤΟΜΑΤΟΣ έλεγχος ενημερώσεων σε ΚΑΘΕ εκκίνηση της εφαρμογής (tray ή κανονική), με
+        // ειδοποίηση. Στην αυτόματη εκκίνηση με τα Windows το δίκτυο δεν είναι πάντα έτοιμο και ο
+        // προηγούμενος άμεσος έλεγχος απέτυχε σιωπηλά (και μετά το διάστημα των 6 ωρών δεν ξαναδοκίμαζε) -
+        // τώρα περιμένουμε σύνδεση (έως ~3 λεπτά) και ο έλεγχος γίνεται μία φορά με announce.
+        public static async Task StartupCheckAsync()
+        {
+            if (_checkInFlight || !AppSettingsService.Current.UpdateNotificationsEnabled) return;
+            _checkInFlight = true;
+            try
+            {
+                await Task.Delay(TimeSpan.FromSeconds(8));
+                for (var i = 0; i < 18 && !System.Net.NetworkInformation.NetworkInterface.GetIsNetworkAvailable(); i++)
+                    await Task.Delay(TimeSpan.FromSeconds(10));
+                await RunCheckAsync(announce: true);
+            }
+            catch { }
+            finally { _checkInFlight = false; }
+        }
+
         public static void Stop()
         {
             _timer?.Stop();
@@ -52,7 +71,7 @@ namespace OptimizerWpf.Services
 
         // Δημόσιο - χρησιμοποιείται ΚΑΙ από το κουμπί "Έλεγχος Τώρα" (Ρυθμίσεις Εμφάνισης), ώστε ο
         // χρήστης να μπορεί να ζητήσει άμεσο έλεγχο χωρίς να περιμένει το επόμενο περιοδικό τικ.
-        public static async Task RunCheckAsync()
+        public static async Task RunCheckAsync(bool announce = false)
         {
             AppSettingsService.Current.LastUpdateCheckAt = DateTime.Now;
             AppSettingsService.Save();
@@ -65,7 +84,7 @@ namespace OptimizerWpf.Services
                     () => AppSettingsService.Current.LastNotifiedAppUpdateCount,
                     v => AppSettingsService.Current.LastNotifiedAppUpdateCount = v,
                     LanguageService.T("UpdateNotify_AppsTitle"),
-                    string.Format(LanguageService.T("UpdateNotify_AppsBody"), appUpdates.Count));
+                    string.Format(LanguageService.T("UpdateNotify_AppsBody"), appUpdates.Count), announce: announce);
             }
             catch { /* best-effort - ίδια ανοχή με τις υπόλοιπες background σαρώσεις της εφαρμογής */ }
 
@@ -79,7 +98,7 @@ namespace OptimizerWpf.Services
                         () => AppSettingsService.Current.LastNotifiedDriverUpdateCount,
                         v => AppSettingsService.Current.LastNotifiedDriverUpdateCount = v,
                         LanguageService.T("UpdateNotify_DriversTitle"),
-                        string.Format(LanguageService.T("UpdateNotify_DriversBody"), driverResult.Updates.Count));
+                        string.Format(LanguageService.T("UpdateNotify_DriversBody"), driverResult.Updates.Count), announce: announce);
                 }
             }
             catch { }
@@ -100,7 +119,8 @@ namespace OptimizerWpf.Services
                         // Οι OS ενημερώσεις δεν έχουν δική τους διαχείριση μέσα στην εφαρμογή (σε
                         // αντίθεση με τις εφαρμογές/οδηγούς - καρτέλα Βελτιστοποίηση) - το κλικ πάει
                         // κατευθείαν στις πραγματικές Ρυθμίσεις Windows Update.
-                        () => { try { System.Diagnostics.Process.Start(new System.Diagnostics.ProcessStartInfo("ms-settings:windowsupdate") { UseShellExecute = true }); } catch { } });
+                        () => { try { System.Diagnostics.Process.Start(new System.Diagnostics.ProcessStartInfo("ms-settings:windowsupdate") { UseShellExecute = true }); } catch { } },
+                        announce);
                 }
             }
             catch { }
@@ -113,10 +133,12 @@ namespace OptimizerWpf.Services
             try { CheckLowDiskSpace(); } catch { }
         }
 
-        private static void MaybeNotify(int count, Func<int?> getLastNotified, Action<int?> setLastNotified, string title, string body, Action? onClick = null)
+        private static void MaybeNotify(int count, Func<int?> getLastNotified, Action<int?> setLastNotified, string title, string body, Action? onClick = null, bool announce = false)
         {
             if (count <= 0) { setLastNotified(0); return; }
-            if (getLastNotified() == count) return; // ίδιος αριθμός με την τελευταία ειδοποίηση - καμία επανάληψη
+            // announce=true (έλεγχος κατά την εκκίνηση): ο χρήστης θέλει να δει ΠΑΝΤΑ το μήνυμα όταν ανοίγει η
+            // εφαρμογή, ακόμα κι αν ο αριθμός είναι ίδιος με την προηγούμενη ειδοποίηση.
+            if (!announce && getLastNotified() == count) return; // ίδιος αριθμός με την τελευταία ειδοποίηση - καμία επανάληψη
             setLastNotified(count);
             TrayIconService.ShowNotificationBalloon(title, body, onClick);
         }

@@ -13,7 +13,8 @@ namespace OptimizerWpf
     // ήδη-μεταφρασμένο κείμενο, η δρομολόγηση θα έσπαγε σε κάθε γλώσσα εκτός Ελληνικών.
     public record MenuAction(string? NavigateTag, string? DestinationKey);
 
-    public record MenuLeaf(string Icon, string Label, MenuAction Action, string? Shortcut = null);
+    // Children != null => το στοιχείο είναι υπομενού (π.χ. Ρυθμίσεις > Γλώσσα) και το Action αγνοείται.
+    public record MenuLeaf(string Icon, string Label, MenuAction Action, string? Shortcut = null, IReadOnlyList<MenuLeaf>? Children = null);
 
     // Flat=true - port του ps1's $menuActionLog (~6671): top-level, μονό στοιχείο ΧΩΡΙΣ υπομενού
     // (κλικ απευθείας στο ίδιο το menu item), σε αντίθεση με τις υπόλοιπες ομάδες που ανοίγουν flyout.
@@ -31,6 +32,18 @@ namespace OptimizerWpf
         // Property (όχι readonly field) ώστε να ξαναχτίζεται με την τρέχουσα γλώσσα - βλ.
         // MainWindow.xaml.cs's ApplyLanguage(), που ξαναχτίζει το μενού/search index σε κάθε αλλαγή
         // γλώσσας (ρητό αίτημα χρήστη: "μετάφρασε τα όλα").
+        // Ονόματα γλωσσών στη δική τους γλώσσα (όπως στη λίστα γλωσσών της επικεφαλίδας).
+        public static readonly IReadOnlyList<(string Code, string Name)> Languages = new[]
+        {
+            ("el", "Ελληνικά"), ("en", "English"), ("de", "Deutsch"), ("fr", "Français"), ("es", "Español"),
+            ("ko", "한국어"), ("zh", "中文"), ("it", "Italiano"), ("ru", "Русский"), ("ja", "日本語"),
+            ("pt", "Português"), ("tr", "Türkçe"), ("ar", "العربية"), ("hi", "हिन्दी"),
+        };
+
+        private static IReadOnlyList<MenuLeaf> LanguageLeaves() => Languages
+            .Select(l => new MenuLeaf(LanguageService.Current == l.Code ? "✔" : "", l.Name, new MenuAction(null, "Lang:" + l.Code)))
+            .ToList();
+
         public static IReadOnlyList<MenuGroup> Groups => new[]
         {
             new MenuGroup("🛠️", LanguageService.T("Menu_Tools"), new[]
@@ -42,13 +55,20 @@ namespace OptimizerWpf
                 new MenuLeaf("", $"{LanguageService.T("HealthCheck_Title")}...", new MenuAction(null, "HealthCheck_Title"), "Ctrl+H"),
                 // ΝΕΟ (6.1.0) - βλ. Views/MaintenanceCenterWindow.xaml.
                 new MenuLeaf("", $"{LanguageService.T("Center_Title")}...", new MenuAction(null, "Center_Title"), "Ctrl+J"),
+                new MenuLeaf("", LanguageService.T("Tray_Exit"), new MenuAction(null, "App_Exit")),
             }),
             new MenuGroup("👁️", LanguageService.T("Menu_View"), NavItems.All
                 .Select((n, i) => new MenuLeaf(n.Icon, n.Label, new MenuAction(n.Tag, null), i < 8 ? $"Ctrl+{i + 1}" : null))
                 .ToList()),
+            // 6.1.0 (ρητό αίτημα χρήστη): το μενού Ρυθμίσεις έδειχνε ΜΟΝΟ "Ρυθμίσεις" - τώρα έχει και
+            // Ρυθμίσεις Εμφάνισης, Ρυθμίσεις Μενού και υπομενού Γλώσσας (ανοίγουν το ίδιο παράθυρο στο
+            // αντίστοιχο tab - "AppearanceSettings:N", N = index του tab).
             new MenuGroup("⚙️", LanguageService.T("Menu_Settings"), new[]
             {
-                new MenuLeaf("", $"{LanguageService.T("AppearanceSettingsTitle")}...", new MenuAction(null, "AppearanceSettingsTitle")),
+                new MenuLeaf("", $"{LanguageService.T("AppearanceSettingsTitle")}...", new MenuAction(null, "AppearanceSettings:0")),
+                new MenuLeaf("", $"{LanguageService.T("Appr_ThemeSettingsTab")}...", new MenuAction(null, "AppearanceSettings:1")),
+                new MenuLeaf("", $"{LanguageService.T("Appr_MenuTab")}...", new MenuAction(null, "AppearanceSettings:2")),
+                new MenuLeaf("🌐", LanguageService.T("Menu_Language"), new MenuAction(null, null), null, LanguageLeaves()),
             }),
             new MenuGroup("📋", LanguageService.T("ActionLog_Title"), new[]
             {

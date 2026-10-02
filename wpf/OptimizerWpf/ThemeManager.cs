@@ -42,7 +42,11 @@ namespace OptimizerWpf
         // δευτερεύοντα παράθυρα (που έχασαν το animated background τους) να το καλούν απευθείας.
         public static void AttachWindow(Window window)
         {
-            void ApplyCorners() => Services.WindowCornerService.SetSquareCorners(window, IsWindowsClassicSkin);
+            void ApplyCorners()
+            {
+                Services.WindowCornerService.SetSquareCorners(window, IsWindowsClassicSkin);
+                Services.WindowCornerService.SetDarkTitleBar(window, IsDarkMode);
+            }
             window.SourceInitialized += (_, _) => ApplyCorners();
             void OnChanged() => ApplyCorners();
             Changed += OnChanged;

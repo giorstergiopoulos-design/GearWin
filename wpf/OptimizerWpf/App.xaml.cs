@@ -160,7 +160,11 @@ public partial class App : Application
         // για το πρώτο tick του περιοδικού timer, βλ. UpdateNotificationService.Start) ώστε το
         // balloon (αν βρεθούν ενημερώσεις) και η κάρτα "Ενημερώσεις Συστήματος" της Αρχικής να
         // ενημερωθούν αμέσως, ίδιο RunCheckAsync με το κουμπί "Έλεγχος Τώρα" των Ρυθμίσεων.
-        if (startToTray) _ = Services.UpdateNotificationService.RunCheckAsync();
+        // 6.1.0 - έλεγχος ενημερώσεων σε ΚΑΘΕ εκκίνηση (όχι μόνο --tray), με αναμονή δικτύου και ειδοποίηση.
+        _ = Services.UpdateNotificationService.StartupCheckAsync();
+
+        // 6.1.0 - μετανάστευση της "εκκίνηση με τα Windows" από το μη-λειτουργικό Run key σε εργασία Task Scheduler.
+        _ = Services.SystemService.EnsureLaunchTaskAsync();
 
         // ΝΕΟ - roadmap "Widget επιφάνειας εργασίας" - ξεκινά ΜΟΝΟ αν ο χρήστης το έχει ενεργοποιήσει
         // ρητά (Ρυθμίσεις Εμφάνισης), ίδιο μοτίβο με το AutoGamingModeEnabled παραπάνω.

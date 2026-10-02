@@ -93,23 +93,45 @@ namespace OptimizerWpf.Services
         // ξεκινήσει κρυμμένο στο tray αντί να δείξει το κύριο παράθυρο/splash.
         private const string TrayAutostartValueName = "GearWinTrayAutostart";
 
-        public static void SetLaunchWithWindowsToTray(bool enabled)
+        // 6.1.0 - ΔΙΟΡΘΩΣΗ "δεν λειτουργεί η εκκίνηση με τα Windows": η εφαρμογή απαιτεί Administrator
+        // (app.manifest) και τα Windows ΠΑΡΑΛΕΙΠΟΥΝ σιωπηλά από το registry Run key κάθε πρόγραμμα που
+        // ζητά elevation. Τώρα η εκκίνηση γίνεται με εργασία Task Scheduler (LogonTrigger, RunLevel=
+        // HighestAvailable - ξεκινά elevated χωρίς UAC prompt, ΚΑΙ με μπαταρία, βλ.
+        // TaskSchedulerService). Η παλιά τιμή του Run key αφαιρείται πάντα (μετανάστευση).
+        public const string AutostartTaskName = @"GearWin\Autostart";
+
+        public static async System.Threading.Tasks.Task<bool> SetLaunchWithWindowsToTrayAsync(bool enabled)
         {
             try
             {
                 using var key = Registry.CurrentUser.OpenSubKey(RunKeyPath, writable: true);
-                if (key == null) return;
-                if (enabled)
-                {
-                    var exePath = Environment.ProcessPath ?? System.Reflection.Assembly.GetExecutingAssembly().Location;
-                    key.SetValue(TrayAutostartValueName, $"\"{exePath}\" --tray");
-                }
-                else
-                {
-                    key.DeleteValue(TrayAutostartValueName, throwOnMissingValue: false);
-                }
+                key?.DeleteValue(TrayAutostartValueName, throwOnMissingValue: false);
             }
-            catch { /* ίδια ανοχή με το SetStartupItemEnabled παραπάνω - honest no-op αν το κλειδί δεν είναι εγγράψιμο */ }
+            catch { /* η παλιά τιμή μπορεί να μην υπάρχει/να μην είναι εγγράψιμη - δεν επηρεάζει τη νέα εργασία */ }
+
+            if (!enabled)
+            {
+                await TaskSchedulerService.DeleteAsync(AutostartTaskName); // false αν δεν υπήρχε - επιθυμητό αποτέλεσμα ούτως ή άλλως
+                return true;
+            }
+
+            var exePath = Environment.ProcessPath ?? System.Reflection.Assembly.GetExecutingAssembly().Location;
+            // 15 δευτερόλεπτα καθυστέρηση: ο desktop/δίκτυο προλαβαίνουν να σηκωθούν πριν ξεκινήσει ο έλεγχος ενημερώσεων.
+            var xml = TaskSchedulerService.BuildLogonTaskXml(exePath, "--tray", 15, TaskSchedulerService.CurrentUserId(), "GearWin - start with Windows (tray)");
+            return await TaskSchedulerService.CreateAsync(AutostartTaskName, xml);
+        }
+
+        // Καλείται στην εκκίνηση: όσοι είχαν ενεργοποιήσει την επιλογή με την παλιά (μη λειτουργική)
+        // μέθοδο Run key, παίρνουν αυτόματα την εργασία χωρίς να χρειαστεί να την ξαναενεργοποιήσουν.
+        public static async System.Threading.Tasks.Task EnsureLaunchTaskAsync()
+        {
+            try
+            {
+                if (!AppSettingsService.Current.LaunchWithWindowsToTray) return;
+                if (await TaskSchedulerService.ExistsAsync(AutostartTaskName)) return;
+                await SetLaunchWithWindowsToTrayAsync(true);
+            }
+            catch { }
         }
 
         // ΝΕΟ - roadmap "Εκτίμηση χρόνου εκκίνησης" - "Πόσο καθυστερεί κάθε εφαρμογή εκκίνησης την

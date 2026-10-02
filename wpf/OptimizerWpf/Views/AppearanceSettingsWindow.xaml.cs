@@ -184,14 +184,24 @@ namespace OptimizerWpf.Views
         // ΝΕΟ - ROADMAP.md REQ-570-02/12 (ρητό αίτημα χρήστη) - εγγράφει/αφαιρεί ΜΙΑ τιμή στο ίδιο
         // registry Run key που ήδη χρησιμοποιεί το SystemService για τα startup items ΤΡΙΤΩΝ
         // εφαρμογών (ξεχωριστό όνομα τιμής, καμία σύγκρουση) - βλ. App.xaml.cs's "--tray" χειρισμό.
-        private void ChkLaunchToTray_Changed(object sender, RoutedEventArgs e)
+        private async void ChkLaunchToTray_Changed(object sender, RoutedEventArgs e)
         {
             if (_loading) return;
             var enabled = ChkLaunchToTray.IsChecked == true;
+            ChkLaunchToTray.IsEnabled = false;
+            bool ok;
+            try { ok = await SystemService.SetLaunchWithWindowsToTrayAsync(enabled); }
+            catch (Exception ex) { ok = false; ThemedMessageBox.Show(ex.Message, LanguageService.T("AppearanceSettingsTitle"), MessageBoxButton.OK, MessageBoxImage.Warning); }
+            ChkLaunchToTray.IsEnabled = true;
+            if (!ok)
+            {
+                // Η εργασία δεν δημιουργήθηκε - ειλικρινής επαναφορά του checkbox αντί για ψεύτικο "ενεργό".
+                _loading = true; ChkLaunchToTray.IsChecked = !enabled; _loading = false;
+                ThemedMessageBox.Show(LanguageService.T("Autostart_Failed"), LanguageService.T("AppearanceSettingsTitle"), MessageBoxButton.OK, MessageBoxImage.Warning);
+                return;
+            }
             AppSettingsService.Current.LaunchWithWindowsToTray = enabled;
             AppSettingsService.Save();
-            try { SystemService.SetLaunchWithWindowsToTray(enabled); }
-            catch (Exception ex) { ThemedMessageBox.Show(ex.Message, LanguageService.T("AppearanceSettingsTitle"), MessageBoxButton.OK, MessageBoxImage.Warning); }
         }
 
         // ΝΕΟ - roadmap "Widget επιφάνειας εργασίας" - ζωντανή ενεργοποίηση/απενεργοποίηση, ίδιο μοτίβο
@@ -236,7 +246,7 @@ namespace OptimizerWpf.Views
                 _opacitySaveTimer.Tick += (_, _) => { _opacitySaveTimer?.Stop(); _opacitySaveTimer = null; AppSettingsService.Save(); };
             }
             _opacitySaveTimer.Stop(); _opacitySaveTimer.Start();
-            if (Owner is MainWindow main) main.Opacity = percent / 100.0;
+            if (Owner is MainWindow main) main.ApplyWindowOpacity();
         }
 
         private void ChkSidebarEnabled_Changed(object sender, RoutedEventArgs e)

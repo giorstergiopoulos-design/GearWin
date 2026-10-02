@@ -16,8 +16,13 @@ namespace OptimizerWpf.Views
             InitializeComponent();
             TxtSplashVersion.Text = App.DisplayVersion;
             _main = main;
-            Left = main.Left;
-            Top = main.Top;
+            // 6.1.0 - το κύριο παράθυρο έχει πλέον κανονικό πλαίσιο/γραμμή τίτλου: η οθόνη εκκίνησης
+            // καλύπτει την περιοχή ΠΕΡΙΕΧΟΜΕΝΟΥ (client area), όχι το εξωτερικό πλαίσιο.
+            var origin = main.PointToScreen(new Point(0, 0));
+            var toDip = PresentationSource.FromVisual(main)?.CompositionTarget?.TransformFromDevice;
+            if (toDip != null) origin = toDip.Value.Transform(origin);
+            Left = origin.X;
+            Top = origin.Y;
             Width = main.ActualWidth;
             Height = main.ActualHeight;
             Loaded += SplashWindow_Loaded;
