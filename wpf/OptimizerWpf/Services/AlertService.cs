@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Threading.Tasks;
 using System.Windows.Threading;
 
 namespace OptimizerWpf.Services
@@ -51,7 +52,11 @@ namespace OptimizerWpf.Services
 
         public static void Stop() { _timer?.Stop(); _timer = null; }
 
-        public static void CheckNow()
+        // Οι αισθητήρες (LibreHardwareMonitor) και τα S.M.A.R.T. (WMI) μπορούν να πάρουν εκατοντάδες ms - τρέχουν
+        // σε νήμα παρασκηνίου ώστε να μην παγώνει το UI, και μόνο το balloon επιστρέφει στο UI νήμα.
+        public static void CheckNow() => _ = Task.Run(CheckCore);
+
+        private static void CheckCore()
         {
             try
             {
@@ -84,7 +89,10 @@ namespace OptimizerWpf.Services
                 foreach (var a in found)
                 {
                     _lastFired[a.Key] = now;
-                    TrayIconService.ShowNotificationBalloon(a.Title, a.Body, () => TrayIconService.OpenTab("System"));
+                    var alert = a;
+                    var dispatcher = System.Windows.Application.Current?.Dispatcher;
+                    void Show() => TrayIconService.ShowNotificationBalloon(alert.Title, alert.Body, () => TrayIconService.OpenTab("System"));
+                    if (dispatcher != null) dispatcher.BeginInvoke((Action)Show); else Show();
                 }
             }
             catch { /* οι ειδοποιήσεις είναι best-effort - ποτέ δεν πρέπει να ρίξουν την εφαρμογή */ }

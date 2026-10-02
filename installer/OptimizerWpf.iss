@@ -106,6 +106,7 @@ Name: "{autodesktop}\{#MyAppName}"; Filename: "{app}\{#MyAppExeName}"; Tasks: de
 [Run]
 Filename: "{app}\{#MyAppExeName}"; Description: "{cm:LaunchProgram,{#StringChange(MyAppName, '&', '&&')}}"; Flags: nowait postinstall skipifsilent
 
+[UninstallRun]
 ; ΝΕΟ - ρητό αίτημα χρήστη: "έλεγξε αν υπάρχει πρόβλεψη για ορθή απεγκατάσταση/διόρθωση και επαναφορά
 ; όλων των ρυθμίσεων των windows στα προεπιλεγμένα αν το θέλει ο χρήστης". Πριν αφαιρεθούν τα αρχεία,
 ; ρωτάει τον χρήστη (InitializeUninstall παρακάτω) αν θέλει να επαναφερθούν όλες οι ρυθμίσεις των
@@ -116,7 +117,13 @@ Filename: "{app}\{#MyAppExeName}"; Description: "{cm:LaunchProgram,{#StringChang
 ; αρχείων (προεπιλεγμένη συμπεριφορά του [UninstallRun]), όσο το exe υπάρχει ακόμα στο {app}. Τόσο ο
 ; απεγκαταστάτης (PrivilegesRequired=admin) όσο και το ίδιο το exe (app.manifest) απαιτούν ήδη admin -
 ; καμία επιπλέον προτροπή UAC αφού ο γονικός απεγκαταστάτης είναι ήδη elevated.
-Filename: "{app}\{#MyAppExeName}"; Parameters: "--reset-tweaks"; Flags: runhidden waituntilterminated; Check: ShouldResetTweaks
+Filename: "{app}\{#MyAppExeName}"; Parameters: "--reset-tweaks"; Flags: runhidden waituntilterminated; Check: ShouldResetTweaks; RunOnceId: "ResetTweaks"
+
+; 6.1.0 - αφαίρεση των εργασιών Task Scheduler που δημιουργεί η εφαρμογή (εκκίνηση με τα Windows,
+; εβδομαδιαία συντήρηση) - αλλιώς θα έμεναν να δείχνουν σε exe που δεν υπάρχει πια. Σφάλμα (η εργασία
+; δεν υπάρχει) αγνοείται σιωπηλά.
+Filename: "{sys}\schtasks.exe"; Parameters: "/Delete /TN ""GearWin\Autostart"" /F"; Flags: runhidden waituntilterminated; RunOnceId: "DelAutostartTask"
+Filename: "{sys}\schtasks.exe"; Parameters: "/Delete /TN ""OptimizerWpf_WeeklyMaintenance"" /F"; Flags: runhidden waituntilterminated; RunOnceId: "DelMaintTask"
 
 ; ΣΗΜΕΙΩΣΗ ("διόρθωση"): το Inno Setup δεν έχει ξεχωριστή λειτουργία "Repair" σαν το MSI - η καθιερωμένη
 ; πρακτική του (και αυτή που υποστηρίζεται ήδη εδώ χωρίς επιπλέον κώδικα) είναι η επανεκτέλεση του ΙΔΙΟΥ

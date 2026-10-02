@@ -14,7 +14,7 @@
         mc:Ignorable="d"
         Title="GearWin - Complete PC Care"
         Icon="AppIcon.ico"
-        Height="800" Width="1360" MinHeight="600" MinWidth="1000"
+        Height="840" Width="1376" MinHeight="640" MinWidth="1016"
         WindowStartupLocation="CenterScreen"
         Background="{DynamicResource MainBgBrush}"
         PreviewKeyDown="Window_PreviewKeyDown"
