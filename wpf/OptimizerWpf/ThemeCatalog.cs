@@ -1,5 +1,6 @@
 using System.Collections.Generic;
 using System.Windows.Media;
+using Microsoft.Win32;
 
 namespace OptimizerWpf
 {
@@ -198,13 +199,65 @@ namespace OptimizerWpf
                 C(192, 192, 192), C(220, 220, 220), C(230, 230, 230), C(0, 0, 140), C(80, 80, 120),
                 C(0, 0, 170), C(200, 200, 200), C(0, 0, 140), C(210, 210, 210), C(225, 225, 225), C(0, 0, 170)));
 
+        // 6.1.0 (ρητό αίτημα χρήστη: "πιο πιστό στο αυθεντικό") - παλέτα Windows 11 Mica όπως το πραγματικό
+        // Microsoft PC Manager: ουδέτερο γκρι φόντο (#F3F3F3 / #202020), λευκές κάρτες με λεπτό περίγραμμα,
+        // κάθετο παράθυρο πλοήγησης ελαφρώς πιο ανοιχτό από το φόντο, επιλεγμένο στοιχείο με απαλή
+        // μπλε απόχρωση + μπλε accent #0067C0 (σκούρο: #4CC2FF). Η αυθεντική διάταξη (πλατιά μπάρα
+        // εικονιδίο+κείμενο + hero Αρχική με Ενίσχυση/Έλεγχο υγείας) βρίσκεται στο MainWindow/PcManagerHomeView.
         public static readonly ThemePair MicrosoftPcManager = new("Microsoft PC Manager",
             new("Microsoft PC Manager",
-                C(18, 18, 20), C(26, 27, 30), C(38, 40, 45), C(240, 240, 242), C(150, 152, 158),
-                C(66, 165, 245), C(28, 29, 33), C(45, 47, 52), C(36, 38, 43), C(48, 50, 56), C(41, 151, 255)),
+                C(32, 32, 32), C(39, 39, 39), C(52, 62, 76), C(255, 255, 255), C(172, 172, 172),
+                C(76, 194, 255), C(45, 45, 45), C(60, 60, 60), C(55, 55, 55), C(66, 66, 66), C(76, 194, 255)),
             new("Microsoft PC Manager",
-                C(253, 254, 255), C(230, 243, 253), C(255, 255, 255), C(32, 33, 36), C(96, 96, 100),
-                C(0, 95, 184), C(255, 255, 255), C(225, 229, 235), C(240, 242, 245), C(225, 230, 238), C(0, 95, 184)));
+                C(243, 243, 243), C(249, 249, 249), C(221, 235, 247), C(26, 26, 26), C(96, 96, 96),
+                C(0, 103, 192), C(255, 255, 255), C(229, 229, 229), C(251, 251, 251), C(243, 243, 243), C(0, 103, 192)));
+
+        // 6.1.0 - ΝΕΟ skin "Windows 11 Settings": ίδια πλατιά πλοήγηση με την εφαρμογή Ρυθμίσεις των Windows 11,
+        // ουδέτερη γκρι παλέτα και accent χρώμα = το ΠΡΑΓΜΑΤΙΚΟ accent των Windows του χρήστη
+        // (HKCU\Software\Microsoft\Windows\DWM\AccentColor, διαβάζεται κατά την εκκίνηση).
+        private static readonly Color WindowsAccent = AccentFromDwm(ReadDwmAccent());
+
+        public static Color AccentFromDwm(int? abgr) => abgr is int v
+            ? Color.FromRgb((byte)(v & 0xFF), (byte)((v >> 8) & 0xFF), (byte)((v >> 16) & 0xFF))
+            : Color.FromRgb(0, 120, 212);
+
+        private static int? ReadDwmAccent()
+        {
+            try
+            {
+                using var key = Registry.CurrentUser.OpenSubKey(@"Software\Microsoft\Windows\DWM");
+                return key?.GetValue("AccentColor") is int v ? v : null;
+            }
+            catch { return null; }
+        }
+
+        public static readonly ThemePair Windows11Settings = new("Windows 11 Settings",
+            new("Windows 11 Settings",
+                C(28, 28, 28), C(32, 32, 32), C(50, 50, 50), C(255, 255, 255), C(165, 165, 165),
+                WindowsAccent, C(43, 43, 43), C(58, 58, 58), C(50, 50, 50), C(62, 62, 62), WindowsAccent),
+            new("Windows 11 Settings",
+                C(243, 243, 243), C(243, 243, 243), C(232, 232, 232), C(26, 26, 26), C(96, 96, 96),
+                WindowsAccent, C(251, 251, 251), C(234, 234, 234), C(249, 249, 249), C(240, 240, 240), WindowsAccent));
+
+        // 6.1.0 - ΝΕΟ skin "Gaming Hub": σκούρο ανθρακί με πράσινο neon accent (αισθητική κονσόλας/Xbox),
+        // μεγάλες στρογγυλεμένες γωνίες, στενή κάθετη μπάρα εικονιδίων, κινούμενο φόντο.
+        public static readonly ThemePair GamingHub = new("Gaming Hub",
+            new("Gaming Hub",
+                C(14, 16, 14), C(20, 24, 20), C(27, 52, 30), C(236, 245, 236), C(132, 160, 132),
+                C(107, 214, 74), C(22, 27, 22), C(38, 52, 38), C(30, 38, 30), C(40, 56, 40), C(16, 160, 16)),
+            new("Gaming Hub",
+                C(226, 236, 226), C(240, 247, 240), C(206, 232, 206), C(14, 32, 14), C(60, 96, 60),
+                C(16, 124, 16), C(250, 253, 250), C(190, 214, 190), C(226, 240, 226), C(210, 232, 210), C(16, 124, 16)));
+
+        // 6.1.0 - ΝΕΟ skin "Office Ribbon": αισθητική Office 2010 - μπλε/λευκό, σχεδόν τετράγωνες γωνίες,
+        // ορατή γραμμή μενού ΜΑΖΙ με τη λωρίδα καρτελών (σαν tabs κορδέλας).
+        public static readonly ThemePair OfficeRibbon = new("Office Ribbon",
+            new("Office Ribbon",
+                C(30, 36, 48), C(36, 46, 66), C(48, 70, 108), C(236, 240, 247), C(150, 164, 188),
+                C(120, 170, 235), C(40, 48, 64), C(62, 78, 106), C(46, 58, 82), C(58, 74, 104), C(43, 87, 154)),
+            new("Office Ribbon",
+                C(255, 255, 255), C(219, 229, 241), C(255, 255, 255), C(30, 30, 30), C(84, 98, 120),
+                C(43, 87, 154), C(255, 255, 255), C(171, 193, 222), C(233, 240, 249), C(213, 227, 245), C(43, 87, 154)));
 
         // Keeps direct access for code that only ever wants the dark palette (e.g. the app's
         // startup default) without going through the Dark/Light pair.
@@ -233,6 +286,6 @@ namespace OptimizerWpf
         // All παραπάνω, αλλά παραμένουν έγκυρες, επιλέξιμες τιμές μέσω της καρτέλας Σκινς) - αλλιώς ο
         // χρήστης που έχει αποθηκεύσει skin ως προεπιλογή εκκίνησης θα έβλεπε το θέμα του να επανέρχεται
         // σιωπηλά σε Windows 11 Fluent σε κάθε επόμενη εκκίνηση.
-        public static readonly IReadOnlyList<ThemePair> AllIncludingSkins = new List<ThemePair>(All) { MicrosoftPcManager, WindowsClassic };
+        public static readonly IReadOnlyList<ThemePair> AllIncludingSkins = new List<ThemePair>(All) { MicrosoftPcManager, WindowsClassic, Windows11Settings, GamingHub, OfficeRibbon };
     }
 }

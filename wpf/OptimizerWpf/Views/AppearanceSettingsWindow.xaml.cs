@@ -55,9 +55,8 @@ namespace OptimizerWpf.Views
             else RadioMenuHoriz.IsChecked = true;
 
             var currentThemeName = ThemeManager.CurrentPair.DisplayName;
-            RadioSkinPcManager.IsChecked = currentThemeName == "Microsoft PC Manager";
-            RadioSkinWindowsClassic.IsChecked = currentThemeName == "Windows Classic";
-            RadioSkinClassic.IsChecked = currentThemeName != "Microsoft PC Manager" && currentThemeName != "Windows Classic";
+            foreach (var (radio, theme) in SkinRadios()) radio.IsChecked = currentThemeName == theme.DisplayName;
+            RadioSkinClassic.IsChecked = !SkinCatalog.IsSkin(currentThemeName);
 
             // ΔΙΟΡΘΩΣΗ (εξονυχιστικός έλεγχος εντόπισε): ήταν IsChecked="True" hardcoded στο XAML,
             // ΠΟΤΕ δεν αντανακλούσε το πραγματικό αποθηκευμένο DefaultTheme - τώρα αντικατοπτρίζει αν
@@ -273,23 +272,27 @@ namespace OptimizerWpf.Views
             (Owner as MainWindow)?.ApplyMenuModeVisibility();
         }
 
-        // Port του radioSkinClassic/radioSkinPcManager (Optimizer.ps1 ~8780-8812) - το skin "Microsoft
-        // PC Manager" ΕΙΝΑΙ το ομώνυμο θέμα (ήδη υπάρχει στο ThemeCatalog) - η επιλογή εδώ απλώς
-        // εναλλάσσει σε αυτό / επαναφέρει το προηγούμενο πραγματικό θέμα, ΔΕΝ είναι ξεχωριστό σύστημα.
-        // Επεκτάθηκε σε 3-way (ρητό αίτημα χρήστη) - προστέθηκε το "Windows Classic" skin, ίδιο μοτίβο.
+        // 6.1.0 - ΟΛΑ τα skins (βλ. SkinCatalog) εναλλάσσονται από εδώ· τα radio buttons παραμένουν (ρητό
+        // αίτημα χρήστη). "Κανονικό" = επαναφορά του τελευταίου πραγματικού θέματος.
+        private (RadioButton Radio, ThemePair Theme)[] SkinRadios() => new[]
+        {
+            (RadioSkinPcManager, ThemeCatalog.MicrosoftPcManager),
+            (RadioSkinWindowsClassic, ThemeCatalog.WindowsClassic),
+            (RadioSkinSettings11, ThemeCatalog.Windows11Settings),
+            (RadioSkinGamingHub, ThemeCatalog.GamingHub),
+            (RadioSkinOfficeRibbon, ThemeCatalog.OfficeRibbon),
+        };
+
         private void Skin_Changed(object sender, RoutedEventArgs e)
         {
             if (_loading) return;
             var currentName = ThemeManager.CurrentPair.DisplayName;
-            if (RadioSkinPcManager.IsChecked == true && currentName != "Microsoft PC Manager")
+            var chosen = SkinRadios().FirstOrDefault(r => r.Radio.IsChecked == true);
+            if (chosen.Radio != null)
             {
-                ThemeManager.SelectTheme(ThemeCatalog.MicrosoftPcManager);
+                if (currentName != chosen.Theme.DisplayName) ThemeManager.SelectTheme(chosen.Theme);
             }
-            else if (RadioSkinWindowsClassic.IsChecked == true && currentName != "Windows Classic")
-            {
-                ThemeManager.SelectTheme(ThemeCatalog.WindowsClassic);
-            }
-            else if (RadioSkinClassic.IsChecked == true && (currentName == "Microsoft PC Manager" || currentName == "Windows Classic"))
+            else if (RadioSkinClassic.IsChecked == true && SkinCatalog.IsSkin(currentName))
             {
                 var name = AppSettingsService.Current.LastNonPcManagerTheme;
                 var pair = ThemeCatalog.All.FirstOrDefault(p => p.DisplayName == name) ?? ThemeCatalog.Windows11Fluent;

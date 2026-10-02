@@ -27,6 +27,25 @@
          Ελαχιστοποίησης/Μεγιστοποίησης/Κλεισίματος αφαιρέθηκαν (τα παρέχουν τα Windows). -->
     <Window.Resources>
         <local:NewlineToSpaceConverter x:Key="NewlineToSpace"/>
+        <!-- Στενή κάθετη μπάρα (Gaming Hub): εικονίδιο + περιγραφή σε δύο γραμμές από κάτω. -->
+        <DataTemplate x:Key="RailItemCompact">
+            <Button Style="{StaticResource FlatButtonStyle}" Width="76" Height="64" Margin="4,3" Click="PcManagerRailItem_Click" Tag="{Binding}" ToolTip="{Binding Label}">
+                <StackPanel>
+                    <TextBlock Text="{Binding Icon}" FontSize="18" HorizontalAlignment="Center"/>
+                    <TextBlock Text="{Binding Label}" FontSize="9.5" TextWrapping="Wrap" TextAlignment="Center" Margin="0,3,0,0"
+                               Foreground="{DynamicResource TextBrush}" MaxWidth="72"/>
+                </StackPanel>
+            </Button>
+        </DataTemplate>
+        <!-- Πλατιά κάθετη μπάρα (PC Manager / Windows 11 Settings): εικονίδιο + κείμενο δίπλα-δίπλα, επιλεγμένο στοιχείο με pill + accent γραμμή. -->
+        <DataTemplate x:Key="RailItemWide">
+            <RadioButton GroupName="Rail" Tag="{Binding}" Style="{StaticResource RailPillStyle}" Click="PcManagerRailRadio_Click" Loaded="RailRadio_Loaded">
+                <StackPanel Orientation="Horizontal">
+                    <views:HeaderGlyphIcon Kind="{Binding IconKind}" Width="18" Height="18" Margin="0,0,12,0"/>
+                    <TextBlock Text="{Binding Label}" VerticalAlignment="Center"/>
+                </StackPanel>
+            </RadioButton>
+        </DataTemplate>
         <!-- ΝΕΟ - roadmap "Παλλόμενο κόκκινο dot προσοχής" - το DotHealthAttention ήταν στατικό·
              αργή, διακριτική παλμική Opacity animation τραβάει λίγο περισσότερο το βλέμμα χωρίς να
              γίνεται ενοχλητική. Ξεκινά/σταματά από το code-behind (CheckHealthAttentionAsync) μαζί
@@ -517,23 +536,22 @@
                  καρτελών/hamburger/πλευρικό μενού όταν αυτό το θέμα είναι ενεργό (βλ.
                  ApplyPcManagerSkinLayout). ΙΔΙΕΣ 8 καρτέλες (NavItems.All), μόνο εικονίδιο (χωρίς
                  κείμενο, όπως στο πραγματικό PC Manager). -->
-            <Border x:Name="PcManagerRail" Grid.Column="0" Grid.RowSpan="1" Background="{DynamicResource TabBgBrush}" Visibility="Collapsed" Width="84">
-                <ItemsControl x:Name="ListPcManagerRail" Margin="0,12,0,0">
-                    <ItemsControl.ItemTemplate>
-                        <DataTemplate>
-                            <!-- Ρητό αίτημα χρήστη: εικονίδιο + περιγραφή σε ΔΥΟ γραμμές κάτω από αυτό
-                                 (όπως στο πραγματικό Microsoft PC Manager), όχι μόνο γυμνό εικονίδιο. -->
-                            <Button Style="{StaticResource FlatButtonStyle}" Width="76" Height="64" Margin="4,3" Click="PcManagerRailItem_Click" Tag="{Binding}"
-                                    ToolTip="{Binding Label}">
-                                <StackPanel>
-                                    <TextBlock Text="{Binding Icon}" FontSize="18" HorizontalAlignment="Center"/>
-                                    <TextBlock Text="{Binding Label}" FontSize="9.5" TextWrapping="Wrap" TextAlignment="Center" Margin="0,3,0,0"
-                                               Foreground="{DynamicResource TextBrush}" MaxWidth="72"/>
-                                </StackPanel>
-                            </Button>
-                        </DataTemplate>
-                    </ItemsControl.ItemTemplate>
-                </ItemsControl>
+            <Border x:Name="PcManagerRail" Grid.Column="0" Grid.RowSpan="1" Background="{DynamicResource TabBgBrush}" Visibility="Collapsed" Width="84"
+                    CornerRadius="{DynamicResource AppCornerRadius}">
+                <Grid>
+                    <Grid.RowDefinitions><RowDefinition Height="*"/><RowDefinition Height="Auto"/></Grid.RowDefinitions>
+                    <ScrollViewer VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled">
+                        <ItemsControl x:Name="ListPcManagerRail" Margin="0,12,0,0"/>
+                    </ScrollViewer>
+                    <!-- 6.1.0 - πλατιά μπάρα (PC Manager / Ρυθμίσεις Windows 11): κουμπί Ρυθμίσεις κάτω-κάτω, όπως στο αυθεντικό. -->
+                    <Button x:Name="RailSettingsButton" Grid.Row="1" Visibility="Collapsed" Style="{StaticResource FlatButtonStyle}" Background="Transparent"
+                            HorizontalContentAlignment="Left" Margin="8,4,8,12" Padding="14,10" Click="RailSettings_Click">
+                        <StackPanel Orientation="Horizontal">
+                            <views:HeaderGlyphIcon Kind="Gear" Width="18" Height="18" Margin="0,0,12,0"/>
+                            <TextBlock x:Name="RailSettingsLabel" VerticalAlignment="Center" Foreground="{DynamicResource TextBrush}"/>
+                        </StackPanel>
+                    </Button>
+                </Grid>
             </Border>
 
             <!-- ΔΙΟΡΘΩΣΗ (χρήστης ανέφερε: "δεν φαίνεται το φόντο, το στατικό ή το κινούμενο") - αυτό

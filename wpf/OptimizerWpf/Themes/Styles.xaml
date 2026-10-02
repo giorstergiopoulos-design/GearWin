@@ -284,6 +284,39 @@
         </Setter>
     </Style>
 
+    <!-- 6.1.0 - στοιχείο πλατιάς κάθετης πλοήγησης (skins PC Manager / Windows 11 Settings): αριστερά-στοιχισμένο
+         εικονίδιο+κείμενο, επιλεγμένο = απαλό pill (TabSelect) + λεπτή accent γραμμή αριστερά, όπως στο αυθεντικό. -->
+    <Style x:Key="RailPillStyle" TargetType="RadioButton">
+        <Setter Property="Foreground" Value="{DynamicResource SubTextBrush}"/>
+        <Setter Property="FontSize" Value="13"/>
+        <Setter Property="Padding" Value="14,10"/>
+        <Setter Property="Margin" Value="8,2"/>
+        <Setter Property="Cursor" Value="Hand"/>
+        <Setter Property="Template">
+            <Setter.Value>
+                <ControlTemplate TargetType="RadioButton">
+                    <Grid>
+                        <Border x:Name="Bg" CornerRadius="{DynamicResource AppCornerRadius}" Background="Transparent" Padding="{TemplateBinding Padding}">
+                            <ContentPresenter HorizontalAlignment="Left" VerticalAlignment="Center"/>
+                        </Border>
+                        <Border x:Name="Bar" Width="3" Height="16" CornerRadius="2" HorizontalAlignment="Left" VerticalAlignment="Center"
+                                Margin="1,0,0,0" Background="{DynamicResource AccentBrush}" Visibility="Collapsed"/>
+                    </Grid>
+                    <ControlTemplate.Triggers>
+                        <Trigger Property="IsMouseOver" Value="True">
+                            <Setter TargetName="Bg" Property="Background" Value="{DynamicResource BtnHoverBrush}"/>
+                        </Trigger>
+                        <Trigger Property="IsChecked" Value="True">
+                            <Setter TargetName="Bg" Property="Background" Value="{DynamicResource TabSelectBrush}"/>
+                            <Setter TargetName="Bar" Property="Visibility" Value="Visible"/>
+                            <Setter Property="Foreground" Value="{DynamicResource TextBrush}"/>
+                        </Trigger>
+                    </ControlTemplate.Triggers>
+                </ControlTemplate>
+            </Setter.Value>
+        </Setter>
+    </Style>
+
     <!-- Ίδιο pill-στυλ με το TabPillStyle (RadioButton) παραπάνω, αλλά για πραγματικό TabItem/
          TabControl (ρητό αίτημα χρήστη: "οι καρτέλες στις ρυθμίσεις εξακολουθούν να μην είναι pills
          και να είναι λευκές" - το TabItem χωρίς δικό του Style/Template χρησιμοποιεί το προεπιλεγμένο

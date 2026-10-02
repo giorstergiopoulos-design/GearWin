@@ -30,6 +30,9 @@ namespace OptimizerWpf
             ["Windows 11 Fluent"] = "FluentAcrylic",
             ["Retro DOS Blue"] = "DosBlueBlocks",
             ["Microsoft PC Manager"] = "StandardDark",
+            ["Windows 11 Settings"] = "StandardDark",
+            ["Office Ribbon"] = "StandardDark",
+            ["Gaming Hub"] = "GridPulse",
         };
 
         public static string For(string themeDisplayName) => Map.TryGetValue(themeDisplayName, out var style) ? style : "StandardDark";

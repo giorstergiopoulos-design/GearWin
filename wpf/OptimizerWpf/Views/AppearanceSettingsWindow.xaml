@@ -154,7 +154,14 @@
                     <RadioButton x:Name="RadioSkinPcManager" Content="{tr:Tr Appr_SkinPcManager}" GroupName="Skin" Foreground="{DynamicResource TextBrush}"
                                  ToolTip="{tr:Tr Appr_SkinPcManagerTip}" Checked="Skin_Changed" Margin="0,0,0,6"/>
                     <RadioButton x:Name="RadioSkinWindowsClassic" Content="{tr:Tr Appr_SkinWindowsClassic}" GroupName="Skin" Foreground="{DynamicResource TextBrush}"
-                                 ToolTip="{tr:Tr Appr_SkinWindowsClassicTip}" Checked="Skin_Changed"/>
+                                 ToolTip="{tr:Tr Appr_SkinWindowsClassicTip}" Checked="Skin_Changed" Margin="0,0,0,6"/>
+                    <!-- 6.1.0 - τρία νέα skins (βλ. SkinCatalog): Windows 11 Settings, Gaming Hub, Office Ribbon. -->
+                    <RadioButton x:Name="RadioSkinSettings11" Content="{tr:Tr Appr_SkinSettings11}" GroupName="Skin" Foreground="{DynamicResource TextBrush}"
+                                 ToolTip="{tr:Tr Appr_SkinSettings11Tip}" Checked="Skin_Changed" Margin="0,0,0,6"/>
+                    <RadioButton x:Name="RadioSkinGamingHub" Content="{tr:Tr Appr_SkinGamingHub}" GroupName="Skin" Foreground="{DynamicResource TextBrush}"
+                                 ToolTip="{tr:Tr Appr_SkinGamingHubTip}" Checked="Skin_Changed" Margin="0,0,0,6"/>
+                    <RadioButton x:Name="RadioSkinOfficeRibbon" Content="{tr:Tr Appr_SkinOfficeRibbon}" GroupName="Skin" Foreground="{DynamicResource TextBrush}"
+                                 ToolTip="{tr:Tr Appr_SkinOfficeRibbonTip}" Checked="Skin_Changed"/>
                     <TextBlock Text="{tr:Tr Appr_SkinDesc}"
                                Style="{StaticResource SubTextStyle}" TextWrapping="Wrap" Margin="0,14,0,0"/>
 

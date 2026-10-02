@@ -104,7 +104,7 @@ namespace OptimizerWpf
             // κεντρικό σημείο ώστε ΚΑΘΕ παράθυρο (κύριο + δευτερεύοντα) να το σέβεται αυτόματα.
             void Apply()
             {
-                var isPcManager = CurrentPair.DisplayName == "Microsoft PC Manager";
+                var isPcManager = CurrentSkin?.FlatBackground == true;
                 control.Visibility = isPcManager ? Visibility.Collapsed : Visibility.Visible;
                 if (isPcManager) return;
                 // Ρητό αίτημα χρήστη (screenshot Ρυθμίσεων Εμφάνισης): "Κινούμενο φόντο" έχει καθολική
@@ -187,7 +187,7 @@ namespace OptimizerWpf
             AppSettingsService.Current.ThemeName = CurrentPair.DisplayName;
             AppSettingsService.Current.IsDarkMode = IsDarkMode;
             if (AppSettingsService.Current.ShareAppearanceWithMotionDesk) PublishSharedAppearance();
-            if (CurrentPair.DisplayName != "Microsoft PC Manager" && CurrentPair.DisplayName != "Windows Classic")
+            if (!SkinCatalog.IsSkin(CurrentPair.DisplayName))
                 AppSettingsService.Current.LastNonPcManagerTheme = CurrentPair.DisplayName;
             AppSettingsService.Save();
             Changed?.Invoke();
@@ -198,6 +198,9 @@ namespace OptimizerWpf
         // το χρησιμοποιεί για να κρύψει sidebar/hamburger/tab-strip και να αναγκάσει το κλασικό μενού
         // πάντα ορατό (ίδιο μοτίβο με το ήδη υπάρχον "Microsoft PC Manager" skin παραπάνω).
         public static bool IsWindowsClassicSkin => CurrentPair.DisplayName == "Windows Classic";
+
+        // 6.1.0 - το ενεργό skin (null = κανονικό θέμα) - βλ. SkinCatalog.
+        public static SkinInfo? CurrentSkin => SkinCatalog.For(CurrentPair.DisplayName);
 
         private static void Apply()
         {
@@ -219,9 +222,9 @@ namespace OptimizerWpf
             // skin· ορατό, συμπαγές περίγραμμα στα κουμπιά αντί για το σκόπιμα αόρατο (0px) που έχουν
             // όλα τα άλλα, μοντέρνα θέματα - απλοποιημένη προσέγγιση του κλασικού ανάγλυφου (3D bevel)
             // στυλ των Windows, ΧΩΡΙΣ πλήρη αναδημιουργία ξεχωριστού ControlTemplate ανά στοιχείο.
-            var isClassic = IsWindowsClassicSkin;
-            res["AppCornerRadius"] = new CornerRadius(isClassic ? 0 : 8);
-            res["AppButtonBorderThickness"] = new Thickness(isClassic ? 1 : 0);
+            var skin = CurrentSkin;
+            res["AppCornerRadius"] = new CornerRadius(skin?.CornerRadius ?? 8);
+            res["AppButtonBorderThickness"] = new Thickness(skin?.ButtonBorder ?? 0);
             res["AppButtonBorderBrush"] = new SolidColorBrush(theme.CardBorder);
         }
     }

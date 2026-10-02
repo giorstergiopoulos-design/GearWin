@@ -46,7 +46,6 @@ public partial class MainWindow : Window
         StatusService.SetIdle(LanguageService.T("Ready"));
 
         ThemeManager.AttachBackground(AppBackground);
-        ListPcManagerRail.ItemsSource = NavItems.All;
         ThemeManager.Changed += ApplyPcManagerSkinLayout;
         Closed += (_, _) => ThemeManager.Changed -= ApplyPcManagerSkinLayout;
         ApplyMenuModeVisibility();
@@ -159,7 +158,7 @@ public partial class MainWindow : Window
         _searchIndex = ClassicMenuModel.Groups
             .SelectMany(g => g.Items.SelectMany(l => l.Children ?? new[] { l }).Select(leaf => new SearchResultRow(leaf.Icon, leaf.Label, g.Header, leaf)))
             .ToList();
-        ListPcManagerRail.ItemsSource = NavItems.All;
+        ConfigureRail(ThemeManager.CurrentSkin?.Nav == SkinNav.WideRail);
 
         // ΔΙΟΡΘΩΣΗ (χρήστης ανέφερε: "κάποια elements μένουν στην προηγούμενη γλώσσα μέχρι το
         // κλείσιμο και άνοιγμα ξανά") - το SidebarNav είναι μόνιμο UserControl (μόνο Visibility
@@ -185,26 +184,94 @@ public partial class MainWindow : Window
     // Port του $isPCManagerSkin κλάδου του Update-SidebarDockLayout (Optimizer.ps1 ~7426-7451) - όταν
     // το θέμα "Microsoft PC Manager" είναι ενεργό, η οριζόντια λωρίδα καρτελών/hamburger/πλευρικό
     // μενού κρύβονται και αντικαθίστανται από την κάθετη μπάρα εικονιδίων (PcManagerRail).
+    private bool _menuForcedBySkin;
+
+    // 6.1.0 - γενίκευση για ΟΛΑ τα skins (βλ. SkinCatalog): διάταξη πλοήγησης (καρτέλες / στενή μπάρα /
+    // πλατιά μπάρα / μόνο κλασικό μενού), ορατότητα γραμμής μενού, και εναλλαγή hero/κανονικής Αρχικής.
     private void ApplyPcManagerSkinLayout()
     {
-        var isPcManagerSkin = ThemeManager.CurrentPair.DisplayName == "Microsoft PC Manager";
-        var isWindowsClassicSkin = ThemeManager.IsWindowsClassicSkin;
-        TabStripScroll.Visibility = (isPcManagerSkin || isWindowsClassicSkin) ? Visibility.Collapsed : Visibility.Visible;
-        PcManagerRail.Visibility = isPcManagerSkin ? Visibility.Visible : Visibility.Collapsed;
-        ColRail.Width = isPcManagerSkin ? GridLength.Auto : new GridLength(0);
-        BtnHamburger.Visibility = (!isPcManagerSkin && !isWindowsClassicSkin && AppSettingsService.Current.SidebarEnabled) ? Visibility.Visible : Visibility.Collapsed;
-        if (isPcManagerSkin || isWindowsClassicSkin)
+        var skin = ThemeManager.CurrentSkin;
+        var nav = skin?.Nav ?? SkinNav.Tabs;
+        var isRail = nav is SkinNav.CompactRail or SkinNav.WideRail;
+        var isMenuOnly = nav == SkinNav.MenuOnly;
+
+        TabStripScroll.Visibility = (isRail || isMenuOnly) ? Visibility.Collapsed : Visibility.Visible;
+        PcManagerRail.Visibility = isRail ? Visibility.Visible : Visibility.Collapsed;
+        ColRail.Width = isRail ? GridLength.Auto : new GridLength(0);
+        BtnHamburger.Visibility = (!isRail && !isMenuOnly && AppSettingsService.Current.SidebarEnabled) ? Visibility.Visible : Visibility.Collapsed;
+        if (isRail) ConfigureRail(nav == SkinNav.WideRail);
+        if (isRail || isMenuOnly)
         {
             _sidebarVisible = false;
             HideHorizModernStrip();
             ApplySidebarLayout();
         }
 
-        // Ρητό αίτημα χρήστη: "Windows Classic skin - δεν θα υπάρχει πλευρικό μενού ούτε το κουμπί
-        // μενού, θα λειτουργεί μόνο η γραμμή μενού η κλασική, που θα είναι πάντα εμφανής σε αυτό το
-        // σκιν" - το κλασικό μενού γίνεται μόνιμα ορατό (όχι toggle-able πλέον μέσω Ctrl+M/κουμπιού) σε
-        // αυτό το skin, ίδιο πνεύμα με το ήδη υπάρχον PC Manager rail replace-the-nav pattern.
-        if (isWindowsClassicSkin) ClassicMenu.Visibility = Visibility.Visible;
+        // Skins με ΜΟΝΙΜΗ γραμμή μενού (Windows Classic, Office Ribbon): πάντα ορατή. Φεύγοντας από
+        // τέτοιο skin επιστρέφει στην προεπιλογή (κρυμμένη, Ctrl+M) αντί να μένει "κολλημένη".
+        if (skin?.ShowMenuBar == true)
+        {
+            ClassicMenu.Visibility = Visibility.Visible;
+            _menuForcedBySkin = true;
+        }
+        else if (_menuForcedBySkin)
+        {
+            ClassicMenu.Visibility = Visibility.Collapsed;
+            _menuForcedBySkin = false;
+        }
+
+        // Αν είμαστε στην Αρχική και το skin άλλαξε από/προς hero Αρχική, ξαναφτιάχνεται το περιεχόμενο.
+        if (_currentTabTag == "Home" && (ContentHost.Content is PcManagerHomeView) != (skin?.HeroHome == true))
+            ShowTabContent("Home", LanguageService.T("TabHome"));
+        SyncRailSelection();
+    }
+
+    private string _currentTabTag = "Home";
+
+    private void ConfigureRail(bool wide)
+    {
+        PcManagerRail.Width = wide ? 236 : 84;
+        ListPcManagerRail.ItemTemplate = (DataTemplate)Resources[wide ? "RailItemWide" : "RailItemCompact"];
+        ListPcManagerRail.ItemsSource = null;
+        ListPcManagerRail.ItemsSource = NavItems.All;
+        RailSettingsButton.Visibility = wide ? Visibility.Visible : Visibility.Collapsed;
+        RailSettingsLabel.Text = LanguageService.T("AppearanceSettingsTitle");
+    }
+
+    private void RailSettings_Click(object sender, RoutedEventArgs e) =>
+        new AppearanceSettingsWindow { Owner = this }.ShowDialog();
+
+    private void PcManagerRailRadio_Click(object sender, RoutedEventArgs e)
+    {
+        if (sender is RadioButton { Tag: NavItem item }) SelectTab(item.Tag);
+    }
+
+    private void RailRadio_Loaded(object sender, RoutedEventArgs e)
+    {
+        if (sender is RadioButton { Tag: NavItem item } rb) rb.IsChecked = item.Tag == _currentTabTag;
+    }
+
+    // Συγχρονίζει την επιλεγμένη καρτέλα με την πλατιά μπάρα (αλλαγή καρτέλας από Ctrl+1..8/μενού/αναζήτηση).
+    private void SyncRailSelection()
+    {
+        for (var i = 0; i < ListPcManagerRail.Items.Count; i++)
+        {
+            if (ListPcManagerRail.ItemContainerGenerator.ContainerFromIndex(i) is not DependencyObject container) continue;
+            var rb = FindDescendant<RadioButton>(container);
+            if (rb is { Tag: NavItem item }) rb.IsChecked = item.Tag == _currentTabTag;
+        }
+    }
+
+    private static T? FindDescendant<T>(DependencyObject root) where T : DependencyObject
+    {
+        for (var i = 0; i < VisualTreeHelper.GetChildrenCount(root); i++)
+        {
+            var child = VisualTreeHelper.GetChild(root, i);
+            if (child is T match) return match;
+            var deeper = FindDescendant<T>(child);
+            if (deeper != null) return deeper;
+        }
+        return null;
     }
 
     private void PcManagerRailItem_Click(object sender, RoutedEventArgs e)
@@ -269,7 +336,7 @@ public partial class MainWindow : Window
         {
             // Στο "Windows Classic" skin η κλασική γραμμή μενού είναι ΠΑΝΤΑ ορατή (ρητό αίτημα χρήστη) -
             // το Ctrl+M δεν πρέπει να μπορεί να την κρύψει εκεί.
-            if (!ThemeManager.IsWindowsClassicSkin)
+            if (ThemeManager.CurrentSkin?.ShowMenuBar != true)
                 ClassicMenu.Visibility = ClassicMenu.Visibility == Visibility.Visible ? Visibility.Collapsed : Visibility.Visible;
             e.Handled = true;
             return;
@@ -370,11 +437,12 @@ public partial class MainWindow : Window
     // χρήστη) - keeps both navigation paths in sync instead of duplicating the switch logic.
     private void ShowTabContent(string tag, string label)
     {
+        _currentTabTag = tag;
         // Only the Home/Optimization tabs are fully ported so far - every other tab shows a labeled
         // placeholder until it's ported in a later session (see the staged migration plan).
         ContentHost.Content = tag switch
         {
-            "Home" => new HomeView(),
+            "Home" => ThemeManager.CurrentSkin?.HeroHome == true ? new PcManagerHomeView() : new HomeView(),
             "Optimization" => new OptimizationView(),
             "Health" => new HealthView(),
             "System" => new SystemView(),
@@ -390,6 +458,7 @@ public partial class MainWindow : Window
         ContentHost.Opacity = 0;
         ContentHost.BeginAnimation(OpacityProperty, new System.Windows.Media.Animation.DoubleAnimation(0, 1,
             new Duration(TimeSpan.FromMilliseconds(180))) { EasingFunction = new System.Windows.Media.Animation.QuadraticEase() });
+        SyncRailSelection();
     }
 
     // Γεμίζει ΟΛΟΚΛΗΡΟ το κλασικό μενού (4 ομάδες: Εργαλεία/Προβολή/Ρυθμίσεις/Βοήθεια) από το κοινό
