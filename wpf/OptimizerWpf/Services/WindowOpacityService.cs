@@ -20,6 +20,11 @@ namespace OptimizerWpf.Services
         [DllImport("user32.dll", SetLastError = true)] private static extern int GetWindowLong(IntPtr hWnd, int nIndex);
         [DllImport("user32.dll", SetLastError = true)] private static extern int SetWindowLong(IntPtr hWnd, int nIndex, int dwNewLong);
         [DllImport("user32.dll", SetLastError = true)] private static extern bool SetLayeredWindowAttributes(IntPtr hwnd, uint crKey, byte bAlpha, uint dwFlags);
+        [DllImport("user32.dll", SetLastError = true)] private static extern bool GetLayeredWindowAttributes(IntPtr hwnd, out uint crKey, out byte bAlpha, out uint dwFlags);
+        [DllImport("user32.dll", SetLastError = true)] private static extern bool SetWindowPos(IntPtr hWnd, IntPtr hWndInsertAfter, int x, int y, int cx, int cy, uint uFlags);
+
+        // Μετά από αλλαγή extended style τα Windows ΔΕΝ την εφαρμόζουν πάντα χωρίς SWP_FRAMECHANGED.
+        private const uint SWP_FLAGS = 0x0001 | 0x0002 | 0x0004 | 0x0010 | 0x0020; // NOSIZE|NOMOVE|NOZORDER|NOACTIVATE|FRAMECHANGED
 
         public static int ClampPercent(int percent) => Math.Clamp(percent, 60, 100);
 
@@ -27,22 +32,33 @@ namespace OptimizerWpf.Services
 
         // Ασφαλές να καλείται πριν υπάρξει HWND (απλά δεν κάνει τίποτα) - ο caller το ξανακαλεί στο
         // SourceInitialized. 100% αφαιρεί εντελώς το layered στυλ (καμία επιβάρυνση απόδοσης).
-        public static void Apply(Window window, int percent)
+        // Επιστρέφει true αν το αποτέλεσμα επιβεβαιώθηκε (το alpha διαβάζεται πίσω από το Windows).
+        public static bool Apply(Window window, int percent)
         {
             try
             {
                 var hwnd = new WindowInteropHelper(window).Handle;
-                if (hwnd == IntPtr.Zero) return;
+                if (hwnd == IntPtr.Zero) return false;
                 var ex = GetWindowLong(hwnd, GWL_EXSTYLE);
                 if (ClampPercent(percent) >= 100)
                 {
-                    if ((ex & WS_EX_LAYERED) != 0) SetWindowLong(hwnd, GWL_EXSTYLE, ex & ~WS_EX_LAYERED);
-                    return;
+                    if ((ex & WS_EX_LAYERED) != 0)
+                    {
+                        SetWindowLong(hwnd, GWL_EXSTYLE, ex & ~WS_EX_LAYERED);
+                        SetWindowPos(hwnd, IntPtr.Zero, 0, 0, 0, 0, SWP_FLAGS);
+                    }
+                    return true;
                 }
-                if ((ex & WS_EX_LAYERED) == 0) SetWindowLong(hwnd, GWL_EXSTYLE, ex | WS_EX_LAYERED);
-                SetLayeredWindowAttributes(hwnd, 0, ToAlpha(percent), LWA_ALPHA);
+                if ((ex & WS_EX_LAYERED) == 0)
+                {
+                    SetWindowLong(hwnd, GWL_EXSTYLE, ex | WS_EX_LAYERED);
+                    SetWindowPos(hwnd, IntPtr.Zero, 0, 0, 0, 0, SWP_FLAGS);
+                }
+                var alpha = ToAlpha(percent);
+                if (!SetLayeredWindowAttributes(hwnd, 0, alpha, LWA_ALPHA)) return false;
+                return GetLayeredWindowAttributes(hwnd, out _, out var applied, out _) && applied == alpha;
             }
-            catch { /* best-effort: χωρίς διαφάνεια το παράθυρο απλά μένει αδιαφανές */ }
+            catch { return false; /* best-effort: χωρίς διαφάνεια το παράθυρο απλά μένει αδιαφανές */ }
         }
     }
 }

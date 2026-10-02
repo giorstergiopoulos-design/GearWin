@@ -503,7 +503,7 @@
              Styles.xaml) αντί να κόβεται σιωπηλά η τελευταία καρτέλα (ίδιος κανόνας με το
              "no truncated descriptions" - βλ. memory). -->
         <ScrollViewer x:Name="TabStripScroll" Grid.Row="2" Margin="24,4,24,16" HorizontalScrollBarVisibility="Auto" VerticalScrollBarVisibility="Disabled">
-        <StackPanel Orientation="Horizontal" x:Name="TabStrip">
+        <StackPanel Orientation="Horizontal" x:Name="TabStrip" HorizontalAlignment="Center">
             <RadioButton x:Name="TabHome" Tag="Home" Style="{StaticResource TabPillStyle}" Checked="TabButton_Checked">
                 <StackPanel Orientation="Horizontal"><views:HeaderGlyphIcon Kind="Home" Width="20" Height="20" Margin="0,0,7,0"/><TextBlock x:Name="LblTabHome" Text="Αρχική"/></StackPanel>
             </RadioButton>

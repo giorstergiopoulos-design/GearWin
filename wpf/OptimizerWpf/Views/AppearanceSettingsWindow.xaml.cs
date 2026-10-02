@@ -255,7 +255,7 @@ namespace OptimizerWpf.Views
                 _opacitySaveTimer.Tick += (_, _) => { _opacitySaveTimer?.Stop(); _opacitySaveTimer = null; AppSettingsService.Save(); };
             }
             _opacitySaveTimer.Stop(); _opacitySaveTimer.Start();
-            if (Owner is MainWindow main) main.ApplyWindowOpacity();
+            (Application.Current.MainWindow as MainWindow ?? Owner as MainWindow)?.ApplyWindowOpacity();
         }
 
         private void ChkSidebarEnabled_Changed(object sender, RoutedEventArgs e)

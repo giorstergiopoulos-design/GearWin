@@ -95,17 +95,37 @@ public partial class MainWindow : Window
         _ = CheckHealthAttentionAsync();
     }
 
-    // 6.2.5 - το παράθυρο ΔΕΝ είναι "τεντωμένο": το πλάτος ορίζεται ώστε η δεξιά άκρη να σταματά ακριβώς μετά την
-    // τελευταία καρτέλα (Σύστημα) με το ΙΔΙΟ κενό (24px) που έχει η Αρχική από αριστερά. Μετράται η πραγματική
-    // λωρίδα καρτελών (στην τρέχουσα γλώσσα), μετά προστίθενται τα περιθώρια της και το πλαίσιο του παραθύρου.
+    private static readonly (string Key, Func<MainWindow, TextBlock> Label)[] TabLabels =
+    {
+        ("TabHome", w => w.LblTabHome), ("TabOptimization", w => w.LblTabOptimization), ("TabHealth", w => w.LblTabHealth),
+        ("TabNetwork", w => w.LblTabNetwork), ("TabTweaks", w => w.LblTabTweaks), ("TabGames", w => w.LblTabGames),
+        ("TabMultimedia", w => w.LblTabMultimedia), ("TabBloatware", w => w.LblTabBloatware),
+        ("TabAdvanced", w => w.LblTabAdvanced), ("TabSystem", w => w.LblTabSystem),
+    };
+
+    // 6.2.5 - το πλάτος του παραθύρου υπολογίζεται από τη ΜΕΓΑΛΥΤΕΡΗ λωρίδα καρτελών ανάμεσα σε ΟΛΕΣ τις γλώσσες
+    // (14), ώστε σε καμία γλώσσα να μην κόβεται/κυλά η λωρίδα και το παράθυρο να μη "τεντώνει" περισσότερο από
+    // όσο χρειάζεται. Η λωρίδα είναι κεντραρισμένη (HorizontalAlignment=Center): στη φαρδύτερη γλώσσα το κενό
+    // δεξιά της τελευταίας καρτέλας (Σύστημα) = κενό αριστερά της Αρχικής (24px)· στις στενότερες μοιράζεται ίσα.
     private void FitWidthToTabs()
     {
         try
         {
-            TabStrip.Measure(new Size(double.PositiveInfinity, double.PositiveInfinity));
+            double widest = 0;
+            foreach (var lang in LanguageService.AllTranslations.Keys)
+            {
+                var dict = LanguageService.AllTranslations[lang];
+                foreach (var (key, label) in TabLabels)
+                    label(this).Text = dict.TryGetValue(key, out var t) ? t : LanguageService.T(key);
+                TabStrip.InvalidateMeasure();
+                TabStrip.Measure(new Size(double.PositiveInfinity, double.PositiveInfinity));
+                widest = Math.Max(widest, TabStrip.DesiredSize.Width);
+            }
+            foreach (var (key, label) in TabLabels) label(this).Text = LanguageService.T(key); // επιστροφή στην τρέχουσα γλώσσα
+
             var margins = TabStripScroll.Margin.Left + TabStripScroll.Margin.Right;
-            var frame = _borderless ? 0 : 16; // πλαίσιο Windows (αριστερά+δεξιά) - ο Width του Window περιλαμβάνει το πλαίσιο
-            var needed = TabStrip.DesiredSize.Width + margins + frame;
+            var frame = _borderless ? 0 : 16; // πλαίσιο Windows (αριστερά+δεξιά) - ο Width του Window το περιλαμβάνει
+            var needed = widest + margins + frame;
             var max = SystemParameters.WorkArea.Width * 0.98;
             Width = Math.Clamp(needed, MinWidth, Math.Max(MinWidth, max));
         }
@@ -479,14 +499,21 @@ public partial class MainWindow : Window
 
     // 6.1.0 - διαφάνεια με native layered window (όπως το MotionDesk Studio) - βλ. WindowOpacityService.
     // Εφαρμόζεται όταν δημιουργηθεί το HWND και ξανά από τις Ρυθμίσεις Εμφάνισης (slider).
-    private void Window_SourceInitialized(object? sender, EventArgs e) => ApplyWindowOpacity();
+    private void Window_SourceInitialized(object? sender, EventArgs e)
+    {
+        ApplyWindowOpacity();
+        // Το WPF μπορεί να ξαναστήσει το παράθυρο στο πρώτο render/εμφάνιση - ξαναεφαρμόζουμε τη διαφάνεια τότε.
+        ContentRendered += (_, _) => ApplyWindowOpacity();
+        IsVisibleChanged += (_, _) => { if (IsVisible) ApplyWindowOpacity(); };
+    }
 
     // Κανονικό πλαίσιο: native layered window (όπως το MotionDesk). Borderless (AllowsTransparency): Window.Opacity.
     public void ApplyWindowOpacity()
     {
         var percent = WindowOpacityService.ClampPercent(AppSettingsService.Current.WindowOpacityPercent);
-        if (_borderless) Opacity = percent / 100.0;
-        else WindowOpacityService.Apply(this, percent);
+        if (_borderless) { Opacity = percent / 100.0; return; }
+        if (!WindowOpacityService.Apply(this, percent) && percent < 100)
+            System.Diagnostics.Debug.WriteLine("Window opacity: layered alpha was not confirmed by Windows");
     }
 
     private void BtnMinimizeWindow_Click(object sender, RoutedEventArgs e) => WindowState = WindowState.Minimized;

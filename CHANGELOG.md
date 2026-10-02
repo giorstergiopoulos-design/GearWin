@@ -9,7 +9,8 @@ Format loosely follows [Keep a Changelog](https://keepachangelog.com/).
 ## v6.2.5 — Unified skin sidebar, window sizing, Classic tabs
 
 - Skins with a vertical bar (PC Manager, Windows 11 Settings, Gaming Hub) share the MotionDesk Studio collapse mechanism: 232/80 px animated width, ‹ › toggle, remembered state (`RailCollapsed`), icon-only with tooltips when collapsed, no clipping scrollbar. Gaming Hub starts collapsed.
-- Window width is measured from the real tab strip: it ends right after the System tab with the same 24 px gap Home has on the left (not overstretched); tab pills slightly tighter.
+- Window width is measured from the widest tab strip across all 14 languages and the strip is centred, so no language scrolls or clips; opacity slider now forces the style change (SWP_FRAMECHANGED), re-applies on first render and verifies the alpha; the settings window finds the main window even when opened from the tray.
+- (previous note) Window width is measured from the real tab strip: it ends right after the System tab with the same 24 px gap Home has on the left (not overstretched); tab pills slightly tighter.
 - Startup curtain sized from the window's content root, so it matches framed and borderless windows (and DPI-converted gear target).
 - Windows Classic shows the tab strip again next to the classic menu; classic Settings menu no longer has a language submenu (Menu/Language opens the settings tab).
 
