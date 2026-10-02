@@ -52,6 +52,10 @@ namespace OptimizerWpf.Services
         // πλαίσιο Windows. Αλλαγή ισχύει μετά από επανεκκίνηση (το στυλ παραθύρου δεν αλλάζει μετά το Show).
         public bool BorderlessWindow { get; set; }
 
+        // 6.2.5 - κατάσταση αναδίπλωσης της κάθετης μπάρας των skins (ίδιος μηχανισμός με το MotionDesk Studio):
+        // true = συμπτυγμένη (μόνο εικονίδια), false = ανοιχτή, null = προεπιλογή του skin (Gaming Hub: συμπτυγμένη).
+        public bool? RailCollapsed { get; set; }
+
         // ΝΕΟ (6.1.0) - καθυστερημένη εκκίνηση προγραμμάτων: όνομα καταχώρησης -> δευτερόλεπτα.
         public System.Collections.Generic.Dictionary<string, int> DelayedStartupSeconds { get; set; } = new();
 

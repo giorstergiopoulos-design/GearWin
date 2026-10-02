@@ -26,7 +26,8 @@ public class SkinCatalogTests
     {
         Assert.Equal(SkinNav.WideRail, SkinCatalog.For("Microsoft PC Manager")!.Nav);
         Assert.True(SkinCatalog.For("Microsoft PC Manager")!.HeroHome);
-        Assert.Equal(SkinNav.MenuOnly, SkinCatalog.For("Windows Classic")!.Nav);
+        Assert.Equal(SkinNav.Tabs, SkinCatalog.For("Windows Classic")!.Nav);
+        Assert.True(SkinCatalog.For("Windows Classic")!.ShowMenuBar);
         Assert.Equal(SkinNav.CompactRail, SkinCatalog.For("Gaming Hub")!.Nav);
         Assert.True(SkinCatalog.For("Office Ribbon")!.ShowMenuBar);
         Assert.Equal(SkinNav.Tabs, SkinCatalog.For("Office Ribbon")!.Nav);

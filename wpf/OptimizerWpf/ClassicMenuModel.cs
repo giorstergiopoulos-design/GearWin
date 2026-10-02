@@ -61,14 +61,13 @@ namespace OptimizerWpf
                 .Select((n, i) => new MenuLeaf(n.Icon, n.Label, new MenuAction(n.Tag, null), i < 9 ? $"Ctrl+{i + 1}" : i == 9 ? "Ctrl+0" : null))
                 .ToList()),
             // 6.1.0 (ρητό αίτημα χρήστη): το μενού Ρυθμίσεις έδειχνε ΜΟΝΟ "Ρυθμίσεις" - τώρα έχει και
-            // Ρυθμίσεις Εμφάνισης, Ρυθμίσεις Μενού και υπομενού Γλώσσας (ανοίγουν το ίδιο παράθυρο στο
+            // Ρυθμίσεις Εμφάνισης και Μενού/Γλώσσα (6.2.5: χωρίς ξεχωριστό υπομενού γλώσσας - ανοίγουν το ίδιο παράθυρο στο
             // αντίστοιχο tab - "AppearanceSettings:N", N = index του tab).
             new MenuGroup("⚙️", LanguageService.T("Menu_Settings"), new[]
             {
                 new MenuLeaf("", $"{LanguageService.T("AppearanceSettingsTitle")}...", new MenuAction(null, "AppearanceSettings:0")),
                 new MenuLeaf("", $"{LanguageService.T("Appr_ThemeSettingsTab")}...", new MenuAction(null, "AppearanceSettings:1")),
                 new MenuLeaf("", $"{LanguageService.T("Appr_MenuTab")}...", new MenuAction(null, "AppearanceSettings:2")),
-                new MenuLeaf("🌐", LanguageService.T("Menu_Language"), new MenuAction(null, null), null, LanguageLeaves()),
             }),
             new MenuGroup("📋", LanguageService.T("ActionLog_Title"), new[]
             {

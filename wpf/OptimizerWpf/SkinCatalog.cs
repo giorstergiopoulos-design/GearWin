@@ -19,7 +19,8 @@ namespace OptimizerWpf
         public static readonly IReadOnlyList<SkinInfo> All = new[]
         {
             new SkinInfo("Microsoft PC Manager", SkinNav.WideRail, false, 8, 0, true, true),
-            new SkinInfo("Windows Classic", SkinNav.MenuOnly, true, 0, 1, false, false),
+            // 6.2.5: το Windows Classic δείχνει ΞΑΝΑ τη λωρίδα καρτελών (ρητό αίτημα χρήστη) μαζί με τη μόνιμη γραμμή μενού.
+            new SkinInfo("Windows Classic", SkinNav.Tabs, true, 0, 1, false, false),
             new SkinInfo("Windows 11 Settings", SkinNav.WideRail, false, 8, 0, true, false),
             new SkinInfo("Gaming Hub", SkinNav.CompactRail, false, 14, 0, false, false),
             new SkinInfo("Office Ribbon", SkinNav.Tabs, true, 2, 1, true, false),

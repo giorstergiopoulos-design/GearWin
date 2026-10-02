@@ -28,15 +28,12 @@
          Ελαχιστοποίησης/Μεγιστοποίησης/Κλεισίματος αφαιρέθηκαν (τα παρέχουν τα Windows). -->
     <Window.Resources>
         <local:NewlineToSpaceConverter x:Key="NewlineToSpace"/>
-        <!-- Στενή κάθετη μπάρα (Gaming Hub): εικονίδιο + περιγραφή σε δύο γραμμές από κάτω. -->
-        <DataTemplate x:Key="RailItemCompact">
-            <Button Style="{StaticResource FlatButtonStyle}" Width="76" Height="64" Margin="4,3" Click="PcManagerRailItem_Click" Tag="{Binding}" ToolTip="{Binding Label}">
-                <StackPanel>
-                    <TextBlock Text="{Binding Icon}" FontSize="18" HorizontalAlignment="Center"/>
-                    <TextBlock Text="{Binding Label}" FontSize="9.5" TextWrapping="Wrap" TextAlignment="Center" Margin="0,3,0,0"
-                               Foreground="{DynamicResource TextBrush}" MaxWidth="72"/>
-                </StackPanel>
-            </Button>
+        <!-- Συμπτυγμένη μπάρα (80px): μόνο εικονίδιο στο κέντρο, το όνομα στο tooltip. -->
+        <DataTemplate x:Key="RailItemIcon">
+            <RadioButton GroupName="Rail" Tag="{Binding}" Style="{StaticResource RailPillStyle}" HorizontalContentAlignment="Center" Padding="0,11"
+                         ToolTip="{Binding Label}" Click="PcManagerRailRadio_Click" Loaded="RailRadio_Loaded">
+                <views:HeaderGlyphIcon Kind="{Binding IconKind}" Width="20" Height="20"/>
+            </RadioButton>
         </DataTemplate>
         <!-- Πλατιά κάθετη μπάρα (PC Manager / Windows 11 Settings): εικονίδιο + κείμενο δίπλα-δίπλα, επιλεγμένο στοιχείο με pill + accent γραμμή. -->
         <DataTemplate x:Key="RailItemWide">
@@ -570,21 +567,30 @@
                  καρτελών/hamburger/πλευρικό μενού όταν αυτό το θέμα είναι ενεργό (βλ.
                  ApplyPcManagerSkinLayout). ΙΔΙΕΣ 8 καρτέλες (NavItems.All), μόνο εικονίδιο (χωρίς
                  κείμενο, όπως στο πραγματικό PC Manager). -->
-            <Border x:Name="PcManagerRail" Grid.Column="0" Grid.RowSpan="1" Background="{DynamicResource TabBgBrush}" Visibility="Collapsed" Width="84"
-                    CornerRadius="{DynamicResource AppCornerRadius}">
+            <!-- 6.1.0/6.2.5 - κάθετη μπάρα πλοήγησης για ΟΛΑ τα skins με μπάρα (PC Manager, Windows 11 Settings, Gaming Hub),
+                 ΙΔΙΟΣ μηχανισμός αναδίπλωσης με το MotionDesk Studio: πλάτος 232 (ανοιχτή: εικονίδιο+κείμενο) / 80 (κλειστή:
+                 μόνο εικονίδια + tooltip), κουμπί ‹ › κάτω-κάτω, animation πλάτους, αποθήκευση κατάστασης (RailCollapsed).
+                 Η λίστα δεν έχει ορατή μπάρα κύλισης (η μπάρα έκοβε τα στοιχεία)· κύλιση με τον τροχό αν δεν χωράνε. -->
+            <Border x:Name="PcManagerRail" Grid.Column="0" Grid.RowSpan="1" Background="{DynamicResource TabBgBrush}" Visibility="Collapsed" Width="232"
+                    CornerRadius="{DynamicResource AppCornerRadius}" ClipToBounds="True">
                 <Grid>
                     <Grid.RowDefinitions><RowDefinition Height="*"/><RowDefinition Height="Auto"/></Grid.RowDefinitions>
-                    <ScrollViewer VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled">
-                        <ItemsControl x:Name="ListPcManagerRail" Margin="0,12,0,0"/>
+                    <ScrollViewer VerticalScrollBarVisibility="Hidden" HorizontalScrollBarVisibility="Disabled" Margin="0,10,0,0">
+                        <ItemsControl x:Name="ListPcManagerRail"/>
                     </ScrollViewer>
-                    <!-- 6.1.0 - πλατιά μπάρα (PC Manager / Ρυθμίσεις Windows 11): κουμπί Ρυθμίσεις κάτω-κάτω, όπως στο αυθεντικό. -->
-                    <Button x:Name="RailSettingsButton" Grid.Row="1" Visibility="Collapsed" Style="{StaticResource FlatButtonStyle}" Background="Transparent"
-                            HorizontalContentAlignment="Left" Margin="8,4,8,12" Padding="14,10" Click="RailSettings_Click">
-                        <StackPanel Orientation="Horizontal">
-                            <views:HeaderGlyphIcon Kind="Gear" Width="18" Height="18" Margin="0,0,12,0"/>
-                            <TextBlock x:Name="RailSettingsLabel" VerticalAlignment="Center" Foreground="{DynamicResource TextBrush}"/>
-                        </StackPanel>
-                    </Button>
+                    <StackPanel Grid.Row="1" Margin="0,4,0,8">
+                        <Border Height="1" Background="{DynamicResource CardBorderBrush}" Margin="14,0,14,6"/>
+                        <Button x:Name="RailSettingsButton" Style="{StaticResource FlatButtonStyle}" Background="Transparent" HorizontalContentAlignment="Left"
+                                Margin="8,2" Padding="14,9" Click="RailSettings_Click">
+                            <StackPanel Orientation="Horizontal">
+                                <TextBlock Text="&#xE713;" FontFamily="Segoe MDL2 Assets" FontSize="16" Width="18" Margin="0,0,12,0" VerticalAlignment="Center" Foreground="{DynamicResource AccentBrush}"/>
+                                <TextBlock x:Name="RailSettingsLabel" VerticalAlignment="Center" Foreground="{DynamicResource TextBrush}"/>
+                            </StackPanel>
+                        </Button>
+                        <Button x:Name="RailCollapseToggle" Style="{StaticResource FlatButtonStyle}" Background="Transparent" Margin="8,2" Padding="0,9" Click="RailCollapseToggle_Click">
+                            <TextBlock x:Name="RailCollapseGlyph" Text="&#xE76B;" FontFamily="Segoe MDL2 Assets" FontSize="14" HorizontalAlignment="Center" Foreground="{DynamicResource SubTextBrush}"/>
+                        </Button>
+                    </StackPanel>
                 </Grid>
             </Border>
 

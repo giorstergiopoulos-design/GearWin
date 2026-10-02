@@ -37,6 +37,10 @@ public partial class MainWindow : Window
     {
         InitializeComponent();
         if (_borderless) ApplyBorderlessChrome();
+        // 6.2.5 - αρκετά μεγάλο ώστε να χωράνε και οι 10 καρτέλες (μέγιστο το 97% της περιοχής εργασίας).
+        var work = SystemParameters.WorkArea;
+        Width = Math.Min(1700, work.Width * 0.97);
+        Height = Math.Min(880, work.Height * 0.95);
         // Set the initial selected tab AFTER InitializeComponent, not via IsChecked="True" in XAML -
         // XAML-set IsChecked fires the Checked event synchronously WHILE the rest of the window's
         // named elements (ContentHost, declared later in the document) are still being wired up by
@@ -177,7 +181,7 @@ public partial class MainWindow : Window
         _searchIndex = ClassicMenuModel.Groups
             .SelectMany(g => g.Items.SelectMany(l => l.Children ?? new[] { l }).Select(leaf => new SearchResultRow(leaf.Icon, leaf.Label, g.Header, leaf)))
             .ToList();
-        ConfigureRail(ThemeManager.CurrentSkin?.Nav == SkinNav.WideRail);
+        ConfigureRail();
 
         // ΔΙΟΡΘΩΣΗ (χρήστης ανέφερε: "κάποια elements μένουν στην προηγούμενη γλώσσα μέχρι το
         // κλείσιμο και άνοιγμα ξανά") - το SidebarNav είναι μόνιμο UserControl (μόνο Visibility
@@ -217,9 +221,9 @@ public partial class MainWindow : Window
         TabStripScroll.Visibility = (isRail || isMenuOnly) ? Visibility.Collapsed : Visibility.Visible;
         PcManagerRail.Visibility = isRail ? Visibility.Visible : Visibility.Collapsed;
         ColRail.Width = isRail ? GridLength.Auto : new GridLength(0);
-        BtnHamburger.Visibility = (!isRail && !isMenuOnly && AppSettingsService.Current.SidebarEnabled) ? Visibility.Visible : Visibility.Collapsed;
-        if (isRail) ConfigureRail(nav == SkinNav.WideRail);
-        if (isRail || isMenuOnly)
+        BtnHamburger.Visibility = (!isRail && !isMenuOnly && !ThemeManager.IsWindowsClassicSkin && AppSettingsService.Current.SidebarEnabled) ? Visibility.Visible : Visibility.Collapsed;
+        if (isRail) ConfigureRail();
+        if (isRail || isMenuOnly || ThemeManager.IsWindowsClassicSkin)
         {
             _sidebarVisible = false;
             HideHorizModernStrip();
@@ -247,14 +251,41 @@ public partial class MainWindow : Window
 
     private string _currentTabTag = "Home";
 
-    private void ConfigureRail(bool wide)
+    private const double RailExpandedWidth = 232;
+    private const double RailCollapsedWidth = 80;
+
+    // Ίδια λογική με το MotionDesk Studio (ToggleSidebarCollapsed): αποθηκευμένη κατάσταση, αλλιώς προεπιλογή του skin.
+    private bool RailCollapsed => AppSettingsService.Current.RailCollapsed ?? (ThemeManager.CurrentSkin?.Nav == SkinNav.CompactRail);
+
+    private void ConfigureRail(bool animate = false)
     {
-        PcManagerRail.Width = wide ? 236 : 84;
-        ListPcManagerRail.ItemTemplate = (DataTemplate)Resources[wide ? "RailItemWide" : "RailItemCompact"];
+        var collapsed = RailCollapsed;
+        ListPcManagerRail.ItemTemplate = (DataTemplate)Resources[collapsed ? "RailItemIcon" : "RailItemWide"];
         ListPcManagerRail.ItemsSource = null;
         ListPcManagerRail.ItemsSource = NavItems.All;
-        RailSettingsButton.Visibility = wide ? Visibility.Visible : Visibility.Collapsed;
+
         RailSettingsLabel.Text = LanguageService.T("AppearanceSettingsTitle");
+        RailSettingsLabel.Visibility = collapsed ? Visibility.Collapsed : Visibility.Visible;
+        RailSettingsButton.HorizontalContentAlignment = collapsed ? HorizontalAlignment.Center : HorizontalAlignment.Left;
+        RailSettingsButton.Padding = collapsed ? new Thickness(0, 9, 0, 9) : new Thickness(14, 9, 14, 9);
+        ((StackPanel)RailSettingsButton.Content).Children[0].SetValue(FrameworkElement.MarginProperty, collapsed ? new Thickness(0) : new Thickness(0, 0, 12, 0));
+        RailSettingsButton.ToolTip = collapsed ? RailSettingsLabel.Text : null;
+        RailCollapseGlyph.Text = collapsed ? "\uE76C" : "\uE76B"; // › / ‹ (Segoe MDL2)
+
+        var target = collapsed ? RailCollapsedWidth : RailExpandedWidth;
+        PcManagerRail.BeginAnimation(WidthProperty, null);
+        if (!animate || PcManagerRail.ActualWidth <= 0) { PcManagerRail.Width = target; return; }
+        var anim = new DoubleAnimation(PcManagerRail.ActualWidth, target, new Duration(TimeSpan.FromMilliseconds(180)))
+        { EasingFunction = new QuadraticEase() };
+        anim.Completed += (_, _) => { PcManagerRail.BeginAnimation(WidthProperty, null); PcManagerRail.Width = target; };
+        PcManagerRail.BeginAnimation(WidthProperty, anim);
+    }
+
+    private void RailCollapseToggle_Click(object sender, RoutedEventArgs e)
+    {
+        AppSettingsService.Current.RailCollapsed = !RailCollapsed;
+        AppSettingsService.Save();
+        ConfigureRail(animate: true);
     }
 
     private void RailSettings_Click(object sender, RoutedEventArgs e) =>
@@ -291,11 +322,6 @@ public partial class MainWindow : Window
             if (deeper != null) return deeper;
         }
         return null;
-    }
-
-    private void PcManagerRailItem_Click(object sender, RoutedEventArgs e)
-    {
-        if (sender is Button { Tag: NavItem item }) SelectTab(item.Tag);
     }
 
     private readonly Storyboard _spinnerStoryboard = BuildSpinnerStoryboard();

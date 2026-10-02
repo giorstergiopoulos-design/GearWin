@@ -6,6 +6,13 @@ available inside the app itself, via Help/Instructions → the "Version History"
 
 Format loosely follows [Keep a Changelog](https://keepachangelog.com/).
 
+## v6.2.5 — Unified skin sidebar, window sizing, Classic tabs
+
+- Skins with a vertical bar (PC Manager, Windows 11 Settings, Gaming Hub) share the MotionDesk Studio collapse mechanism: 232/80 px animated width, ‹ › toggle, remembered state (`RailCollapsed`), icon-only with tooltips when collapsed, no clipping scrollbar. Gaming Hub starts collapsed.
+- Window opens large enough for all 10 tabs (up to 97% of the work area); tab pills slightly tighter.
+- Startup curtain sized from the window's content root, so it matches framed and borderless windows (and DPI-converted gear target).
+- Windows Classic shows the tab strip again next to the classic menu; classic Settings menu no longer has a language submenu (Menu/Language opens the settings tab).
+
 ## v6.2.0 — Games & Multimedia tabs, new skins, Maintenance & Security Center, startup fixes
 
 (Also contains the 6.1.0 work below. Help, quick tour and shortcuts were updated for the new tabs.)

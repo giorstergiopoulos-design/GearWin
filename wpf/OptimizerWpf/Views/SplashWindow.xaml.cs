@@ -16,15 +16,17 @@ namespace OptimizerWpf.Views
             InitializeComponent();
             TxtSplashVersion.Text = App.DisplayVersion;
             _main = main;
-            // 6.1.0 - το κύριο παράθυρο έχει πλέον κανονικό πλαίσιο/γραμμή τίτλου: η οθόνη εκκίνησης
-            // καλύπτει την περιοχή ΠΕΡΙΕΧΟΜΕΝΟΥ (client area), όχι το εξωτερικό πλαίσιο.
-            var origin = main.PointToScreen(new Point(0, 0));
+            // 6.2.5 - η οθόνη εκκίνησης καλύπτει ΑΚΡΙΒΩΣ την περιοχή περιεχομένου του κύριου παραθύρου, είτε αυτό
+            // έχει κανονικό πλαίσιο των Windows είτε είναι "χωρίς πλαίσιο": μετράμε το ριζικό στοιχείο
+            // (main.Content), όχι το Window (το ActualWidth του Window περιλαμβάνει το πλαίσιο/τη γραμμή τίτλου).
+            var root = main.Content as FrameworkElement ?? main;
+            var origin = root.PointToScreen(new Point(0, 0));
             var toDip = PresentationSource.FromVisual(main)?.CompositionTarget?.TransformFromDevice;
             if (toDip != null) origin = toDip.Value.Transform(origin);
             Left = origin.X;
             Top = origin.Y;
-            Width = main.ActualWidth;
-            Height = main.ActualHeight;
+            Width = root.ActualWidth;
+            Height = root.ActualHeight;
             Loaded += SplashWindow_Loaded;
         }
 
@@ -49,6 +51,8 @@ namespace OptimizerWpf.Views
         {
             var targetScreen = _main.TitleGearBorder.PointToScreen(
                 new Point(_main.TitleGearBorder.ActualWidth / 2, _main.TitleGearBorder.ActualHeight / 2));
+            var fromDevice = PresentationSource.FromVisual(_main)?.CompositionTarget?.TransformFromDevice;
+            if (fromDevice != null) targetScreen = fromDevice.Value.Transform(targetScreen);
             var targetLocal = new Point(targetScreen.X - Left, targetScreen.Y - Top);
             var targetScale = _main.TitleGearBorder.ActualWidth / SplashGearBorder.Width;
 
