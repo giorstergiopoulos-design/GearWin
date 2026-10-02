@@ -23,7 +23,7 @@ namespace OptimizerWpf.Views
             ComboTheme.ItemsSource = ThemeCatalog.All;
             ComboTheme.SelectedItem = ThemeManager.CurrentPair;
             ChkAnimatedBg.IsChecked = ThemeManager.AnimatedBackgrounds;
-            ChkBorderless.IsChecked = AppSettingsService.Current.BorderlessWindow;
+            ChkBorderless.IsChecked = AppSettingsService.Current.NativeWindowFrame;
             ChkDesktopWidget.IsChecked = AppSettingsService.Current.DesktopWidgetEnabled;
 
             ChkUpdateNotifications.IsChecked = AppSettingsService.Current.UpdateNotificationsEnabled;
@@ -136,7 +136,7 @@ namespace OptimizerWpf.Views
         private void ChkBorderless_Changed(object sender, RoutedEventArgs e)
         {
             if (_loading) return;
-            AppSettingsService.Current.BorderlessWindow = ChkBorderless.IsChecked == true;
+            AppSettingsService.Current.NativeWindowFrame = ChkBorderless.IsChecked == true;
             AppSettingsService.Save();
             ThemedMessageBox.Show(LanguageService.T("Appr_BorderlessRestart"), LanguageService.T("AppearanceSettingsTitle"), MessageBoxButton.OK, MessageBoxImage.Information);
         }

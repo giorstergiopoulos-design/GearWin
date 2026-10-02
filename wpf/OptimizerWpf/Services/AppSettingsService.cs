@@ -50,7 +50,10 @@ namespace OptimizerWpf.Services
 
         // 6.1.0 - παράθυρο χωρίς πλαίσιο (custom γραμμή τίτλου + κουμπιά, Window.Opacity). Προεπιλογή: κανονικό
         // πλαίσιο Windows. Αλλαγή ισχύει μετά από επανεκκίνηση (το στυλ παραθύρου δεν αλλάζει μετά το Show).
-        public bool BorderlessWindow { get; set; }
+        public bool BorderlessWindow { get; set; } // παλιά ρύθμιση (6.1.x) - δεν χρησιμοποιείται πια
+        // 6.2.5 - true = κανονικό πλαίσιο Windows (η διαφάνεια ΔΕΝ είναι εγγυημένη). Default false = δικό μας πλαίσιο με
+        // γραμμή τίτλου/κουμπιά + Window.Opacity, που δουλεύει πάντα ζωντανά.
+        public bool NativeWindowFrame { get; set; }
 
         // 6.2.5 - κατάσταση αναδίπλωσης της κάθετης μπάρας των skins (ίδιος μηχανισμός με το MotionDesk Studio):
         // true = συμπτυγμένη (μόνο εικονίδια), false = ανοιχτή, null = προεπιλογή του skin (Gaming Hub: συμπτυγμένη).

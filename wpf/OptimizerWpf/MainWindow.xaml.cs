@@ -19,18 +19,55 @@ public partial class MainWindow : Window
 {
     // 6.1.0 - προαιρετικό παράθυρο χωρίς πλαίσιο (Ρυθμίσεις Εμφάνισης). Το WindowStyle/AllowsTransparency πρέπει
     // να οριστούν ΠΡΙΝ το πρώτο Show() - γι' αυτό διαβάζεται η ρύθμιση εδώ και η αλλαγή ισχύει στην επόμενη εκκίνηση.
-    private readonly bool _borderless = AppSettingsService.Current.BorderlessWindow;
+    private readonly bool _borderless = !AppSettingsService.Current.NativeWindowFrame; // true = δικό μας πλαίσιο (AllowsTransparency)
 
     private void ApplyBorderlessChrome()
     {
         AllowsTransparency = true;
         WindowStyle = WindowStyle.None;
+        // 6.2.5 - λεπτό περίγραμμα ώστε το παράθυρο να φαίνεται "με border" (η διαφάνεια δουλεύει ζωντανά εδώ).
+        BorderThickness = new Thickness(1);
+        SetResourceReference(BorderBrushProperty, "CardBorderBrush");
+        SourceInitialized += (_, _) => (PresentationSource.FromVisual(this) as System.Windows.Interop.HwndSource)?.AddHook(WorkAreaHook);
         System.Windows.Shell.WindowChrome.SetWindowChrome(this, new System.Windows.Shell.WindowChrome
         {
             CaptionHeight = 84, ResizeBorderThickness = new Thickness(6), GlassFrameThickness = new Thickness(0),
             CornerRadius = new CornerRadius(0), UseAeroCaptionButtons = false,
         });
         BorderlessButtons.Visibility = Visibility.Visible;
+    }
+
+
+    // 6.2.5 - με AllowsTransparency+WindowStyle.None η μεγιστοποίηση θα κάλυπτε και τη γραμμή εργασιών:
+    // περιορίζουμε το μέγιστο μέγεθος στην περιοχή εργασίας της οθόνης όπου βρίσκεται το παράθυρο.
+    private const int WM_GETMINMAXINFO = 0x0024;
+    [System.Runtime.InteropServices.StructLayout(System.Runtime.InteropServices.LayoutKind.Sequential)] private struct PT { public int x, y; }
+    [System.Runtime.InteropServices.StructLayout(System.Runtime.InteropServices.LayoutKind.Sequential)] private struct MMI { public PT ptReserved, ptMaxSize, ptMaxPosition, ptMinTrackSize, ptMaxTrackSize; }
+    [System.Runtime.InteropServices.StructLayout(System.Runtime.InteropServices.LayoutKind.Sequential)] private struct RC { public int left, top, right, bottom; }
+    [System.Runtime.InteropServices.StructLayout(System.Runtime.InteropServices.LayoutKind.Sequential)] private struct MONINFO { public int cbSize; public RC rcMonitor, rcWork; public int dwFlags; }
+    [System.Runtime.InteropServices.DllImport("user32.dll")] private static extern IntPtr MonitorFromWindow(IntPtr hwnd, int flags);
+    [System.Runtime.InteropServices.DllImport("user32.dll")] private static extern bool GetMonitorInfo(IntPtr hMonitor, ref MONINFO mi);
+
+    private IntPtr WorkAreaHook(IntPtr hwnd, int msg, IntPtr wParam, IntPtr lParam, ref bool handled)
+    {
+        if (msg != WM_GETMINMAXINFO) return IntPtr.Zero;
+        try
+        {
+            var mon = MonitorFromWindow(hwnd, 2 /* MONITOR_DEFAULTTONEAREST */);
+            var info = new MONINFO { cbSize = System.Runtime.InteropServices.Marshal.SizeOf<MONINFO>() };
+            if (mon != IntPtr.Zero && GetMonitorInfo(mon, ref info))
+            {
+                var mmi = System.Runtime.InteropServices.Marshal.PtrToStructure<MMI>(lParam);
+                mmi.ptMaxPosition.x = info.rcWork.left - info.rcMonitor.left;
+                mmi.ptMaxPosition.y = info.rcWork.top - info.rcMonitor.top;
+                mmi.ptMaxSize.x = info.rcWork.right - info.rcWork.left;
+                mmi.ptMaxSize.y = info.rcWork.bottom - info.rcWork.top;
+                System.Runtime.InteropServices.Marshal.StructureToPtr(mmi, lParam, true);
+                handled = true;
+            }
+        }
+        catch { /* best-effort */ }
+        return IntPtr.Zero;
     }
 
     public MainWindow()
@@ -124,7 +161,7 @@ public partial class MainWindow : Window
             foreach (var (key, label) in TabLabels) label(this).Text = LanguageService.T(key); // επιστροφή στην τρέχουσα γλώσσα
 
             var margins = TabStripScroll.Margin.Left + TabStripScroll.Margin.Right;
-            var frame = _borderless ? 0 : 16; // πλαίσιο Windows (αριστερά+δεξιά) - ο Width του Window το περιλαμβάνει
+            var frame = _borderless ? 2 : 16; // πλαίσιο Windows (αριστερά+δεξιά) - ο Width του Window το περιλαμβάνει
             var needed = widest + margins + frame;
             var max = SystemParameters.WorkArea.Width * 0.98;
             Width = Math.Clamp(needed, MinWidth, Math.Max(MinWidth, max));
@@ -507,7 +544,7 @@ public partial class MainWindow : Window
         IsVisibleChanged += (_, _) => { if (IsVisible) ApplyWindowOpacity(); };
     }
 
-    // Κανονικό πλαίσιο: native layered window (όπως το MotionDesk). Borderless (AllowsTransparency): Window.Opacity.
+    // Δικό μας πλαίσιο (default, AllowsTransparency): Window.Opacity - δουλεύει πάντα ζωντανά. Native πλαίσιο Windows: layered alpha (best effort).
     public void ApplyWindowOpacity()
     {
         var percent = WindowOpacityService.ClampPercent(AppSettingsService.Current.WindowOpacityPercent);
