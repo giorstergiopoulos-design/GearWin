@@ -19,15 +19,29 @@ namespace OptimizerWpf.Views
             // 6.2.5 - η οθόνη εκκίνησης καλύπτει ΑΚΡΙΒΩΣ την περιοχή περιεχομένου του κύριου παραθύρου, είτε αυτό
             // έχει κανονικό πλαίσιο των Windows είτε είναι "χωρίς πλαίσιο": μετράμε το ριζικό στοιχείο
             // (main.Content), όχι το Window (το ActualWidth του Window περιλαμβάνει το πλαίσιο/τη γραμμή τίτλου).
-            var root = main.Content as FrameworkElement ?? main;
-            var origin = root.PointToScreen(new Point(0, 0));
-            var toDip = PresentationSource.FromVisual(main)?.CompositionTarget?.TransformFromDevice;
+            _root = main.Content as FrameworkElement ?? main;
+            FitToMain();
+            // Η κουρτίνα ακολουθεί το παράθυρο όσο είναι ορατή (αλλαγή μεγέθους/θέσης/DPI, κανονικό ή borderless).
+            main.SizeChanged += OnMainGeometryChanged;
+            main.LocationChanged += OnMainGeometryChanged;
+            Closed += (_, _) => { main.SizeChanged -= OnMainGeometryChanged; main.LocationChanged -= OnMainGeometryChanged; };
+            Loaded += SplashWindow_Loaded;
+        }
+
+        private readonly FrameworkElement _root = null!;
+
+        private void OnMainGeometryChanged(object? sender, EventArgs e) => FitToMain();
+
+        // Τοποθετεί/μεγεθύνει την κουρτίνα ακριβώς πάνω στην περιοχή περιεχομένου του κύριου παραθύρου.
+        private void FitToMain()
+        {
+            var origin = _root.PointToScreen(new Point(0, 0));
+            var toDip = PresentationSource.FromVisual(_main)?.CompositionTarget?.TransformFromDevice;
             if (toDip != null) origin = toDip.Value.Transform(origin);
             Left = origin.X;
             Top = origin.Y;
-            Width = root.ActualWidth;
-            Height = root.ActualHeight;
-            Loaded += SplashWindow_Loaded;
+            Width = _root.ActualWidth > 0 ? _root.ActualWidth : _main.ActualWidth;
+            Height = _root.ActualHeight > 0 ? _root.ActualHeight : _main.ActualHeight;
         }
 
         private void SplashWindow_Loaded(object sender, RoutedEventArgs e)
