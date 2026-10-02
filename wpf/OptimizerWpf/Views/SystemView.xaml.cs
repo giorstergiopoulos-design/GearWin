@@ -299,6 +299,9 @@ namespace OptimizerWpf.Views
             s_storageStatusCache = TxtStorageStatus.Text;
         }
 
+        private void BtnHealthTimeline_Click(object sender, RoutedEventArgs e) =>
+            new HealthTimelineWindow { Owner = Window.GetWindow(this) }.ShowDialog();
+
         private async void BtnOneDrive_Click(object sender, RoutedEventArgs e)
         {
             if (ThemedMessageBox.Show(LanguageService.T("Sys_OneDriveConfirm"),

@@ -271,6 +271,15 @@
 
 
 
+                        <!-- REQ-590-04 - χρονολόγιο υγείας συστήματος (Event Log: crashes/BSOD + πρόσφατες εγκαταστάσεις) -->
+            <Border Style="{StaticResource CardStyle}" Margin="0,16,0,0">
+                <StackPanel>
+                    <TextBlock Text="{tr:Tr Timeline_Title}" Style="{StaticResource CardTitleStyle}" Margin="0,0,0,6"/>
+                    <TextBlock Text="{tr:Tr Timeline_Desc}" Style="{StaticResource SubTextStyle}" TextWrapping="Wrap" Margin="0,0,0,10"/>
+                    <Button Content="{tr:Tr Timeline_Title}" Style="{StaticResource AccentButtonStyle}" MinWidth="220" Height="34" HorizontalAlignment="Left" Click="BtnHealthTimeline_Click"/>
+                </StackPanel>
+            </Border>
+
             <!-- ΝΕΟ - REQ-580-02 follow-up (ρητό αίτημα χρήστη: "τα fonts να μην είναι στις ρυθμίσεις
                  της εφαρμογής αλλά σε καποια από τις καρτέλες") - μεταφέρθηκε εδώ από το tab
                  Ρυθμίσεων: οι εγκατεστημένες γραμματοσειρές είναι απογραφή του συστήματος (ίδιο
