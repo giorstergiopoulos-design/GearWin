@@ -37,10 +37,7 @@ public partial class MainWindow : Window
     {
         InitializeComponent();
         if (_borderless) ApplyBorderlessChrome();
-        // 6.2.5 - αρκετά μεγάλο ώστε να χωράνε και οι 10 καρτέλες (μέγιστο το 97% της περιοχής εργασίας).
-        var work = SystemParameters.WorkArea;
-        Width = Math.Min(1700, work.Width * 0.97);
-        Height = Math.Min(880, work.Height * 0.95);
+        Height = Math.Min(880, SystemParameters.WorkArea.Height * 0.95);
         // Set the initial selected tab AFTER InitializeComponent, not via IsChecked="True" in XAML -
         // XAML-set IsChecked fires the Checked event synchronously WHILE the rest of the window's
         // named elements (ContentHost, declared later in the document) are still being wired up by
@@ -93,7 +90,26 @@ public partial class MainWindow : Window
             else if (IsActive) TitleGear.StartSpin();
         };
 
+        FitWidthToTabs();
+
         _ = CheckHealthAttentionAsync();
+    }
+
+    // 6.2.5 - το παράθυρο ΔΕΝ είναι "τεντωμένο": το πλάτος ορίζεται ώστε η δεξιά άκρη να σταματά ακριβώς μετά την
+    // τελευταία καρτέλα (Σύστημα) με το ΙΔΙΟ κενό (24px) που έχει η Αρχική από αριστερά. Μετράται η πραγματική
+    // λωρίδα καρτελών (στην τρέχουσα γλώσσα), μετά προστίθενται τα περιθώρια της και το πλαίσιο του παραθύρου.
+    private void FitWidthToTabs()
+    {
+        try
+        {
+            TabStrip.Measure(new Size(double.PositiveInfinity, double.PositiveInfinity));
+            var margins = TabStripScroll.Margin.Left + TabStripScroll.Margin.Right;
+            var frame = _borderless ? 0 : 16; // πλαίσιο Windows (αριστερά+δεξιά) - ο Width του Window περιλαμβάνει το πλαίσιο
+            var needed = TabStrip.DesiredSize.Width + margins + frame;
+            var max = SystemParameters.WorkArea.Width * 0.98;
+            Width = Math.Clamp(needed, MinWidth, Math.Max(MinWidth, max));
+        }
+        catch { /* αν αποτύχει η μέτρηση μένει το πλάτος του XAML */ }
     }
 
     // ΝΕΟ (roadmap: "ένδειξη προσοχής στο tab strip") - υπολογίζεται ΜΙΑ φορά στην εκκίνηση (ίδιο
