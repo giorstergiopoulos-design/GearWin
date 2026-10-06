@@ -34,8 +34,12 @@ button padding increased app-wide (TabPillStyle/RailPillStyle/PillTabItemStyle).
 push to `claude/full-audit` and whether/when to merge to `master` or create a GitHub release.
 
 ## Current Phase
-Mid-release (v6.3.5 built and installer delivered, not yet committed/pushed). Governance docs
-(CLAUDE.md, PROJECT_STATE.md, ROADMAP.md) adopted 2026-09-29 at user's request.
+Shipped. `claude/full-audit` fast-forward-merged into `master` (no conflicts, master had no unique
+commits) and both pushed, 2026-10-06. Followed by: upgrade to .NET 10 (`net8.0-windows` ->
+`net10.0-windows`, app + tests) and enlarging the title bar's animated gear icon (44->56 badge, 32->38
+glyph) and title text (20->26 "GearWin", 11->13 version) per explicit user request - also committed
+and pushed to both branches. Governance docs (CLAUDE.md, PROJECT_STATE.md, ROADMAP.md) adopted
+2026-09-29 at user's request.
 
 ## Completed
 - v6.3.5 built (2026-10-06, branch `claude/full-audit`, NOT committed yet) - see Current Objective for the full 13-item list. First time this branch's WPF Views were actually built+run-verified on Windows (prior `claude/full-audit` commits, per the "Audit pass" section below, were compile-checked Services-only on Linux).
@@ -55,9 +59,9 @@ Nothing mid-flight.
 Nothing currently blocked.
 
 ## Next Actions
-1. Decide with the user: commit+push v6.3.5 to `claude/full-audit`? Merge to `master`? Create a GitHub release?
+1. Decide with the user: create a GitHub release for v6.3.5? (merge/push already done, see Current Phase)
 2. REQ-590-05 (app-usage bloatware suggestions) and REQ-590-06 (per-game Tweaks profiles) remain NOT STARTED (carried over, not part of GEARWIN.MD v6.3.5).
-3. Manually verify by hand (no GUI automation available in this session): the new Boost button's visual placement, the modernized searchbar, the tab-strip wheel-scroll, and that the window's new MinWidth=946/Width=1306 (estimated, not runtime-measured) actually look right for the 9-tab strip in every language.
+3. Manually verify by hand (no GUI automation available in this session): the new Boost button's visual placement, the modernized searchbar, the tab-strip wheel-scroll, the enlarged title-bar icon/text, and that the window's new size constants (estimated, not runtime-measured) actually look right for the 9-tab strip in every language.
 
 ## MotionDeskStudio note
 Separate project, separate repo, at `C:\Users\gstrj\Documents\MotionDeskStudio` (own `.sln`, own git repo, `MOTIONDESK_MASTER_PROPOSALS_AND_ROADMAP.md`) — path confirmed by the user 2026-09-30 when asked. REQ-580-05 read its opacity mechanism (`src/UI/MainWindow.cs`) and ported the UX into GearWin (see Completed). No other MotionDeskStudio work has been requested or done from this session — still a distinct project with its own state, don't mix contexts without an explicit ask each time.
