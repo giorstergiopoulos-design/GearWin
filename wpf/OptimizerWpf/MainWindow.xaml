@@ -20,7 +20,7 @@
         mc:Ignorable="d"
         Title="GearWin - Complete PC Care"
         Icon="AppIcon.ico"
-        Height="840" Width="1306" MinHeight="640" MinWidth="946"
+        Height="852" Width="1306" MinHeight="652" MinWidth="946"
         WindowStartupLocation="CenterScreen"
         Background="{DynamicResource MainBgBrush}"
         PreviewKeyDown="Window_PreviewKeyDown"
@@ -130,13 +130,17 @@
                      36->44 / 24->32 (ίδια αναλογία badge:γρανάζι ~1.5x κρατημένη) ώστε τα δόντια να
                      είναι ευδιάκριτα αντί για σχεδόν-συμπαγή κουκκίδα στα 24px. Το SplashWindow's
                      "προσγείωση" διαβάζει το ActualWidth δυναμικά (SplashWindow.xaml.cs) - καμία
-                     εξάρτηση εδώ σε συγκεκριμένο μέγεθος. -->
-                <Border x:Name="TitleGearBorder" Width="44" Height="44" CornerRadius="8" Background="{DynamicResource AccentBrush}" Margin="0,0,12,0">
-                    <views:ThreeGearIcon x:Name="TitleGear" Width="32" Height="32" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                     εξάρτηση εδώ σε συγκεκριμένο μέγεθος.
+                     ΔΙΟΡΘΩΣΗ (ρητό αίτημα χρήστη: "μεγάλωσε το κινούμενο εικονίδιο τίτλου και τον
+                     τίτλο") - 44->56 / 32->38 (ίδια αναλογία badge:γρανάζι κρατημένη), FontSize του
+                     "GearWin" 20->26 και της έκδοσης 11->13. Πάλι καμία εξάρτηση στο SplashWindow -
+                     διαβάζει δυναμικά το νέο ActualWidth. -->
+                <Border x:Name="TitleGearBorder" Width="56" Height="56" CornerRadius="10" Background="{DynamicResource AccentBrush}" Margin="0,0,14,0">
+                    <views:ThreeGearIcon x:Name="TitleGear" Width="38" Height="38" HorizontalAlignment="Center" VerticalAlignment="Center"/>
                 </Border>
                 <StackPanel x:Name="TitleTextPanel" VerticalAlignment="Center">
-                    <TextBlock Text="GearWin" FontSize="20" FontWeight="Bold" Foreground="{DynamicResource TextBrush}"/>
-                    <TextBlock x:Name="TxtAppVersion" FontSize="11" Foreground="{DynamicResource SubTextBrush}"/>
+                    <TextBlock Text="GearWin" FontSize="26" FontWeight="Bold" Foreground="{DynamicResource TextBrush}"/>
+                    <TextBlock x:Name="TxtAppVersion" FontSize="13" Foreground="{DynamicResource SubTextBrush}"/>
                 </StackPanel>
 
                 <!-- ===== Οριζόντιο σύγχρονο μενού (MenuMode="HorizontalModern", port του ps1's
