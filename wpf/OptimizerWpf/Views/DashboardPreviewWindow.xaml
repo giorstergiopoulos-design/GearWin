@@ -70,12 +70,18 @@
     </ui:FluentWindow.Resources>
 
     <!-- ΔΙΟΡΘΩΣΗ (χρήστης είδε screenshot: "φτιάξε τα χρώματα τις υφές το κινούμενο φόντο") - έλειπε
-         τελείως το ThemedBackgroundControl (το ίδιο animated φόντο με MainWindow/SplashWindow) - μόνο
-         ένα επίπεδο MainBgBrush, γι' αυτό έδειχνε επίπεδο/σκέτο μαύρο αντί για το κινούμενο θέμα της
-         εφαρμογής. ΙΔΙΟ μοτίβο 2 επιπέδων με το SplashWindow.xaml. -->
+         τελείως το ThemedBackgroundControl (το ίδιο animated φόντο με MainWindow/SplashWindow).
+         ΔΙΟΡΘΩΣΗ #2 (χρήστης είδε screenshot: "το κινούμενο φόντο... οι γραμμές... δεν είναι καλό") -
+         πρώτη προσπάθεια το άπλωνε σε ΟΛΟ το παράθυρο (μαζί με την περιοχή περιεχομένου/καρτών) - το
+         ίδιο ΤΟ MainWindow.xaml ΕΧΕΙ ΗΔΗ διορθώσει ακριβώς αυτό στο παρελθόν (βλ. σχόλιο εκεί, γραμμή
+         ~82: "σε 7 από τις 8 καρτέλες οι πυκνές κάρτες καλύπτουν όλο το παράθυρο... RowSpan 5->3:
+         καλύπτει πλέον ΜΟΝΟ... τίτλο+λωρίδα καρτελών, ΟΧΙ το ContentRow") - το AppBackground εκεί
+         περιορίζεται ΡΗΤΑ στις γραμμές menu+τίτλος+tabs, ΠΟΤΕ στην περιοχή με τις κάρτες. Ίδιος
+         περιορισμός εδώ: το ThemedBackgroundControl μπαίνει ΜΕΣΑ στη γραμμή του ui:TitleBar (Row="0",
+         Auto-ύψος, όσο ψηλή είναι η γραμμή τίτλου) αντί να απλώνεται πίσω από όλο το παράθυρο - η
+         περιοχή πλευρικού μενού+περιεχομένου μένει σκέτο MainBgBrush, όπως ακριβώς στο MainWindow. -->
     <Grid>
         <Border Background="{DynamicResource MainBgBrush}"/>
-        <views:ThemedBackgroundControl x:Name="DashboardBackground"/>
 
         <Grid>
             <Grid.RowDefinitions>
@@ -83,6 +89,7 @@
                 <RowDefinition Height="*"/>
             </Grid.RowDefinitions>
 
+            <views:ThemedBackgroundControl x:Name="DashboardBackground" Grid.Row="0"/>
             <ui:TitleBar Grid.Row="0" x:Name="PreviewTitleBar" Title="PC Performance &amp; Maintenance Suite"/>
 
             <Grid Grid.Row="1">
