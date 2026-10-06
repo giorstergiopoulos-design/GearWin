@@ -79,6 +79,7 @@
     <!-- Εικονίδιο εφαρμογής (ρητό αίτημα χρήστη: "στο παράθυρο της εφαρμογής δεν εμφανίζεται
          εικονίδιο") - Resource ώστε το Window.Icon="AppIcon.ico" να το βρίσκει μέσω pack URI, ΚΑΙ
          ApplicationIcon παραπάνω για το ίδιο το exe/taskbar. -->
+    <PackageReference Include="WPF-UI" Version="4.3.0" />
     <Resource Include="AppIcon.ico" />
     <!-- Ρητό αίτημα χρήστη - πραγματικές εικόνες CPU/RAM/GPU/Δίσκου στα αντίστοιχα πλακίδια της
          Αρχικής (αντικαθιστούν το διανυσματικό HardwareChipIcon και στα 4 πλακίδια). -->

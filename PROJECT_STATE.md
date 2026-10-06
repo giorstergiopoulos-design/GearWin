@@ -42,6 +42,17 @@ and pushed to both branches. Governance docs (CLAUDE.md, PROJECT_STATE.md, ROADM
 2026-09-29 at user's request.
 
 ## Completed
+- WPF-UI pilot: `Views/DashboardPreviewWindow.xaml(.cs)` (2026-10-06) - a standalone, additive "Πίνακας
+  Ελέγχου" window built with the WPF-UI 4.3.0 nuget (ui:FluentWindow/TitleBar/Card/InfoBar/Button/
+  TextBox), reusing the SidebarShortcuts/NavItems/RailPillStyle/PcManagerHomeView.BuildArc/TweakRowVm
+  patterns already proven in the real app, wired to real data (HealthScoreService, UpdatesHubService,
+  WingetService, pinned tweaks) - no fabricated numbers/names. Opens ONLY via `--dashboard-preview`
+  (App.xaml.cs), the normal app/MainWindow is 100% untouched. Visual reference: user's screenshot of
+  "PC Performance & Maintenance Suite v5.1.0" (see `[[project_optimizer_shell_v510_reference]]` memory).
+  Build + full test suite (156/156) verified; **NOT runtime/visually verified** - this session cannot
+  elevate (app.manifest requires Administrator, `Start-Process -Verb RunAs` would hang with no user to
+  click UAC, see `[[feedback_avoid_runas_hangs]]` memory) - user needs to run
+  `GearWin.exe --dashboard-preview` themselves and report back.
 - Installer gained a "Start with Windows" task on the Additional Tasks page (2026-10-06, unchecked by default) - writes `LaunchWithWindowsToTray=true` into `AppSettings.json` via a bundled `installer/SetAutostart.ps1` (PS 5.1-compatible, merges rather than overwrites so upgrades keep existing settings); the app's own already-tested `SystemService.EnsureLaunchTaskAsync()` (runs every launch) then creates the real Task Scheduler task - no duplicated logic in the installer script. 13 installer languages (same set as `ResetPromptText`/`UpdateDetected` - the installer wizard doesn't have a Turkish translation, pre-existing gap, not part of this change).
 - v6.3.5 shipped (2026-10-06) - see Current Objective for the full 13-item GEARWIN.MD list, plus the .NET 10 upgrade and title-bar enlargement. Merged `claude/full-audit` into `master`, both pushed. First time this branch's WPF Views were actually built+run-verified on Windows (prior `claude/full-audit` commits, per the "Audit pass" section below, were compile-checked Services-only on Linux).
 - v5.11.0 shipped (2026-09-30): REQ-590-01 (Fonts moved from Settings to System tab - it's inventory, not a preference), REQ-590-02 (saved Wi-Fi password viewer in Network & Security, using native WLAN API rather than locale-fragile netsh text parsing - this machine is Greek-locale, English-string parsing would have silently broken), REQ-590-03 (settings backup/restore - export/import AppSettings.json, validates before overwriting).

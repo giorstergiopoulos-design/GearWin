@@ -47,6 +47,19 @@ public partial class App : Application
             return;
         }
 
+        // ΝΕΟ (GEARWIN.MD, ρητό αίτημα χρήστη: "κάνε τον πίνακα ελέγχου που είναι το κύριο παράθυρο
+        // της εφαρμογής & βλέπουμε") - πιλοτικό WPF-UI "Πίνακας Ελέγχου" (Views/DashboardPreviewWindow),
+        // ΔΕΝ αντικαθιστά το MainWindow - ανοίγει μόνο με αυτό το όρισμα, πριν το single-instance mutex
+        // (ίδιο σκεπτικό με τα headless modes παραπάνω: δεν πρέπει να εμποδίζεται από ή να εμποδίζει μια
+        // ήδη τρέχουσα κανονική διεργασία GearWin). Καμία αλληλεπίδραση με tray/splash/update-checks.
+        if (e.Args.Contains("--dashboard-preview"))
+        {
+            var preview = new Views.DashboardPreviewWindow();
+            MainWindow = preview;
+            preview.Show();
+            return;
+        }
+
         // ΔΙΟΡΘΩΣΗ (χρήστης ανέφερε: "η εφαρμογή κρασάρει και κλείνει" σε μια σάρωση) - χωρίς αυτόν
         // τον global handler, ΚΑΘΕ μη-χειρισμένη εξαίρεση σε async void event handler (το μοτίβο που
         // χρησιμοποιείται σχεδόν παντού στην εφαρμογή για Click handlers) τερματίζει ΣΙΩΠΗΛΑ ολόκληρη
