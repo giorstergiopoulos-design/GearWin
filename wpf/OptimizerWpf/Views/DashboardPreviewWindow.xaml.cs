@@ -50,7 +50,30 @@ namespace OptimizerWpf.Views
             // ΔΙΟΡΘΩΣΗ (χρήστης είδε screenshot: "φτιάξε... το κινούμενο φόντο") - έλειπε η σύνδεση του
             // ThemedBackgroundControl με τον ThemeManager (ίδια κλήση με το SplashWindow_Loaded).
             Loaded += (_, _) => ThemeManager.AttachBackground(DashboardBackground);
+            // ΔΙΟΡΘΩΣΗ (ρητό αίτημα χρήστη: "ολοκλήρωσέ το") - καμία καρτέλα δεν εμφανιζόταν επιλεγμένη
+            // στο screenshot (το ItemsControl δεν επιλέγει αυτόματα RadioButtons) - η "Αρχική" (πάντα
+            // index 0 στο NavItems.All) επιλέγεται ρητά μόλις υλοποιηθούν τα containers (UpdateLayout
+            // το εξασφαλίζει πριν την αναζήτηση στο visual tree).
+            Loaded += (_, _) => SelectFirstTab();
             Loaded += async (_, _) => await RefreshAsync();
+        }
+
+        private void SelectFirstTab()
+        {
+            ListTabs.UpdateLayout();
+            if (ListTabs.ItemContainerGenerator.ContainerFromIndex(0) is not DependencyObject container) return;
+            if (FindVisualChild<System.Windows.Controls.RadioButton>(container) is { } radio) radio.IsChecked = true;
+        }
+
+        private static T? FindVisualChild<T>(DependencyObject parent) where T : DependencyObject
+        {
+            for (var i = 0; i < System.Windows.Media.VisualTreeHelper.GetChildrenCount(parent); i++)
+            {
+                var child = System.Windows.Media.VisualTreeHelper.GetChild(parent, i);
+                if (child is T match) return match;
+                if (FindVisualChild<T>(child) is { } nested) return nested;
+            }
+            return null;
         }
 
         // ── Πλευρικό μενού ────────────────────────────────────────────────────────────────
@@ -70,13 +93,44 @@ namespace OptimizerWpf.Views
             BtnCollapseSidebar.Content = _collapsed ? "»" : "Σύμπτυξη μενού";
         }
 
+        // ΔΙΟΡΘΩΣΗ (ρητό αίτημα χρήστη: "ολοκλήρωσέ το και παράδωσέ το") - οι 6 συντομεύσεις ανοίγουν
+        // πλέον τα ΠΡΑΓΜΑΤΙΚΑ, ήδη δοκιμασμένα δευτερεύοντα παράθυρά τους (ίδιο υποσύνολο περιπτώσεων
+        // με το MainWindow.OpenDestination - καμία νέα λειτουργία, μόνο επαναχρησιμοποίηση). Οι άλλες
+        // 8 καρτέλες (εκτός Αρχικής) δεν έχουν δικό τους περιεχόμενο μέσα σε ΑΥΤΟ το πιλοτικό παράθυρο
+        // (θα απαιτούσε να ξαναχτιστεί ολόκληρη η εφαρμογή σε WPF-UI, εκτός σκοπού - "κάνε ΤΟΝ ΠΙΝΑΚΑ
+        // ΕΛΕΓΧΟΥ") - ειλικρινές μήνυμα αντί για σιωπηλό τίποτα, ίδιο ήδη υπάρχον κείμενο/μοτίβο
+        // ("Main_NotPorted...") με το κλασικό μενού.
         private void NavRow_Click(object sender, RoutedEventArgs e)
         {
-            // Μόνο ο "Πίνακας Ελέγχου" (Home) είναι πραγματικά συνδεδεμένος σε αυτό το πιλοτικό
-            // παράθυρο - οι άλλες 8 καρτέλες/6 συντομεύσεις δείχνουν σωστά (πραγματικά NavItems/
-            // SidebarShortcuts) αλλά δεν ανοίγουν ακόμα δικό τους περιεχόμενο εδώ (εκτός σκοπού: "κάνε
-            // ΤΟΝ ΠΙΝΑΚΑ ΕΛΕΓΧΟΥ", όχι ολόκληρη την εφαρμογή σε WPF-UI).
-            if (sender is not System.Windows.Controls.RadioButton { Tag: NavItem item } || item.Tag != "Home") return;
+            if (sender is not System.Windows.Controls.RadioButton { Tag: { } tag } button) return;
+
+            if (tag is NavItem navItem && navItem.Tag != "Home")
+            {
+                ThemedMessageBox.Show(
+                    $"{LanguageService.T("Main_NotPortedPrefix")}{navItem.Label}{LanguageService.T("Main_NotPortedSuffix")}",
+                    LanguageService.T("Main_NotPortedTitle"), System.Windows.MessageBoxButton.OK, System.Windows.MessageBoxImage.Information);
+            }
+            else if (tag is SidebarShortcut shortcut)
+            {
+                OpenShortcutDestination(shortcut.DestinationKey);
+            }
+        }
+
+        private void OpenShortcutDestination(string key)
+        {
+            if (key == "Clipboard_Title") { new ClipboardHistoryWindow { Owner = this }.Show(); return; }
+
+            Window? window = key switch
+            {
+                "Vive_Title" => new ViveToolWindow { Owner = this },
+                "Uwp_Title" => new UwpAppManagerWindow { Owner = this },
+                "Center_Title" => new MaintenanceCenterWindow { Owner = this },
+                "AppearanceSettingsTitle" => new AppearanceSettingsWindow { Owner = this },
+                "Help_Title" => new HelpWindow { Owner = this },
+                "ActionLog_Title" => new ActionLogWindow { Owner = this },
+                _ => null,
+            };
+            window?.ShowDialog();
         }
 
         private void BtnThemeToggle_Click(object sender, RoutedEventArgs e)
