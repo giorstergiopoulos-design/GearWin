@@ -84,6 +84,11 @@ Name: "korean"; MessagesFile: "compiler:Languages\Korean.isl"; LicenseFile: "lic
 ; χρήστης μπορεί να το αποεπιλέξει πριν την εγκατάσταση.
 [Tasks]
 Name: "desktopicon"; Description: "{cm:CreateDesktopIcon}"; GroupDescription: "{cm:AdditionalIcons}"; Flags: checkedonce
+; ΝΕΟ - ρητό αίτημα χρήστη: επιλογή "Εκκίνηση με τα Windows" ήδη στη σελίδα "Πρόσθετες Εργασίες" του
+; installer (πέρα από το ήδη υπάρχον toggle στις Ρυθμίσεις της εφαρμογής) - αποεπιλεγμένο από προεπιλογή
+; (δεν επιβάλλεται αυτόματη εκκίνηση χωρίς ρητή επιλογή του χρήστη, ίδια σύμβαση με το desktopicon
+; checkbox). Βλ. SetAutostart.ps1 + [Run] παρακάτω για τον μηχανισμό.
+Name: "startwithwindows"; Description: "{cm:StartWithWindows}"; GroupDescription: "{cm:AdditionalIcons}"; Flags: unchecked
 
 ; ΝΕΟ - ρητό αίτημα χρήστη: "όταν υπάρχει ήδη η εφαρμογή στον υπολογιστή, να υπάρχει επιλογή ενημέρωση
 ; όπου θα ενημερώνει μόνο τα αρχεία που άλλαξαν". ΧΩΡΙΣ το "ignoreversion" flag, το Inno Setup συγκρίνει
@@ -97,6 +102,8 @@ Name: "desktopicon"; Description: "{cm:CreateDesktopIcon}"; GroupDescription: "{
 ; το ίδιο μηχανισμό - όχι απαραίτητο ακόμα, μπορεί να προστεθεί όποτε χρειαστεί.
 [Files]
 Source: "{#MyPublishDir}\*"; DestDir: "{app}"; Flags: recursesubdirs createallsubdirs
+; dontcopy: εξάγεται ΜΟΝΟ προσωρινά (δεν μπαίνει στο {app}) - βλ. InitializeWizard/[Run] παρακάτω.
+Source: "SetAutostart.ps1"; Flags: dontcopy
 
 [Icons]
 Name: "{group}\{#MyAppName}"; Filename: "{app}\{#MyAppExeName}"
@@ -104,6 +111,11 @@ Name: "{group}\{cm:UninstallProgram,{#MyAppName}}"; Filename: "{uninstallexe}"
 Name: "{autodesktop}\{#MyAppName}"; Filename: "{app}\{#MyAppExeName}"; Tasks: desktopicon
 
 [Run]
+; ΝΕΟ - αν επιλέχθηκε το "startwithwindows" task, γράφει το LaunchWithWindowsToTray flag στο
+; AppSettings.json ΠΡΙΝ την πρώτη εκκίνηση - η ίδια η εφαρμογή (SystemService.EnsureLaunchTaskAsync,
+; τρέχει σε ΚΑΘΕ εκκίνηση) δημιουργεί τότε την πραγματική εργασία Task Scheduler μόνη της, ίδια
+; δοκιμασμένη λογική με το χειροκίνητο toggle στις Ρυθμίσεις - καμία διπλή υλοποίηση εδώ.
+Filename: "powershell.exe"; Parameters: "-NoProfile -ExecutionPolicy Bypass -File ""{tmp}\SetAutostart.ps1"""; Tasks: startwithwindows; Flags: runhidden waituntilterminated
 Filename: "{app}\{#MyAppExeName}"; Description: "{cm:LaunchProgram,{#StringChange(MyAppName, '&', '&&')}}"; Flags: nowait postinstall skipifsilent
 
 [UninstallRun]
@@ -164,6 +176,22 @@ japanese.UpdateDetected={#MyAppName} バージョン %1 の既存のインスト
 portuguese.UpdateDetected=Foi detetada uma instalação existente do {#MyAppName} versão %1.%n%nSerá atualizada para a versão {#MyAppVersion} - apenas os ficheiros alterados serão copiados, não a aplicação inteira desde o início.
 korean.UpdateDetected={#MyAppName} 버전 %1의 기존 설치가 감지되었습니다.%n%n버전 {#MyAppVersion}(으)로 업데이트됩니다 - 변경된 파일만 복사되며, 전체 애플리케이션을 처음부터 복사하지 않습니다.
 
+; ΝΕΟ - ρητό αίτημα χρήστη: περιγραφή του "startwithwindows" task παραπάνω, σε όλες τις 13 γλώσσες
+; του installer wizard (ίδιο σύνολο γλωσσών με το ResetPromptText/UpdateDetected παραπάνω).
+greek.StartWithWindows=Εκκίνηση αυτόματα με τα Windows (ελαχιστοποιημένο στην περιοχή ειδοποιήσεων)
+english.StartWithWindows=Start automatically with Windows (minimized to the tray)
+german.StartWithWindows=Automatisch mit Windows starten (minimiert im Infobereich)
+french.StartWithWindows=Démarrer automatiquement avec Windows (réduit dans la zone de notification)
+arabic.StartWithWindows=البدء تلقائيًا مع ويندوز (مصغّرًا في شريط الإشعارات)
+hindi.StartWithWindows=Windows के साथ स्वचालित रूप से प्रारंभ करें (ट्रे में छोटा किया हुआ)
+spanish.StartWithWindows=Iniciar automáticamente con Windows (minimizado en la bandeja)
+italian.StartWithWindows=Avvia automaticamente con Windows (ridotto a icona nella barra delle applicazioni)
+russian.StartWithWindows=Запускать автоматически с Windows (свёрнуто в трей)
+chinese.StartWithWindows=随 Windows 自动启动（最小化到系统托盘）
+japanese.StartWithWindows=Windows 起動時に自動的に開始する（タスク トレイに最小化）
+portuguese.StartWithWindows=Iniciar automaticamente com o Windows (minimizado no tabuleiro)
+korean.StartWithWindows=Windows 시작 시 자동으로 실행 (트레이로 최소화)
+
 [Code]
 var
   ResetTweaksOnUninstall: Boolean;
@@ -197,6 +225,9 @@ begin
   sPrevVersion := GetInstalledVersion();
   if sPrevVersion <> '' then
     WizardForm.WelcomeLabel2.Caption := FmtMessage(CustomMessage('UpdateDetected'), [sPrevVersion]);
+  // ΝΕΟ - εξάγει το dontcopy ps1 σε {tmp} ΤΩΡΑ (όχι αργότερα) ώστε να υπάρχει ήδη εκεί όταν τρέξει
+  // το αντίστοιχο [Run] βήμα στο τέλος της εγκατάστασης, ανεξάρτητα από το αν το task επιλεγεί.
+  ExtractTemporaryFile('SetAutostart.ps1');
 end;
 
 function InitializeUninstall(): Boolean;
