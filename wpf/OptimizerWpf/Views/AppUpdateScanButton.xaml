@@ -35,6 +35,11 @@
             </Grid.RenderTransform>
             <Path Data="M32,4 L56,30 L42,30 L42,60 L22,60 L22,30 L8,30 Z" Fill="White"/>
         </Grid>
-        <TextBlock Text="{tr:Tr Opt_ScanCaps}" FontWeight="Bold" FontSize="17" Foreground="White" HorizontalAlignment="Center" VerticalAlignment="Bottom" Margin="0,0,0,28" IsHitTestVisible="False"/>
+        <!-- ΔΙΟΡΘΩΣΗ (GEARWIN.MD: "όταν γίνεται εγκατάσταση αντί του σάρωση στο κουμπί να εμφανίζεται
+             εγκατάσταση, εντός του περιθωρίου του κουμπιού") - το κείμενο ήταν πάντα δεμένο στο
+             Opt_ScanCaps ("ΣΑΡΩΣΗ") ό,τι λειτουργία και να τρέχει· τώρα αλλάζει μέσω SetScanning's
+             captionKey (OptimizationView), με μικρότερο FontSize για τη μακρύτερη λέξη ώστε να μη
+             ξεχειλίζει από τον κύκλο. -->
+        <TextBlock x:Name="TxtCaption" Text="{tr:Tr Opt_ScanCaps}" FontWeight="Bold" FontSize="17" Foreground="White" HorizontalAlignment="Center" VerticalAlignment="Bottom" Margin="0,0,0,28" IsHitTestVisible="False"/>
     </Grid>
 </UserControl>

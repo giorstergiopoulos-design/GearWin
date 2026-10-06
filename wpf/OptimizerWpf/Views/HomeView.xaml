@@ -219,6 +219,12 @@
                     <StackPanel Grid.Row="2" Grid.Column="1" Orientation="Horizontal" Margin="0,10,0,0">
                         <Button Content="{tr:Tr Home_FixAll}" Style="{StaticResource AccentButtonStyle}" Width="150" Margin="0,0,10,0" Click="BtnFixAllHealth_Click"/>
                         <Button Content="{tr:Tr Refresh}" Style="{StaticResource FlatButtonStyle}" Width="150" Margin="0,0,10,0" Click="BtnRefreshHealth_Click"/>
+                        <!-- ΔΙΟΡΘΩΣΗ (GEARWIN.MD: "δίπλα από τον πλήρη έλεγχο υγείας, όπως στο pcmanager
+                             να υπάρχει ένα κουμπί boost") - το PcManagerHomeView (skin "PC Manager") είχε
+                             ήδη αυτό το κουμπί δίπλα στο δικό του Health Check· η προεπιλεγμένη Αρχική
+                             (αυτή η προβολή) δεν το είχε καθόλου - ίδια ακριβώς λειτουργία (BtnBoost_Click),
+                             για ανεξαρτήτως skin. Η πιο ενδελεχής εκδοχή παραμένει ο Πλήρης Έλεγχος Υγείας. -->
+                        <Button x:Name="BtnBoost" Content="{tr:Tr PcmHome_Boost}" Style="{StaticResource FlatButtonStyle}" Width="150" Margin="0,0,10,0" Click="BtnBoost_Click"/>
                         <!-- ΝΕΟ - ρητό αίτημα χρήστη: "αντίστοιχο γραφικό με το Health Check του PC Manager". -->
                         <Button Content="{tr:Tr HealthCheck_RunButton}" Style="{StaticResource FlatButtonStyle}" Width="150" Click="BtnRunHealthCheck_Click"/>
                     </StackPanel>
@@ -321,25 +327,6 @@
                             <TextBlock Text="{tr:Tr Home_UpdatesWindows}" Style="{StaticResource SubTextStyle}" HorizontalAlignment="Center"/>
                         </StackPanel>
                     </Grid>
-                </StackPanel>
-            </Border>
-
-            <!-- ΝΕΟ - roadmap ιδέα #5 (ρητό αίτημα χρήστη: "κάνε τα 4-7" - "Σύγκριση πριν/μετά σε
-                 όλες τις σαρώσεις... πόσος χώρος/πόσα ms boot time κέρδισε ο χρήστης συνολικά,
-                 ιστορικό στο Home") - βλ. Services/ImpactTrackingService.cs. Ο χρόνος εκκίνησης
-                 χρησιμοποιεί ΤΑ ΙΔΙΑ πραγματικά δεδομένα με το Boot Timeline (Προηγμένα Εργαλεία, βλ.
-                 AdvancedToolsService.GetRecentBootTimes) - καμία νέα μέτρηση, μόνο σύγκριση παλιότερων
-                 vs πιο πρόσφατων καταγραφών. Κρυφό (Visibility.Collapsed αρχικά στο XAML) όσο δεν
-                 υπάρχουν αρκετά δεδομένα - ΚΑΜΙΑ ψεύτικη τάση από 0-1 σημεία. -->
-            <Border Style="{StaticResource CardStyle}" Margin="0,16,0,0">
-                <StackPanel>
-                    <Grid Margin="0,0,0,8">
-                        <Grid.ColumnDefinitions><ColumnDefinition Width="Auto"/><ColumnDefinition Width="*"/></Grid.ColumnDefinitions>
-                        <views:HeaderGlyphIcon Grid.Column="0" Kind="Check" Width="16" Height="16" Margin="0,0,8,0" VerticalAlignment="Center"/>
-                        <TextBlock Grid.Column="1" Text="{tr:Tr Home_ImpactTitle}" Style="{StaticResource CardTitleStyle}"/>
-                    </Grid>
-                    <TextBlock x:Name="TxtImpactFreed" Style="{StaticResource SubTextStyle}" TextWrapping="Wrap"/>
-                    <TextBlock x:Name="TxtImpactBootTrend" Style="{StaticResource SubTextStyle}" TextWrapping="Wrap" Margin="0,4,0,0" Visibility="Collapsed"/>
                 </StackPanel>
             </Border>
 

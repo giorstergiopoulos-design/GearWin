@@ -236,7 +236,7 @@ namespace OptimizerWpf.Views
             var selected = _updates.Where(u => u.IsSelected).ToList();
             if (selected.Count == 0) return;
 
-            SetBusy(true);
+            SetBusy(true, installing: true);
             var succeeded = new List<string>();
             var failed = new List<string>();
             var openedInStore = new List<string>();
@@ -278,13 +278,17 @@ namespace OptimizerWpf.Views
                 failed.Count == 0 ? MessageBoxImage.Information : MessageBoxImage.Warning);
         }
 
-        private void SetBusy(bool busy)
+        // ΔΙΟΡΘΩΣΗ (GEARWIN.MD: "όταν γίνεται εγκατάσταση αντί του σάρωση στο κουμπί να εμφανίζεται
+        // εγκατάσταση") - το ίδιο SetBusy εξυπηρετούσε ΚΑΙ τη σάρωση (BtnScanWinget_Click) ΚΑΙ την
+        // εγκατάσταση (BtnUpgradeSelected_Click), πάντα με το ίδιο κείμενο "ΣΑΡΩΣΗ" - installing=true
+        // δείχνει "ΕΓΚΑΤΑΣΤΑΣΗ" αντί γι' αυτό μόνο στο δεύτερο μονοπάτι.
+        private void SetBusy(bool busy, bool installing = false)
         {
             ProgressWinget.Visibility = busy ? Visibility.Visible : Visibility.Collapsed;
-            BtnScanWinget.SetScanning(busy);
+            BtnScanWinget.SetScanning(busy, installing && busy ? "Opt_InstallingCaps" : null);
             BtnScanWinget.IsEnabled = !busy;
             BtnUpgradeSelected.IsEnabled = !busy;
-            if (busy) StatusService.SetBusy(LanguageService.T("Opt_CheckingWingetUpdates"));
+            if (busy) StatusService.SetBusy(LanguageService.T(installing ? "Opt_InstallingUpdates" : "Opt_CheckingWingetUpdates"));
             else StatusService.SetIdle(LanguageService.T("Ready"));
         }
 

@@ -135,8 +135,8 @@ public partial class MainWindow : Window
     private static readonly (string Key, Func<MainWindow, TextBlock> Label)[] TabLabels =
     {
         ("TabHome", w => w.LblTabHome), ("TabOptimization", w => w.LblTabOptimization), ("TabHealth", w => w.LblTabHealth),
-        ("TabNetwork", w => w.LblTabNetwork), ("TabTweaks", w => w.LblTabTweaks), ("TabGames", w => w.LblTabGames),
-        ("TabMultimedia", w => w.LblTabMultimedia), ("TabBloatware", w => w.LblTabBloatware),
+        ("TabNetwork", w => w.LblTabNetwork), ("TabTweaks", w => w.LblTabTweaks), ("TabGamesMedia", w => w.LblTabGamesMedia),
+        ("TabBloatware", w => w.LblTabBloatware),
         ("TabAdvanced", w => w.LblTabAdvanced), ("TabSystem", w => w.LblTabSystem),
     };
 
@@ -167,6 +167,16 @@ public partial class MainWindow : Window
             Width = Math.Clamp(needed, MinWidth, Math.Max(MinWidth, max));
         }
         catch { /* αν αποτύχει η μέτρηση μένει το πλάτος του XAML */ }
+    }
+
+    // GEARWIN.MD: όταν η λωρίδα καρτελών δεν χωράει, η ρόδα του ποντικιού με hover να την κυλάει -
+    // το ScrollViewer δέχεται wheel μόνο κατακόρυφα από προεπιλογή, εδώ είναι καθαρά οριζόντια λωρίδα
+    // (VerticalScrollBarVisibility="Disabled"), οπότε προωθείται απευθείας σε οριζόντια κύλιση.
+    private void TabStripScroll_PreviewMouseWheel(object sender, MouseWheelEventArgs e)
+    {
+        if (TabStripScroll.ScrollableWidth <= 0) return;
+        TabStripScroll.ScrollToHorizontalOffset(TabStripScroll.HorizontalOffset - e.Delta);
+        e.Handled = true;
     }
 
     // ΝΕΟ (roadmap: "ένδειξη προσοχής στο tab strip") - υπολογίζεται ΜΙΑ φορά στην εκκίνηση (ίδιο
@@ -244,8 +254,7 @@ public partial class MainWindow : Window
         LblTabHealth.Text = LanguageService.T("TabHealth");
         LblTabNetwork.Text = LanguageService.T("TabNetwork");
         LblTabTweaks.Text = LanguageService.T("TabTweaks");
-        LblTabGames.Text = LanguageService.T("TabGames");
-        LblTabMultimedia.Text = LanguageService.T("TabMultimedia");
+        LblTabGamesMedia.Text = LanguageService.T("TabGamesMedia");
         LblTabBloatware.Text = LanguageService.T("TabBloatware");
         LblTabAdvanced.Text = LanguageService.T("TabAdvanced");
         LblTabSystem.Text = LanguageService.T("TabSystem");
@@ -499,11 +508,10 @@ public partial class MainWindow : Window
             Key.D3 or Key.NumPad3 => "Health",
             Key.D4 or Key.NumPad4 => "Network",
             Key.D5 or Key.NumPad5 => "Tweaks",
-            Key.D6 or Key.NumPad6 => "Games",
-            Key.D7 or Key.NumPad7 => "Multimedia",
-            Key.D8 or Key.NumPad8 => "Bloatware",
-            Key.D9 or Key.NumPad9 => "Advanced",
-            Key.D0 or Key.NumPad0 => "System",
+            Key.D6 or Key.NumPad6 => "GamesMedia",
+            Key.D7 or Key.NumPad7 => "Bloatware",
+            Key.D8 or Key.NumPad8 => "Advanced",
+            Key.D9 or Key.NumPad9 => "System",
             _ => null,
         };
         if (tag == null) return;
@@ -593,8 +601,7 @@ public partial class MainWindow : Window
             "Health" => new HealthView(),
             "System" => new SystemView(),
             "Network" => new NetworkView(),
-            "Games" => new GamesView(),
-            "Multimedia" => new MultimediaView(),
+            "GamesMedia" => new GamesMediaView(),
             "Bloatware" => new BloatwareView(),
             "Tweaks" => new TweaksView(),
             "Advanced" => new AdvancedView(),
@@ -893,6 +900,7 @@ public partial class MainWindow : Window
     private void TxtSearch_TextChanged(object sender, TextChangedEventArgs e)
     {
         var query = TxtSearch.Text.Trim();
+        BtnClearSearch.Visibility = query.Length > 0 ? Visibility.Visible : Visibility.Collapsed;
         if (query.Length == 0) { SearchPopup.IsOpen = false; return; }
 
         var words = query.Split(' ', StringSplitOptions.RemoveEmptyEntries);
@@ -966,6 +974,13 @@ public partial class MainWindow : Window
         SearchPopup.IsOpen = false;
         TxtSearch.Text = "";
         HandleLeafClick(row.Leaf);
+    }
+
+    // ΔΙΟΡΘΩΣΗ (GEARWIN.MD: εκσυγχρονισμός searchbar) - κουμπί καθαρισμού (X), ορατό μόνο με κείμενο.
+    private void BtnClearSearch_Click(object sender, RoutedEventArgs e)
+    {
+        TxtSearch.Text = "";
+        TxtSearch.Focus();
     }
 
     private void BtnThemeToggle_Click(object sender, RoutedEventArgs e)

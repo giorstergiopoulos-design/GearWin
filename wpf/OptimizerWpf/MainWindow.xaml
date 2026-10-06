@@ -2,7 +2,13 @@
      880->760: το sidebar πλέον κολλάει στο φυσικό του ύψος (βλ. Sidebar's VerticalAlignment="Top"
      παρακάτω) αντί να τεντώνεται σε όλη τη στήλη - το παράθυρο μικραίνει αντίστοιχα ώστε να μη μένει
      μεγάλο άδειο κενό. Κάθε καρτέλα περιεχομένου έχει ήδη δικό της ScrollViewer, οπότε μικρότερο
-     ύψος σημαίνει απλώς λίγο περισσότερο scroll, όχι κομμένο περιεχόμενο. -->
+     ύψος σημαίνει απλώς λίγο περισσότερο scroll, όχι κομμένο περιεχόμενο.
+     ΔΙΟΡΘΩΣΗ (GEARWIN.MD: "αναπροσαρμογή του μεγέθους της εφαρμογής με τη μείωση κατά μια καρτέλα") -
+     το FitWidthToTabs() στο .cs μετρά ήδη δυναμικά τη λωρίδα (τώρα 9 pills αντί για 10), ΑΛΛΑ το
+     MinWidth εδώ ήταν σκληρό κάτω όριο χτισμένο για τα παλιά 10 - χωρίς να χαμηλώσει, η Clamp() στο
+     FitWidthToTabs() κρατούσε το παράθυρο στο παλιό πλάτος ό,τι και να υπολόγιζε η μέτρηση. Width
+     (εφεδρικό, μόνο αν αποτύχει η μέτρηση) και MinWidth χαμήλωσαν κατά ~70px - εκτίμηση απουσία
+     runtime μέτρησης, η FitWidthToTabs() θα προσαρμόσει το ακριβές τελικό πλάτος στην εκκίνηση. -->
 <Window x:Class="OptimizerWpf.MainWindow"
         xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
@@ -14,7 +20,7 @@
         mc:Ignorable="d"
         Title="GearWin - Complete PC Care"
         Icon="AppIcon.ico"
-        Height="840" Width="1376" MinHeight="640" MinWidth="1016"
+        Height="840" Width="1306" MinHeight="640" MinWidth="946"
         WindowStartupLocation="CenterScreen"
         Background="{DynamicResource MainBgBrush}"
         PreviewKeyDown="Window_PreviewKeyDown"
@@ -184,11 +190,33 @@
                  τροφοδοτεί ΚΑΙ το κλασικό μενού ΚΑΙ το πλευρικό μενού, ώστε η αναζήτηση να καλύπτει
                  ό,τι ήδη είναι προσβάσιμο από εκεί (καρτέλες + εργαλεία + ρυθμίσεις + βοήθεια) χωρίς
                  ξεχωριστό, παράλληλο ευρετήριο που θα μπορούσε να αποκλίνει. -->
-            <TextBox x:Name="TxtSearch" Grid.Column="1" Width="260" Height="34" HorizontalAlignment="Right"
-                     Margin="0,0,16,0" VerticalContentAlignment="Center" Padding="8,0"
-                     Background="{DynamicResource CardBgBrush}" Foreground="{DynamicResource TextBrush}"
-                     BorderBrush="{DynamicResource CardBorderBrush}" TextChanged="TxtSearch_TextChanged"
-                     shell:WindowChrome.IsHitTestVisibleInChrome="True"/>
+            <!-- ΔΙΟΡΘΩΣΗ (GEARWIN.MD: "επικαιροποίηση & εκσυγχρονισμος του searchbar") - πρώην γυμνό
+                 TextBox με τετράγωνο chrome των Windows (καμία γωνιακή ακτίνα, σε αντίθεση με ΟΛΟ το
+                 υπόλοιπο chrome της εφαρμογής που χρησιμοποιεί AppCornerRadius) - τώρα μέσα σε Border
+                 με το ίδιο AppCornerRadius, εικονίδιο μεγεθυντικού φακού, και κουμπί καθαρισμού (X) που
+                 εμφανίζεται μόνο όταν υπάρχει κείμενο. Η ίδια λογική αναζήτησης (TxtSearch_TextChanged)
+                 δεν άλλαξε - μόνο η εμφάνιση. -->
+            <Border Grid.Column="1" Width="260" Height="34" HorizontalAlignment="Right" Margin="0,0,16,0"
+                    Background="{DynamicResource CardBgBrush}" BorderBrush="{DynamicResource CardBorderBrush}" BorderThickness="1"
+                    CornerRadius="{DynamicResource AppCornerRadius}" shell:WindowChrome.IsHitTestVisibleInChrome="True">
+                <Grid>
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="Auto"/>
+                        <ColumnDefinition Width="*"/>
+                        <ColumnDefinition Width="Auto"/>
+                    </Grid.ColumnDefinitions>
+                    <TextBlock Grid.Column="0" Text="&#xE721;" FontFamily="Segoe MDL2 Assets" FontSize="13"
+                               Foreground="{DynamicResource SubTextBrush}" VerticalAlignment="Center" Margin="10,0,4,0" IsHitTestVisible="False"/>
+                    <TextBox x:Name="TxtSearch" Grid.Column="1" BorderThickness="0" Background="Transparent"
+                             Foreground="{DynamicResource TextBrush}" VerticalContentAlignment="Center" Padding="0,0,4,0"
+                             ToolTip="{local:Tr Main_SearchPlaceholder}" TextChanged="TxtSearch_TextChanged"/>
+                    <Button x:Name="BtnClearSearch" Grid.Column="2" Width="24" Height="24" Margin="0,0,5,0" Padding="0"
+                            Background="Transparent" BorderThickness="0" Cursor="Hand" Visibility="Collapsed"
+                            Click="BtnClearSearch_Click" ToolTip="{local:Tr Cancel}">
+                        <TextBlock Text="&#xE711;" FontFamily="Segoe MDL2 Assets" FontSize="10" Foreground="{DynamicResource SubTextBrush}"/>
+                    </Button>
+                </Grid>
+            </Border>
             <Popup x:Name="SearchPopup" PlacementTarget="{Binding ElementName=TxtSearch}" Placement="Bottom" StaysOpen="False" AllowsTransparency="True">
                 <Border Background="{DynamicResource CardBgBrush}" BorderBrush="{DynamicResource CardBorderBrush}" BorderThickness="1" CornerRadius="{DynamicResource AppCornerRadius}" Padding="4">
                     <ListBox x:Name="ListSearchResults" BorderThickness="0" Background="Transparent" Width="260" MaxHeight="300"
@@ -501,8 +529,12 @@
              κάποιο overflow. Τυλίχτηκε σε οριζόντιο ScrollViewer - ΠΟΤΕ clipping, αν δεν χωράει
              εμφανίζεται λεπτή οριζόντια μπάρα κύλισης (το ίδιο μοντέρνο ScrollBar style του
              Styles.xaml) αντί να κόβεται σιωπηλά η τελευταία καρτέλα (ίδιος κανόνας με το
-             "no truncated descriptions" - βλ. memory). -->
-        <ScrollViewer x:Name="TabStripScroll" Grid.Row="2" Margin="24,4,24,16" HorizontalScrollBarVisibility="Auto" VerticalScrollBarVisibility="Disabled">
+             "no truncated descriptions" - βλ. memory).
+             ΔΙΟΡΘΩΣΗ (GEARWIN.MD: "με την ροδέλα του ποντικιού με hover να μπορεί να τις κυλήσει") -
+             η μπάρα κύλισης δούλευε μόνο με drag· η ρόδα του ποντικιού δεν έκανε τίποτα γιατί το
+             ScrollViewer δέχεται wheel μόνο κατακόρυφα από προεπιλογή. -->
+        <ScrollViewer x:Name="TabStripScroll" Grid.Row="2" Margin="24,4,24,16" HorizontalScrollBarVisibility="Auto" VerticalScrollBarVisibility="Disabled"
+                      PreviewMouseWheel="TabStripScroll_PreviewMouseWheel">
         <StackPanel Orientation="Horizontal" x:Name="TabStrip" HorizontalAlignment="Center">
             <RadioButton x:Name="TabHome" Tag="Home" Style="{StaticResource TabPillStyle}" Checked="TabButton_Checked">
                 <StackPanel Orientation="Horizontal"><views:HeaderGlyphIcon Kind="Home" Width="20" Height="20" Margin="0,0,7,0"/><TextBlock x:Name="LblTabHome" Text="Αρχική"/></StackPanel>
@@ -532,11 +564,8 @@
             <RadioButton Tag="Tweaks" Style="{StaticResource TabPillStyle}" Checked="TabButton_Checked">
                 <StackPanel Orientation="Horizontal"><views:HeaderGlyphIcon Kind="Wrench" Width="20" Height="20" Margin="0,0,7,0"/><TextBlock x:Name="LblTabTweaks" Text="Επιπλέον Ρυθμίσεις"/></StackPanel>
             </RadioButton>
-            <RadioButton Tag="Games" Style="{StaticResource TabPillStyle}" Checked="TabButton_Checked">
-                <StackPanel Orientation="Horizontal"><views:HeaderGlyphIcon Kind="Gamepad" Width="20" Height="20" Margin="0,0,7,0"/><TextBlock x:Name="LblTabGames" Text="Παιχνίδια"/></StackPanel>
-            </RadioButton>
-            <RadioButton Tag="Multimedia" Style="{StaticResource TabPillStyle}" Checked="TabButton_Checked">
-                <StackPanel Orientation="Horizontal"><views:HeaderGlyphIcon Kind="Play" Width="20" Height="20" Margin="0,0,7,0"/><TextBlock x:Name="LblTabMultimedia" Text="Πολυμέσα"/></StackPanel>
+            <RadioButton Tag="GamesMedia" Style="{StaticResource TabPillStyle}" Checked="TabButton_Checked">
+                <StackPanel Orientation="Horizontal"><views:HeaderGlyphIcon Kind="Gamepad" Width="20" Height="20" Margin="0,0,7,0"/><TextBlock x:Name="LblTabGamesMedia" Text="Παιχνίδια &amp; Πολυμέσα"/></StackPanel>
             </RadioButton>
             <RadioButton Tag="Bloatware" Style="{StaticResource TabPillStyle}" Checked="TabButton_Checked">
                 <StackPanel Orientation="Horizontal"><views:HeaderGlyphIcon Kind="Broom" Width="20" Height="20" Margin="0,0,7,0"/><TextBlock x:Name="LblTabBloatware" Text="Εφαρμογές &amp; Bloat"/></StackPanel>

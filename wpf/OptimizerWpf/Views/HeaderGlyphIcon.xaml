@@ -85,9 +85,14 @@
                 <Line X1="13.5" Y1="12.5" X2="15" Y2="18" Stroke="{DynamicResource AccentBrush}" StrokeThickness="0.8" Opacity="0.6"/>
             </Canvas>
 
+            <!-- ΔΙΟΡΘΩΣΗ (GEARWIN.MD: "το εικονίδιο της ασπίδας δεν εμφανίζεται καλά στο dark mode") -
+                 ήταν το μόνο "κλειστό" σχήμα του συνόλου με Fill="Transparent" (μόνο περίγραμμα+check),
+                 ενώ τα άλλα κλειστά σχήματα (PartTools/PartLock/PartGear) έχουν όλα Fill=CardBgBrush για
+                 οπτικό βάρος - σε σκούρα θέματα με πιο απαλό Accent ένα λεπτό περίγραμμα 1.5px γίνεται
+                 δυσανάγνωστο. Ίδιο μοτίβο γέμισης με τα υπόλοιπα "κλειστά" εικονίδια. -->
             <Canvas x:Name="PartShield" Width="20" Height="20" Visibility="Collapsed">
                 <Polygon Points="10,2 17,4.5 17,10.5 10,18 3,10.5 3,4.5" Stroke="{DynamicResource AccentBrush}" StrokeThickness="1.5"
-                          StrokeLineJoin="Round" Fill="Transparent"/>
+                          StrokeLineJoin="Round" Fill="{DynamicResource CardBgBrush}"/>
                 <Polyline Points="6.5,9.5 9,12.5 14,6.5" Stroke="{DynamicResource AccentBrush}" StrokeThickness="1.8"
                            StrokeStartLineCap="Round" StrokeEndLineCap="Round" StrokeLineJoin="Round" Fill="Transparent"/>
             </Canvas>

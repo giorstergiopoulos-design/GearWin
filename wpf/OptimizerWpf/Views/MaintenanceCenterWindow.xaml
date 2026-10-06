@@ -13,8 +13,13 @@
          επαναφοράς, ειδοποιήσεις/ασφάλεια, καθυστέρηση εκκίνησης προγραμμάτων, αναφορά συστήματος.
          Η λογική βρίσκεται σε Services (SecurityStatusService, ChangeJournalService, RestoreGuardService,
          AlertService, StartupDelayService, SystemReportService, SharedAppearanceService). -->
+    <!-- ΔΙΟΡΘΩΣΗ (χρήστης ανέφερε, με screenshot: "οι καρτέλες είναι των κλασικών παραθύρων των
+         windows... ενοποίησε το με την εμφάνιση της εφαρμογής") - το TabControl ΔΕΝ είχε
+         ItemContainerStyle, άρα χρησιμοποιούσε το προεπιλεγμένο λευκό chrome των Windows αντί για
+         το pill-στυλ της υπόλοιπης εφαρμογής (ίδιο μοτίβο/λύση με το AppearanceSettingsWindow's
+         PillTabItemStyle). -->
     <Grid Margin="16">
-        <TabControl x:Name="Tabs">
+        <TabControl x:Name="Tabs" Background="Transparent" BorderThickness="0" ItemContainerStyle="{StaticResource PillTabItemStyle}">
             <!-- 1. Ασφάλεια -->
             <TabItem Header="{tr:Tr Center_TabSecurity}">
                 <Grid Margin="12">

@@ -1,0 +1,292 @@
+<UserControl x:Class="OptimizerWpf.Views.GamesMediaView"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:tr="clr-namespace:OptimizerWpf"
+             xmlns:views="clr-namespace:OptimizerWpf.Views"
+             mc:Ignorable="d">
+    <!-- GEARWIN.MD (6.3.5, ρητό αίτημα χρήστη: "Παιχνιδια & Πολυμεσα μια καρτελα") - συγχώνευση των
+         πρώην ξεχωριστών καρτελών GamesView + MultimediaView σε ΜΙΑ. Καμία αλλαγή λειτουργίας -
+         ίδια Services (GameLibraryService/GamingTweaksService/DisplayInfoService/AudioDeviceService/
+         PrivacyAccessService/MediaCodecService/MediaConverterService), μόνο ενοποιημένο UI. -->
+    <UserControl.Resources>
+        <BooleanToVisibilityConverter x:Key="BoolToVis"/>
+        <DataTemplate x:Key="GameRowTemplate">
+            <Border Background="{DynamicResource CardBgBrush}" BorderBrush="{DynamicResource CardBorderBrush}" BorderThickness="1"
+                    CornerRadius="{DynamicResource AppCornerRadius}" Padding="12,8" Margin="0,0,0,6">
+                <Grid>
+                    <Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions>
+                    <StackPanel>
+                        <StackPanel Orientation="Horizontal">
+                            <TextBlock Text="{Binding Entry.Name}" FontWeight="SemiBold" Foreground="{DynamicResource TextBrush}" VerticalAlignment="Center"/>
+                            <Border Background="{DynamicResource TabSelectBrush}" CornerRadius="4" Padding="6,1" Margin="8,0,0,0" VerticalAlignment="Center">
+                                <TextBlock Text="{Binding Entry.Launcher}" FontSize="10" Foreground="{DynamicResource TextBrush}"/>
+                            </Border>
+                            <Border Background="#33F59E0B" BorderBrush="#F59E0B" BorderThickness="1" CornerRadius="4" Padding="6,1" Margin="8,0,0,0" VerticalAlignment="Center"
+                                    Visibility="{Binding UpdatePending, Converter={StaticResource BoolToVis}}">
+                                <TextBlock Text="{tr:Tr Games_UpdatePending}" FontSize="10" Foreground="{DynamicResource TextBrush}"/>
+                            </Border>
+                        </StackPanel>
+                        <TextBlock Text="{Binding Details}" Style="{StaticResource SubTextStyle}" TextWrapping="Wrap" Margin="0,2,0,0"/>
+                    </StackPanel>
+                    <StackPanel Grid.Column="1" Orientation="Horizontal" VerticalAlignment="Center">
+                        <Button Content="{tr:Tr Games_Launch}" Style="{StaticResource AccentButtonStyle}" Padding="12,5" Margin="0,0,6,0" Tag="{Binding}" Click="BtnLaunchGame_Click"
+                                Visibility="{Binding CanLaunch, Converter={StaticResource BoolToVis}}"/>
+                        <Button Content="{tr:Tr Games_Folder}" Style="{StaticResource FlatButtonStyle}" Padding="10,5" Margin="0,0,6,0" Tag="{Binding}" Click="BtnGameFolder_Click"/>
+                        <Button Content="{tr:Tr Games_Verify}" Style="{StaticResource FlatButtonStyle}" Padding="10,5" Margin="0,0,6,0" Tag="{Binding}" Click="BtnVerifyGame_Click"
+                                Visibility="{Binding CanVerify, Converter={StaticResource BoolToVis}}"/>
+                        <Button Content="{tr:Tr Games_Uninstall}" Style="{StaticResource FlatButtonStyle}" Padding="10,5" Tag="{Binding}" Click="BtnUninstallGame_Click"
+                                Visibility="{Binding CanUninstall, Converter={StaticResource BoolToVis}}"/>
+                    </StackPanel>
+                </Grid>
+            </Border>
+        </DataTemplate>
+        <DataTemplate x:Key="GameTweakRowTemplate">
+            <Grid Margin="0,0,0,10">
+                <Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="Auto"/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions>
+                <StackPanel Margin="0,0,10,0">
+                    <TextBlock Text="{Binding Tweak.Label}" Foreground="{DynamicResource TextBrush}" TextWrapping="Wrap"/>
+                    <TextBlock Text="{Binding Tweak.Description}" Style="{StaticResource SubTextStyle}" TextWrapping="Wrap"/>
+                </StackPanel>
+                <TextBlock Grid.Column="1" Text="🛡" FontSize="13" VerticalAlignment="Center" Margin="0,0,8,0" Opacity="0.75"
+                           Visibility="{Binding AdminBadgeVisibility}" ToolTip="{Binding AdminBadgeTip}"/>
+                <ToggleButton Grid.Column="2" IsChecked="{Binding IsOn}" Style="{StaticResource ToggleSwitchStyle}" Click="ToggleGameTweak_Click" Tag="{Binding}"/>
+            </Grid>
+        </DataTemplate>
+    </UserControl.Resources>
+    <ScrollViewer VerticalScrollBarVisibility="Auto" PreviewMouseWheel="NestedScroll_PreviewMouseWheel">
+        <StackPanel Margin="0,8,0,24">
+
+            <!-- ===== Παιχνίδια ===== -->
+
+            <!-- Βιβλιοθήκη -->
+            <Border Style="{StaticResource CardStyle}">
+                <StackPanel>
+                    <Grid Margin="0,0,0,10">
+                        <Grid.ColumnDefinitions><ColumnDefinition Width="Auto"/><ColumnDefinition Width="*"/></Grid.ColumnDefinitions>
+                        <views:HeaderGlyphIcon Grid.Column="0" Kind="Gamepad" Width="16" Height="16" Margin="0,0,8,0" VerticalAlignment="Center"/>
+                        <TextBlock Grid.Column="1" Text="{tr:Tr Games_LibraryTitle}" Style="{StaticResource CardTitleStyle}"/>
+                    </Grid>
+                    <Grid Margin="0,0,0,10">
+                        <Grid.ColumnDefinitions><ColumnDefinition Width="Auto"/><ColumnDefinition Width="Auto"/><ColumnDefinition Width="*"/></Grid.ColumnDefinitions>
+                        <Button x:Name="BtnScanGames" Content="{tr:Tr Games_Scan}" Style="{StaticResource AccentButtonStyle}" Padding="16,7" Margin="0,0,10,0" Click="BtnScanGames_Click"/>
+                        <ComboBox x:Name="CmbLauncher" Grid.Column="1" Width="140" Margin="0,0,10,0" SelectionChanged="Filter_Changed"/>
+                        <TextBox x:Name="TxtGameSearch" Grid.Column="2" Height="32" VerticalContentAlignment="Center" Padding="8,0" TextChanged="Filter_TextChanged"
+                                 ToolTip="{tr:Tr Games_SearchHint}"/>
+                    </Grid>
+                    <TextBlock x:Name="TxtGamesSummary" Style="{StaticResource SubTextStyle}" TextWrapping="Wrap" Margin="0,0,0,10"/>
+                    <ItemsControl x:Name="ListGames" ItemTemplate="{StaticResource GameRowTemplate}"/>
+                </StackPanel>
+            </Border>
+
+            <!-- Ρυθμίσεις ανά παιχνίδι -->
+            <!-- ΔΙΟΡΘΩΣΗ (GEARWIN.MD, ρητό αίτημα χρήστη: "απενεργοποίηση βελτιστοποιήσεων πλήρους
+                 οθόνης και το πλήκτρο εφαρμογή στην ίδια ευθεία με την προτίμηση GPU") - το κουμπί
+                 επιλογής exe, η προτίμηση GPU και το "Απενεργοποίηση FSO" ήταν πριν σε 3 ξεχωριστές
+                 γραμμές· τώρα όλα στην ΙΔΙΑ γραμμή. -->
+            <Border Style="{StaticResource CardStyle}" Margin="0,16,0,0">
+                <StackPanel>
+                    <Grid Margin="0,0,0,10">
+                        <Grid.ColumnDefinitions><ColumnDefinition Width="Auto"/><ColumnDefinition Width="*"/></Grid.ColumnDefinitions>
+                        <views:HeaderGlyphIcon Grid.Column="0" Kind="Gear" Width="16" Height="16" Margin="0,0,8,0" VerticalAlignment="Center"/>
+                        <TextBlock Grid.Column="1" Text="{tr:Tr Games_PerGameTitle}" Style="{StaticResource CardTitleStyle}"/>
+                    </Grid>
+                    <TextBlock Text="{tr:Tr Games_PerGameHint}" Style="{StaticResource SubTextStyle}" TextWrapping="Wrap" Margin="0,0,0,10"/>
+                    <Grid Margin="0,0,0,10">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*"/>
+                            <ColumnDefinition Width="Auto"/>
+                            <ColumnDefinition Width="Auto"/>
+                            <ColumnDefinition Width="Auto"/>
+                        </Grid.ColumnDefinitions>
+                        <TextBox x:Name="TxtGameExe" Grid.Column="0" IsReadOnly="True" Height="32" VerticalContentAlignment="Center" Padding="8,0" Margin="0,0,10,0"/>
+                        <Button Grid.Column="1" Content="{tr:Tr Games_ChooseExe}" Style="{StaticResource FlatButtonStyle}" Padding="14,6" Margin="0,0,14,0" Click="BtnChooseExe_Click"/>
+                        <ComboBox x:Name="CmbGpuPref" Grid.Column="2" Width="190" Margin="0,0,14,0"/>
+                        <CheckBox x:Name="ChkDisableFso" Grid.Column="3" Content="{tr:Tr Games_DisableFso}" Foreground="{DynamicResource TextBrush}" VerticalAlignment="Center"/>
+                    </Grid>
+                    <Button x:Name="BtnApplyGameSettings" Content="{tr:Tr Games_Apply}" Style="{StaticResource AccentButtonStyle}" Padding="16,7" HorizontalAlignment="Left" IsEnabled="False" Click="BtnApplyGameSettings_Click"/>
+                    <TextBlock x:Name="TxtGameSettingsStatus" Style="{StaticResource SubTextStyle}" TextWrapping="Wrap" Margin="0,8,0,0"/>
+                </StackPanel>
+            </Border>
+
+            <!-- Καθολικά gaming tweaks -->
+            <Border Style="{StaticResource CardStyle}" Margin="0,16,0,0">
+                <StackPanel>
+                    <Grid Margin="0,0,0,10">
+                        <Grid.ColumnDefinitions><ColumnDefinition Width="Auto"/><ColumnDefinition Width="*"/></Grid.ColumnDefinitions>
+                        <views:HeaderGlyphIcon Grid.Column="0" Kind="Bolt" Width="16" Height="16" Margin="0,0,8,0" VerticalAlignment="Center"/>
+                        <TextBlock Grid.Column="1" Text="{tr:Tr Games_TweaksTitle}" Style="{StaticResource CardTitleStyle}"/>
+                    </Grid>
+                    <ItemsControl x:Name="ListGameTweaks" ItemTemplate="{StaticResource GameTweakRowTemplate}"/>
+                </StackPanel>
+            </Border>
+
+            <!-- Shader cache -->
+            <Border Style="{StaticResource CardStyle}" Margin="0,16,0,0">
+                <StackPanel>
+                    <Grid Margin="0,0,0,10">
+                        <Grid.ColumnDefinitions><ColumnDefinition Width="Auto"/><ColumnDefinition Width="*"/></Grid.ColumnDefinitions>
+                        <views:HeaderGlyphIcon Grid.Column="0" Kind="Broom" Width="16" Height="16" Margin="0,0,8,0" VerticalAlignment="Center"/>
+                        <TextBlock Grid.Column="1" Text="{tr:Tr Games_ShaderTitle}" Style="{StaticResource CardTitleStyle}"/>
+                    </Grid>
+                    <TextBlock Text="{tr:Tr Games_ShaderDesc}" Style="{StaticResource SubTextStyle}" TextWrapping="Wrap" Margin="0,0,0,10"/>
+                    <Button x:Name="BtnCleanShader" Content="{tr:Tr Games_ShaderClean}" Style="{StaticResource FlatButtonStyle}" Padding="16,7" HorizontalAlignment="Left" Click="BtnCleanShader_Click"/>
+                    <TextBlock x:Name="TxtShaderStatus" Style="{StaticResource SubTextStyle}" TextWrapping="Wrap" Margin="0,8,0,0"/>
+                </StackPanel>
+            </Border>
+
+            <TextBlock Text="{tr:Tr Games_UpdatesNote}" Style="{StaticResource SubTextStyle}" TextWrapping="Wrap" Margin="4,12,4,0"/>
+
+            <!-- ===== Πολυμέσα ===== -->
+            <Separator Margin="0,20,0,16"/>
+
+            <!-- Οθόνες -->
+            <Border Style="{StaticResource CardStyle}">
+                <StackPanel>
+                    <Grid Margin="0,0,0,10">
+                        <Grid.ColumnDefinitions><ColumnDefinition Width="Auto"/><ColumnDefinition Width="*"/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions>
+                        <views:HeaderGlyphIcon Grid.Column="0" Kind="Monitor" Width="16" Height="16" Margin="0,0,8,0" VerticalAlignment="Center"/>
+                        <TextBlock Grid.Column="1" Text="{tr:Tr Media_DisplaysTitle}" Style="{StaticResource CardTitleStyle}"/>
+                        <Button Grid.Column="2" Content="{tr:Tr Media_OpenDisplaySettings}" Style="{StaticResource FlatButtonStyle}" Padding="12,5" Click="BtnOpenDisplay_Click"/>
+                    </Grid>
+                    <ItemsControl x:Name="ListDisplays">
+                        <ItemsControl.ItemTemplate>
+                            <DataTemplate>
+                                <TextBlock Text="{Binding}" Foreground="{DynamicResource TextBrush}" TextWrapping="Wrap" Margin="0,0,0,4"/>
+                            </DataTemplate>
+                        </ItemsControl.ItemTemplate>
+                    </ItemsControl>
+                    <TextBlock x:Name="TxtDisplayHint" Style="{StaticResource SubTextStyle}" TextWrapping="Wrap" Margin="0,6,0,0"/>
+                </StackPanel>
+            </Border>
+
+            <!-- Ήχος -->
+            <Border Style="{StaticResource CardStyle}" Margin="0,16,0,0">
+                <StackPanel>
+                    <Grid Margin="0,0,0,10">
+                        <Grid.ColumnDefinitions><ColumnDefinition Width="Auto"/><ColumnDefinition Width="*"/></Grid.ColumnDefinitions>
+                        <views:HeaderGlyphIcon Grid.Column="0" Kind="Dial" Width="16" Height="16" Margin="0,0,8,0" VerticalAlignment="Center"/>
+                        <TextBlock Grid.Column="1" Text="{tr:Tr Media_AudioTitle}" Style="{StaticResource CardTitleStyle}"/>
+                    </Grid>
+                    <TextBlock Text="{tr:Tr Media_Playback}" FontWeight="SemiBold" Foreground="{DynamicResource TextBrush}" Margin="0,0,0,4"/>
+                    <ItemsControl x:Name="ListPlayback"><ItemsControl.ItemTemplate><DataTemplate>
+                        <TextBlock Text="{Binding}" Style="{StaticResource SubTextStyle}" TextWrapping="Wrap" Margin="0,0,0,2"/>
+                    </DataTemplate></ItemsControl.ItemTemplate></ItemsControl>
+                    <TextBlock Text="{tr:Tr Media_Recording}" FontWeight="SemiBold" Foreground="{DynamicResource TextBrush}" Margin="0,10,0,4"/>
+                    <ItemsControl x:Name="ListRecording"><ItemsControl.ItemTemplate><DataTemplate>
+                        <TextBlock Text="{Binding}" Style="{StaticResource SubTextStyle}" TextWrapping="Wrap" Margin="0,0,0,2"/>
+                    </DataTemplate></ItemsControl.ItemTemplate></ItemsControl>
+                    <StackPanel Orientation="Horizontal" Margin="0,12,0,0">
+                        <Button Content="{tr:Tr Media_OpenSound}" Style="{StaticResource FlatButtonStyle}" Padding="12,6" Margin="0,0,8,0" Click="BtnOpenSound_Click"/>
+                        <Button Content="{tr:Tr Media_OpenMixer}" Style="{StaticResource FlatButtonStyle}" Padding="12,6" Click="BtnOpenMixer_Click"/>
+                    </StackPanel>
+                </StackPanel>
+            </Border>
+
+            <!-- Απόρρητο: κάμερα / μικρόφωνο -->
+            <Border Style="{StaticResource CardStyle}" Margin="0,16,0,0">
+                <StackPanel>
+                    <Grid Margin="0,0,0,10">
+                        <Grid.ColumnDefinitions><ColumnDefinition Width="Auto"/><ColumnDefinition Width="*"/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions>
+                        <views:HeaderGlyphIcon Grid.Column="0" Kind="Lock" Width="16" Height="16" Margin="0,0,8,0" VerticalAlignment="Center"/>
+                        <TextBlock Grid.Column="1" Text="{tr:Tr Media_PrivacyTitle}" Style="{StaticResource CardTitleStyle}"/>
+                        <Button Grid.Column="2" Content="{tr:Tr Media_RefreshAccess}" Style="{StaticResource FlatButtonStyle}" Padding="12,5" Click="BtnRefreshAccess_Click"/>
+                    </Grid>
+                    <TextBlock Text="{tr:Tr Media_Camera}" FontWeight="SemiBold" Foreground="{DynamicResource TextBrush}" Margin="0,0,0,4"/>
+                    <ItemsControl x:Name="ListCameraAccess"><ItemsControl.ItemTemplate><DataTemplate>
+                        <TextBlock Text="{Binding}" Style="{StaticResource SubTextStyle}" TextWrapping="Wrap" Margin="0,0,0,2"/>
+                    </DataTemplate></ItemsControl.ItemTemplate></ItemsControl>
+                    <TextBlock Text="{tr:Tr Media_Microphone}" FontWeight="SemiBold" Foreground="{DynamicResource TextBrush}" Margin="0,10,0,4"/>
+                    <ItemsControl x:Name="ListMicAccess"><ItemsControl.ItemTemplate><DataTemplate>
+                        <TextBlock Text="{Binding}" Style="{StaticResource SubTextStyle}" TextWrapping="Wrap" Margin="0,0,0,2"/>
+                    </DataTemplate></ItemsControl.ItemTemplate></ItemsControl>
+                    <StackPanel Orientation="Horizontal" Margin="0,12,0,0">
+                        <Button Content="{tr:Tr Media_OpenCameraPrivacy}" Style="{StaticResource FlatButtonStyle}" Padding="12,6" Margin="0,0,8,0" Click="BtnOpenCameraPrivacy_Click"/>
+                        <Button Content="{tr:Tr Media_OpenMicPrivacy}" Style="{StaticResource FlatButtonStyle}" Padding="12,6" Click="BtnOpenMicPrivacy_Click"/>
+                    </StackPanel>
+                </StackPanel>
+            </Border>
+
+            <!-- Κωδικοποιητές -->
+            <!-- ΔΙΟΡΘΩΣΗ (GEARWIN.MD, ρητό αίτημα χρήστη: "εκτός από τους επίσημους κωδικοποιητές να
+                 εμφανίζονται και εκείνοι που έχουν εγκατασταθεί από τον χρήστη από εφαρμογές όπως το
+                 k-lite, και να εμφανίζονται σε τρεις στήλες") - η λίστα συγχωνεύει MediaCodecService.
+                 Check (Store Media Feature Pack appx) ΚΑΙ ThirdPartyCodecService.Check (K-Lite φάκελος +
+                 εγκατεστημένα DirectShow filters φιλτραρισμένα σε γνωστά third-party ονόματα ώστε να μη
+                 πλημμυρίσει με built-in Windows filters) - βλ. GamesMediaView.xaml.cs LoadMediaAsync.
+                 UniformGrid Columns=3 αντί για 1 στήλη ItemsControl.StackPanel. -->
+            <Border Style="{StaticResource CardStyle}" Margin="0,16,0,0">
+                <StackPanel>
+                    <Grid Margin="0,0,0,10">
+                        <Grid.ColumnDefinitions><ColumnDefinition Width="Auto"/><ColumnDefinition Width="*"/></Grid.ColumnDefinitions>
+                        <views:HeaderGlyphIcon Grid.Column="0" Kind="Package" Width="16" Height="16" Margin="0,0,8,0" VerticalAlignment="Center"/>
+                        <TextBlock Grid.Column="1" Text="{tr:Tr Media_CodecsTitle}" Style="{StaticResource CardTitleStyle}"/>
+                    </Grid>
+                    <TextBlock Text="{tr:Tr Media_CodecsDesc}" Style="{StaticResource SubTextStyle}" TextWrapping="Wrap" Margin="0,0,0,10"/>
+                    <ItemsControl x:Name="ListCodecs">
+                        <ItemsControl.ItemsPanel>
+                            <ItemsPanelTemplate><UniformGrid Columns="3"/></ItemsPanelTemplate>
+                        </ItemsControl.ItemsPanel>
+                        <ItemsControl.ItemTemplate>
+                            <DataTemplate>
+                                <Border Background="{DynamicResource MainBgBrush}" CornerRadius="6" Margin="0,0,10,10" Padding="10,8">
+                                    <StackPanel>
+                                        <TextBlock Text="{Binding Name}" Foreground="{DynamicResource TextBrush}" TextTrimming="CharacterEllipsis"/>
+                                        <Grid Margin="0,4,0,0">
+                                            <Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions>
+                                            <TextBlock Text="{Binding Status}" Foreground="{Binding StatusBrush}" VerticalAlignment="Center" FontSize="11"/>
+                                            <Button Grid.Column="1" Content="{tr:Tr Media_CodecGet}" Style="{StaticResource FlatButtonStyle}" Padding="10,4" Tag="{Binding}" Click="BtnGetCodec_Click"
+                                                    Visibility="{Binding Missing, Converter={StaticResource BoolToVis}}"/>
+                                        </Grid>
+                                    </StackPanel>
+                                </Border>
+                            </DataTemplate>
+                        </ItemsControl.ItemTemplate>
+                    </ItemsControl>
+                </StackPanel>
+            </Border>
+
+            <!-- Μετατροπέας -->
+            <!-- ΔΙΟΡΘΩΣΗ (GEARWIN.MD, ρητό αίτημα χρήστη: "ο μετατροπέας βίντεο/ήχου να παράγει πολλά
+                 περισσότερα αρχεία ήχου/εικόνας με επιλογή ποιότητας") - βλ. MediaConverterService.
+                 MediaPreset (επεκτάθηκε με πολύ περισσότερα presets + CmbQuality για ποιότητα/bitrate). -->
+            <Border Style="{StaticResource CardStyle}" Margin="0,16,0,0">
+                <StackPanel>
+                    <Grid Margin="0,0,0,10">
+                        <Grid.ColumnDefinitions><ColumnDefinition Width="Auto"/><ColumnDefinition Width="*"/></Grid.ColumnDefinitions>
+                        <views:HeaderGlyphIcon Grid.Column="0" Kind="Play" Width="16" Height="16" Margin="0,0,8,0" VerticalAlignment="Center"/>
+                        <TextBlock Grid.Column="1" Text="{tr:Tr Media_ConverterTitle}" Style="{StaticResource CardTitleStyle}"/>
+                    </Grid>
+                    <TextBlock Text="{tr:Tr Media_ConverterDesc}" Style="{StaticResource SubTextStyle}" TextWrapping="Wrap" Margin="0,0,0,10"/>
+
+                    <StackPanel x:Name="PanelNoFfmpeg" Visibility="Collapsed" Margin="0,0,0,10">
+                        <TextBlock Text="{tr:Tr Media_FfmpegMissing}" Foreground="{DynamicResource TextBrush}" TextWrapping="Wrap" Margin="0,0,0,8"/>
+                        <StackPanel Orientation="Horizontal">
+                            <Button Content="{tr:Tr Media_InstallFfmpeg}" Style="{StaticResource AccentButtonStyle}" Padding="14,6" Margin="0,0,8,0" Click="BtnInstallFfmpeg_Click"/>
+                            <Button Content="{tr:Tr Media_Recheck}" Style="{StaticResource FlatButtonStyle}" Padding="14,6" Click="BtnRecheckFfmpeg_Click"/>
+                        </StackPanel>
+                    </StackPanel>
+
+                    <StackPanel x:Name="PanelConverter">
+                        <Grid Margin="0,0,0,10">
+                            <Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions>
+                            <TextBox x:Name="TxtMediaInput" IsReadOnly="True" Height="32" VerticalContentAlignment="Center" Padding="8,0" Margin="0,0,10,0"/>
+                            <Button Grid.Column="1" Content="{tr:Tr Media_ChooseFile}" Style="{StaticResource FlatButtonStyle}" Padding="14,6" Click="BtnChooseMedia_Click"/>
+                        </Grid>
+                        <StackPanel Orientation="Horizontal" Margin="0,0,0,10">
+                            <ComboBox x:Name="CmbPreset" Width="260" Margin="0,0,10,0"/>
+                            <ComboBox x:Name="CmbQuality" Width="140"/>
+                        </StackPanel>
+                        <StackPanel Orientation="Horizontal">
+                            <Button x:Name="BtnConvert" Content="{tr:Tr Media_Convert}" Style="{StaticResource AccentButtonStyle}" Padding="16,7" Margin="0,0,8,0" IsEnabled="False" Click="BtnConvert_Click"/>
+                            <Button x:Name="BtnCancelConvert" Content="{tr:Tr Cancel}" Style="{StaticResource FlatButtonStyle}" Padding="16,7" Visibility="Collapsed" Click="BtnCancelConvert_Click"/>
+                        </StackPanel>
+                        <ProgressBar x:Name="ConvertProgress" Height="6" Minimum="0" Maximum="1" Margin="0,10,0,0" Visibility="Collapsed"/>
+                        <TextBlock x:Name="TxtConvertStatus" Style="{StaticResource SubTextStyle}" TextWrapping="Wrap" Margin="0,8,0,0"/>
+                    </StackPanel>
+                </StackPanel>
+            </Border>
+        </StackPanel>
+    </ScrollViewer>
+</UserControl>

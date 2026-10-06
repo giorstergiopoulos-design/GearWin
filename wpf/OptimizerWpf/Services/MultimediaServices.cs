@@ -141,6 +141,76 @@ namespace OptimizerWpf.Services
         public static string StoreSearchUri(MediaExtension e) => "ms-windows-store://search/?query=" + Uri.EscapeDataString(e.StoreSearch);
     }
 
+    // ΔΙΟΡΘΩΣΗ (GEARWIN.MD: "εκτός από τους επίσημους κωδικοποιητές να εμφανίζονται και εκείνοι που
+    // έχουν εγκατασταθεί από τον χρήστη από εφαρμογές όπως το k-lite") - το MediaCodecService.Check()
+    // πάνω βλέπει ΜΟΝΟ τα 7 Appx "Media Feature Pack" του Microsoft Store· το K-Lite/LAV/ffdshow κ.λπ.
+    // καταχωρούνται ως κλασικά (COM, όχι Appx) DirectShow filters, άρα δεν εμφανίζονταν ΠΟΤΕ. Δύο
+    // ανιχνεύσεις: (1) το ίδιο file-existence check που ήδη εμπιστεύεται το BloatwareService.
+    // InstallKLiteAsync για το K-Lite/MPC-HC, (2) απαρίθμηση HKEY_CLASSES_ROOT\Filter (instantiable
+    // DirectShow filters) φιλτραρισμένη σε γνωστά third-party ονόματα ώστε να μη πλημμυρίσει η λίστα
+    // με δεκάδες built-in Windows filters.
+    public record ThirdPartyCodec(string Name);
+
+    public static class ThirdPartyCodecService
+    {
+        private static readonly string[] KnownMarkers =
+        {
+            "LAV", "ffdshow", "DivX", "Xvid", "CoreAVC", "K-Lite", "MPC-HC", "MPC Video", "MPC Audio",
+            "Haali", "AC3Filter", "CyberLink", "Perian", "Real", "QuickTime",
+        };
+
+        public static IReadOnlyList<ThirdPartyCodec> Check()
+        {
+            var names = new List<string>();
+
+            try
+            {
+                var programFiles = Environment.GetFolderPath(Environment.SpecialFolder.ProgramFiles);
+                var programFilesX86 = Environment.GetFolderPath(Environment.SpecialFolder.ProgramFilesX86);
+                if (new[] { Path.Combine(programFiles, "K-Lite Codec Pack"), Path.Combine(programFilesX86, "K-Lite Codec Pack") }.Any(Directory.Exists))
+                    names.Add("K-Lite Codec Pack");
+            }
+            catch { }
+
+            try
+            {
+                using var filterRoot = Registry.ClassesRoot.OpenSubKey("Filter");
+                if (filterRoot != null)
+                {
+                    foreach (var clsid in filterRoot.GetSubKeyNames())
+                    {
+                        var friendly = ReadFilterFriendlyName(clsid);
+                        if (friendly != null && LooksThirdParty(friendly) && !names.Contains(friendly))
+                            names.Add(friendly);
+                    }
+                }
+            }
+            catch { }
+
+            return names.Select(n => new ThirdPartyCodec(n)).ToList();
+        }
+
+        private static string? ReadFilterFriendlyName(string clsid)
+        {
+            try
+            {
+                using var filterKey = Registry.ClassesRoot.OpenSubKey($@"Filter\{clsid}");
+                if (filterKey?.GetValue("FriendlyName") is string fn && !string.IsNullOrWhiteSpace(fn)) return fn;
+            }
+            catch { }
+            try
+            {
+                using var clsidKey = Registry.ClassesRoot.OpenSubKey($@"CLSID\{clsid}");
+                if (clsidKey?.GetValue(null) is string name && !string.IsNullOrWhiteSpace(name)) return name;
+            }
+            catch { }
+            return null;
+        }
+
+        private static bool LooksThirdParty(string friendlyName) =>
+            KnownMarkers.Any(m => friendlyName.Contains(m, StringComparison.OrdinalIgnoreCase));
+    }
+
     // ═════════ Ποιος χρησιμοποιεί κάμερα/μικρόφωνο ════════════════════════════════════════════
     public record DeviceAccessEntry(string App, DateTime? LastStart, DateTime? LastStop, bool InUseNow, bool Allowed);
 
@@ -202,37 +272,109 @@ namespace OptimizerWpf.Services
     }
 
     // ═════════ Μετατροπέας πολυμέσων (ffmpeg) ════════════════════════════════════════════════
-    public enum MediaPreset { VideoToMp4H264, VideoToMp4H265, VideoToGif, ExtractMp3, ShareSized720p }
+    // ΔΙΟΡΘΩΣΗ (GEARWIN.MD: "ο μετατροπέας βίντεο/ήχου να παράγει πολλά περισσότερα αρχεία ήχου/
+    // εικόνας με επιλογή ποιότητας") - 5 presets πριν, όλα σταθερής ποιότητας· προστέθηκαν WebM/MKV
+    // (βίντεο) και OGG/AAC/WAV/FLAC (ήχος), συν MediaQuality για να μην "κλειδώνει" η ποιότητα μέσα
+    // στο preset.
+    public enum MediaPreset
+    {
+        VideoToMp4H264, VideoToMp4H265, VideoToWebm, VideoToMkvH264, ShareSized720p, VideoToGif,
+        ExtractMp3, ExtractAac, ExtractOgg, ExtractWav, ExtractFlac,
+    }
+
+    public enum MediaQuality { Low, Medium, High }
 
     public static class MediaConverterService
     {
         public static string OutputExtension(MediaPreset p) => p switch
         {
+            MediaPreset.VideoToWebm => ".webm",
+            MediaPreset.VideoToMkvH264 => ".mkv",
             MediaPreset.VideoToGif => ".gif",
             MediaPreset.ExtractMp3 => ".mp3",
+            MediaPreset.ExtractAac => ".m4a",
+            MediaPreset.ExtractOgg => ".ogg",
+            MediaPreset.ExtractWav => ".wav",
+            MediaPreset.ExtractFlac => ".flac",
             _ => ".mp4",
         };
 
+        // x264/x265 CRF: μικρότερο = καλύτερη ποιότητα/μεγαλύτερο αρχείο - Medium = παλιές σταθερές τιμές.
+        private static (string Crf, string Preset) X264Quality(MediaQuality q) => q switch
+        {
+            MediaQuality.Low => ("30", "veryfast"),
+            MediaQuality.High => ("18", "slow"),
+            _ => ("23", "medium"),
+        };
+        private static (string Crf, string Preset) X265Quality(MediaQuality q) => q switch
+        {
+            MediaQuality.Low => ("34", "veryfast"),
+            MediaQuality.High => ("22", "slow"),
+            _ => ("28", "medium"),
+        };
+        private static string AacBitrate(MediaQuality q) => q switch { MediaQuality.Low => "96k", MediaQuality.High => "256k", _ => "160k" };
+        private static string Mp3Quality(MediaQuality q) => q switch { MediaQuality.Low => "5", MediaQuality.High => "0", _ => "2" };
+        private static string OggQuality(MediaQuality q) => q switch { MediaQuality.Low => "3", MediaQuality.High => "8", _ => "5" };
+        private static (int Fps, int Width) GifQuality(MediaQuality q) => q switch
+        {
+            MediaQuality.Low => (8, 360),
+            MediaQuality.High => (15, 640),
+            _ => (12, 480),
+        };
+
         // Επιστρέφει τη λίστα ορισμάτων ffmpeg (χωρίς shell quoting - περνιέται μέσω ArgumentList).
-        public static IReadOnlyList<string> BuildArgs(MediaPreset preset, string input, string output)
+        public static IReadOnlyList<string> BuildArgs(MediaPreset preset, MediaQuality quality, string input, string output)
         {
             var a = new List<string> { "-y", "-hide_banner", "-i", input };
             switch (preset)
             {
                 case MediaPreset.VideoToMp4H264:
-                    a.AddRange(new[] { "-c:v", "libx264", "-preset", "medium", "-crf", "23", "-c:a", "aac", "-b:a", "160k", "-movflags", "+faststart" });
+                {
+                    var (crf, p) = X264Quality(quality);
+                    a.AddRange(new[] { "-c:v", "libx264", "-preset", p, "-crf", crf, "-c:a", "aac", "-b:a", AacBitrate(quality), "-movflags", "+faststart" });
                     break;
+                }
                 case MediaPreset.VideoToMp4H265:
-                    a.AddRange(new[] { "-c:v", "libx265", "-preset", "medium", "-crf", "28", "-tag:v", "hvc1", "-c:a", "aac", "-b:a", "160k", "-movflags", "+faststart" });
+                {
+                    var (crf, p) = X265Quality(quality);
+                    a.AddRange(new[] { "-c:v", "libx265", "-preset", p, "-crf", crf, "-tag:v", "hvc1", "-c:a", "aac", "-b:a", AacBitrate(quality), "-movflags", "+faststart" });
                     break;
+                }
+                case MediaPreset.VideoToWebm:
+                {
+                    var (crf, _) = X264Quality(quality); // ίδια κλίμακα CRF χρησιμοποιήσιμη και για VP9
+                    a.AddRange(new[] { "-c:v", "libvpx-vp9", "-crf", crf, "-b:v", "0", "-c:a", "libopus", "-b:a", AacBitrate(quality) });
+                    break;
+                }
+                case MediaPreset.VideoToMkvH264:
+                {
+                    var (crf, p) = X264Quality(quality);
+                    a.AddRange(new[] { "-c:v", "libx264", "-preset", p, "-crf", crf, "-c:a", "aac", "-b:a", AacBitrate(quality) });
+                    break;
+                }
                 case MediaPreset.ShareSized720p:
                     a.AddRange(new[] { "-vf", "scale=-2:720", "-c:v", "libx264", "-preset", "veryfast", "-crf", "26", "-c:a", "aac", "-b:a", "128k", "-movflags", "+faststart" });
                     break;
                 case MediaPreset.VideoToGif:
-                    a.AddRange(new[] { "-vf", "fps=12,scale=480:-1:flags=lanczos,split[s0][s1];[s0]palettegen[p];[s1][p]paletteuse", "-loop", "0" });
+                {
+                    var (fps, width) = GifQuality(quality);
+                    a.AddRange(new[] { "-vf", $"fps={fps},scale={width}:-1:flags=lanczos,split[s0][s1];[s0]palettegen[p];[s1][p]paletteuse", "-loop", "0" });
                     break;
+                }
                 case MediaPreset.ExtractMp3:
-                    a.AddRange(new[] { "-vn", "-c:a", "libmp3lame", "-q:a", "2" });
+                    a.AddRange(new[] { "-vn", "-c:a", "libmp3lame", "-q:a", Mp3Quality(quality) });
+                    break;
+                case MediaPreset.ExtractAac:
+                    a.AddRange(new[] { "-vn", "-c:a", "aac", "-b:a", AacBitrate(quality) });
+                    break;
+                case MediaPreset.ExtractOgg:
+                    a.AddRange(new[] { "-vn", "-c:a", "libvorbis", "-q:a", OggQuality(quality) });
+                    break;
+                case MediaPreset.ExtractWav:
+                    a.AddRange(new[] { "-vn", "-c:a", "pcm_s16le" });
+                    break;
+                case MediaPreset.ExtractFlac:
+                    a.AddRange(new[] { "-vn", "-c:a", "flac" });
                     break;
             }
             a.Add(output);
@@ -281,11 +423,11 @@ namespace OptimizerWpf.Services
             return candidates.FirstOrDefault(File.Exists);
         }
 
-        public static async Task<(bool Ok, string Message)> ConvertAsync(string ffmpeg, MediaPreset preset, string input, string output,
+        public static async Task<(bool Ok, string Message)> ConvertAsync(string ffmpeg, MediaPreset preset, MediaQuality quality, string input, string output,
             IProgress<double>? progress, CancellationToken ct)
         {
             var psi = new ProcessStartInfo(ffmpeg) { UseShellExecute = false, CreateNoWindow = true, RedirectStandardError = true, RedirectStandardOutput = true };
-            foreach (var a in BuildArgs(preset, input, output)) psi.ArgumentList.Add(a);
+            foreach (var a in BuildArgs(preset, quality, input, output)) psi.ArgumentList.Add(a);
             using var p = Process.Start(psi) ?? throw new InvalidOperationException("ffmpeg");
             using var reg = ct.Register(() => { try { p.Kill(true); } catch { } });
             TimeSpan? total = null;

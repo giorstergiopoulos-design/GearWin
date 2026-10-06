@@ -170,7 +170,7 @@ public class MultimediaServicesTests
     [InlineData(MediaPreset.VideoToGif, "paletteuse")]
     public void Ffmpeg_ArgsContainPresetEssentials(MediaPreset p, string expected)
     {
-        var a = MediaConverterService.BuildArgs(p, @"C:\in put.mov", @"C:\out.mp4");
+        var a = MediaConverterService.BuildArgs(p, MediaQuality.Medium, @"C:\in put.mov", @"C:\out.mp4");
         Assert.Contains(a, x => x.Contains(expected));
         Assert.Equal(@"C:\in put.mov", a[a.ToList().IndexOf("-i") + 1]);   // διαδρομή με κενό: ένα όρισμα, χωρίς quoting
         Assert.Equal(@"C:\out.mp4", a[^1]);

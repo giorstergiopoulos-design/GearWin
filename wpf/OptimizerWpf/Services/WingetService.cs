@@ -36,10 +36,7 @@ namespace OptimizerWpf.Services
             }
 
             foreach (var u in ParseWingetTable(wingetOutput))
-            {
-                var withSource = u with { Source = "winget" };
-                if (seenIds.Add(withSource.Id)) results.Add(withSource);
-            }
+                if (seenIds.Add(u.Id)) results.Add(u);
 
             // Microsoft Store CLI ("store updates") - αντικατέστησε το παλιό "winget upgrade --source
             // msstore" στο ps1 (v1.9.6): τεκμηριωμένα πιο αξιόπιστο, το ΙΔΙΟ εργαλείο που χρησιμοποιεί
@@ -540,12 +537,19 @@ $out | ConvertTo-Json -Compress";
 
                 if (fields.TryGetValue("Id", out var id) && !string.IsNullOrEmpty(id))
                 {
+                    // ΔΙΟΡΘΩΣΗ (GEARWIN.MD: "κάποιες ενημερώσεις αποτυγχάνουν και ανοίγει το παράθυρο
+                    // του msstore") - η στήλη "Source" διαβαζόταν από τον πίνακα και μετά πετιόταν,
+                    // αντικαθιστώντας ΠΑΝΤΑ με "winget" - γραμμές με πραγματική πηγή "msstore" (το
+                    // "winget upgrade" περιλαμβάνει και τα Store apps) παρουσιάζονταν ως απλό winget,
+                    // προσπερνώντας τον ήδη υπάρχοντα χειρισμό msstore (άνοιγμα Store, όχι αποτυχία) και
+                    // καταλήγοντας σε "winget upgrade --id" που το ίδιο το winget αποτυγχάνει/ανοίγει
+                    // μόνο του το Store για πακέτα αυτής της πηγής.
                     result.Add(new WingetUpdate(
                         fields.GetValueOrDefault("Name", ""),
                         id,
                         fields.GetValueOrDefault("Version", ""),
                         fields.GetValueOrDefault("Available", ""),
-                        "winget"));
+                        fields.GetValueOrDefault("Source", "winget")));
                 }
             }
 

@@ -28,10 +28,23 @@ namespace OptimizerWpf.Views
             if (_isEnabled) Click?.Invoke(this, new RoutedEventArgs());
         }
 
-        public void SetScanning(bool scanning)
+        // captionKey: κλειδί μετάφρασης για το κείμενο κάτω από το εικονίδιο κατά τη λειτουργία (π.χ.
+        // "Opt_InstallingCaps" στην εγκατάσταση αντί του προεπιλεγμένου "Opt_ScanCaps" στη σάρωση) -
+        // μικρότερο FontSize για λέξεις μεγαλύτερες από "ΣΑΡΩΣΗ"/"SCAN" ώστε να μη ξεχειλίζουν τον κύκλο.
+        public void SetScanning(bool scanning, string? captionKey = null)
         {
             ProgressArc.Visibility = scanning ? Visibility.Visible : Visibility.Collapsed;
             IconGroup.Opacity = scanning ? 1.0 : 0.55;
+            if (captionKey != null)
+            {
+                TxtCaption.Text = Services.LanguageService.T(captionKey);
+                TxtCaption.FontSize = 13;
+            }
+            else
+            {
+                TxtCaption.Text = Services.LanguageService.T("Opt_ScanCaps");
+                TxtCaption.FontSize = 17;
+            }
             if (scanning)
             {
                 var arcAnim = new DoubleAnimation(0, 360, new Duration(TimeSpan.FromSeconds(1.4))) { RepeatBehavior = RepeatBehavior.Forever };

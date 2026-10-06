@@ -324,8 +324,14 @@ namespace OptimizerWpf.Services
                     }
                     catch { }
 
+                    // ΔΙΟΡΘΩΣΗ (χρήστης ανέφερε: "ενώ το antivirus (eset) εμφανίζεται και είναι
+                    // ενεργό, το Κέντρο Συντήρησης & Ασφάλειας το δείχνει ανενεργό") - πραγματικό bug
+                    // στο ΚΕΙΜΕΝΟ, όχι στην ανίχνευση: όταν εντοπίζεται ενεργό τρίτο antivirus, η
+                    // προηγούμενη έκδοση έγραφε ΚΥΡΙΟΛΕΚΤΙΚΑ "Ανενεργό (ESET Security)" - "Ανενεργό"
+                    // αναφερόταν στο ΙΔΙΟ το Defender (σωστό, αναμενόμενο όταν υπάρχει άλλο ενεργό AV),
+                    // αλλά διαβάζεται σαν να ΜΗΝ υπάρχει καθόλου προστασία. Τώρα λέει "Ενεργό μέσω X".
                     defender = otherAvName != null
-                        ? $"{LanguageService.T("Sys_Disabled")} ({otherAvName})"
+                        ? string.Format(LanguageService.T("Sys_DefenderActiveViaFormat"), otherAvName)
                         : LanguageService.T("Sys_Disabled");
                 }
             }

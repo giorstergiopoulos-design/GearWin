@@ -36,9 +36,10 @@ namespace OptimizerWpf
             new NavItem("Health", "❤", LanguageService.T("TabHealth"), GlyphKind.Heart),
             new NavItem("Network", "\U0001F310", LanguageService.T("TabNetwork"), GlyphKind.Globe),
             new NavItem("Tweaks", "\U0001F527", LanguageService.T("TabTweaks"), GlyphKind.Wrench),
-            // 6.1.0 - νέες καρτέλες Παιχνίδια/Πολυμέσα, ανάμεσα στα Tweaks και την Αφαίρεση εφαρμογών.
-            new NavItem("Games", "\U0001F3AE", LanguageService.T("TabGames"), GlyphKind.Gamepad),
-            new NavItem("Multimedia", "\U0001F3AC", LanguageService.T("TabMultimedia"), GlyphKind.Play),
+            // 6.3.5 - συγχώνευση Παιχνίδια+Πολυμέσα σε μία καρτέλα (βλ. GamesMediaView, Tag="GamesMedia"
+            // στο MainWindow.xaml) - το tag εδώ ΠΡΕΠΕΙ να ταιριάζει, αλλιώς το κλασικό μενού/PC Manager
+            // rail καλούν SelectTab με tag που δεν αντιστοιχεί σε κανένα RadioButton (no-op).
+            new NavItem("GamesMedia", "\U0001F3AE", LanguageService.T("TabGamesMedia"), GlyphKind.Gamepad),
             new NavItem("Bloatware", "\U0001F9F9", LanguageService.T("TabBloatware"), GlyphKind.Broom),
             new NavItem("Advanced", "\U0001F6E0", LanguageService.T("TabAdvanced"), GlyphKind.Tools),
             new NavItem("System", "\U0001F5A5", LanguageService.T("TabSystem"), GlyphKind.Monitor),

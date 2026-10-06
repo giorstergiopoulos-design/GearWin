@@ -15,12 +15,30 @@ Name: GearWin - Complete PC Care (WPF port of the original Optimizer.ps1)
 - Repo: `giorstergiopoulos-design/GearWin` on GitHub. `gh release create` works from this environment (has previously needed a retry after an auto-mode permission block).
 
 ## Current Objective
-User asked for feature proposals, then said implement all of them (tracked as REQ-590-xx). v6.2.5 (2026-10-02; rail collapse like MotionDesk, window sizing, Classic tabs; supersedes 6.2.0/6.1.0: + Games/Multimedia tabs, SkinCatalog skins, native frame + layered opacity, Task Scheduler autostart; NOT built/run on Windows; build installer with installer\build-installer.ps1; card moves SystemView->Health(RecoveryCards)/Advanced(PowerToolsCards)): Maintenance & Security Center (Views/MaintenanceCenterWindow, Ctrl+J), new services (ChangeJournal, RestoreGuard, Alert, SecurityStatus, SystemReport, StartupDelay, SharedAppearance, Admin), Cancel buttons (health tools/driver scan/duplicates/disk analysis), dry-run preview in Health Check Fix All, 10 per-theme animated backgrounds, 'Appearance Settings' rename, Home disk selector. Verified only: whole-app compile with generated XAML stubs (0 errors) + 32 unit tests on Linux (Release610ServicesTests + language tests). Still pending: Windows build, click-through of new UI, translations of new keys were machine-written (review), MotionDesk side must read %APPDATA%\MotionDeskShared\appearance.json. Earlier: shipped v5.11.0 (Fonts relocation, Wi-Fi password viewer, settings backup/restore). Still to do: system health timeline, app-usage bloatware suggestions, per-game Tweaks profiles, and a new Multimedia tab (photo/video/audio tools) - see ROADMAP.md's "v5.11.0+" section. The v5.10.1 borderless-window/transparency change is **still not confirmed working by the user** - re-check on next contact.
+v6.3.5 (2026-10-06, branch `claude/full-audit` - this is the ACTIVE branch, NOT master; a separate
+cloud session created it, this session verified it builds/runs on Windows for the first time and
+continued work on it) implements the full 13-item GEARWIN.MD backlog: Games+Multimedia merged into
+one tab (`Views/GamesMediaView`, replaces GamesView/MultimediaView), GPU-pref/FSO/exe-picker on one
+row, shield icon dark-mode fill fix, third-party codec detection (K-Lite + DirectShow filter registry
+scan, `Services/MultimediaServices.cs`'s `ThirdPartyCodecService`) + 3-column codec grid, converter
+gained WebM/MKV/OGG/AAC/WAV/FLAC + Low/Medium/High quality (`MediaQuality` enum), tab strip scrolls
+with mouse wheel when it overflows, searchbar modernized (rounded, icon, clear button), "Cumulative
+Benefit" folded into the health-score message list instead of its own Home card, new Boost button on
+Home (next to Full Health Check, mirrors PcManagerHomeView's), update-manager button now shows
+"Installing" instead of "Scan" during installs, fixed a real bug where msstore-sourced winget rows
+were mislabeled "winget" (causing failures + an unexplained Store popup), ESET/Defender status wording
+fixed, Maintenance Center tabs now use the app's pill style (was default white Windows tabs), and pill
+button padding increased app-wide (TabPillStyle/RailPillStyle/PillTabItemStyle). Built: `dotnet build`
+0 errors, `dotnet test` 156/156, installer `GearWin-Setup-6.3.5.exe` built and sent to the user.
+**NOT YET committed to git** (working tree only) - awaiting the user's decision on whether to commit/
+push to `claude/full-audit` and whether/when to merge to `master` or create a GitHub release.
 
 ## Current Phase
-Between releases. Governance docs (CLAUDE.md, PROJECT_STATE.md, ROADMAP.md) adopted 2026-09-29 at user's request.
+Mid-release (v6.3.5 built and installer delivered, not yet committed/pushed). Governance docs
+(CLAUDE.md, PROJECT_STATE.md, ROADMAP.md) adopted 2026-09-29 at user's request.
 
 ## Completed
+- v6.3.5 built (2026-10-06, branch `claude/full-audit`, NOT committed yet) - see Current Objective for the full 13-item list. First time this branch's WPF Views were actually built+run-verified on Windows (prior `claude/full-audit` commits, per the "Audit pass" section below, were compile-checked Services-only on Linux).
 - v5.11.0 shipped (2026-09-30): REQ-590-01 (Fonts moved from Settings to System tab - it's inventory, not a preference), REQ-590-02 (saved Wi-Fi password viewer in Network & Security, using native WLAN API rather than locale-fragile netsh text parsing - this machine is Greek-locale, English-string parsing would have silently broken), REQ-590-03 (settings backup/restore - export/import AppSettings.json, validates before overwriting).
 - v5.10.1 shipped (2026-09-30): fixed v5.10.0's opacity slider, which the user correctly reported produced no real transparency (just darkened/lightened the window's own color). Root cause: WPF's `Window.Opacity` requires `AllowsTransparency="True"` for genuine see-through transparency, which itself requires giving up native OS window chrome (`WindowStyle="None"`). Confirmed via git history that the *original* `Optimizer.ps1` (WinForms) had real transparency natively (WinForms doesn't have this restriction) - lost silently during the pre-session PowerShell→WPF port. Fixed properly, after explicitly asking the user given the real tradeoffs (forced software rendering, losing native chrome): `MainWindow` is now borderless with `shell:WindowChrome` restoring move/resize/maximize/edge-snap and the "maximized covers taskbar" fix automatically, plus new custom-drawn Minimize/Maximize/Close buttons. **Not visually verified by the assistant** (no GUI automation for a native, admin-elevated desktop app in this session) - explicitly flagged for the user to test by hand. Known limitation: Windows 11's snap-layout hover flyout on the maximize button doesn't appear (basic edge/keyboard snapping still works).
 - v5.10.0 shipped (2026-09-30): REQ-580-05 — ported MotionDeskStudio's opacity mechanism (separate project at `C:\Users\gstrj\Documents\MotionDeskStudio`, per user's explicit request after providing that path). Replaced the old 3-option radio-button opacity (None/Light/Medium) with a continuous 60-100% `Slider` with live drag preview, matching MotionDeskStudio's own `BuildOpacityRow` UX exactly. New `AppSettingsService.WindowOpacityPercent` (int) replaces the old string `WindowOpacityMode`; dead language keys removed. One real bug found and fixed during implementation (XAML-wired `ValueChanged` firing mid-`InitializeComponent()` before a sibling element existed) — caught by the existing passive smoke test.
@@ -37,7 +55,9 @@ Nothing mid-flight.
 Nothing currently blocked.
 
 ## Next Actions
-Continuing REQ-590-xx: system health timeline (REQ-590-04), app-usage bloatware suggestions (REQ-590-05), per-game Tweaks profiles (REQ-590-06), new Multimedia tab (REQ-590-07 - photo/video/audio tools, scoped concretely rather than literally "everything from every app/GitHub", see ROADMAP.md's REQ-590 notes for why). REQ-580-01 could still be extended further (memory-leak detection specifically) if worth the effort.
+1. Decide with the user: commit+push v6.3.5 to `claude/full-audit`? Merge to `master`? Create a GitHub release?
+2. REQ-590-05 (app-usage bloatware suggestions) and REQ-590-06 (per-game Tweaks profiles) remain NOT STARTED (carried over, not part of GEARWIN.MD v6.3.5).
+3. Manually verify by hand (no GUI automation available in this session): the new Boost button's visual placement, the modernized searchbar, the tab-strip wheel-scroll, and that the window's new MinWidth=946/Width=1306 (estimated, not runtime-measured) actually look right for the 9-tab strip in every language.
 
 ## MotionDeskStudio note
 Separate project, separate repo, at `C:\Users\gstrj\Documents\MotionDeskStudio` (own `.sln`, own git repo, `MOTIONDESK_MASTER_PROPOSALS_AND_ROADMAP.md`) — path confirmed by the user 2026-09-30 when asked. REQ-580-05 read its opacity mechanism (`src/UI/MainWindow.cs`) and ported the UX into GearWin (see Completed). No other MotionDeskStudio work has been requested or done from this session — still a distinct project with its own state, don't mix contexts without an explicit ask each time.
@@ -62,13 +82,13 @@ Separate project, separate repo, at `C:\Users\gstrj\Documents\MotionDeskStudio` 
 
 ## Last Verification
 Build: `dotnet build -c Release` — succeeded, 0 errors (2 pre-existing WFAC010 warnings, unrelated).
-Tests: `dotnet test` (OptimizerWpf.Tests, 62 tests) — 62/62 passed.
-Installer: `ISCC.exe installer/OptimizerWpf.iss` — succeeded, `GearWin-Setup-5.11.0.exe`.
-Date: 2026-09-30 (v5.11.0 release).
-**Still NOT visually/manually verified** (carried over from v5.10.1): the borderless-window rebuild (drag, resize, maximize, edge-snap, real transparency) has not been tested by a human or any GUI-capable tool yet.
+Tests: `dotnet test` (OptimizerWpf.Tests, 156 tests) — 156/156 passed, including the 14-language key-parity test (all new keys added to all 14 blocks).
+Installer: `ISCC.exe installer/OptimizerWpf.iss` — succeeded, `GearWin-Setup-6.3.5.exe`, sent to user.
+Date: 2026-10-06 (v6.3.5, branch `claude/full-audit`, not yet committed/pushed/released).
+**Still NOT visually/manually verified**: all v6.3.5 UI changes (Boost button, searchbar, tab wheel-scroll, shield icon, codec grid, converter quality combo, window sizing) - no GUI-automation capability in this session. Also still carried over, never confirmed: the v5.10.1 borderless-window rebuild (drag, resize, maximize, edge-snap, real transparency).
 
 ## Last Updated
-2026-09-30
+2026-10-06
 
 ## Audit pass (2026-10-01, cloud session, branch `claude/full-audit`, NOT merged, NOT verified on Windows)
 Compile-checked only (Services/* via scratch project on Linux; Views/XAML not buildable there). Needs `dotnet build` + `dotnet test` + manual click-through before release.

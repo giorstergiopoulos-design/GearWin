@@ -125,9 +125,9 @@ namespace OptimizerWpf.Views
             RefreshUpdatesSummary();
             UpdatesHubService.Changed += RefreshUpdatesSummary;
 
-            // ΝΕΟ - βλ. σχόλιο στο XAML - roadmap ιδέα #5.
-            RefreshImpactSummary();
-            ImpactTrackingService.Changed += RefreshImpactSummary;
+            // ΝΕΟ - roadmap ιδέα #5 - βλ. GetImpactSummaryLines/RenderHealthIssues παρακάτω.
+            RenderHealthIssues();
+            ImpactTrackingService.Changed += RenderHealthIssues;
 
             // ΔΙΟΡΘΩΣΗ ("ελάφρυνση εφαρμογής"): κάθε επιστροφή στην Αρχική δημιουργεί ΝΕΟ HomeView
             // (βλ. MainWindow.ShowTabContent) - χωρίς αυτό, οι timers του ΠΑΛΙΟΥ instance θα
@@ -146,7 +146,7 @@ namespace OptimizerWpf.Views
                 DisposeCounters();
                 ActionLogService.Changed -= RefreshRecentActivity;
                 UpdatesHubService.Changed -= RefreshUpdatesSummary;
-                ImpactTrackingService.Changed -= RefreshImpactSummary;
+                ImpactTrackingService.Changed -= RenderHealthIssues;
             };
         }
 
@@ -160,11 +160,14 @@ namespace OptimizerWpf.Views
         private void BtnOpenUpdatesTab_Click(object sender, RoutedEventArgs e) =>
             (Window.GetWindow(this) as MainWindow)?.SelectTab("Optimization");
 
-        // ΝΕΟ - roadmap ιδέα #5 - βλ. σχόλιο στο XAML.
-        private void RefreshImpactSummary()
+        // ΔΙΟΡΘΩΣΗ (GEARWIN.MD: "το συνολικό όφελος να μην είναι σε ξεχωριστό πλαίσιο, ενσωμάτωσέ το
+        // στα μηνύματα της βαθμολογίας υγείας συστήματος") - πριν ήταν δική του κάρτα (TxtImpactFreed/
+        // TxtImpactBootTrend, αφαιρέθηκαν από το XAML) - τώρα οι ίδιες ακριβώς γραμμές προστίθενται
+        // στο ListHealthIssues (βλ. RenderHealthIssues/RefreshHealthScoreAsync).
+        private IEnumerable<string> GetImpactSummaryLines()
         {
             var totalGb = ImpactTrackingService.TotalBytesFreedAllTime / 1024.0 / 1024 / 1024;
-            TxtImpactFreed.Text = totalGb > 0.05
+            yield return totalGb > 0.05
                 ? string.Format(LanguageService.T("Home_ImpactFreedFormat"), totalGb.ToString("0.#"))
                 : LanguageService.T("Home_ImpactFreedNone");
 
@@ -180,12 +183,27 @@ namespace OptimizerWpf.Views
                 if (older > 0.1)
                 {
                     var pct = (older - newer) / older * 100.0;
-                    TxtImpactBootTrend.Visibility = Visibility.Visible;
-                    TxtImpactBootTrend.Text = string.Format(
+                    yield return string.Format(
                         LanguageService.T(pct >= 0 ? "Home_ImpactBootTrendBetter" : "Home_ImpactBootTrendWorse"),
                         Math.Abs(pct).ToString("0"));
                 }
             }
+        }
+
+        // Κρατά το τελευταίο αποτέλεσμα του HealthScoreService.Compute() ώστε το RenderHealthIssues να
+        // μπορεί να ξαναζωγραφίσει τη λίστα (π.χ. όταν αλλάζει το ImpactTrackingService) ΧΩΡΙΣ να
+        // ξανατρέξει ολόκληρο το (ακριβό, πολλαπλά WMI queries) RefreshHealthScoreAsync.
+        private IReadOnlyList<HealthIssue> _lastHealthIssues = Array.Empty<HealthIssue>();
+        private Brush _lastScoreColor = Brushes.Gray;
+
+        private void RenderHealthIssues()
+        {
+            var baseRows = _lastHealthIssues.Count == 0
+                ? new[] { new HealthIssueRow(LanguageService.T("Home_NoIssuesFound"), _lastScoreColor) }
+                : _lastHealthIssues.Select(i => new HealthIssueRow(i.Title, _lastScoreColor));
+            ListHealthIssues.ItemsSource = baseRows
+                .Concat(GetImpactSummaryLines().Select(line => new HealthIssueRow(line, _lastScoreColor)))
+                .ToList();
         }
 
         // ΝΕΟ - roadmap "Καρφιτσωμένες συντομεύσεις" - συγκεντρώνει τα καρφιτσωμένα tweaks από όλες
@@ -220,6 +238,33 @@ namespace OptimizerWpf.Views
         // σάρωση. Το "Πλήρης Έλεγχος Υγείας" παρακάτω είναι πλέον το ΕΝΑ σημείο εισόδου για καθαρισμό.
         private void BtnRunHealthCheck_Click(object sender, RoutedEventArgs e) =>
             new HealthCheckWindow { Owner = Window.GetWindow(this) }.ShowDialog();
+
+        // ΔΙΟΡΘΩΣΗ (GEARWIN.MD: κουμπί Boost δίπλα στον Πλήρη Έλεγχο Υγείας, "ίδια ακριβώς λειτουργία"
+        // με το PcManagerHomeView's BtnBoost_Click) - ελευθερώνει μνήμη παρασκηνίου + καθαρίζει μόνο τα
+        // "προτεινόμενα" προσωρινά (QuickCleanService) - γρήγορο/στενό, σε αντίθεση με τον Πλήρη Έλεγχο
+        // Υγείας που καθαρίζει ό,τι επιλέξει ο χρήστης (πιο ενδελεχές, βλ. HealthCheckWindow).
+        private async void BtnBoost_Click(object sender, RoutedEventArgs e)
+        {
+            BtnBoost.IsEnabled = false;
+            StatusService.SetBusy(LanguageService.T("PcmHome_Boosting"));
+            try
+            {
+                var (_, freedMb) = await SystemService.FreeBackgroundMemoryAsync();
+                var items = await QuickCleanService.ScanAsync();
+                var keys = items.Where(i => i.Recommended).Select(i => i.Key).ToList();
+                var freedBytes = await QuickCleanService.CleanAsync(keys);
+                ImpactTrackingService.RecordBytesFreed(freedBytes);
+                var message = string.Format(LanguageService.T("PcmHome_BoostDone"), Math.Round(freedMb), QuickCleanService.FormatSize(freedBytes));
+                (Window.GetWindow(this) as MainWindow)?.ShowToast(message);
+            }
+            catch (Exception ex) { (Window.GetWindow(this) as MainWindow)?.ShowToast(ex.Message); }
+            finally
+            {
+                StatusService.SetIdle(LanguageService.T("Ready"));
+                BtnBoost.IsEnabled = true;
+            }
+            await RefreshHealthScoreAsync();
+        }
 
         private void RefreshRecentActivity()
         {
@@ -760,14 +805,9 @@ namespace OptimizerWpf.Views
             TxtHealthLabel.Foreground = scoreColor;
             TxtHealthLabel.Text = result.Score >= 80 ? LanguageService.T("Home_HealthGood") : result.Score >= 50 ? LanguageService.T("Home_HealthFair") : LanguageService.T("Home_HealthNeedsAttention");
 
-            if (result.Issues.Count == 0)
-            {
-                ListHealthIssues.ItemsSource = new[] { new HealthIssueRow(LanguageService.T("Home_NoIssuesFound"), scoreColor) };
-            }
-            else
-            {
-                ListHealthIssues.ItemsSource = result.Issues.Select(i => new HealthIssueRow(i.Title, scoreColor)).ToList();
-            }
+            _lastHealthIssues = result.Issues;
+            _lastScoreColor = scoreColor;
+            RenderHealthIssues();
         }
     }
 

@@ -261,7 +261,11 @@
         <Setter Property="Foreground" Value="{DynamicResource SubTextBrush}"/>
         <Setter Property="FontSize" Value="13"/>
         <Setter Property="FontWeight" Value="SemiBold"/>
-        <Setter Property="Padding" Value="11,8"/>
+        <!-- ΔΙΟΡΘΩΣΗ (GEARWIN.MD: "τα Pills των κουμπιών είναι τσίμα τσίμα με τα κείμενα... περιθώριο
+             δεξιά και αριστερά... και σε όλη την εφαρμογή") - 11px ήταν λιγότερο από το οριζόντιο
+             padding των κοινών κουμπιών (FlatButtonStyle/AccentButtonStyle, 14px) - ασυνήθιστο για το
+             πιο ορατό pill της εφαρμογής (κύρια λωρίδα καρτελών). -->
+        <Setter Property="Padding" Value="18,9"/>
         <Setter Property="Margin" Value="0,0,3,0"/>
         <Setter Property="Cursor" Value="Hand"/>
         <Setter Property="Template">
@@ -290,7 +294,8 @@
         <Setter Property="HorizontalContentAlignment" Value="Left"/>
         <Setter Property="Foreground" Value="{DynamicResource SubTextBrush}"/>
         <Setter Property="FontSize" Value="13"/>
-        <Setter Property="Padding" Value="14,10"/>
+        <!-- ΔΙΟΡΘΩΣΗ (GEARWIN.MD: περιθώριο κειμένου στα pills, σε όλη την εφαρμογή) - ευθυγράμμιση με TabPillStyle/PillTabItemStyle. -->
+        <Setter Property="Padding" Value="18,10"/>
         <Setter Property="Margin" Value="8,2"/>
         <Setter Property="Cursor" Value="Hand"/>
         <Setter Property="Template">
@@ -326,7 +331,8 @@
         <Setter Property="Foreground" Value="{DynamicResource SubTextBrush}"/>
         <Setter Property="FontSize" Value="13"/>
         <Setter Property="FontWeight" Value="SemiBold"/>
-        <Setter Property="Padding" Value="14,8"/>
+        <!-- ΔΙΟΡΘΩΣΗ (GEARWIN.MD: περιθώριο κειμένου στα pills, σε όλη την εφαρμογή) - ευθυγράμμιση με TabPillStyle/RailPillStyle. -->
+        <Setter Property="Padding" Value="18,9"/>
         <Setter Property="Margin" Value="0,0,6,6"/>
         <Setter Property="Cursor" Value="Hand"/>
         <Setter Property="Template">

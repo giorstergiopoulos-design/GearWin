@@ -32,7 +32,13 @@ namespace OptimizerWpf.Services
             var list = new List<SecurityItem>();
 
             if (os?.DefenderStatus is { Length: > 0 } def)
-                list.Add(new SecurityItem("Defender", T("Sec_Antivirus"), SecurityLevel.Info, def));
+            {
+                // ΔΙΟΡΘΩΣΗ: "Ανενεργό" (χωρίς τρίτο AV) σημαίνει πραγματικά καμία προστασία - Warning.
+                // Οτιδήποτε άλλο (Ενεργό, ή "Ενεργό μέσω X" όταν ανιχνεύεται τρίτο AV) είναι Good, όχι
+                // ουδέτερο Info - η προηγούμενη έκδοση δεν έκανε ποτέ αυτή τη διάκριση.
+                var level = def == T("Sys_Disabled") ? SecurityLevel.Warning : SecurityLevel.Good;
+                list.Add(new SecurityItem("Defender", T("Sec_Antivirus"), level, def));
+            }
             else
                 list.Add(new SecurityItem("Defender", T("Sec_Antivirus"), SecurityLevel.Warning, T("Sec_Unknown")));
 
