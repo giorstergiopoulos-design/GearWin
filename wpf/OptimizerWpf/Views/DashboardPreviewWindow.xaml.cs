@@ -34,12 +34,22 @@ namespace OptimizerWpf.Views
             InitializeComponent();
 
             TxtSidebarVersion.Text = App.DisplayVersion;
-            WpfUiThemeDictionary.Theme = ThemeManager.IsDarkMode ? Wpf.Ui.Appearance.ApplicationTheme.Dark : Wpf.Ui.Appearance.ApplicationTheme.Light;
+            var wpfUiTheme = ThemeManager.IsDarkMode ? Wpf.Ui.Appearance.ApplicationTheme.Dark : Wpf.Ui.Appearance.ApplicationTheme.Light;
+            WpfUiThemeDictionary.Theme = wpfUiTheme;
+            // ΔΙΟΡΘΩΣΗ (χρήστης είδε screenshot: "φτιάξε τα χρώματα") - χωρίς αυτό, τα ui:Button
+            // Appearance="Primary" κ.λπ. χρησιμοποιούν το ΔΙΚΟ ΤΟΥΣ προεπιλεγμένο accent (μπλε) του
+            // WPF-UI αντί για το πραγματικό accent (π.χ. τιρκουάζ) του τρέχοντος θέματος της εφαρμογής -
+            // ApplicationAccentColorManager είναι η δημόσια, τεκμηριωμένη μέθοδος του ίδιου του πακέτου
+            // γι' αυτό ακριβώς (swap τα dynamic resources που διαβάζουν τα WPF-UI controls).
+            Wpf.Ui.Appearance.ApplicationAccentColorManager.Apply(ThemeManager.CurrentTheme.Accent, wpfUiTheme, systemGlassColor: false, systemAccentColor: false);
 
             ListTabs.ItemsSource = NavItems.All;
             ListShortcuts.ItemsSource = SidebarShortcuts.All;
             LoadPinnedShortcuts();
 
+            // ΔΙΟΡΘΩΣΗ (χρήστης είδε screenshot: "φτιάξε... το κινούμενο φόντο") - έλειπε η σύνδεση του
+            // ThemedBackgroundControl με τον ThemeManager (ίδια κλήση με το SplashWindow_Loaded).
+            Loaded += (_, _) => ThemeManager.AttachBackground(DashboardBackground);
             Loaded += async (_, _) => await RefreshAsync();
         }
 
@@ -72,7 +82,9 @@ namespace OptimizerWpf.Views
         private void BtnThemeToggle_Click(object sender, RoutedEventArgs e)
         {
             ThemeManager.ToggleLightDark();
-            WpfUiThemeDictionary.Theme = ThemeManager.IsDarkMode ? Wpf.Ui.Appearance.ApplicationTheme.Dark : Wpf.Ui.Appearance.ApplicationTheme.Light;
+            var wpfUiTheme = ThemeManager.IsDarkMode ? Wpf.Ui.Appearance.ApplicationTheme.Dark : Wpf.Ui.Appearance.ApplicationTheme.Light;
+            WpfUiThemeDictionary.Theme = wpfUiTheme;
+            Wpf.Ui.Appearance.ApplicationAccentColorManager.Apply(ThemeManager.CurrentTheme.Accent, wpfUiTheme, systemGlassColor: false, systemAccentColor: false);
         }
 
         // ── Κεφαλίδα / ενημερώσεις ────────────────────────────────────────────────────────

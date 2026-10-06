@@ -54,25 +54,45 @@
                     </StackPanel>
                 </RadioButton>
             </DataTemplate>
+
+            <!-- ΔΙΟΡΘΩΣΗ (χρήστης είδε screenshot: "φτιάξε τα χρώματα τις υφές") - χωρίς ρητό Background/
+                 BorderBrush, το ui:Card παίρνει το ΔΙΚΟ ΤΟΥ προεπιλεγμένο (σχεδόν μαύρο/διάφανο) φόντο
+                 από το ControlsDictionary παραπάνω αντί για το CardBgBrush του ThemeManager - γι' αυτό
+                 οι κάρτες δεν ξεχώριζαν καθόλου από το φόντο του παραθύρου. Ίδιο ακριβώς "ύφος" με το
+                 CardStyle του Styles.xaml (Background/BorderBrush/BorderThickness/CornerRadius/Padding). -->
+            <Style x:Key="DashCardStyle" TargetType="ui:Card">
+                <Setter Property="Background" Value="{DynamicResource CardBgBrush}"/>
+                <Setter Property="BorderBrush" Value="{DynamicResource CardBorderBrush}"/>
+                <Setter Property="BorderThickness" Value="1"/>
+                <Setter Property="Padding" Value="20"/>
+            </Style>
         </ResourceDictionary>
     </ui:FluentWindow.Resources>
 
+    <!-- ΔΙΟΡΘΩΣΗ (χρήστης είδε screenshot: "φτιάξε τα χρώματα τις υφές το κινούμενο φόντο") - έλειπε
+         τελείως το ThemedBackgroundControl (το ίδιο animated φόντο με MainWindow/SplashWindow) - μόνο
+         ένα επίπεδο MainBgBrush, γι' αυτό έδειχνε επίπεδο/σκέτο μαύρο αντί για το κινούμενο θέμα της
+         εφαρμογής. ΙΔΙΟ μοτίβο 2 επιπέδων με το SplashWindow.xaml. -->
     <Grid>
-        <Grid.RowDefinitions>
-            <RowDefinition Height="Auto"/>
-            <RowDefinition Height="*"/>
-        </Grid.RowDefinitions>
+        <Border Background="{DynamicResource MainBgBrush}"/>
+        <views:ThemedBackgroundControl x:Name="DashboardBackground"/>
 
-        <ui:TitleBar Grid.Row="0" x:Name="PreviewTitleBar" Title="PC Performance &amp; Maintenance Suite"/>
+        <Grid>
+            <Grid.RowDefinitions>
+                <RowDefinition Height="Auto"/>
+                <RowDefinition Height="*"/>
+            </Grid.RowDefinitions>
 
-        <Grid Grid.Row="1">
-            <Grid.ColumnDefinitions>
-                <ColumnDefinition x:Name="SidebarColumn" Width="260"/>
-                <ColumnDefinition Width="*"/>
-            </Grid.ColumnDefinitions>
+            <ui:TitleBar Grid.Row="0" x:Name="PreviewTitleBar" Title="PC Performance &amp; Maintenance Suite"/>
 
-            <!-- ===== Πλευρικό μενού ===== -->
-            <Border Grid.Column="0" Background="{DynamicResource CardBgBrush}" BorderBrush="{DynamicResource CardBorderBrush}" BorderThickness="0,0,1,0">
+            <Grid Grid.Row="1">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition x:Name="SidebarColumn" Width="260"/>
+                    <ColumnDefinition Width="*"/>
+                </Grid.ColumnDefinitions>
+
+                <!-- ===== Πλευρικό μενού ===== -->
+                <Border Grid.Column="0" Background="{DynamicResource CardBgBrush}" BorderBrush="{DynamicResource CardBorderBrush}" BorderThickness="0,0,1,0">
                 <Grid>
                     <Grid.RowDefinitions>
                         <RowDefinition Height="Auto"/>
@@ -135,7 +155,7 @@
                     </ui:Button>
                     <ui:TextBox Grid.Column="3" x:Name="TxtSearch" Width="220" PlaceholderText="Γρήγορη εντολή... Ctrl K" Margin="0,0,10,0" VerticalAlignment="Center"/>
                     <ui:Button Grid.Column="4" x:Name="BtnThemeToggle" Appearance="Transparent" Width="34" Height="34" Padding="0" VerticalAlignment="Center" Click="BtnThemeToggle_Click">
-                        <views:HeaderGlyphIcon x:Name="IconThemeToggle" Kind="Check" Width="16" Height="16"/>
+                        <views:HeaderGlyphIcon x:Name="IconThemeToggle" Kind="Palette" Width="16" Height="16"/>
                     </ui:Button>
                 </Grid>
 
@@ -151,7 +171,7 @@
                         <ColumnDefinition Width="*"/>
                     </Grid.ColumnDefinitions>
 
-                    <ui:Card Grid.Column="0">
+                    <ui:Card Grid.Column="0" Style="{StaticResource DashCardStyle}">
                         <Grid>
                             <Grid.ColumnDefinitions>
                                 <ColumnDefinition Width="Auto"/>
@@ -188,7 +208,7 @@
                         </Grid>
                     </ui:Card>
 
-                    <ui:Card Grid.Column="2">
+                    <ui:Card Grid.Column="2" Style="{StaticResource DashCardStyle}">
                         <StackPanel>
                             <Grid Margin="0,0,0,10">
                                 <Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions>
@@ -221,7 +241,7 @@
                 </Grid>
 
                 <!-- Καρφιτσωμένες συντομεύσεις -->
-                <ui:Card Grid.Row="3">
+                <ui:Card Grid.Row="3" Style="{StaticResource DashCardStyle}">
                     <StackPanel>
                         <Grid Margin="0,0,0,12">
                             <Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions>
@@ -248,5 +268,6 @@
                 </ui:Card>
             </Grid>
         </Grid>
+    </Grid>
     </Grid>
 </ui:FluentWindow>
