@@ -9,7 +9,7 @@ Name: GearWin - Complete PC Care (WPF port of the original Optimizer.ps1)
 - UI: WPF, `wpf/OptimizerWpf/` — Views (XAML + code-behind, no MVVM/ViewModels — direct code-behind is the established pattern here), Services (static classes), Themes/Styles.xaml. WPF-UI 4.3.0 nuget also in use for the standalone `DashboardPreviewWindow` pilot only (normal app/MainWindow untouched).
 - Mobile: none
 - Backend: none (fully local desktop app)
-- Tests: `wpf/OptimizerWpf.Tests/` (xUnit-style, run via `dotnet test`), 175 tests in the default battery (all passing as of last verification), plus one opt-in UI Automation click-through test (`GEARWIN_UI_CLICKTHROUGH=1`, shows real windows - not run by default)
+- Tests: `wpf/OptimizerWpf.Tests/` (xUnit-style, run via `dotnet test`), 181 tests in the default battery (all passing as of last verification), plus one opt-in UI Automation click-through test (`GEARWIN_UI_CLICKTHROUGH=1`, shows real windows - not run by default)
 - Installer: Inno Setup, `installer/OptimizerWpf.iss` → `installer/Output/GearWin-Setup-<version>.exe`. Build: `dotnet publish -c Release -r win-x64 --self-contained true -o wpf/OptimizerWpf/publish/win-x64` then `ISCC.exe installer/OptimizerWpf.iss`. ISCC lives at `AppData\Local\Programs\Inno Setup 6\ISCC.exe` (not Program Files).
 - 14 supported UI languages, all strings in `Services/LanguageService.cs` (huge file, ~18k lines, one dictionary block per language in fixed order: el, en, de, fr, es, ko, zh, it, ru, ja, pt, tr, ar, hi). New keys must be added to all 14 blocks (use a small Python script to insert by anchor-key line number, descending order, rather than hand-editing).
 - Repo: `giorstergiopoulos-design/GearWin` on GitHub. `gh release create` works from this environment (has previously needed a retry after an auto-mode permission block).
@@ -46,6 +46,26 @@ Maintenance Center one-line-tabs sizing fix - see Completed for details. Publish
 ROADMAP.md) adopted 2026-09-29 at user's request.
 
 ## Completed
+- Universal button text-touches-edge fix (2026-10-07, user explicitly demanded a systemic rule
+  instead of more per-button guessing - "δεν μπορεις να βαλεις εναν universal kanona"): new
+  `Services/ButtonAutoFit.cs` attached behavior, wired once onto `FlatButtonStyle` in `Styles.xaml`
+  (`services:ButtonAutoFit.Enabled="True"`, inherited automatically by `AccentButtonStyle`). On
+  `Loaded` and on every `Content` change (covers live language switching via `{tr:Tr}`'s binding),
+  it measures the button's OWN text with `FormattedText` using its actual `FontFamily`/`FontSize`/
+  `Padding`/`BorderThickness` and raises `MinWidth` to fit - automatically, per button, per language,
+  for every button that exists today AND every button written from now on, with zero manual
+  measurement. Never shrinks an existing larger `MinWidth` (the ~85 hand-picked values from the two
+  earlier rounds below still work as floors; nothing needs removing, and nothing like them needs
+  adding again). This is the actual root-cause fix for the Grid Auto-column-compression bug - the
+  two rounds below were the stopgap, button-by-button version of what this now does for the whole
+  app in one place. One real bug caught during implementation: `DependencyProperty.Register`
+  requires the owner type to derive from `DependencyObject`; `RegisterAttached` is the correct API
+  for an attached property on a static helper class - threw `TypeInitializationException` at
+  startup until fixed (caught immediately by the existing `WindowSmokeTests`, not shipped).
+  New `ButtonAutoFitTests.cs` (6 tests: grows to fit text+padding, longer text needs more width,
+  never shrinks an existing larger MinWidth, raises an existing too-small one, ignores non-string
+  Content, wider padding needs more width) locks the behavior in. 175 -> 181 tests, all passing.
+  Build + tests verified; **NOT visually verified** (no GUI automation in this session).
 - Maintenance Center tabs forced onto one line (2026-10-07, explicit user request: "οι καρτελες να
   ειναι σε μια ευθεια αρα προσαρμοσε το μεγεθος του παραθυρου αναλογα"): fixed `Width="760"` didn't
   always fit all 5 `PillTabItemStyle` tabs in a single row for longer-language labels. Added
@@ -156,9 +176,8 @@ Separate project, separate repo, at `C:\Users\gstrj\Documents\MotionDeskStudio` 
 
 ## Last Verification
 Build: `dotnet build -c Release` (net10.0-windows) — succeeded, 0 errors.
-Tests: `dotnet test` (OptimizerWpf.Tests) — 175/175 passed, including the 14-language key-parity test.
-Publish: `dotnet publish -c Release -r win-x64 --self-contained true -o publish/win-x64` — succeeded, re-run after the Maintenance Center sizing fix so `Run_OptimizerWpf.bat`/`Run_DashboardPreview.bat` pick up the current binary.
-Git: `claude/full-audit` and `master` both at `e5d5f65`, pushed.
+Tests: `dotnet test` (OptimizerWpf.Tests) — 181/181 passed, including the 14-language key-parity test and the new `ButtonAutoFitTests`.
+Publish: `dotnet publish -c Release -r win-x64 --self-contained true -o publish/win-x64` — succeeded, re-run after the ButtonAutoFit fix so `Run_OptimizerWpf.bat`/`Run_DashboardPreview.bat` pick up the current binary.
 Date: 2026-10-07.
 **Still NOT visually/manually verified** (no GUI-automation/elevation capability in this session, all UI verification depends on the user testing and reporting back): v6.3.5's UI changes (Boost button, searchbar, tab wheel-scroll, shield icon, codec grid, converter quality combo), the Dashboard Preview pilot window, both rounds of button-padding/sizing fixes, the Maintenance Center one-line-tabs fix, and the v5.10.1 borderless-window rebuild (drag, resize, maximize, edge-snap, real transparency).
 
