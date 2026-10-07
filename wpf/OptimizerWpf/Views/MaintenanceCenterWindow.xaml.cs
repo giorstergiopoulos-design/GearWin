@@ -24,6 +24,7 @@ namespace OptimizerWpf.Views
         {
             InitializeComponent();
             ThemeManager.AttachWindow(this);
+            FitWidthToTabs();
 
             var s = AppSettingsService.Current;
             ChkAutoRestorePoint.IsChecked = s.AutoRestorePointBeforeRiskyActions;
@@ -43,6 +44,47 @@ namespace OptimizerWpf.Views
         }
 
         private void Window_Closed(object sender, EventArgs e) => ChangeJournalService.Changed -= OnJournalChanged;
+
+        // ΔΙΟΡΘΩΣΗ (ρητό αίτημα χρήστη: "οι καρτέλες να είναι σε μία ευθεία, προσάρμοσε το μέγεθος
+        // του παραθύρου ανάλογα") - 5 καρτέλες με PillTabItemStyle (Padding 18,9 + Margin 0,0,6,6, βλ.
+        // Styles.xaml) δεν χωρούσαν πάντα σε μία γραμμή στο σταθερό Width="760" - ειδικά σε γλώσσες με
+        // μακρύτερο κείμενο (π.χ. το ελληνικό "Ειδοποιήσεις & Ασφάλεια ενεργειών"). Ίδιο σκεπτικό με το
+        // MainWindow.FitWidthToTabs (μέτρηση του ΠΛΑΤΥΤΕΡΟΥ συνόλου ανάμεσα σε ΟΛΕΣ τις 14 γλώσσες) αλλά
+        // μέσω FormattedText αντί για μέτρηση ζωντανού TabPanel - το TabControl δεν εκθέτει το εσωτερικό
+        // του TabPanel ως named element, ενώ η ίδια η γραμματοσειρά/μέγεθος/βάρος (PillTabItemStyle) +
+        // το σταθερό Padding/Margin ανά pill είναι ήδη γνωστά - ακριβής υπολογισμός χωρίς να χρειάζεται
+        // πρόσβαση στο visual tree του TabControl.
+        private static readonly string[] TabLabelKeys =
+            { "Center_TabSecurity", "Center_TabChanges", "Center_TabAlerts", "Center_TabStartup", "Center_TabReport" };
+
+        private void FitWidthToTabs()
+        {
+            try
+            {
+                var typeface = new Typeface(FontFamily, FontStyle, FontWeights.SemiBold, FontStretch);
+                var dpi = VisualTreeHelper.GetDpi(this).PixelsPerDip;
+                const double perTabChrome = 18 + 18 + 6; // PillTabItemStyle: Padding αριστερά+δεξιά + Margin δεξιά
+
+                double widest = 0;
+                foreach (var dict in LanguageService.AllTranslations.Values)
+                {
+                    double total = 0;
+                    foreach (var key in TabLabelKeys)
+                    {
+                        var text = dict.TryGetValue(key, out var t) ? t : LanguageService.T(key);
+                        var ft = new FormattedText(text, System.Globalization.CultureInfo.CurrentCulture, FlowDirection.LeftToRight, typeface, 13, Brushes.Black, dpi);
+                        total += ft.Width + perTabChrome;
+                    }
+                    widest = Math.Max(widest, total);
+                }
+
+                var frame = 48; // Grid Margin="16" αριστερά+δεξιά (βλ. XAML) + περιθώριο παραθύρου/ασφάλεια μέτρησης κειμένου
+                var needed = widest + frame;
+                var max = SystemParameters.WorkArea.Width * 0.9;
+                Width = Math.Clamp(needed, MinWidth, Math.Max(MinWidth, max));
+            }
+            catch { /* αν αποτύχει η μέτρηση μένει το πλάτος του XAML */ }
+        }
 
         // ── Ασφάλεια ─────────────────────────────────────────────────────────────────────────
         private async System.Threading.Tasks.Task LoadSecurityAsync()
