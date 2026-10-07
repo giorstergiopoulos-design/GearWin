@@ -76,6 +76,10 @@
                                  ToolTip="{tr:Tr Games_SearchHint}"/>
                     </Grid>
                     <TextBlock x:Name="TxtGamesSummary" Style="{StaticResource SubTextStyle}" TextWrapping="Wrap" Margin="0,0,0,10"/>
+                    <!-- Πρόταση χρήστη: "GPU driver freshness banner" - διαβάζει το ΗΔΗ υπάρχον cache
+                         της σάρωσης οδηγών κατασκευαστή (καρτέλα Βελτιστοποίηση), ΔΕΝ ξεκινά νέα δική
+                         του (αργή, δικτυακή) σάρωση - αν ο χρήστης δεν έχει σκανάρει ποτέ εκεί, κενό. -->
+                    <TextBlock x:Name="TxtDriverHint" Style="{StaticResource SubTextStyle}" TextWrapping="Wrap" Margin="0,0,0,10" Foreground="#F59E0B"/>
                     <ItemsControl x:Name="ListGames" ItemTemplate="{StaticResource GameRowTemplate}"/>
                 </StackPanel>
             </Border>
@@ -105,7 +109,14 @@
                         <ComboBox x:Name="CmbGpuPref" Grid.Column="2" Width="190" Margin="0,0,14,0"/>
                         <CheckBox x:Name="ChkDisableFso" Grid.Column="3" Content="{tr:Tr Games_DisableFso}" Foreground="{DynamicResource TextBrush}" VerticalAlignment="Center"/>
                     </Grid>
-                    <Button x:Name="BtnApplyGameSettings" Content="{tr:Tr Games_Apply}" Style="{StaticResource AccentButtonStyle}" Padding="16,7" HorizontalAlignment="Left" IsEnabled="False" Click="BtnApplyGameSettings_Click"/>
+                    <StackPanel Orientation="Horizontal">
+                        <Button x:Name="BtnApplyGameSettings" Content="{tr:Tr Games_Apply}" Style="{StaticResource AccentButtonStyle}" Padding="16,7" Margin="0,0,8,0" HorizontalAlignment="Left" IsEnabled="False" Click="BtnApplyGameSettings_Click"/>
+                        <!-- REQ-590-06 (ήδη στο backlog) - "προφίλ tweaks ανά παιχνίδι": αποθηκεύει/
+                             εφαρμόζει ΕΠΙΠΛΕΟΝ και τα 4 καθολικά gaming tweaks παρακάτω (GPU pref/FSO
+                             είναι ήδη ανά-exe μέσω registry, βλ. GameProfileService.cs). -->
+                        <Button x:Name="BtnSaveGameProfile" Content="{tr:Tr Games_ProfileSave}" Style="{StaticResource FlatButtonStyle}" Padding="16,7" MinWidth="170" Margin="0,0,8,0" IsEnabled="False" Click="BtnSaveGameProfile_Click"/>
+                        <Button x:Name="BtnLoadGameProfile" Content="{tr:Tr Games_ProfileLoad}" Style="{StaticResource FlatButtonStyle}" Padding="16,7" MinWidth="170" IsEnabled="False" Click="BtnLoadGameProfile_Click"/>
+                    </StackPanel>
                     <TextBlock x:Name="TxtGameSettingsStatus" Style="{StaticResource SubTextStyle}" TextWrapping="Wrap" Margin="0,8,0,0"/>
                 </StackPanel>
             </Border>
@@ -131,8 +142,32 @@
                         <TextBlock Grid.Column="1" Text="{tr:Tr Games_ShaderTitle}" Style="{StaticResource CardTitleStyle}"/>
                     </Grid>
                     <TextBlock Text="{tr:Tr Games_ShaderDesc}" Style="{StaticResource SubTextStyle}" TextWrapping="Wrap" Margin="0,0,0,10"/>
-                    <Button x:Name="BtnCleanShader" Content="{tr:Tr Games_ShaderClean}" Style="{StaticResource FlatButtonStyle}" Padding="16,7" HorizontalAlignment="Left" Click="BtnCleanShader_Click"/>
+                    <StackPanel Orientation="Horizontal">
+                        <Button x:Name="BtnCleanShader" Content="{tr:Tr Games_ShaderClean}" Style="{StaticResource FlatButtonStyle}" Padding="16,7" Margin="0,0,8,0" Click="BtnCleanShader_Click"/>
+                        <!-- Πρόταση χρήστη: "καθαρισμός cache launcher" - sibling του Shader Cache, ίδιο
+                             "ασφαλές να διαγραφεί/ξαναφτιάχνεται μόνο του" θέμα. -->
+                        <Button x:Name="BtnCleanLauncherCache" Content="{tr:Tr Games_LauncherCacheClean}" Style="{StaticResource FlatButtonStyle}" Padding="16,7" Click="BtnCleanLauncherCache_Click"/>
+                    </StackPanel>
                     <TextBlock x:Name="TxtShaderStatus" Style="{StaticResource SubTextStyle}" TextWrapping="Wrap" Margin="0,8,0,0"/>
+                </StackPanel>
+            </Border>
+
+            <!-- Αντίγραφο ασφαλείας αποθηκεύσεων -->
+            <!-- Πρόταση χρήστη: "backup των save files" - καλύπτει ΜΟΝΟ τις δύο τεκμηριωμένες γενικές
+                 συμβάσεις των Windows (Known Folder "Saved Games" + Documents\My Games), ΟΧΙ μια βάση
+                 ανά-παιχνίδι διαδρομών που δεν θα μπορούσαμε να εγγυηθούμε σωστή - βλ.
+                 GameSaveBackupService.cs. Το κείμενο στο UI το λέει ρητά, καμία ψευδή διαβεβαίωση
+                 πληρότητας. -->
+            <Border Style="{StaticResource CardStyle}" Margin="0,16,0,0">
+                <StackPanel>
+                    <Grid Margin="0,0,0,10">
+                        <Grid.ColumnDefinitions><ColumnDefinition Width="Auto"/><ColumnDefinition Width="*"/></Grid.ColumnDefinitions>
+                        <views:HeaderGlyphIcon Grid.Column="0" Kind="Shield" Width="16" Height="16" Margin="0,0,8,0" VerticalAlignment="Center"/>
+                        <TextBlock Grid.Column="1" Text="{tr:Tr Games_SaveBackupTitle}" Style="{StaticResource CardTitleStyle}"/>
+                    </Grid>
+                    <TextBlock Text="{tr:Tr Games_SaveBackupDesc}" Style="{StaticResource SubTextStyle}" TextWrapping="Wrap" Margin="0,0,0,10"/>
+                    <Button x:Name="BtnBackupSaves" Content="{tr:Tr Games_SaveBackupButton}" Style="{StaticResource FlatButtonStyle}" Padding="16,7" HorizontalAlignment="Left" Click="BtnBackupSaves_Click"/>
+                    <TextBlock x:Name="TxtSaveBackupStatus" Style="{StaticResource SubTextStyle}" TextWrapping="Wrap" Margin="0,8,0,0"/>
                 </StackPanel>
             </Border>
 
@@ -158,6 +193,10 @@
                         </ItemsControl.ItemTemplate>
                     </ItemsControl>
                     <TextBlock x:Name="TxtDisplayHint" Style="{StaticResource SubTextStyle}" TextWrapping="Wrap" Margin="0,6,0,0"/>
+                    <!-- Πρόταση χρήστη: "HDR hint" - ίδιας λογικής ευρετική όπως το από πάνω high-refresh
+                         hint, όχι πραγματική ανίχνευση HDR-ενεργοποιημένο (θα απαιτούσε DXGI/COM interop) -
+                         μόνο "η οθόνη αναφέρει βάθος χρώματος που υποστηρίζει HDR" (BitsPerPixel>=30). -->
+                    <TextBlock x:Name="TxtHdrHint" Style="{StaticResource SubTextStyle}" TextWrapping="Wrap" Margin="0,4,0,0"/>
                 </StackPanel>
             </Border>
 
@@ -205,6 +244,14 @@
                         <Button Content="{tr:Tr Media_OpenCameraPrivacy}" Style="{StaticResource FlatButtonStyle}" Padding="16,6" Margin="0,0,8,0" Click="BtnOpenCameraPrivacy_Click"/>
                         <Button Content="{tr:Tr Media_OpenMicPrivacy}" Style="{StaticResource FlatButtonStyle}" Padding="16,6" Click="BtnOpenMicPrivacy_Click"/>
                     </StackPanel>
+                    <!-- Πρόταση χρήστη: "ζωντανή δοκιμή μικροφώνου/κάμερας" - αντί να χτίσουμε δική μας
+                         λήψη ήχου/εικόνας (ρίσκο, μη επαληθεύσιμο εδώ), ανοίγει τα ΗΔΗ υπάρχοντα, πραγματικά
+                         εργαλεία δοκιμής των Windows (εφαρμογή Κάμερα + το VU-meter δοκιμής μικροφώνου
+                         στο Πίνακας Ελέγχου > Ήχος). -->
+                    <StackPanel Orientation="Horizontal" Margin="0,8,0,0">
+                        <Button Content="{tr:Tr Media_TestCamera}" Style="{StaticResource FlatButtonStyle}" Padding="16,6" MinWidth="160" Margin="0,0,8,0" Click="BtnTestCamera_Click"/>
+                        <Button Content="{tr:Tr Media_TestMic}" Style="{StaticResource FlatButtonStyle}" Padding="16,6" MinWidth="160" Click="BtnTestMic_Click"/>
+                    </StackPanel>
                 </StackPanel>
             </Border>
 
@@ -224,6 +271,10 @@
                         <TextBlock Grid.Column="1" Text="{tr:Tr Media_CodecsTitle}" Style="{StaticResource CardTitleStyle}"/>
                     </Grid>
                     <TextBlock Text="{tr:Tr Media_CodecsDesc}" Style="{StaticResource SubTextStyle}" TextWrapping="Wrap" Margin="0,0,0,10"/>
+                    <!-- Πρόταση χρήστη: "one-click codec pack install" - ανοίγει την ΕΠΙΣΗΜΗ σελίδα
+                         λήψης (όχι winget - δεν υπάρχει επιβεβαιωμένο, σταθερό package id να μαντέψουμε
+                         με σιγουριά), ίδιο μοτίβο με τα ήδη υπάρχοντα OpenUri κουμπιά πιο πάνω. -->
+                    <Button Content="{tr:Tr Media_GetCodecPack}" Style="{StaticResource FlatButtonStyle}" Padding="16,6" HorizontalAlignment="Left" Margin="0,0,0,10" Click="BtnGetCodecPack_Click"/>
                     <ItemsControl x:Name="ListCodecs">
                         <ItemsControl.ItemsPanel>
                             <ItemsPanelTemplate><UniformGrid Columns="3"/></ItemsPanelTemplate>
@@ -268,12 +319,16 @@
                         </StackPanel>
                     </StackPanel>
 
-                    <StackPanel x:Name="PanelConverter">
+                    <!-- Προτάσεις χρήστη: "batch conversion" (πολλά αρχεία μαζί) + "drag-and-drop" -
+                         TxtMediaInput δείχνει πλέον πλήθος αρχείων αντί για ένα μονοπάτι (_mediaInputs
+                         στο .xaml.cs), AllowDrop δέχεται αρχεία σερνόμενα απευθείας εδώ. -->
+                    <StackPanel x:Name="PanelConverter" AllowDrop="True" DragOver="PanelConverter_DragOver" Drop="PanelConverter_Drop">
                         <Grid Margin="0,0,0,10">
                             <Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions>
                             <TextBox x:Name="TxtMediaInput" IsReadOnly="True" Height="32" VerticalContentAlignment="Center" Padding="8,0" Margin="0,0,10,0"/>
                             <Button Grid.Column="1" Content="{tr:Tr Media_ChooseFile}" Style="{StaticResource FlatButtonStyle}" Padding="16,6" MinWidth="170" Click="BtnChooseMedia_Click"/>
                         </Grid>
+                        <TextBlock Text="{tr:Tr Media_DropHint}" Style="{StaticResource SubTextStyle}" TextWrapping="Wrap" Margin="0,0,0,10"/>
                         <StackPanel Orientation="Horizontal" Margin="0,0,0,10">
                             <ComboBox x:Name="CmbPreset" Width="260" Margin="0,0,10,0"/>
                             <ComboBox x:Name="CmbQuality" Width="140"/>

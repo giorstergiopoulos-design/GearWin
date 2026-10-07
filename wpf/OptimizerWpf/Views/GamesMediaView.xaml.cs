@@ -79,6 +79,12 @@ namespace OptimizerWpf.Views
         // ── Πολυμέσα ───────────────────────────────────────────────────────────────────────
         private string? _ffmpeg;
         private CancellationTokenSource? _convertCts;
+        // Πρόταση χρήστη: "batch conversion" - πολλά αρχεία αντί για ένα.
+        private List<string> _mediaInputs = new();
+
+        // Κρατά τη λίστα ζωντανή (όχι μόνο ItemsSource) ώστε η Εφαρμογή Προφίλ Παιχνιδιού να μπορεί
+        // να αλλάξει IsOn + να καλέσει OnAction/OffAction στα ΙΔΙΑ TweakRowVm που βλέπει ο χρήστης.
+        private List<TweakRowVm> _gameTweakRows = new();
 
         public GamesMediaView()
         {
@@ -90,8 +96,10 @@ namespace OptimizerWpf.Views
                 CmbLauncher.Items.Add(new ComboBoxItem { Content = l, Tag = l });
             CmbLauncher.SelectedIndex = 0;
             CmbGpuPref.SelectedIndex = 0;
-            ListGameTweaks.ItemsSource = GamingTweaksService.GlobalTweaks().Select(t => new TweakRowVm(t, "Gaming")).ToList();
+            _gameTweakRows = GamingTweaksService.GlobalTweaks().Select(t => new TweakRowVm(t, "Gaming")).ToList();
+            ListGameTweaks.ItemsSource = _gameTweakRows;
             _gamesLoading = false;
+            ShowDriverFreshnessHint();
 
             if (s_gamesCache != null) { _allGames = s_gamesCache; ApplyFilter(); }
             else Loaded += async (_, _) => { if (_allGames.Count == 0) await ScanGamesAsync(); };
@@ -199,7 +207,100 @@ namespace OptimizerWpf.Views
             CmbGpuPref.SelectedIndex = (int)pref;
             ChkDisableFso.IsChecked = GamingTweaksService.GetFullscreenOptimizationsDisabled(dlg.FileName);
             BtnApplyGameSettings.IsEnabled = true;
+            BtnSaveGameProfile.IsEnabled = true;
+            BtnLoadGameProfile.IsEnabled = GameProfileService.HasProfile(dlg.FileName);
             TxtGameSettingsStatus.Text = "";
+        }
+
+        // ── Παιχνίδια: Προφίλ ανά παιχνίδι (REQ-590-06) ──────────────────────────────────
+
+        private void BtnSaveGameProfile_Click(object sender, RoutedEventArgs e)
+        {
+            var exe = TxtGameExe.Text;
+            if (string.IsNullOrEmpty(exe)) return;
+            var data = new GameProfileData
+            {
+                GpuPreference = (GpuPreference)CmbGpuPref.SelectedIndex,
+                DisableFullscreenOptimizations = ChkDisableFso.IsChecked == true,
+                GlobalTweaks = _gameTweakRows.Where(r => r.Tweak.Id != null).ToDictionary(r => r.Tweak.Id!, r => r.IsOn),
+            };
+            var ok = GameProfileService.Save(exe, data);
+            TxtGameSettingsStatus.Text = LanguageService.T(ok ? "Games_ProfileSaved" : "Autostart_Failed");
+            if (ok) BtnLoadGameProfile.IsEnabled = true;
+        }
+
+        private void BtnLoadGameProfile_Click(object sender, RoutedEventArgs e)
+        {
+            var exe = TxtGameExe.Text;
+            if (string.IsNullOrEmpty(exe)) return;
+            var data = GameProfileService.Load(exe);
+            if (data == null) { TxtGameSettingsStatus.Text = LanguageService.T("Games_ProfileNotFound"); return; }
+
+            if (data.GpuPreference is { } gpu) CmbGpuPref.SelectedIndex = (int)gpu;
+            if (data.DisableFullscreenOptimizations is { } fso) ChkDisableFso.IsChecked = fso;
+            GamingTweaksService.SetGpuPreference(exe, data.GpuPreference);
+            GamingTweaksService.SetFullscreenOptimizationsDisabled(exe, data.DisableFullscreenOptimizations == true);
+
+            foreach (var row in _gameTweakRows)
+            {
+                if (row.Tweak.Id == null || !data.GlobalTweaks.TryGetValue(row.Tweak.Id, out var wantOn) || wantOn == row.IsOn) continue;
+                try { if (wantOn) row.Tweak.OnAction(); else row.Tweak.OffAction(); row.IsOn = wantOn; row.RecordChange(wantOn); }
+                catch { /* ένα αποτυχημένο tweak δεν ακυρώνει την εφαρμογή των υπολοίπων */ }
+            }
+            TxtGameSettingsStatus.Text = LanguageService.T("Games_ProfileApplied");
+        }
+
+        // ── Παιχνίδια: GPU driver freshness hint ─────────────────────────────────────────
+
+        // Διαβάζει ΜΟΝΟ το ήδη υπάρχον cache της σάρωσης οδηγών κατασκευαστή (καρτέλα Βελτιστοποίηση) -
+        // ποτέ δεν ξεκινά τη δική της (αργή, δικτυακή) σάρωση μόνο για να δείξει αυτό το hint.
+        private void ShowDriverFreshnessHint()
+        {
+            TxtDriverHint.Text = "";
+            var vendor = OptimizationView.CachedVendorScan;
+            if (vendor == null) return;
+            foreach (var a in vendor.Amd)
+                if (!string.IsNullOrEmpty(a.InstalledVersion) && !a.InstalledVersion.Equals(a.LatestVersion, StringComparison.OrdinalIgnoreCase))
+                { TxtDriverHint.Text = string.Format(LanguageService.T("Games_DriverStale"), a.GpuName, a.InstalledVersion, a.LatestVersion); return; }
+            foreach (var n in vendor.Nvidia)
+                if (!string.IsNullOrEmpty(n.InstalledVersion) && !n.InstalledVersion.Equals(n.LatestVersion, StringComparison.OrdinalIgnoreCase))
+                { TxtDriverHint.Text = string.Format(LanguageService.T("Games_DriverStale"), n.GpuName, n.InstalledVersion, n.LatestVersion); return; }
+        }
+
+        // ── Παιχνίδια: Cache launcher ─────────────────────────────────────────────────────
+
+        private async void BtnCleanLauncherCache_Click(object sender, RoutedEventArgs e)
+        {
+            BtnCleanLauncherCache.IsEnabled = false;
+            try
+            {
+                var freed = await QuickCleanService.CleanAsync(new[] { "LauncherCache" });
+                ImpactTrackingService.RecordBytesFreed(freed);
+                TxtShaderStatus.Text = string.Format(LanguageService.T("Games_LauncherCacheDone"), QuickCleanService.FormatSize(freed));
+            }
+            catch (Exception ex) { TxtShaderStatus.Text = ex.Message; }
+            finally { BtnCleanLauncherCache.IsEnabled = true; }
+        }
+
+        // ── Παιχνίδια: Αντίγραφο ασφαλείας αποθηκεύσεων ──────────────────────────────────
+
+        private async void BtnBackupSaves_Click(object sender, RoutedEventArgs e)
+        {
+            var dlg = new Microsoft.Win32.SaveFileDialog
+            {
+                Filter = "Zip|*.zip", FileName = $"GearWin-GameSaves-{DateTime.Now:yyyyMMdd}.zip",
+            };
+            if (dlg.ShowDialog() != true) return;
+
+            BtnBackupSaves.IsEnabled = false;
+            TxtSaveBackupStatus.Text = LanguageService.T("Games_SaveBackupRunning");
+            try
+            {
+                var ok = await GameSaveBackupService.BackupAsync(dlg.FileName);
+                TxtSaveBackupStatus.Text = ok ? string.Format(LanguageService.T("Games_SaveBackupDone"), dlg.FileName) : LanguageService.T("Games_SaveBackupFailed");
+            }
+            catch (Exception ex) { TxtSaveBackupStatus.Text = ex.Message; }
+            finally { BtnBackupSaves.IsEnabled = true; }
         }
 
         private void BtnApplyGameSettings_Click(object sender, RoutedEventArgs e)
@@ -254,6 +355,9 @@ namespace OptimizerWpf.Views
                 $"{d.Name}{(d.IsPrimary ? " (" + LanguageService.T("Media_Primary") + ")" : "")} — {d.Width}×{d.Height} @ {d.RefreshHz} Hz, {d.BitsPerPixel}-bit").ToList();
             TxtDisplayHint.Text = displays.Any(d => DisplayInfoService.LooksLikeHighRefreshAtSixty(d.RefreshHz))
                 ? LanguageService.T("Media_RefreshHint") : "";
+            // Πρόταση χρήστη: "HDR hint" - ευρετική σαν το από πάνω (BitsPerPixel>=30 => η οθόνη
+            // ΑΝΑΦΕΡΕΙ βάθος χρώματος που υποστηρίζει HDR), όχι απόδειξη ότι το HDR είναι ενεργό.
+            TxtHdrHint.Text = displays.Any(d => d.BitsPerPixel >= 30) ? LanguageService.T("Media_HdrHint") : "";
 
             var audio = await System.Threading.Tasks.Task.Run(AudioDeviceService.GetEndpoints);
             string Line(AudioEndpoint a) => $"{(a.IsActive ? "●" : "○")} {a.Name}{(a.IsActive ? "" : "  (" + LanguageService.T("Media_Inactive") + ")")}";
@@ -301,10 +405,25 @@ namespace OptimizerWpf.Views
         private void BtnOpenMicPrivacy_Click(object sender, RoutedEventArgs e) => Open("ms-settings:privacy-microphone");
         private async void BtnRefreshAccess_Click(object sender, RoutedEventArgs e) => await LoadAccessAsync();
 
+        // Πρόταση χρήστη: "ζωντανή δοκιμή μικροφώνου/κάμερας" - ανοίγει τα ΗΔΗ υπάρχοντα πραγματικά
+        // εργαλεία δοκιμής των Windows αντί να χτίσουμε δική μας λήψη ήχου/εικόνας (μη επαληθεύσιμο
+        // χωρίς πραγματική κάμερα/μικρόφωνο σε αυτό το περιβάλλον ανάπτυξης).
+        private void BtnTestCamera_Click(object sender, RoutedEventArgs e) => Open("microsoft.windows.camera:");
+
+        private void BtnTestMic_Click(object sender, RoutedEventArgs e)
+        {
+            try { Process.Start(new ProcessStartInfo("control.exe", "mmsys.cpl,,1") { UseShellExecute = true }); }
+            catch { }
+        }
+
         private void BtnGetCodec_Click(object sender, RoutedEventArgs e)
         {
             if (sender is Button { Tag: CodecRowVm { Extension: { } ext } }) Open(MediaCodecService.StoreSearchUri(ext));
         }
+
+        // Πρόταση χρήστη: "one-click codec pack install" - η επίσημη σελίδα λήψης (όχι winget, δεν
+        // υπάρχει επιβεβαιωμένο σταθερό package id γι' αυτό το πακέτο ώστε να το μαντέψουμε με σιγουριά).
+        private void BtnGetCodecPack_Click(object sender, RoutedEventArgs e) => Open("https://www.codecguide.com/download_kl.htm");
 
         // ── Πολυμέσα: Μετατροπέας ────────────────────────────────────────────────────────
 
@@ -327,40 +446,86 @@ namespace OptimizerWpf.Views
             catch (Exception ex) { TxtConvertStatus.Text = ex.Message; }
         }
 
+        private static readonly string[] MediaExtensions =
+            { ".mp4", ".mkv", ".avi", ".mov", ".wmv", ".webm", ".flv", ".m4v", ".mp3", ".wav", ".flac", ".m4a", ".aac", ".ogg" };
+
+        // Πρόταση χρήστη: "batch conversion" - Multiselect=true αντί για ένα αρχείο τη φορά.
         private void BtnChooseMedia_Click(object sender, RoutedEventArgs e)
         {
             var dlg = new Microsoft.Win32.OpenFileDialog
             {
                 Filter = "Media|*.mp4;*.mkv;*.avi;*.mov;*.wmv;*.webm;*.flv;*.m4v;*.mp3;*.wav;*.flac;*.m4a;*.aac;*.ogg|All files|*.*",
-                CheckFileExists = true,
+                CheckFileExists = true, Multiselect = true,
             };
             if (dlg.ShowDialog() != true) return;
-            TxtMediaInput.Text = dlg.FileName;
-            BtnConvert.IsEnabled = true;
+            SetMediaInputs(dlg.FileNames);
+        }
+
+        private void SetMediaInputs(IEnumerable<string> files)
+        {
+            _mediaInputs = files.ToList();
+            TxtMediaInput.Text = _mediaInputs.Count == 1
+                ? Path.GetFileName(_mediaInputs[0])
+                : string.Format(LanguageService.T("Media_FilesSelectedCount"), _mediaInputs.Count);
+            BtnConvert.IsEnabled = _mediaInputs.Count > 0;
             TxtConvertStatus.Text = "";
+        }
+
+        // Πρόταση χρήστη: "drag-and-drop" στο μετατροπέα - φιλτράρει στις ίδιες επεκτάσεις πολυμέσων
+        // με το OpenFileDialog, ώστε ένα τυχαίο αρχείο να μην καταλήξει σαν είσοδος στο ffmpeg.
+        private void PanelConverter_DragOver(object sender, System.Windows.DragEventArgs e)
+        {
+            e.Effects = e.Data.GetDataPresent(DataFormats.FileDrop) ? DragDropEffects.Copy : DragDropEffects.None;
+            e.Handled = true;
+        }
+
+        private void PanelConverter_Drop(object sender, System.Windows.DragEventArgs e)
+        {
+            if (e.Data.GetData(DataFormats.FileDrop) is not string[] files) return;
+            var media = files.Where(f => MediaExtensions.Contains(Path.GetExtension(f).ToLowerInvariant())).ToList();
+            if (media.Count > 0) SetMediaInputs(media);
         }
 
         private async void BtnConvert_Click(object sender, RoutedEventArgs e)
         {
-            if (_ffmpeg == null || string.IsNullOrEmpty(TxtMediaInput.Text) || CmbPreset.SelectedItem is not ComboBoxItem { Tag: MediaPreset preset }) return;
+            if (_ffmpeg == null || _mediaInputs.Count == 0 || CmbPreset.SelectedItem is not ComboBoxItem { Tag: MediaPreset preset }) return;
             var quality = CmbQuality.SelectedItem is ComboBoxItem { Tag: MediaQuality q } ? q : MediaQuality.Medium;
-            var input = TxtMediaInput.Text;
-            var output = MediaConverterService.SuggestOutputPath(input, preset);
+            var inputs = _mediaInputs;
 
             _convertCts = new CancellationTokenSource();
             BtnConvert.IsEnabled = false;
             BtnCancelConvert.Visibility = Visibility.Visible;
             ConvertProgress.Value = 0;
             ConvertProgress.Visibility = Visibility.Visible;
-            TxtConvertStatus.Text = LanguageService.T("Media_Converting");
             StatusService.SetBusy(LanguageService.T("Media_Converting"));
+            var doneOutputs = new List<string>();
+            var failedNames = new List<string>();
             try
             {
-                var progress = new Progress<double>(v => ConvertProgress.Value = v);
-                var (ok, message) = await MediaConverterService.ConvertAsync(_ffmpeg, preset, quality, input, output, progress, _convertCts.Token);
-                TxtConvertStatus.Text = ok ? string.Format(LanguageService.T("Media_ConvertDone"), message)
-                    : (_convertCts.IsCancellationRequested ? message : LanguageService.T("Media_ConvertFailed") + message);
-                if (ok) ChangeJournalService.Record($"ffmpeg: {Path.GetFileName(output)}", () => { try { File.Delete(output); } catch { } });
+                for (var i = 0; i < inputs.Count; i++)
+                {
+                    var input = inputs[i];
+                    var output = MediaConverterService.SuggestOutputPath(input, preset);
+                    TxtConvertStatus.Text = inputs.Count == 1
+                        ? LanguageService.T("Media_Converting")
+                        : string.Format(LanguageService.T("Media_ConvertingBatch"), i + 1, inputs.Count, Path.GetFileName(input));
+                    ConvertProgress.Value = 0;
+                    var progress = new Progress<double>(v => ConvertProgress.Value = v);
+                    var (ok, message) = await MediaConverterService.ConvertAsync(_ffmpeg, preset, quality, input, output, progress, _convertCts.Token);
+                    if (_convertCts.IsCancellationRequested) break;
+                    if (ok)
+                    {
+                        doneOutputs.Add(output);
+                        ChangeJournalService.Record($"ffmpeg: {Path.GetFileName(output)}", () => { try { File.Delete(output); } catch { } });
+                    }
+                    else failedNames.Add(Path.GetFileName(input));
+                }
+
+                TxtConvertStatus.Text = _convertCts.IsCancellationRequested
+                    ? LanguageService.T("Health_ToolCancelled")
+                    : failedNames.Count == 0
+                        ? string.Format(LanguageService.T("Media_ConvertDone"), doneOutputs.Count == 1 ? doneOutputs[0] : string.Format(LanguageService.T("Media_ConvertDoneCount"), doneOutputs.Count))
+                        : LanguageService.T("Media_ConvertFailed") + string.Join(", ", failedNames);
             }
             catch (Exception ex) { TxtConvertStatus.Text = LanguageService.T("Media_ConvertFailed") + ex.Message; }
             finally

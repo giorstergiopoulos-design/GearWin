@@ -105,7 +105,9 @@ namespace OptimizerWpf.Services
                 $"steam://rungameid/{id}", $"steam://uninstall/{id}", $"steam://validate/{id}");
         }
 
-        private static string? SteamRoot()
+        // internal (όχι private) - το QuickCleanService το ξαναχρησιμοποιεί για τον φάκελο
+        // Steam\appcache\httpcache (καθαρισμός cache launcher) αντί να ξαναμαντέψει τη διαδρομή.
+        internal static string? SteamRoot()
         {
             try
             {

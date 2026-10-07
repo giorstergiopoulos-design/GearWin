@@ -85,5 +85,34 @@ namespace OptimizerWpf.Tests
 
             if (unexpected != null) throw unexpected;
         }
+
+        // Το GamesMediaView (tab UserControl, όχι Window) δεν καλυπτόταν ΚΑΘΟΛΟΥ εδώ πριν - πραγματικό
+        // κενό κάλυψης, όχι σκόπιμη εξαίρεση. Μετά τις προσθήκες "προτάσεις για Games & Multimedia"
+        // (προφίλ ανά παιχνίδι, cache launcher, backup αποθηκεύσεων, HDR hint, batch conversion,
+        // drag-and-drop) αυτό είναι το πρώτο πράγμα που θα έσπαγε σε XAML binding/named-element λάθος -
+        // ίδιο μοτίβο STA-thread με το παραπάνω, μόνο constructor (κανένα Show(), άρα κανένα Loaded).
+        [Fact]
+        public void GamesMediaViewConstructsWithoutThrowing()
+        {
+            Exception? unexpected = null;
+            var thread = new Thread(() =>
+            {
+                try
+                {
+                    if (Application.Current == null)
+                    {
+                        var app = new OptimizerWpf.App();
+                        app.InitializeComponent();
+                    }
+                    OptimizerWpf.ThemeManager.LoadPersisted();
+                    _ = new GamesMediaView();
+                }
+                catch (Exception ex) { unexpected = ex; }
+            });
+            thread.SetApartmentState(ApartmentState.STA);
+            thread.Start();
+            thread.Join();
+            if (unexpected != null) throw unexpected;
+        }
     }
 }

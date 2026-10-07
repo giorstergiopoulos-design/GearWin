@@ -33,6 +33,19 @@ namespace OptimizerWpf.Services
             Path.Combine(LocalAppData, "AMD", "GLCache"),
         };
 
+        // Πρόταση χρήστη: "καθαρισμός cache launcher παιχνιδιών" - ΜΟΝΟ τεκμηριωμένα, καθαρά
+        // HTTP/web-cache φάκελοι (σαν cache browser - αναδημιουργούνται μόνοι τους, καμία απώλεια
+        // δεδομένων/προόδου) - ΟΧΙ "depotcache"/"downloading" του Steam, που κρατούν delta-patch
+        // δεδομένα ή ενεργές λήψεις.
+        private static IEnumerable<string> LauncherCacheDirs()
+        {
+            var dirs = new List<string>();
+            if (GameLibraryService.SteamRoot() is { } steam) dirs.Add(Path.Combine(steam, "appcache", "httpcache"));
+            dirs.Add(Path.Combine(LocalAppData, "EpicGamesLauncher", "Saved", "webcache"));
+            dirs.Add(Path.Combine(LocalAppData, "EpicGamesLauncher", "Saved", "webcache_4147"));
+            return dirs;
+        }
+
         public static Task<IReadOnlyList<QuickCleanItem>> ScanAsync() => Task.Run(() =>
         {
             var items = new List<QuickCleanItem>
@@ -44,6 +57,7 @@ namespace OptimizerWpf.Services
                 new("WindowsUpdateCache", LanguageService.T("QuickClean_WindowsUpdateCache"), DirSize(WindowsUpdateCacheDir), false),
                 new("DeliveryOptimization", LanguageService.T("QuickClean_DeliveryOptimization"), DirSize(DeliveryOptimizationDir), false),
                 new("ShaderCache", LanguageService.T("QuickClean_ShaderCache"), ShaderCacheDirs().Sum(DirSize), false),
+                new("LauncherCache", LanguageService.T("QuickClean_LauncherCache"), LauncherCacheDirs().Sum(DirSize), false),
                 new("BrowserCache", LanguageService.T("QuickClean_BrowserCache"), HealthCleanupService.DetectBrowsers().Sum(BrowserCacheSize), false),
             };
             return (IReadOnlyList<QuickCleanItem>)items;
@@ -82,6 +96,13 @@ namespace OptimizerWpf.Services
                         break;
                     case "ShaderCache":
                         foreach (var dir in ShaderCacheDirs())
+                        {
+                            freed += DirSize(dir);
+                            await Task.Run(() => DeleteContents(dir));
+                        }
+                        break;
+                    case "LauncherCache":
+                        foreach (var dir in LauncherCacheDirs())
                         {
                             freed += DirSize(dir);
                             await Task.Run(() => DeleteContents(dir));

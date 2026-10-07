@@ -36,6 +36,11 @@ namespace OptimizerWpf.Views
         private static string? s_wingetStatusCache;
         private static string? s_driverStoreStatusCache;
 
+        // Δημόσια πρόσβαση μόνο-για-ανάγνωση στο ήδη υπάρχον cache (όχι νέο σκανάρισμα) - το
+        // GamesMediaView το διαβάζει για το "ο οδηγός της κάρτας γραφικών είναι παλιός" hint, ΧΩΡΙΣ
+        // να πυροδοτεί τη δική του (αργή, δικτυακή) σάρωση οδηγών κατασκευαστή σε άλλη καρτέλα.
+        public static VendorScanResult? CachedVendorScan => s_vendorCache;
+
         public OptimizationView()
         {
             InitializeComponent();
