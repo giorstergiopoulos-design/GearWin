@@ -25,7 +25,7 @@
                 <Grid Margin="12">
                     <Grid.RowDefinitions><RowDefinition Height="Auto"/><RowDefinition Height="*"/></Grid.RowDefinitions>
                     <StackPanel Orientation="Horizontal" Margin="0,0,0,10">
-                        <Button x:Name="BtnRefreshSecurity" Content="{tr:Tr Center_Refresh}" Style="{StaticResource AccentButtonStyle}" Padding="14,6" Click="BtnRefreshSecurity_Click"/>
+                        <Button x:Name="BtnRefreshSecurity" Content="{tr:Tr Center_Refresh}" Style="{StaticResource AccentButtonStyle}" Padding="16,6" Click="BtnRefreshSecurity_Click"/>
                         <TextBlock x:Name="TxtSecurityStatus" Style="{StaticResource SubTextStyle}" VerticalAlignment="Center" Margin="12,0,0,0"/>
                     </StackPanel>
                     <ScrollViewer Grid.Row="1" VerticalScrollBarVisibility="Auto" PreviewMouseWheel="NestedScroll_PreviewMouseWheel">
@@ -56,8 +56,8 @@
                              BorderBrush="{DynamicResource CardBorderBrush}" SelectionChanged="ListChanges_SelectionChanged"/>
                     <StackPanel Grid.Row="2" Margin="0,10,0,0">
                         <StackPanel Orientation="Horizontal">
-                            <Button x:Name="BtnUndoChange" Content="{tr:Tr Center_Undo}" Style="{StaticResource AccentButtonStyle}" Padding="14,6" Margin="0,0,10,0" IsEnabled="False" Click="BtnUndoChange_Click"/>
-                            <Button x:Name="BtnCreateRestorePoint" Content="{tr:Tr Center_CreateRestorePoint}" Style="{StaticResource FlatButtonStyle}" Padding="14,6" Click="BtnCreateRestorePoint_Click"/>
+                            <Button x:Name="BtnUndoChange" Content="{tr:Tr Center_Undo}" Style="{StaticResource AccentButtonStyle}" Padding="16,6" Margin="0,0,10,0" IsEnabled="False" Click="BtnUndoChange_Click"/>
+                            <Button x:Name="BtnCreateRestorePoint" Content="{tr:Tr Center_CreateRestorePoint}" Style="{StaticResource FlatButtonStyle}" Padding="16,6" Click="BtnCreateRestorePoint_Click"/>
                         </StackPanel>
                         <TextBlock x:Name="TxtChangesStatus" Style="{StaticResource SubTextStyle}" TextWrapping="Wrap" Margin="0,8,0,0"/>
                     </StackPanel>
@@ -84,7 +84,7 @@
                         <CheckBox x:Name="ChkShareAppearance" Content="{tr:Tr Center_ShareAppearance}" Foreground="{DynamicResource TextBrush}" Margin="0,0,0,2" Click="Setting_Changed"/>
                         <TextBlock Text="{tr:Tr Center_ShareAppearanceDesc}" Style="{StaticResource SubTextStyle}" TextWrapping="Wrap" Margin="22,0,0,14"/>
 
-                        <Button Content="{tr:Tr Center_CheckAlertsNow}" Style="{StaticResource FlatButtonStyle}" Padding="14,6" HorizontalAlignment="Left" Click="BtnCheckAlertsNow_Click"/>
+                        <Button Content="{tr:Tr Center_CheckAlertsNow}" Style="{StaticResource FlatButtonStyle}" Padding="16,6" HorizontalAlignment="Left" Click="BtnCheckAlertsNow_Click"/>
                     </StackPanel>
                 </ScrollViewer>
             </TabItem>
@@ -100,8 +100,8 @@
                         <TextBox x:Name="TxtDelaySeconds" Grid.Column="1" Width="60" Text="30" VerticalAlignment="Center"/>
                         <TextBlock Grid.Column="2" Text="{tr:Tr Center_Seconds}" Foreground="{DynamicResource TextBrush}" VerticalAlignment="Center" Margin="6,0,10,0"/>
                         <StackPanel Grid.Column="3" Orientation="Horizontal">
-                            <Button x:Name="BtnApplyDelay" Content="{tr:Tr Center_ApplyDelay}" Style="{StaticResource AccentButtonStyle}" Padding="12,6" Margin="0,0,8,0" Click="BtnApplyDelay_Click"/>
-                            <Button x:Name="BtnRemoveDelay" Content="{tr:Tr Center_RemoveDelay}" Style="{StaticResource FlatButtonStyle}" Padding="12,6" Click="BtnRemoveDelay_Click"/>
+                            <Button x:Name="BtnApplyDelay" Content="{tr:Tr Center_ApplyDelay}" Style="{StaticResource AccentButtonStyle}" Padding="16,6" Margin="0,0,8,0" Click="BtnApplyDelay_Click"/>
+                            <Button x:Name="BtnRemoveDelay" Content="{tr:Tr Center_RemoveDelay}" Style="{StaticResource FlatButtonStyle}" Padding="16,6" Click="BtnRemoveDelay_Click"/>
                         </StackPanel>
                     </Grid>
                     <StackPanel Grid.Row="2">
@@ -116,8 +116,8 @@
                 <StackPanel Margin="12">
                     <TextBlock Text="{tr:Tr Center_ReportDesc}" Style="{StaticResource SubTextStyle}" TextWrapping="Wrap" Margin="0,0,0,12"/>
                     <StackPanel Orientation="Horizontal">
-                        <Button x:Name="BtnReportTxt" Content="{tr:Tr Center_ExportTxt}" Style="{StaticResource AccentButtonStyle}" Padding="14,6" Margin="0,0,10,0" Click="BtnReportTxt_Click"/>
-                        <Button x:Name="BtnReportPdf" Content="{tr:Tr Center_ExportPdf}" Style="{StaticResource FlatButtonStyle}" Padding="14,6" Click="BtnReportPdf_Click"/>
+                        <Button x:Name="BtnReportTxt" Content="{tr:Tr Center_ExportTxt}" Style="{StaticResource AccentButtonStyle}" Padding="16,6" Margin="0,0,10,0" Click="BtnReportTxt_Click"/>
+                        <Button x:Name="BtnReportPdf" Content="{tr:Tr Center_ExportPdf}" Style="{StaticResource FlatButtonStyle}" Padding="16,6" Click="BtnReportPdf_Click"/>
                     </StackPanel>
                     <TextBlock x:Name="TxtReportStatus" Style="{StaticResource SubTextStyle}" TextWrapping="Wrap" Margin="0,10,0,0"/>
                 </StackPanel>

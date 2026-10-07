@@ -42,8 +42,8 @@
                             <ColumnDefinition Width="*"/><ColumnDefinition Width="Auto"/><ColumnDefinition Width="Auto"/><ColumnDefinition Width="Auto"/>
                         </Grid.ColumnDefinitions>
                         <ComboBox x:Name="ListNamedProfiles" Grid.Column="0" Margin="0,0,8,0"/>
-                        <Button Grid.Column="1" Content="{tr:Tr Tweaks_NamedProfileSaveAs}" Style="{StaticResource FlatButtonStyle}" Padding="12,6" Margin="0,0,8,0" Click="BtnSaveNamedProfile_Click"/>
-                        <Button Grid.Column="2" Content="{tr:Tr Tweaks_NamedProfileLoad}" Style="{StaticResource AccentButtonStyle}" Padding="12,6" Margin="0,0,8,0" Click="BtnLoadNamedProfile_Click"/>
+                        <Button Grid.Column="1" Content="{tr:Tr Tweaks_NamedProfileSaveAs}" Style="{StaticResource FlatButtonStyle}" Padding="16,6" Margin="0,0,8,0" Click="BtnSaveNamedProfile_Click"/>
+                        <Button Grid.Column="2" Content="{tr:Tr Tweaks_NamedProfileLoad}" Style="{StaticResource AccentButtonStyle}" Padding="16,6" Margin="0,0,8,0" Click="BtnLoadNamedProfile_Click"/>
                         <Button Grid.Column="3" Content="🗑" Style="{StaticResource FlatButtonStyle}" Width="36" Padding="0" Click="BtnDeleteNamedProfile_Click" AutomationProperties.Name="{tr:Tr Tweaks_NamedProfileDelete}"/>
                     </Grid>
                     <Separator Margin="0,0,0,10"/>
@@ -51,8 +51,8 @@
                     <Grid>
                         <Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="Auto"/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions>
                         <TextBlock Grid.Column="0" x:Name="TxtTweakProfileStatus" Style="{StaticResource SubTextStyle}" VerticalAlignment="Center" TextWrapping="Wrap"/>
-                        <Button Grid.Column="1" Content="{tr:Tr Tweaks_ExportProfile}" Style="{StaticResource FlatButtonStyle}" Padding="12,6" Margin="0,0,8,0" Click="BtnExportTweakProfile_Click"/>
-                        <Button Grid.Column="2" Content="{tr:Tr Tweaks_ImportProfile}" Style="{StaticResource FlatButtonStyle}" Padding="12,6" Click="BtnImportTweakProfile_Click"/>
+                        <Button Grid.Column="1" Content="{tr:Tr Tweaks_ExportProfile}" Style="{StaticResource FlatButtonStyle}" Padding="16,6" Margin="0,0,8,0" Click="BtnExportTweakProfile_Click"/>
+                        <Button Grid.Column="2" Content="{tr:Tr Tweaks_ImportProfile}" Style="{StaticResource FlatButtonStyle}" Padding="16,6" Click="BtnImportTweakProfile_Click"/>
                     </Grid>
                 </StackPanel>
             </Border>

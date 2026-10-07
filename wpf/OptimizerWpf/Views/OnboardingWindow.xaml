@@ -25,7 +25,7 @@
         </Grid.RowDefinitions>
 
         <Button x:Name="BtnSkip" Grid.Row="0" Content="{tr:Tr Onb_Skip}" Style="{StaticResource FlatButtonStyle}"
-                Padding="12,6" HorizontalAlignment="Right" Margin="16,14,16,0" Click="BtnSkip_Click"/>
+                Padding="16,6" HorizontalAlignment="Right" Margin="16,14,16,0" Click="BtnSkip_Click"/>
 
         <Border Grid.Row="1" Margin="50,10,50,10" Padding="20" Background="{DynamicResource CardBgBrush}" CornerRadius="{DynamicResource AppCornerRadius}">
             <StackPanel VerticalAlignment="Center" HorizontalAlignment="Center" MaxWidth="600">
@@ -47,8 +47,8 @@
                      LanguageService μηχανισμούς - καμία νέα λογική, μόνο συντόμευση στον οδηγό. -->
                 <StackPanel x:Name="SetupStepPanel" Orientation="Horizontal" HorizontalAlignment="Center" Margin="0,20,0,0" Visibility="Collapsed">
                     <Button x:Name="BtnOnbLanguage" Content="Ελληνικά / English / Deutsch / Français" Style="{StaticResource FlatButtonStyle}"
-                            Padding="14,8" Margin="0,0,10,0" Click="BtnOnbLanguage_Click"/>
-                    <Button x:Name="BtnOnbTheme" Style="{StaticResource FlatButtonStyle}" Padding="14,8" Click="BtnOnbTheme_Click"/>
+                            Padding="16,8" Margin="0,0,10,0" Click="BtnOnbLanguage_Click"/>
+                    <Button x:Name="BtnOnbTheme" Style="{StaticResource FlatButtonStyle}" Padding="16,8" Click="BtnOnbTheme_Click"/>
                 </StackPanel>
             </StackPanel>
         </Border>

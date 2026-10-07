@@ -44,9 +44,9 @@
                      συστηματος" - το MyDeviceService πλέον cache-άρει ολόκληρο το DeviceSummary (βλ.
                      σχόλιο εκεί), οπότε αυτό το κουμπί είναι η ρητή διέξοδος για να ζητήσει ο χρήστης
                      μια πραγματικά φρέσκια σάρωση (π.χ. μετά τη σύνδεση νέου δίσκου). -->
-                <Button Grid.Column="2" Content="{tr:Tr Refresh}" Style="{StaticResource FlatButtonStyle}" Padding="12,6" Margin="0,0,8,0" Click="BtnRefreshDevice_Click"/>
+                <Button Grid.Column="2" Content="{tr:Tr Refresh}" Style="{StaticResource FlatButtonStyle}" Padding="16,6" Margin="0,0,8,0" Click="BtnRefreshDevice_Click"/>
                 <!-- ΝΕΟ - roadmap "Εξαγωγή Η Συσκευή Μου" - βλ. BtnExportDevice_Click. -->
-                <Button Grid.Column="3" Content="{tr:Tr Sys_ExportDevice}" Style="{StaticResource FlatButtonStyle}" Padding="12,6" Click="BtnExportDevice_Click"/>
+                <Button Grid.Column="3" Content="{tr:Tr Sys_ExportDevice}" Style="{StaticResource FlatButtonStyle}" Padding="16,6" Click="BtnExportDevice_Click"/>
             </Grid>
 
             <UniformGrid Columns="2" Margin="0,0,0,16">
@@ -133,7 +133,7 @@
                              δημόσιο API για πραγματικά ανά-εφαρμογή νούμερα ενέργειας, οπότε αντί να
                              κατασκευαστούν αναξιόπιστα ψευδο-νούμερα, η κάρτα παραπέμπει στην ΙΔΙΑ
                              την επίσημη οθόνη ανάλυσης μπαταρίας ανά εφαρμογή των Windows. -->
-                        <Button Content="{tr:Tr Sys_OpenBatteryUsageButton}" Style="{StaticResource FlatButtonStyle}" Padding="10,5" Margin="0,10,0,0" HorizontalAlignment="Left" Click="BtnOpenBatteryUsage_Click"/>
+                        <Button Content="{tr:Tr Sys_OpenBatteryUsageButton}" Style="{StaticResource FlatButtonStyle}" Padding="16,5" Margin="0,10,0,0" HorizontalAlignment="Left" Click="BtnOpenBatteryUsage_Click"/>
                     </StackPanel>
                 </Border>
                 <Border Style="{StaticResource CardStyle}" Margin="8,0,8,0">
@@ -201,7 +201,7 @@
                                         <TextBlock Grid.Column="0" Text="{Binding Name}" Foreground="{DynamicResource TextBrush}"/>
                                         <TextBlock Grid.Column="1" Text="{Binding MemoryTrend}" Foreground="{DynamicResource AccentBrush}" Margin="0,0,8,0" VerticalAlignment="Center" FontSize="12"/>
                                         <TextBlock Grid.Column="2" Text="{Binding WorkingSetMb, StringFormat={}{0} MB}" Style="{StaticResource SubTextStyle}"/>
-                                        <Button Grid.Column="3" Content="{tr:Tr System_Kill}" Style="{StaticResource FlatButtonStyle}" FontSize="10" Padding="4,2"
+                                        <Button Grid.Column="3" Content="{tr:Tr System_Kill}" Style="{StaticResource FlatButtonStyle}" FontSize="10" Padding="16,2"
                                                 IsEnabled="{Binding CanKill}" Click="BtnKillProcess_Click" Tag="{Binding}"/>
                                     </Grid>
                                 </DataTemplate>
@@ -254,8 +254,8 @@
                                             <TextBlock Grid.Column="0" Text="{Binding Path}" Foreground="{DynamicResource TextBrush}" TextTrimming="CharacterEllipsis"/>
                                             <TextBlock Grid.Column="1" Text="{Binding SizeMb, StringFormat={}{0} MB}" Style="{StaticResource SubTextStyle}"/>
                                             <TextBlock Grid.Column="2" Text="{Binding SafetyLabel}" Foreground="{Binding SafetyColor}" FontSize="10" VerticalAlignment="Center" ToolTip="{tr:Tr Sys_SafetyTooltip}"/>
-                                            <Button Grid.Column="3" Content="{tr:Tr System_RecycleBin}" Style="{StaticResource FlatButtonStyle}" FontSize="10" Padding="4,2" Margin="0,0,4,0" Click="BtnRecycleFile_Click" Tag="{Binding}"/>
-                                            <Button Grid.Column="4" Content="{tr:Tr Sys_ShredButton}" Style="{StaticResource FlatButtonStyle}" FontSize="10" Padding="4,2" Foreground="#FFE53935" Click="BtnShredFile_Click" Tag="{Binding}"/>
+                                            <Button Grid.Column="3" Content="{tr:Tr System_RecycleBin}" Style="{StaticResource FlatButtonStyle}" FontSize="10" Padding="16,2" Margin="0,0,4,0" Click="BtnRecycleFile_Click" Tag="{Binding}"/>
+                                            <Button Grid.Column="4" Content="{tr:Tr Sys_ShredButton}" Style="{StaticResource FlatButtonStyle}" FontSize="10" Padding="16,2" Foreground="#FFE53935" Click="BtnShredFile_Click" Tag="{Binding}"/>
                                         </Grid>
                                     </DataTemplate>
                                 </ItemsControl.ItemTemplate>
@@ -327,7 +327,7 @@
                                             </TextBlock>
                                         </StackPanel>
                                         <Button Grid.Column="1" Content="{tr:Tr Appr_FontsPreviewDownloadBtn}" Style="{StaticResource AccentButtonStyle}"
-                                                MinWidth="170" Padding="10,6" Click="BtnPreviewDownloadFont_Click" Tag="{Binding}"/>
+                                                MinWidth="170" Padding="16,6" Click="BtnPreviewDownloadFont_Click" Tag="{Binding}"/>
                                     </Grid>
                                 </Border>
                             </DataTemplate>

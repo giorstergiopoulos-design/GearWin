@@ -47,7 +47,7 @@
                              AccentButtonStyle (συμπαγές χρώμα έμφασης, ίδιο με το "Ξεκινήστε" του ίδιου
                              του οδηγού) το κάνει αδιαμφισβήτητα ορατό ως κλικαρίσιμο στοιχείο. -->
                         <Button Content="{tr:Tr Onb_ReplayButton}" Style="{StaticResource AccentButtonStyle}"
-                                HorizontalAlignment="Left" Padding="14,8" Margin="0,0,0,14" Click="BtnReplayOnboarding_Click"/>
+                                HorizontalAlignment="Left" Padding="16,8" Margin="0,0,0,14" Click="BtnReplayOnboarding_Click"/>
 
                         <Grid Margin="0,10,0,4">
                             <Grid.ColumnDefinitions><ColumnDefinition Width="Auto"/><ColumnDefinition Width="*"/></Grid.ColumnDefinitions>

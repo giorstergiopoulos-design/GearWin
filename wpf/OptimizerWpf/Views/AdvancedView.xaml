@@ -155,9 +155,9 @@
                                                     </TextBlock>
                                                 </StackPanel>
                                                 <StackPanel Grid.Column="1" Orientation="Horizontal">
-                                                    <Button Content="{tr:Tr Wsl_OpenShellButton}" Style="{StaticResource FlatButtonStyle}" Padding="10,5" Margin="0,0,6,0" Click="BtnWslOpenShell_Click" Tag="{Binding}"/>
-                                                    <Button Content="{tr:Tr Wsl_SetDefaultButton}" Style="{StaticResource FlatButtonStyle}" Padding="10,5" Margin="0,0,6,0" Click="BtnWslSetDefault_Click" Tag="{Binding}"/>
-                                                    <Button Content="{tr:Tr Wsl_TerminateButton}" Style="{StaticResource FlatButtonStyle}" Padding="10,5" Margin="0,0,6,0" Click="BtnWslTerminate_Click" Tag="{Binding}"/>
+                                                    <Button Content="{tr:Tr Wsl_OpenShellButton}" Style="{StaticResource FlatButtonStyle}" Padding="16,5" Margin="0,0,6,0" Click="BtnWslOpenShell_Click" Tag="{Binding}"/>
+                                                    <Button Content="{tr:Tr Wsl_SetDefaultButton}" Style="{StaticResource FlatButtonStyle}" Padding="16,5" Margin="0,0,6,0" Click="BtnWslSetDefault_Click" Tag="{Binding}"/>
+                                                    <Button Content="{tr:Tr Wsl_TerminateButton}" Style="{StaticResource FlatButtonStyle}" Padding="16,5" Margin="0,0,6,0" Click="BtnWslTerminate_Click" Tag="{Binding}"/>
                                                     <Button Content="🗑" Style="{StaticResource FlatButtonStyle}" Width="36" Padding="0" Click="BtnWslUnregister_Click" Tag="{Binding}" AutomationProperties.Name="{tr:Tr Wsl_UnregisterButton}"/>
                                                 </StackPanel>
                                             </Grid>
@@ -168,8 +168,8 @@
                         </ScrollViewer>
                     </Border>
                     <StackPanel Orientation="Horizontal">
-                        <Button x:Name="BtnWslShutdownAll" Content="{tr:Tr Wsl_ShutdownAllButton}" Style="{StaticResource FlatButtonStyle}" Padding="12,6" Margin="0,0,10,0" Click="BtnWslShutdownAll_Click"/>
-                        <Button x:Name="BtnWslUpdate" Content="{tr:Tr Wsl_UpdateButton}" Style="{StaticResource FlatButtonStyle}" Padding="12,6" Click="BtnWslUpdate_Click"/>
+                        <Button x:Name="BtnWslShutdownAll" Content="{tr:Tr Wsl_ShutdownAllButton}" Style="{StaticResource FlatButtonStyle}" Padding="16,6" Margin="0,0,10,0" Click="BtnWslShutdownAll_Click"/>
+                        <Button x:Name="BtnWslUpdate" Content="{tr:Tr Wsl_UpdateButton}" Style="{StaticResource FlatButtonStyle}" Padding="16,6" Click="BtnWslUpdate_Click"/>
                     </StackPanel>
                     <TextBlock x:Name="TxtWslStatus" Style="{StaticResource SubTextStyle}" TextWrapping="Wrap" Margin="0,6,0,0"/>
                 </StackPanel>

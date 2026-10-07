@@ -31,12 +31,12 @@
                         <TextBlock Text="{Binding Details}" Style="{StaticResource SubTextStyle}" TextWrapping="Wrap" Margin="0,2,0,0"/>
                     </StackPanel>
                     <StackPanel Grid.Column="1" Orientation="Horizontal" VerticalAlignment="Center">
-                        <Button Content="{tr:Tr Games_Launch}" Style="{StaticResource AccentButtonStyle}" Padding="12,5" Margin="0,0,6,0" Tag="{Binding}" Click="BtnLaunchGame_Click"
+                        <Button Content="{tr:Tr Games_Launch}" Style="{StaticResource AccentButtonStyle}" Padding="16,5" Margin="0,0,6,0" Tag="{Binding}" Click="BtnLaunchGame_Click"
                                 Visibility="{Binding CanLaunch, Converter={StaticResource BoolToVis}}"/>
-                        <Button Content="{tr:Tr Games_Folder}" Style="{StaticResource FlatButtonStyle}" Padding="10,5" Margin="0,0,6,0" Tag="{Binding}" Click="BtnGameFolder_Click"/>
-                        <Button Content="{tr:Tr Games_Verify}" Style="{StaticResource FlatButtonStyle}" Padding="10,5" Margin="0,0,6,0" Tag="{Binding}" Click="BtnVerifyGame_Click"
+                        <Button Content="{tr:Tr Games_Folder}" Style="{StaticResource FlatButtonStyle}" Padding="16,5" Margin="0,0,6,0" Tag="{Binding}" Click="BtnGameFolder_Click"/>
+                        <Button Content="{tr:Tr Games_Verify}" Style="{StaticResource FlatButtonStyle}" Padding="16,5" Margin="0,0,6,0" Tag="{Binding}" Click="BtnVerifyGame_Click"
                                 Visibility="{Binding CanVerify, Converter={StaticResource BoolToVis}}"/>
-                        <Button Content="{tr:Tr Games_Uninstall}" Style="{StaticResource FlatButtonStyle}" Padding="10,5" Tag="{Binding}" Click="BtnUninstallGame_Click"
+                        <Button Content="{tr:Tr Games_Uninstall}" Style="{StaticResource FlatButtonStyle}" Padding="16,5" Tag="{Binding}" Click="BtnUninstallGame_Click"
                                 Visibility="{Binding CanUninstall, Converter={StaticResource BoolToVis}}"/>
                     </StackPanel>
                 </Grid>
@@ -101,7 +101,7 @@
                             <ColumnDefinition Width="Auto"/>
                         </Grid.ColumnDefinitions>
                         <TextBox x:Name="TxtGameExe" Grid.Column="0" IsReadOnly="True" Height="32" VerticalContentAlignment="Center" Padding="8,0" Margin="0,0,10,0"/>
-                        <Button Grid.Column="1" Content="{tr:Tr Games_ChooseExe}" Style="{StaticResource FlatButtonStyle}" Padding="14,6" Margin="0,0,14,0" Click="BtnChooseExe_Click"/>
+                        <Button Grid.Column="1" Content="{tr:Tr Games_ChooseExe}" Style="{StaticResource FlatButtonStyle}" Padding="16,6" Margin="0,0,14,0" Click="BtnChooseExe_Click"/>
                         <ComboBox x:Name="CmbGpuPref" Grid.Column="2" Width="190" Margin="0,0,14,0"/>
                         <CheckBox x:Name="ChkDisableFso" Grid.Column="3" Content="{tr:Tr Games_DisableFso}" Foreground="{DynamicResource TextBrush}" VerticalAlignment="Center"/>
                     </Grid>
@@ -148,7 +148,7 @@
                         <Grid.ColumnDefinitions><ColumnDefinition Width="Auto"/><ColumnDefinition Width="*"/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions>
                         <views:HeaderGlyphIcon Grid.Column="0" Kind="Monitor" Width="16" Height="16" Margin="0,0,8,0" VerticalAlignment="Center"/>
                         <TextBlock Grid.Column="1" Text="{tr:Tr Media_DisplaysTitle}" Style="{StaticResource CardTitleStyle}"/>
-                        <Button Grid.Column="2" Content="{tr:Tr Media_OpenDisplaySettings}" Style="{StaticResource FlatButtonStyle}" Padding="12,5" Click="BtnOpenDisplay_Click"/>
+                        <Button Grid.Column="2" Content="{tr:Tr Media_OpenDisplaySettings}" Style="{StaticResource FlatButtonStyle}" Padding="16,5" Click="BtnOpenDisplay_Click"/>
                     </Grid>
                     <ItemsControl x:Name="ListDisplays">
                         <ItemsControl.ItemTemplate>
@@ -178,8 +178,8 @@
                         <TextBlock Text="{Binding}" Style="{StaticResource SubTextStyle}" TextWrapping="Wrap" Margin="0,0,0,2"/>
                     </DataTemplate></ItemsControl.ItemTemplate></ItemsControl>
                     <StackPanel Orientation="Horizontal" Margin="0,12,0,0">
-                        <Button Content="{tr:Tr Media_OpenSound}" Style="{StaticResource FlatButtonStyle}" Padding="12,6" Margin="0,0,8,0" Click="BtnOpenSound_Click"/>
-                        <Button Content="{tr:Tr Media_OpenMixer}" Style="{StaticResource FlatButtonStyle}" Padding="12,6" Click="BtnOpenMixer_Click"/>
+                        <Button Content="{tr:Tr Media_OpenSound}" Style="{StaticResource FlatButtonStyle}" Padding="16,6" Margin="0,0,8,0" Click="BtnOpenSound_Click"/>
+                        <Button Content="{tr:Tr Media_OpenMixer}" Style="{StaticResource FlatButtonStyle}" Padding="16,6" Click="BtnOpenMixer_Click"/>
                     </StackPanel>
                 </StackPanel>
             </Border>
@@ -191,7 +191,7 @@
                         <Grid.ColumnDefinitions><ColumnDefinition Width="Auto"/><ColumnDefinition Width="*"/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions>
                         <views:HeaderGlyphIcon Grid.Column="0" Kind="Lock" Width="16" Height="16" Margin="0,0,8,0" VerticalAlignment="Center"/>
                         <TextBlock Grid.Column="1" Text="{tr:Tr Media_PrivacyTitle}" Style="{StaticResource CardTitleStyle}"/>
-                        <Button Grid.Column="2" Content="{tr:Tr Media_RefreshAccess}" Style="{StaticResource FlatButtonStyle}" Padding="12,5" Click="BtnRefreshAccess_Click"/>
+                        <Button Grid.Column="2" Content="{tr:Tr Media_RefreshAccess}" Style="{StaticResource FlatButtonStyle}" Padding="16,5" Click="BtnRefreshAccess_Click"/>
                     </Grid>
                     <TextBlock Text="{tr:Tr Media_Camera}" FontWeight="SemiBold" Foreground="{DynamicResource TextBrush}" Margin="0,0,0,4"/>
                     <ItemsControl x:Name="ListCameraAccess"><ItemsControl.ItemTemplate><DataTemplate>
@@ -202,8 +202,8 @@
                         <TextBlock Text="{Binding}" Style="{StaticResource SubTextStyle}" TextWrapping="Wrap" Margin="0,0,0,2"/>
                     </DataTemplate></ItemsControl.ItemTemplate></ItemsControl>
                     <StackPanel Orientation="Horizontal" Margin="0,12,0,0">
-                        <Button Content="{tr:Tr Media_OpenCameraPrivacy}" Style="{StaticResource FlatButtonStyle}" Padding="12,6" Margin="0,0,8,0" Click="BtnOpenCameraPrivacy_Click"/>
-                        <Button Content="{tr:Tr Media_OpenMicPrivacy}" Style="{StaticResource FlatButtonStyle}" Padding="12,6" Click="BtnOpenMicPrivacy_Click"/>
+                        <Button Content="{tr:Tr Media_OpenCameraPrivacy}" Style="{StaticResource FlatButtonStyle}" Padding="16,6" Margin="0,0,8,0" Click="BtnOpenCameraPrivacy_Click"/>
+                        <Button Content="{tr:Tr Media_OpenMicPrivacy}" Style="{StaticResource FlatButtonStyle}" Padding="16,6" Click="BtnOpenMicPrivacy_Click"/>
                     </StackPanel>
                 </StackPanel>
             </Border>
@@ -236,7 +236,7 @@
                                         <Grid Margin="0,4,0,0">
                                             <Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions>
                                             <TextBlock Text="{Binding Status}" Foreground="{Binding StatusBrush}" VerticalAlignment="Center" FontSize="11"/>
-                                            <Button Grid.Column="1" Content="{tr:Tr Media_CodecGet}" Style="{StaticResource FlatButtonStyle}" Padding="10,4" Tag="{Binding}" Click="BtnGetCodec_Click"
+                                            <Button Grid.Column="1" Content="{tr:Tr Media_CodecGet}" Style="{StaticResource FlatButtonStyle}" Padding="16,4" Tag="{Binding}" Click="BtnGetCodec_Click"
                                                     Visibility="{Binding Missing, Converter={StaticResource BoolToVis}}"/>
                                         </Grid>
                                     </StackPanel>
@@ -263,8 +263,8 @@
                     <StackPanel x:Name="PanelNoFfmpeg" Visibility="Collapsed" Margin="0,0,0,10">
                         <TextBlock Text="{tr:Tr Media_FfmpegMissing}" Foreground="{DynamicResource TextBrush}" TextWrapping="Wrap" Margin="0,0,0,8"/>
                         <StackPanel Orientation="Horizontal">
-                            <Button Content="{tr:Tr Media_InstallFfmpeg}" Style="{StaticResource AccentButtonStyle}" Padding="14,6" Margin="0,0,8,0" Click="BtnInstallFfmpeg_Click"/>
-                            <Button Content="{tr:Tr Media_Recheck}" Style="{StaticResource FlatButtonStyle}" Padding="14,6" Click="BtnRecheckFfmpeg_Click"/>
+                            <Button Content="{tr:Tr Media_InstallFfmpeg}" Style="{StaticResource AccentButtonStyle}" Padding="16,6" Margin="0,0,8,0" Click="BtnInstallFfmpeg_Click"/>
+                            <Button Content="{tr:Tr Media_Recheck}" Style="{StaticResource FlatButtonStyle}" Padding="16,6" Click="BtnRecheckFfmpeg_Click"/>
                         </StackPanel>
                     </StackPanel>
 
@@ -272,7 +272,7 @@
                         <Grid Margin="0,0,0,10">
                             <Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions>
                             <TextBox x:Name="TxtMediaInput" IsReadOnly="True" Height="32" VerticalContentAlignment="Center" Padding="8,0" Margin="0,0,10,0"/>
-                            <Button Grid.Column="1" Content="{tr:Tr Media_ChooseFile}" Style="{StaticResource FlatButtonStyle}" Padding="14,6" Click="BtnChooseMedia_Click"/>
+                            <Button Grid.Column="1" Content="{tr:Tr Media_ChooseFile}" Style="{StaticResource FlatButtonStyle}" Padding="16,6" Click="BtnChooseMedia_Click"/>
                         </Grid>
                         <StackPanel Orientation="Horizontal" Margin="0,0,0,10">
                             <ComboBox x:Name="CmbPreset" Width="260" Margin="0,0,10,0"/>

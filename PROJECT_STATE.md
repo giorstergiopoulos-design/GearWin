@@ -42,6 +42,17 @@ and pushed to both branches. Governance docs (CLAUDE.md, PROJECT_STATE.md, ROADM
 2026-09-29 at user's request.
 
 ## Completed
+- Button padding, app-wide (2026-10-07, user flagged this repeatedly across the session): the 6.3.5
+  fix only widened the Styles.xaml DEFAULT Padding on `FlatButtonStyle`/`AccentButtonStyle`/pill
+  styles - it didn't help most real buttons, which set their OWN explicit (tighter) `Padding` per
+  View, overriding that default entirely. Found 65+ instances of `Padding="8,4"`/`"12,6"`/`"14,6"`/
+  `"10,5"`/`"10,6"` etc. across 16 files. Scripted sweep: every `Button` using
+  `FlatButtonStyle`/`AccentButtonStyle` with horizontal padding < 16 got it bumped to 16 (vertical
+  padding left untouched, so button heights/layout rhythm didn't shift) - 68 buttons fixed via regex
+  sweep, +1 manual fix for a `<Button.Style>` property-element case the regex couldn't reach
+  (`OptimizationView.xaml`'s pin button). Left alone on purpose: `TextBox`/`PasswordBox` `Padding="8,4"`
+  (input fields, not the "text touches the button edge" complaint) and icon-only square buttons
+  (`Padding="0"`, e.g. window chrome). Build + full test suite (175/175) verified.
 - v6.3.5 polish (2026-10-07): fixed the real "no update check/balloon tip on autostart" bug - winget.exe
   is an App Execution Alias (reparse-point stub in `%LOCALAPPDATA%\Microsoft\WindowsApps`) whose PATH
   entry can lag right after logon, especially when launched via Task Scheduler's LogonTrigger (the

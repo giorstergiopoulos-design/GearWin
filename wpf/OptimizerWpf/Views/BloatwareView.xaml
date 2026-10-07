@@ -101,7 +101,7 @@
                              (βλ. σχόλιο στο BloatwareView.xaml.cs), οπότε αυτό το κουμπί είναι η ρητή
                              διέξοδος για πραγματικά φρέσκιο έλεγχο (π.χ. αν κάτι εγκαταστάθηκε/
                              αφαιρέθηκε εκτός εφαρμογής μέσα στο ίδιο session). -->
-                        <Button Grid.Column="2" Content="{tr:Tr Bloatware_RefreshList}" Style="{StaticResource FlatButtonStyle}" Padding="10,4" Click="BtnRefreshRecommended_Click"/>
+                        <Button Grid.Column="2" Content="{tr:Tr Bloatware_RefreshList}" Style="{StaticResource FlatButtonStyle}" Padding="16,4" Click="BtnRefreshRecommended_Click"/>
                     </Grid>
                     <TextBlock x:Name="TxtRecommendedStatus" Style="{StaticResource SubTextStyle}" Margin="0,0,0,8"/>
                     <!-- Πρόταση βελτίωσης που εγκρίθηκε ("κάνε τα όλα") - πεδίο αναζήτησης, η λίστα θα
@@ -133,7 +133,7 @@
                                             <TextBlock Text="{Binding Name, Converter={StaticResource GroupHeaderText}}" FontWeight="Bold"
                                                        Foreground="{DynamicResource TextBrush}" VerticalAlignment="Center"/>
                                             <Button Content="{tr:Tr Bloatware_InstallAllInGroup}" Style="{StaticResource FlatButtonStyle}"
-                                                    FontSize="10.5" Padding="8,3" Margin="10,0,0,0" Click="BtnInstallGroup_Click" Tag="{Binding Name}"/>
+                                                    FontSize="10.5" Padding="16,3" Margin="10,0,0,0" Click="BtnInstallGroup_Click" Tag="{Binding Name}"/>
                                         </StackPanel>
                                     </DataTemplate>
                                 </GroupStyle.HeaderTemplate>

@@ -59,7 +59,7 @@
                         <Grid.ColumnDefinitions><ColumnDefinition Width="Auto"/><ColumnDefinition Width="*"/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions>
                         <TextBlock Grid.Column="0" Text="{tr:Tr Appr_UpdateCheckInterval}" Foreground="{DynamicResource TextBrush}" VerticalAlignment="Center" Margin="0,0,10,0"/>
                         <ComboBox Grid.Column="1" x:Name="ComboUpdateInterval" Width="140" HorizontalAlignment="Left" SelectionChanged="ComboUpdateInterval_SelectionChanged"/>
-                        <Button Grid.Column="2" Content="{tr:Tr Appr_UpdateCheckNow}" Style="{StaticResource FlatButtonStyle}" Padding="12,6" Margin="10,0,0,0" Click="BtnUpdateCheckNow_Click"/>
+                        <Button Grid.Column="2" Content="{tr:Tr Appr_UpdateCheckNow}" Style="{StaticResource FlatButtonStyle}" Padding="16,6" Margin="10,0,0,0" Click="BtnUpdateCheckNow_Click"/>
                     </Grid>
                     <TextBlock x:Name="TxtUpdateCheckStatus" Style="{StaticResource SubTextStyle}" TextWrapping="Wrap"/>
 
@@ -90,8 +90,8 @@
                     <TextBlock Text="{tr:Tr Appr_BackupTitle}" Style="{StaticResource CardTitleStyle}" Margin="0,0,0,8"/>
                     <TextBlock Text="{tr:Tr Appr_BackupDesc}" Style="{StaticResource SubTextStyle}" TextWrapping="Wrap" Margin="0,0,0,10"/>
                     <StackPanel Orientation="Horizontal">
-                        <Button Content="{tr:Tr Appr_BackupExportBtn}" Style="{StaticResource FlatButtonStyle}" MinWidth="180" Padding="10,6" Margin="0,0,10,0" Click="BtnExportSettings_Click"/>
-                        <Button Content="{tr:Tr Appr_BackupImportBtn}" Style="{StaticResource FlatButtonStyle}" MinWidth="180" Padding="10,6" Click="BtnImportSettings_Click"/>
+                        <Button Content="{tr:Tr Appr_BackupExportBtn}" Style="{StaticResource FlatButtonStyle}" MinWidth="180" Padding="16,6" Margin="0,0,10,0" Click="BtnExportSettings_Click"/>
+                        <Button Content="{tr:Tr Appr_BackupImportBtn}" Style="{StaticResource FlatButtonStyle}" MinWidth="180" Padding="16,6" Click="BtnImportSettings_Click"/>
                     </StackPanel>
                 </StackPanel>
                 </ScrollViewer>

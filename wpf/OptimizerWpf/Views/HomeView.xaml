@@ -237,7 +237,7 @@
                         <Grid>
                             <Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions>
                             <TextBlock x:Name="TxtHealthCheckReminder" Grid.Column="0" Style="{StaticResource SubTextStyle}" TextWrapping="Wrap" VerticalAlignment="Center"/>
-                            <Button Grid.Column="1" Content="{tr:Tr HealthCheck_RunButton}" Style="{StaticResource AccentButtonStyle}" Padding="12,6" Margin="10,0,0,0" Click="BtnRunHealthCheck_Click"/>
+                            <Button Grid.Column="1" Content="{tr:Tr HealthCheck_RunButton}" Style="{StaticResource AccentButtonStyle}" Padding="16,6" Margin="10,0,0,0" Click="BtnRunHealthCheck_Click"/>
                         </Grid>
                     </Border>
                 </Grid>
@@ -310,7 +310,7 @@
                         <Grid.ColumnDefinitions><ColumnDefinition Width="Auto"/><ColumnDefinition Width="*"/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions>
                         <views:HeaderGlyphIcon Grid.Column="0" Kind="Bolt" Width="16" Height="16" Margin="0,0,8,0" VerticalAlignment="Center"/>
                         <TextBlock Grid.Column="1" Text="{tr:Tr Home_UpdatesTitle}" Style="{StaticResource CardTitleStyle}"/>
-                        <Button Grid.Column="2" Content="{tr:Tr Home_UpdatesOpenBtn}" Style="{StaticResource FlatButtonStyle}" Padding="10,5" Click="BtnOpenUpdatesTab_Click"/>
+                        <Button Grid.Column="2" Content="{tr:Tr Home_UpdatesOpenBtn}" Style="{StaticResource FlatButtonStyle}" Padding="16,5" Click="BtnOpenUpdatesTab_Click"/>
                     </Grid>
                     <Grid>
                         <Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="*"/><ColumnDefinition Width="*"/></Grid.ColumnDefinitions>
@@ -378,7 +378,7 @@
                         <ItemsControl.ItemTemplate>
                             <DataTemplate>
                                 <Button Click="DiskLegendItem_Click" Tag="{Binding}" Style="{StaticResource FlatButtonStyle}"
-                                        Background="Transparent" Padding="4,3" Margin="0,0,10,6" HorizontalContentAlignment="Left">
+                                        Background="Transparent" Padding="16,3" Margin="0,0,10,6" HorizontalContentAlignment="Left">
                                     <StackPanel Orientation="Horizontal" MaxWidth="220">
                                         <Border Width="10" Height="10" CornerRadius="2" Background="{Binding BarColor}" VerticalAlignment="Top" Margin="0,3,6,0"/>
                                         <TextBlock Text="{Binding LegendText}" TextWrapping="Wrap" Foreground="{DynamicResource TextBrush}" FontSize="12"/>
@@ -398,7 +398,7 @@
                         <Grid.ColumnDefinitions><ColumnDefinition Width="Auto"/><ColumnDefinition Width="*"/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions>
                         <views:HeaderGlyphIcon Grid.Column="0" Kind="Document" Width="16" Height="16" Margin="0,0,8,0" VerticalAlignment="Center"/>
                         <TextBlock Grid.Column="1" Text="{tr:Tr Home_RecentActivity}" Style="{StaticResource CardTitleStyle}"/>
-                        <Button Grid.Column="2" Content="{tr:Tr Home_RecentActivitySeeAll}" Style="{StaticResource FlatButtonStyle}" Padding="10,5" Click="BtnOpenActionLog_Click"/>
+                        <Button Grid.Column="2" Content="{tr:Tr Home_RecentActivitySeeAll}" Style="{StaticResource FlatButtonStyle}" Padding="16,5" Click="BtnOpenActionLog_Click"/>
                     </Grid>
                     <ItemsControl x:Name="ListRecentActivity">
                         <ItemsControl.ItemTemplate>
