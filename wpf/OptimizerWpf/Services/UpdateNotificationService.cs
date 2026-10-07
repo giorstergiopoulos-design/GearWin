@@ -1,4 +1,5 @@
 using System;
+using System.IO;
 using System.Threading.Tasks;
 using System.Windows.Threading;
 
@@ -21,6 +22,25 @@ namespace OptimizerWpf.Services
         private static DispatcherTimer? _timer;
         private static bool _checkInFlight;
 
+        // ΔΙΟΡΘΩΣΗ (ρητό αίτημα χρήστη, επαναλαμβανόμενο: "δεν βλέπω αυτόματο έλεγχο ενημερώσεων/
+        // balloon tip") - μέχρι τώρα ΟΛΗ αυτή η ροή ήταν 100% αόρατη εκτός αν άλλαζε ο αριθμός
+        // ενημερώσεων (ΚΑΙ εμφανιζόταν πραγματικά το Windows toast - που μπορεί να καταπνιγεί σιωπηλά
+        // από Focus Assist/ανά-εφαρμογή ρυθμίσεις ειδοποιήσεων, εκτός ελέγχου της εφαρμογής). Κάθε
+        // βήμα γράφεται εδώ ΜΕ timestamp - επιτρέπει να επιβεβαιωθεί τι ΠΡΑΓΜΑΤΙΚΑ συνέβη (έτρεξε/
+        // απέτυχε/βρήκε Χ) χωρίς να χρειάζεται ζωντανή παρατήρηση της οθόνης.
+        private static readonly string LogPath = Path.Combine(
+            Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "OptimizerWpf", "update-check.log");
+
+        private static void Log(string message)
+        {
+            try
+            {
+                Directory.CreateDirectory(Path.GetDirectoryName(LogPath)!);
+                File.AppendAllText(LogPath, $"[{DateTime.Now:yyyy-MM-dd HH:mm:ss}] {message}{Environment.NewLine}");
+            }
+            catch { /* η ίδια η καταγραφή δεν πρέπει ποτέ να ρίξει τον έλεγχο ενημερώσεων */ }
+        }
+
         public static void Start()
         {
             if (_timer != null) return;
@@ -38,16 +58,23 @@ namespace OptimizerWpf.Services
         // τώρα περιμένουμε σύνδεση (έως ~3 λεπτά) και ο έλεγχος γίνεται μία φορά με announce.
         public static async Task StartupCheckAsync()
         {
-            if (_checkInFlight || !AppSettingsService.Current.UpdateNotificationsEnabled) return;
+            if (_checkInFlight) { Log("StartupCheckAsync: skipped, already in flight"); return; }
+            if (!AppSettingsService.Current.UpdateNotificationsEnabled) { Log("StartupCheckAsync: skipped, UpdateNotificationsEnabled=false"); return; }
+            Log("StartupCheckAsync: starting, waiting 8s then for network (up to 3 min)");
             _checkInFlight = true;
             try
             {
                 await Task.Delay(TimeSpan.FromSeconds(8));
-                for (var i = 0; i < 18 && !System.Net.NetworkInformation.NetworkInterface.GetIsNetworkAvailable(); i++)
+                var waited = 0;
+                while (waited < 18 && !System.Net.NetworkInformation.NetworkInterface.GetIsNetworkAvailable())
+                {
                     await Task.Delay(TimeSpan.FromSeconds(10));
+                    waited++;
+                }
+                Log($"StartupCheckAsync: network available={System.Net.NetworkInformation.NetworkInterface.GetIsNetworkAvailable()} after {waited * 10}s wait - running check");
                 await RunCheckAsync(announce: true);
             }
-            catch { }
+            catch (Exception ex) { Log($"StartupCheckAsync: unexpected exception - {ex}"); }
             finally { _checkInFlight = false; }
         }
 
@@ -73,12 +100,14 @@ namespace OptimizerWpf.Services
         // χρήστης να μπορεί να ζητήσει άμεσο έλεγχο χωρίς να περιμένει το επόμενο περιοδικό τικ.
         public static async Task RunCheckAsync(bool announce = false)
         {
+            Log($"RunCheckAsync: starting (announce={announce})");
             AppSettingsService.Current.LastUpdateCheckAt = DateTime.Now;
             AppSettingsService.Save();
 
             try
             {
                 var appUpdates = await WingetService.ScanAsync();
+                Log($"RunCheckAsync: winget scan found {appUpdates.Count} app update(s)");
                 UpdatesHubService.ReportAppScan(appUpdates.Count);
                 MaybeNotify(appUpdates.Count,
                     () => AppSettingsService.Current.LastNotifiedAppUpdateCount,
@@ -86,11 +115,15 @@ namespace OptimizerWpf.Services
                     LanguageService.T("UpdateNotify_AppsTitle"),
                     string.Format(LanguageService.T("UpdateNotify_AppsBody"), appUpdates.Count), announce: announce);
             }
-            catch { /* best-effort - ίδια ανοχή με τις υπόλοιπες background σαρώσεις της εφαρμογής */ }
+            // ΔΙΟΡΘΩΣΗ (ρητό αίτημα χρήστη, επαναλαμβανόμενο) - πριν ήταν "catch { }" - μια πραγματική
+            // αποτυχία εδώ (π.χ. αν το PATH fallback του WingetService δεν αρκεί σε κάποιο μηχάνημα)
+            // ήταν ΑΔΥΝΑΤΟ να εντοπιστεί χωρίς αυτό το log.
+            catch (Exception ex) { Log($"RunCheckAsync: winget scan threw - {ex}"); }
 
             try
             {
                 var driverResult = await DriverService.ScanAsync();
+                Log($"RunCheckAsync: driver scan found {driverResult.Updates.Count} update(s) (PolicyBlocked={driverResult.PolicyBlocked})");
                 if (!driverResult.PolicyBlocked)
                 {
                     UpdatesHubService.ReportDriverScan(driverResult.Updates.Count);
@@ -101,13 +134,14 @@ namespace OptimizerWpf.Services
                         string.Format(LanguageService.T("UpdateNotify_DriversBody"), driverResult.Updates.Count), announce: announce);
                 }
             }
-            catch { }
+            catch (Exception ex) { Log($"RunCheckAsync: driver scan threw - {ex}"); }
 
             // ΝΕΟ - roadmap ιδέα #3 (ρητό αίτημα χρήστη: "κάνε το 3 από τις ιδέες") - βλ.
             // Services/WindowsUpdateService.cs. Ίδιο μοτίβο best-effort/MaybeNotify με τα δύο παραπάνω.
             try
             {
                 var (success, winUpdates, _) = await WindowsUpdateService.ScanAsync();
+                Log($"RunCheckAsync: Windows Update scan success={success}, found {winUpdates.Count} update(s)");
                 if (success)
                 {
                     UpdatesHubService.ReportWindowsUpdateScan(winUpdates.Count);
@@ -123,14 +157,15 @@ namespace OptimizerWpf.Services
                         announce);
                 }
             }
-            catch { }
+            catch (Exception ex) { Log($"RunCheckAsync: Windows Update scan threw - {ex}"); }
 
             AppSettingsService.Save();
 
             // ΝΕΟ - roadmap ιδέα #4 (ρητό αίτημα χρήστη: "κάνε τα 4-7") - "Ειδοποίηση χαμηλού χώρου
             // δίσκου" - ίδιο περιοδικό tick, ξεχωριστό (χρονικό, όχι αριθμητικό) dedup - βλ. σχόλιο στο
             // AppSettingsService.LastLowDiskNotifyAt.
-            try { CheckLowDiskSpace(); } catch { }
+            try { CheckLowDiskSpace(); } catch (Exception ex) { Log($"RunCheckAsync: low disk check threw - {ex}"); }
+            Log("RunCheckAsync: finished");
         }
 
         private static void MaybeNotify(int count, Func<int?> getLastNotified, Action<int?> setLastNotified, string title, string body, Action? onClick = null, bool announce = false)
@@ -138,8 +173,12 @@ namespace OptimizerWpf.Services
             if (count <= 0) { setLastNotified(0); return; }
             // announce=true (έλεγχος κατά την εκκίνηση): ο χρήστης θέλει να δει ΠΑΝΤΑ το μήνυμα όταν ανοίγει η
             // εφαρμογή, ακόμα κι αν ο αριθμός είναι ίδιος με την προηγούμενη ειδοποίηση.
-            if (!announce && getLastNotified() == count) return; // ίδιος αριθμός με την τελευταία ειδοποίηση - καμία επανάληψη
+            if (!announce && getLastNotified() == count) { Log($"MaybeNotify: '{title}' skipped, count unchanged ({count}) and announce=false"); return; }
             setLastNotified(count);
+            // ΣΗΜΕΙΩΣΗ: αν ΑΥΤΗ η γραμμή καταγράφεται αλλά ο χρήστης δεν βλέπει κανένα toast, η ίδια η
+            // εφαρμογή ΚΑΛΕΙ σωστά το API - το Windows (Focus Assist/ρυθμίσεις ειδοποιήσεων ανά
+            // εφαρμογή) το καταπνίγει σιωπηλά, εκτός ελέγχου της εφαρμογής.
+            Log($"MaybeNotify: showing balloon '{title}' ({body})");
             TrayIconService.ShowNotificationBalloon(title, body, onClick);
         }
 
