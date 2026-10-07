@@ -41,6 +41,13 @@ namespace OptimizerWpf.Tests
                         ("ClipboardHistoryWindow", () => new ClipboardHistoryWindow()),
                         ("DesktopWidgetWindow", () => new DesktopWidgetWindow()),
                         ("HealthCheckWindow", () => new HealthCheckWindow()),
+                        // ΔΙΟΡΘΩΣΗ (ρητό αίτημα χρήστη: "polish 6.3.5 με automated tests") - αυτά τα 2
+                        // παράθυρα υπήρχαν ήδη στην εφαρμογή αλλά δεν ήταν ποτέ προστεθειμένα εδώ -
+                        // πραγματικό κενό κάλυψης, όχι σκόπιμη εξαίρεση (κανένα από τα δύο κάνει
+                        // οτιδήποτε destructive/αργό ΜΕΣΑ στον constructor - μόνο σε Loaded, που δεν
+                        // πυροδοτείται ποτέ εδώ αφού δεν καλείται Show()/δεν αντλείται Dispatcher).
+                        ("HealthTimelineWindow", () => new HealthTimelineWindow()),
+                        ("MaintenanceCenterWindow", () => new MaintenanceCenterWindow()),
                         ("HelpWindow", () => new HelpWindow()),
                         ("OnboardingWindow", () => new OnboardingWindow()),
                         ("PasswordManagerWindow", () => new PasswordManagerWindow()),

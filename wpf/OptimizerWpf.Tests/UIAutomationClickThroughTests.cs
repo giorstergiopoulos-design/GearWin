@@ -210,13 +210,22 @@ namespace OptimizerWpf.Tests
         //   - ViveToolWindow: τα per-feature toggles ενεργοποιούν/απενεργοποιούν ΠΡΑΓΜΑΤΙΚΑ
         //     πειραματικά Windows features μέσω registry (ΚΑΙ κατεβάζουν το vivetool.exe αν λείπει)
         //     - ίδιο ζήτημα, καμία αυτοματοποιημένη δοκιμή δεν πρέπει να το πυροδοτεί τυφλά.
-        // Και τα δύο επιβεβαιώθηκαν ζωντανά ασφαλή στο WindowSmokeTests.cs (κατασκευή χωρίς exception).
+        //   - MaintenanceCenterWindow (ΔΙΟΡΘΩΣΗ - ρητό αίτημα χρήστη: "polish 6.3.5 με automated
+        //     tests", εντοπίστηκε απόν από αυτή τη λίστα): το "Δημιουργία Σημείου Επαναφοράς"
+        //     (BtnCreateRestorePoint) δημιουργεί ΠΡΑΓΜΑΤΙΚΟ System Restore Point - ίδια κατηγορία
+        //     πραγματικής system-modifying ενέργειας με τα δύο παραπάνω, όχι τυφλό αυτοματοποιημένο
+        //     κλικ. Ήδη καλυμμένο παθητικά στο WindowSmokeTests.cs (κατασκευή χωρίς exception).
+        // Και τα δύο αρχικά επιβεβαιώθηκαν ζωντανά ασφαλή στο WindowSmokeTests.cs (κατασκευή χωρίς exception).
         private static List<(string Name, Func<Window> Create)> Factories() => new()
         {
             ("ActionLogWindow", () => new ActionLogWindow()),
             ("AddContextMenuDialog", () => new AddContextMenuDialog()),
             ("AppearanceSettingsWindow", () => new AppearanceSettingsWindow()),
             ("ClipboardHistoryWindow", () => new ClipboardHistoryWindow()),
+            // ΔΙΟΡΘΩΣΗ (ρητό αίτημα χρήστη: "polish 6.3.5 με automated tests") - απούσα από αυτή τη
+            // λίστα, πραγματικό κενό κάλυψης. Μόνο ανάγνωση (Event Log scan), καμία system-modifying
+            // ενέργεια σε κανένα κουμπί - ασφαλές για τυφλό κλικ, σε αντίθεση με τα 3 εξαιρεμένα πιο πάνω.
+            ("HealthTimelineWindow", () => new HealthTimelineWindow()),
             ("HelpWindow", () => new HelpWindow()),
             ("OnboardingWindow", () => new OnboardingWindow()),
             ("PasswordManagerWindow", () => new PasswordManagerWindow()),

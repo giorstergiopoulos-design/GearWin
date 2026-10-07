@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Diagnostics;
+using System.IO;
 using System.Linq;
 using System.Management;
 using System.Text.Json;
@@ -473,30 +474,57 @@ $out | ConvertTo-Json -Compress";
                 StandardOutputEncoding = System.Text.Encoding.UTF8,
             };
 
-            Process process;
-            try { process = Process.Start(psi)!; }
-            catch (Win32Exception) { return ("", -1, false); }
+            Process? process;
+            try { process = Process.Start(psi); }
+            catch (Win32Exception)
+            {
+                // ΔΙΟΡΘΩΣΗ (χρήστης ανέφερε: "όταν ξεκινούν τα windows δεν γίνεται έλεγχος ενημερώσεων,
+                // ούτε balloon tip") - το winget.exe είναι ένα App Execution Alias (reparse-point stub
+                // στο %LOCALAPPDATA%\Microsoft\WindowsApps) - η καταχώρηση αυτού του φακέλου στο PATH
+                // της διεργασίας μπορεί να μην έχει προλάβει να διαδοθεί ΤΟΣΟ νωρίς μετά την είσοδο,
+                // ειδικά όταν η εφαρμογή ξεκινά μέσω Task Scheduler LogonTrigger (--tray αυτόματη
+                // εκκίνηση) αντί μέσω explorer.exe - το bare "winget.exe" απέτυχε σιωπηλά (Win32Exception,
+                // "δεν βρέθηκε"), το UpdateNotificationService.StartupCheckAsync() το διάβαζε ως "0
+                // ενημερώσεις" (αφού wingetStarted=false -> ScanAsync επιστρέφει άδεια λίστα, βλ. εκεί) -
+                // καμία ειδοποίηση, καμία ένδειξη σφάλματος πουθενά. Fallback ΜΟΝΟ για το winget.exe,
+                // στην απόλυτη διαδρομή του alias stub (σταθερή θέση, ανεξάρτητη από το PATH).
+                process = null;
+                if (string.Equals(fileName, "winget.exe", StringComparison.OrdinalIgnoreCase))
+                {
+                    var fallback = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "Microsoft", "WindowsApps", "winget.exe");
+                    if (File.Exists(fallback))
+                    {
+                        psi.FileName = fallback;
+                        try { process = Process.Start(psi); } catch (Win32Exception) { /* παραμένει null */ }
+                    }
+                }
+                if (process == null) return ("", -1, false);
+            }
 
             using (process)
             {
-                var stdoutTask = process.StandardOutput.ReadToEndAsync();
-                _ = process.StandardError.ReadToEndAsync(); // το stderr δεν διαβαζόταν ποτέ → block αν γέμιζε το pipe
+                var proc = process!; // μη-nullable alias - η null περίπτωση έχει ήδη επιστρέψει παραπάνω (το using(process) από μόνο του δεν στενεύει τη nullability ανάλυση)
+                var stdoutTask = proc.StandardOutput.ReadToEndAsync();
+                _ = proc.StandardError.ReadToEndAsync(); // το stderr δεν διαβαζόταν ποτέ → block αν γέμιζε το pipe
                 try
                 {
                     using var cts = new CancellationTokenSource(timeout);
-                    await process.WaitForExitAsync(cts.Token);
+                    await proc.WaitForExitAsync(cts.Token);
                 }
                 catch (OperationCanceledException)
                 {
-                    try { process.Kill(true); } catch { } // ολόκληρο το δέντρο (winget/powershell παιδιά)
+                    try { proc.Kill(true); } catch { } // ολόκληρο το δέντρο (winget/powershell παιδιά)
                     return ("", -1, true);
                 }
                 var stdout = await stdoutTask;
-                return (stdout, process.ExitCode, true);
+                return (stdout, proc.ExitCode, true);
             }
         }
 
-        private static IReadOnlyList<WingetUpdate> ParseWingetTable(string rawText)
+        // internal (όχι private) - ίδιο μοτίβο InternalsVisibleTo με το ThemedMessageBox.TxtMessage
+        // (βλ. OptimizerWpf.csproj), ώστε το OptimizerWpf.Tests να μπορεί να το δοκιμάσει απευθείας
+        // χωρίς πραγματική κλήση winget.exe (βλ. WingetServiceTests.cs).
+        internal static IReadOnlyList<WingetUpdate> ParseWingetTable(string rawText)
         {
             var result = new List<WingetUpdate>();
             // winget draws its table with ANSI escape/progress codes mixed in on some terminals -

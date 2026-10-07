@@ -42,6 +42,28 @@ and pushed to both branches. Governance docs (CLAUDE.md, PROJECT_STATE.md, ROADM
 2026-09-29 at user's request.
 
 ## Completed
+- v6.3.5 polish (2026-10-07): fixed the real "no update check/balloon tip on autostart" bug - winget.exe
+  is an App Execution Alias (reparse-point stub in `%LOCALAPPDATA%\Microsoft\WindowsApps`) whose PATH
+  entry can lag right after logon, especially when launched via Task Scheduler's LogonTrigger (the
+  `--tray` autostart) rather than explorer.exe; the bare `Process.Start("winget.exe", ...)` failed
+  silently (`Win32Exception`), `WingetService.ScanAsync()` read that as "0 updates" (honest-by-design,
+  but indistinguishable from a real empty result), so `UpdateNotificationService.StartupCheckAsync()`
+  never had anything to announce - no error anywhere. Fixed with an absolute-path fallback in
+  `WingetService.RunToolAsync` (covers every winget call site: scan/pin/export/import/upgrade). Also
+  found and fixed a related bug while investigating: the first-run onboarding wizard
+  (`App.xaml.cs`) could block the entire `--tray` silent-startup sequence (tray icon, update check)
+  since it wasn't gated on `--tray` - now skipped on autostart.
+  Expanded automated test coverage: `WindowSmokeTests.cs`/`UIAutomationClickThroughTests.cs` gained
+  `MaintenanceCenterWindow`/`HealthTimelineWindow` (both real gaps, not prior exclusions);
+  `ParseWingetTable` made `internal` (same `InternalsVisibleTo` pattern as `ThemedMessageBox`) and
+  covered by new `WingetServiceTests.cs`; `GamesMultimediaServicesTests.cs` extended with the 6 new
+  6.3.5 converter presets, a quality-level-actually-changes-the-args test, and a
+  `ThirdPartyCodecService` never-throws smoke test. 156 -> 175 tests, all passing. **Honest limit**:
+  this is unit/construction-level coverage, not literally "every tool verified" - genuinely
+  destructive/slow actions (Optimize Now, ViVeTool toggles, real driver/winget installs) remain
+  deliberately excluded from automated click-through (documented in that file), and the opt-in live
+  GUI click-through suite itself could not be run by this session (no elevation/display available,
+  same constraint as the Dashboard preview below).
 - WPF-UI pilot: `Views/DashboardPreviewWindow.xaml(.cs)` (2026-10-06) - a standalone, additive "Πίνακας
   Ελέγχου" window built with the WPF-UI 4.3.0 nuget (ui:FluentWindow/TitleBar/Card/InfoBar/Button/
   TextBox), reusing the SidebarShortcuts/NavItems/RailPillStyle/PcManagerHomeView.BuildArc/TweakRowVm

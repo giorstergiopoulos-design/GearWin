@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using System.Linq;
 using OptimizerWpf.Services;
 
@@ -168,6 +169,14 @@ public class MultimediaServicesTests
     [InlineData(MediaPreset.ExtractMp3, "libmp3lame")]
     [InlineData(MediaPreset.ShareSized720p, "scale=-2:720")]
     [InlineData(MediaPreset.VideoToGif, "paletteuse")]
+    // ΔΙΟΡΘΩΣΗ (ρητό αίτημα χρήστη: "polish 6.3.5 με automated tests") - τα 6 νέα presets του 6.3.5
+    // (GEARWIN.MD: "πολλά περισσότερα αρχεία ήχου/εικόνας") δεν είχαν καθόλου δοκιμή ακόμα.
+    [InlineData(MediaPreset.VideoToWebm, "libvpx-vp9")]
+    [InlineData(MediaPreset.VideoToMkvH264, "libx264")]
+    [InlineData(MediaPreset.ExtractAac, "aac")]
+    [InlineData(MediaPreset.ExtractOgg, "libvorbis")]
+    [InlineData(MediaPreset.ExtractWav, "pcm_s16le")]
+    [InlineData(MediaPreset.ExtractFlac, "flac")]
     public void Ffmpeg_ArgsContainPresetEssentials(MediaPreset p, string expected)
     {
         var a = MediaConverterService.BuildArgs(p, MediaQuality.Medium, @"C:\in put.mov", @"C:\out.mp4");
@@ -175,6 +184,51 @@ public class MultimediaServicesTests
         Assert.Equal(@"C:\in put.mov", a[a.ToList().IndexOf("-i") + 1]);   // διαδρομή με κενό: ένα όρισμα, χωρίς quoting
         Assert.Equal(@"C:\out.mp4", a[^1]);
         Assert.Equal("-y", a[0]);
+    }
+
+    // ΔΙΟΡΘΩΣΗ (ρητό αίτημα χρήστη: "polish 6.3.5 με automated tests") - το MediaQuality (Low/Medium/
+    // High, νέο στο 6.3.5) δεν είχε καμία δοκιμή ότι πράγματι ΑΛΛΑΖΕΙ τα ορίσματα ffmpeg - χωρίς αυτό
+    // το CmbQuality της διεπαφής θα μπορούσε να μην κάνει τίποτα ουσιαστικό χωρίς να το εντοπίσει
+    // καμία δοκιμή.
+    [Theory]
+    [InlineData(MediaPreset.VideoToMp4H264, "-crf")]
+    [InlineData(MediaPreset.ExtractMp3, "-q:a")]
+    public void Ffmpeg_QualityLevelsProduceDifferentArgs(MediaPreset p, string qualityFlag)
+    {
+        string ValueAfter(IReadOnlyList<string> args, string flag) => args[args.ToList().IndexOf(flag) + 1];
+
+        var low = MediaConverterService.BuildArgs(p, MediaQuality.Low, "in.mov", "out.mp4");
+        var med = MediaConverterService.BuildArgs(p, MediaQuality.Medium, "in.mov", "out.mp4");
+        var high = MediaConverterService.BuildArgs(p, MediaQuality.High, "in.mov", "out.mp4");
+
+        var lowVal = ValueAfter(low, qualityFlag);
+        var medVal = ValueAfter(med, qualityFlag);
+        var highVal = ValueAfter(high, qualityFlag);
+        Assert.True(lowVal != medVal && medVal != highVal && lowVal != highVal,
+            $"expected 3 distinct values for {qualityFlag}, got Low={lowVal} Medium={medVal} High={highVal}");
+    }
+
+    [Theory]
+    [InlineData(MediaPreset.VideoToWebm, ".webm")]
+    [InlineData(MediaPreset.VideoToMkvH264, ".mkv")]
+    [InlineData(MediaPreset.ExtractAac, ".m4a")]
+    [InlineData(MediaPreset.ExtractOgg, ".ogg")]
+    [InlineData(MediaPreset.ExtractWav, ".wav")]
+    [InlineData(MediaPreset.ExtractFlac, ".flac")]
+    public void Ffmpeg_OutputExtensionMatchesNewPresets(MediaPreset p, string expectedExt) =>
+        Assert.Equal(expectedExt, MediaConverterService.OutputExtension(p));
+
+    // ΔΙΟΡΘΩΣΗ (ρητό αίτημα χρήστη: "polish 6.3.5 με automated tests") - ThirdPartyCodecService (νέο
+    // στο 6.3.5, GEARWIN.MD: ανίχνευση K-Lite/DirectShow filters) δεν είχε καμία δοκιμή. Διαβάζει
+    // πραγματικό filesystem/registry - δεν μπορεί να επαληθευτεί ΤΙ θα βρει σε ένα δεδομένο μηχάνημα,
+    // αλλά ΠΡΕΠΕΙ να μην πετάει εξαίρεση ποτέ (καθαρά best-effort, βλ. try/catch στο ίδιο) και να
+    // επιστρέφει πάντα μια έγκυρη (έστω άδεια) λίστα.
+    [Fact]
+    public void ThirdPartyCodecs_NeverThrowsAndReturnsAList()
+    {
+        var result = ThirdPartyCodecService.Check();
+        Assert.NotNull(result);
+        Assert.All(result, c => Assert.False(string.IsNullOrWhiteSpace(c.Name)));
     }
 
     [Fact]

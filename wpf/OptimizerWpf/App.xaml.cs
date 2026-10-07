@@ -119,7 +119,14 @@ public partial class App : Application
         // αποτέλεσμα το Owner=main του SplashWindow να αποτυγχάνει. OnExplicitShutdown ΜΟΝΟ γύρω από
         // αυτό το ένα ShowDialog() εμποδίζει το "τελευταίο παράθυρο έκλεισε" να μετρήσει καθόλου εδώ -
         // επαναφέρεται αμέσως μετά, πριν δημιουργηθεί το πραγματικό MainWindow.
-        if (!Services.AppSettingsService.Current.HasSeenOnboarding)
+        // ΔΙΟΡΘΩΣΗ (εντοπίστηκε κατά τον έλεγχο του "δεν γίνεται έλεγχος ενημερώσεων/balloon tip στην
+        // αυτόματη εκκίνηση" - σχετικό αλλά ξεχωριστό bug) - αυτός ο έλεγχος έτρεχε ΠΡΙΝ το "--tray"
+        // παρακάτω, άρα σε ΠΡΩΤΗ αυτόματη εκκίνηση με τα Windows (π.χ. μόλις ενεργοποιηθεί το "Εκκίνηση
+        // με τα Windows" task στον installer) θα εμφανιζόταν ολόκληρος ο οδηγός καλωσορίσματος αντί για
+        // σιωπηλή εκκίνηση στο tray - μπλοκάρει ΚΑΙ όλο τον υπόλοιπο κώδικα παρακάτω (tray icon, έλεγχος
+        // ενημερώσεων) μέχρι να κλείσει, κάτι που ο χρήστης δεν θα περίμενε/πρόσεχε σε μια σιωπηλή
+        // εκκίνηση. Η κουρτίνα παραμένει διαθέσιμη αργότερα από τη Βοήθεια - δεν χάνεται τίποτα.
+        if (!Services.AppSettingsService.Current.HasSeenOnboarding && !e.Args.Contains("--tray"))
         {
             ShutdownMode = ShutdownMode.OnExplicitShutdown;
             new Views.OnboardingWindow().ShowDialog();
