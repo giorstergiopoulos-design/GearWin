@@ -62,6 +62,11 @@ namespace OptimizerWpf.Services
             if (!AppSettingsService.Current.UpdateNotificationsEnabled) { Log("StartupCheckAsync: skipped, UpdateNotificationsEnabled=false"); return; }
             Log("StartupCheckAsync: starting, waiting 8s then for network (up to 3 min)");
             _checkInFlight = true;
+            // ΔΙΟΡΘΩΣΗ (ρητό αίτημα χρήστη: "όταν γίνεται η διαδικασία θα φαίνεται στη γραμμή
+            // κατάστασης, που δεν βλέπω κάτι") - μέχρι τώρα ΟΛΟ αυτό το 8s+έως 3' στάδιο αναμονής ΚΑΙ
+            // η ίδια η σάρωση ήταν αόρατα στη γραμμή κατάστασης (μόνο το χειροκίνητο "Έλεγχος Τώρα" το
+            // έκανε). SetBusy εδώ, SetIdle σε finally - ΠΑΝΤΑ καθαρίζει ακόμα κι αν πεταχτεί εξαίρεση.
+            StatusService.SetBusy(LanguageService.T("UpdateNotify_AutoChecking"));
             try
             {
                 await Task.Delay(TimeSpan.FromSeconds(8));
@@ -75,7 +80,7 @@ namespace OptimizerWpf.Services
                 await RunCheckAsync(announce: true);
             }
             catch (Exception ex) { Log($"StartupCheckAsync: unexpected exception - {ex}"); }
-            finally { _checkInFlight = false; }
+            finally { StatusService.SetIdle(LanguageService.T("Ready")); _checkInFlight = false; }
         }
 
         public static void Stop()
@@ -92,8 +97,10 @@ namespace OptimizerWpf.Services
             if (last.HasValue && DateTime.Now - last.Value < TimeSpan.FromHours(intervalHours)) return;
 
             _checkInFlight = true;
+            Log("RunCheckIfDueAsync: interval elapsed, running periodic check");
+            StatusService.SetBusy(LanguageService.T("UpdateNotify_AutoChecking"));
             try { await RunCheckAsync(); }
-            finally { _checkInFlight = false; }
+            finally { StatusService.SetIdle(LanguageService.T("Ready")); _checkInFlight = false; }
         }
 
         // Δημόσιο - χρησιμοποιείται ΚΑΙ από το κουμπί "Έλεγχος Τώρα" (Ρυθμίσεις Εμφάνισης), ώστε ο
