@@ -108,17 +108,27 @@
                         </Grid.ColumnDefinitions>
                         <CheckBox x:Name="ChkSelectAll" Grid.Column="0" Content="{tr:Tr Opt_SelectAll}" VerticalAlignment="Center"
                                   Foreground="{DynamicResource TextBrush}" Click="ChkSelectAll_Click"/>
-                        <Button x:Name="BtnUpgradeSelected" Grid.Column="1" Content="{tr:Tr Opt_UpgradeSelected}" Style="{StaticResource AccentButtonStyle}" Width="180" Margin="0,0,10,0" Click="BtnUpgradeSelected_Click"/>
+                        <!-- ΔΙΟΡΘΩΣΗ (χρήστης έδειξε με screenshot: "το ένα κουμπί έχει περιθώριο, στο
+                             άλλο η περιγραφή είναι ίσα με το πλαίσιο") - Width="180" σταθερό εδώ ΚΑΙ
+                             μόνο Padding (χωρίς κατώτατο όριο) στο BtnCheckMsStore δίπλα σημαίνει ότι
+                             όταν ο 3-στηλος Grid στενεύει (λιγότερος χώρος από ό,τι χρειάζονται και τα
+                             δύο κουμπιά μαζί με το checkbox), το Auto-στήλης BtnCheckMsStore συμπιέζεται
+                             ΚΑΤΩ από το φυσικό του μέγεθος - το padding "καταπίνεται" οπτικά, ενώ αυτό
+                             εδώ (σταθερό Width) δεν συμπιέζεται ποτέ κάτω από τα 180px. MinWidth αντί
+                             για Width - ίδια προστασία, αλλά επιτρέπει να μεγαλώσει για πιο μακριές
+                             μεταφράσεις αντί να κόβει/συμπιέζει το κείμενο. -->
+                        <Button x:Name="BtnUpgradeSelected" Grid.Column="1" Content="{tr:Tr Opt_UpgradeSelected}" Style="{StaticResource AccentButtonStyle}" MinWidth="180" Margin="0,0,10,0" Click="BtnUpgradeSelected_Click"/>
                         <!-- Port του $global:btnCheckMsStore (ρητή ανάγκη - το "store updates" CLI
                              παραπάνω δεν πιάνει πάντα ΟΛΕΣ τις ενημερώσεις Metro/UWP εφαρμογών,
                              τεκμηριωμένο όριο - χρήστης ανέφερε "δεν φαίνονται οι ενημερώσεις των metro
                              εφαρμογών"). Ενεργοποιεί πραγματική σάρωση μέσω των επίσημων μηχανισμών των
                              Windows και ανοίγει το Store για επιβεβαίωση - συμπληρωματικό, όχι
-                             υποκατάστατο της λίστας παραπάνω. Padding 24,10 (αντί για σταθερό Width)
-                             διατηρείται ώστε το κείμενο να έχει άνετο χώρο σε ΚΑΘΕ γλώσσα (π.χ. τα
-                             Γαλλικά είναι σημαντικά πιο μακριά από τα Αγγλικά). -->
+                             υποκατάστατο της λίστας παραπάνω. Padding 24,10 διατηρείται ώστε το κείμενο
+                             να έχει άνετο χώρο σε ΚΑΘΕ γλώσσα - ΚΑΙ τώρα MinWidth ώστε αυτό το padding
+                             να ΜΗΝ μπορεί να συμπιεστεί κάτω από το ελάχιστο ασφαλές πλάτος όταν στενεύει
+                             η στήλη (βλ. σχόλιο στο BtnUpgradeSelected παραπάνω για το ακριβές bug). -->
                         <Button x:Name="BtnCheckMsStore" Grid.Column="2" Content="{tr:Tr Opt_CheckMsStore}"
-                                Style="{StaticResource AccentButtonStyle}" Height="40" Padding="24,10" Click="BtnCheckMsStore_Click"/>
+                                Style="{StaticResource AccentButtonStyle}" Height="40" Padding="24,10" MinWidth="300" Click="BtnCheckMsStore_Click"/>
                     </Grid>
                     <TextBlock Text="{tr:Tr Opt_MsStoreDesc}"
                             Style="{StaticResource SubTextStyle}" Margin="0,4,0,0"/>

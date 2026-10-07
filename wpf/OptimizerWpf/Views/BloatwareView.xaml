@@ -101,7 +101,7 @@
                              (βλ. σχόλιο στο BloatwareView.xaml.cs), οπότε αυτό το κουμπί είναι η ρητή
                              διέξοδος για πραγματικά φρέσκιο έλεγχο (π.χ. αν κάτι εγκαταστάθηκε/
                              αφαιρέθηκε εκτός εφαρμογής μέσα στο ίδιο session). -->
-                        <Button Grid.Column="2" Content="{tr:Tr Bloatware_RefreshList}" Style="{StaticResource FlatButtonStyle}" Padding="16,4" Click="BtnRefreshRecommended_Click"/>
+                        <Button Grid.Column="2" Content="{tr:Tr Bloatware_RefreshList}" Style="{StaticResource FlatButtonStyle}" Padding="16,4" MinWidth="170" Click="BtnRefreshRecommended_Click"/>
                     </Grid>
                     <TextBlock x:Name="TxtRecommendedStatus" Style="{StaticResource SubTextStyle}" Margin="0,0,0,8"/>
                     <!-- Πρόταση βελτίωσης που εγκρίθηκε ("κάνε τα όλα") - πεδίο αναζήτησης, η λίστα θα

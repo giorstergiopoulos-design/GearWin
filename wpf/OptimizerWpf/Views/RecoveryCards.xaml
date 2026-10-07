@@ -55,8 +55,8 @@
                     <Grid Margin="0,0,0,10">
                         <Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="Auto"/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions>
                         <ComboBox x:Name="ListBackupTargetDrives" Grid.Column="0" Margin="0,0,8,0"/>
-                        <Button Grid.Column="1" Content="{tr:Tr Backup_StartButton}" Style="{StaticResource AccentButtonStyle}" Padding="16,8" Margin="0,0,8,0" Click="BtnStartBackup_Click"/>
-                        <Button Grid.Column="2" Content="{tr:Tr Backup_ViewVersionsButton}" Style="{StaticResource FlatButtonStyle}" Padding="16,8" Click="BtnViewBackupVersions_Click"/>
+                        <Button Grid.Column="1" Content="{tr:Tr Backup_StartButton}" Style="{StaticResource AccentButtonStyle}" Padding="16,8" MinWidth="280" Margin="0,0,8,0" Click="BtnStartBackup_Click"/>
+                        <Button Grid.Column="2" Content="{tr:Tr Backup_ViewVersionsButton}" Style="{StaticResource FlatButtonStyle}" Padding="16,8" MinWidth="300" Click="BtnViewBackupVersions_Click"/>
                     </Grid>
                     <TextBlock x:Name="TxtBackupStatus" Style="{StaticResource SubTextStyle}" TextWrapping="Wrap" Margin="0,0,0,8"/>
                     <ItemsControl x:Name="ListBackupVersions"/>
