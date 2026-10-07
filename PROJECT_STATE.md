@@ -4,12 +4,12 @@
 Name: GearWin - Complete PC Care (WPF port of the original Optimizer.ps1)
 
 ## Technology
-- .NET: net8.0-windows
+- .NET: net10.0-windows
 - C#: WPF (OptimizerWpf.csproj), assembly/exe name `GearWin.exe`
-- UI: WPF, `wpf/OptimizerWpf/` — Views (XAML + code-behind, no MVVM/ViewModels — direct code-behind is the established pattern here), Services (static classes), Themes/Styles.xaml
+- UI: WPF, `wpf/OptimizerWpf/` — Views (XAML + code-behind, no MVVM/ViewModels — direct code-behind is the established pattern here), Services (static classes), Themes/Styles.xaml. WPF-UI 4.3.0 nuget also in use for the standalone `DashboardPreviewWindow` pilot only (normal app/MainWindow untouched).
 - Mobile: none
 - Backend: none (fully local desktop app)
-- Tests: `wpf/OptimizerWpf.Tests/` (xUnit-style, run via `dotnet test`), 62 tests in the default battery (all passing as of last verification), plus one opt-in UI Automation click-through test (`GEARWIN_UI_CLICKTHROUGH=1`, shows real windows - not run by default)
+- Tests: `wpf/OptimizerWpf.Tests/` (xUnit-style, run via `dotnet test`), 175 tests in the default battery (all passing as of last verification), plus one opt-in UI Automation click-through test (`GEARWIN_UI_CLICKTHROUGH=1`, shows real windows - not run by default)
 - Installer: Inno Setup, `installer/OptimizerWpf.iss` → `installer/Output/GearWin-Setup-<version>.exe`. Build: `dotnet publish -c Release -r win-x64 --self-contained true -o wpf/OptimizerWpf/publish/win-x64` then `ISCC.exe installer/OptimizerWpf.iss`. ISCC lives at `AppData\Local\Programs\Inno Setup 6\ISCC.exe` (not Program Files).
 - 14 supported UI languages, all strings in `Services/LanguageService.cs` (huge file, ~18k lines, one dictionary block per language in fixed order: el, en, de, fr, es, ko, zh, it, ru, ja, pt, tr, ar, hi). New keys must be added to all 14 blocks (use a small Python script to insert by anchor-key line number, descending order, rather than hand-editing).
 - Repo: `giorstergiopoulos-design/GearWin` on GitHub. `gh release create` works from this environment (has previously needed a retry after an auto-mode permission block).
@@ -34,14 +34,39 @@ button padding increased app-wide (TabPillStyle/RailPillStyle/PillTabItemStyle).
 push to `claude/full-audit` and whether/when to merge to `master` or create a GitHub release.
 
 ## Current Phase
-Shipped. `claude/full-audit` fast-forward-merged into `master` (no conflicts, master had no unique
-commits) and both pushed, 2026-10-06. Followed by: upgrade to .NET 10 (`net8.0-windows` ->
-`net10.0-windows`, app + tests) and enlarging the title bar's animated gear icon (44->56 badge, 32->38
-glyph) and title text (20->26 "GearWin", 11->13 version) per explicit user request - also committed
-and pushed to both branches. Governance docs (CLAUDE.md, PROJECT_STATE.md, ROADMAP.md) adopted
-2026-09-29 at user's request.
+Shipped, both branches kept in sync by repeated fast-forward merges (`claude/full-audit` -> `master`)
+after every commit, latest 2026-10-07 (`e5d5f65`). Since the v6.3.5 ship (2026-10-06): .NET 10 upgrade,
+title-bar icon/text enlargement, a `DashboardPreviewWindow` WPF-UI pilot (opens only via
+`--dashboard-preview`, normal app untouched), two rounds of app-wide button-padding/sizing fixes (plain
+tight-padding sweep, then a separate Grid Auto-column-compression fix), winget App-Execution-Alias +
+onboarding-wizard autostart fixes with new diagnostic logging + status-bar visibility, and the
+Maintenance Center one-line-tabs sizing fix - see Completed for details. Published binary
+(`publish/win-x64`) re-built after every change (lesson: the `.bat` launchers prefer that folder over
+`bin/Release`, going stale silently otherwise). Governance docs (CLAUDE.md, PROJECT_STATE.md,
+ROADMAP.md) adopted 2026-09-29 at user's request.
 
 ## Completed
+- Maintenance Center tabs forced onto one line (2026-10-07, explicit user request: "οι καρτελες να
+  ειναι σε μια ευθεια αρα προσαρμοσε το μεγεθος του παραθυρου αναλογα"): fixed `Width="760"` didn't
+  always fit all 5 `PillTabItemStyle` tabs in a single row for longer-language labels. Added
+  `MaintenanceCenterWindow.FitWidthToTabs()` (called from the constructor) - measures the widest
+  5-tab-label sum across all 14 languages via `FormattedText` (using the style's known fixed
+  Padding/Margin/FontSize/FontWeight constants - `TabControl` doesn't expose its internal tab strip
+  as a named element the way `MainWindow`'s hand-built `StackPanel` strip does) and sets `Width`
+  accordingly (clamped between `MinWidth` and 90% of the work-area width). Build + full test suite
+  (175/175) verified; **NOT visually verified** (no GUI automation in this session).
+- Button text-touches-edge fix, second root cause (2026-10-07, user screenshot of
+  "Αναβάθμιση Επιλεγμένων" vs "Έλεγχος Ενημερώσεων μέσω Microsoft Store" - one had margin, the other
+  didn't despite both having the same kind of `Padding`): this is a DIFFERENT bug from the plain-
+  padding sweep below. Root cause: a `Button` sitting in a `Grid.Column` next to a sibling with a
+  hardcoded `Width` inside a `Grid` that also has a `*` column - when the row's total desired width
+  exceeds available width, WPF compresses `Auto` columns below their desired size as a last resort,
+  visually "eating" the button's own correct `Padding` with no error anywhere. Fixed the reported
+  button (`OptimizationView.xaml`'s `BtnUpgradeSelected`: `Width="180"` -> `MinWidth="180"`;
+  `BtnCheckMsStore` gained `MinWidth="300"`) plus 17 more buttons across 8 files sharing the identical
+  structural risk pattern (found via grep: `Grid.Column` child + `Padding`-only + sibling `*` column),
+  each given an individually-sized `MinWidth` (not `Width`, to preserve room for longer translations).
+  Build + full test suite (175/175) verified; **NOT visually verified**.
 - Button padding, app-wide (2026-10-07, user flagged this repeatedly across the session): the 6.3.5
   fix only widened the Styles.xaml DEFAULT Padding on `FlatButtonStyle`/`AccentButtonStyle`/pill
   styles - it didn't help most real buttons, which set their OWN explicit (tighter) `Padding` per
@@ -130,14 +155,15 @@ Separate project, separate repo, at `C:\Users\gstrj\Documents\MotionDeskStudio` 
 - `Views/HomeView.xaml(.cs)`, `Views/OptimizationView.xaml(.cs)`, `Views/SystemView.xaml(.cs)`, `Views/HealthCheckWindow.xaml(.cs)` — largest/most frequently touched views.
 
 ## Last Verification
-Build: `dotnet build -c Release` — succeeded, 0 errors (2 pre-existing WFAC010 warnings, unrelated).
-Tests: `dotnet test` (OptimizerWpf.Tests, 156 tests) — 156/156 passed, including the 14-language key-parity test (all new keys added to all 14 blocks).
-Installer: `ISCC.exe installer/OptimizerWpf.iss` — succeeded, `GearWin-Setup-6.3.5.exe`, sent to user.
-Date: 2026-10-06 (v6.3.5, branch `claude/full-audit`, not yet committed/pushed/released).
-**Still NOT visually/manually verified**: all v6.3.5 UI changes (Boost button, searchbar, tab wheel-scroll, shield icon, codec grid, converter quality combo, window sizing) - no GUI-automation capability in this session. Also still carried over, never confirmed: the v5.10.1 borderless-window rebuild (drag, resize, maximize, edge-snap, real transparency).
+Build: `dotnet build -c Release` (net10.0-windows) — succeeded, 0 errors.
+Tests: `dotnet test` (OptimizerWpf.Tests) — 175/175 passed, including the 14-language key-parity test.
+Publish: `dotnet publish -c Release -r win-x64 --self-contained true -o publish/win-x64` — succeeded, re-run after the Maintenance Center sizing fix so `Run_OptimizerWpf.bat`/`Run_DashboardPreview.bat` pick up the current binary.
+Git: `claude/full-audit` and `master` both at `e5d5f65`, pushed.
+Date: 2026-10-07.
+**Still NOT visually/manually verified** (no GUI-automation/elevation capability in this session, all UI verification depends on the user testing and reporting back): v6.3.5's UI changes (Boost button, searchbar, tab wheel-scroll, shield icon, codec grid, converter quality combo), the Dashboard Preview pilot window, both rounds of button-padding/sizing fixes, the Maintenance Center one-line-tabs fix, and the v5.10.1 borderless-window rebuild (drag, resize, maximize, edge-snap, real transparency).
 
 ## Last Updated
-2026-10-06
+2026-10-07
 
 ## Audit pass (2026-10-01, cloud session, branch `claude/full-audit`, NOT merged, NOT verified on Windows)
 Compile-checked only (Services/* via scratch project on Linux; Views/XAML not buildable there). Needs `dotnet build` + `dotnet test` + manual click-through before release.
