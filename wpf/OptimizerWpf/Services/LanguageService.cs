@@ -1272,7 +1272,7 @@ namespace OptimizerWpf.Services
                 // ΝΕΟ - "πρώτη κουρτίνα" οδηγού χρήσης κατά το πρώτο άνοιγμα της εφαρμογής (ρητό
                 // αίτημα χρήστη), με δυνατότητα επανάληψης από τη Βοήθεια.
                 ["Onb_WelcomeTitle"] = "Καλωσήρθατε!",
-                ["Onb_WelcomeDesc"] = "Ας κάνουμε μια σύντομη βόλτα στις 10 καρτέλες του εργαλείου, ώστε να ξέρετε ακριβώς πού θα βρείτε ό,τι χρειάζεστε.",
+                ["Onb_WelcomeDesc"] = "Ας κάνουμε μια σύντομη βόλτα στις 9 καρτέλες του εργαλείου, ώστε να ξέρετε ακριβώς πού θα βρείτε ό,τι χρειάζεστε.",
                 ["Onb_HomeDesc"] = "Παρακολουθήστε CPU, RAM, δίσκο και GPU σε πραγματικό χρόνο, δείτε τη Βαθμολογία Υγείας του υπολογιστή σας και πατήστε «Διόρθωση Όλων» για αυτόματη επιδιόρθωση των ευρημάτων. Η κατάσταση δικτύου με το ζωντανό γράφημα ταχύτητας σας οδηγεί κατευθείαν στην καρτέλα Δίκτυο & Ασφάλεια.",
                 ["Onb_OptDesc"] = "Επιλέξτε «Λειτουργία Γραφείου» ή «Λειτουργία Gaming» για έτοιμα προφίλ ενέργειας/ρυθμίσεων, πατήστε «Έλεγχος για Ενημερώσεις Οδηγών» για μία ενιαία λίστα από πολλαπλές πηγές (Windows Update, κατασκευαστές κ.ά.), και χρησιμοποιήστε τον Διαχειριστή Ενημερώσεων Λογισμικού για μαζική ενημέρωση των εγκατεστημένων εφαρμογών σας.",
                 ["Onb_HealthDesc"] = "Πατήστε ένα κουμπί για έλεγχο/επιδιόρθωση αρχείων συστήματος (SFC/DISM), δίσκου (CHKDSK) ή WinRE, καθαρίστε την cache των browser σας με ένα κλικ, και χρησιμοποιήστε τον Καθαρισμό Μητρώου (με αυτόματο αντίγραφο ασφαλείας πριν από κάθε αλλαγή).",
@@ -2883,7 +2883,7 @@ namespace OptimizerWpf.Services
                 ["Main_CloseWindowAuto"] = "Close window",
 
                 ["Onb_WelcomeTitle"] = "Welcome!",
-                ["Onb_WelcomeDesc"] = "Let's take a quick tour of the tool's 10 tabs, so you know exactly where to find what you need.",
+                ["Onb_WelcomeDesc"] = "Let's take a quick tour of the tool's 9 tabs, so you know exactly where to find what you need.",
                 ["Onb_HomeDesc"] = "Track CPU, RAM, disk, and GPU in real time, check your PC's Health Score, and click “Fix All” to auto-repair what it finds. The network status tile with its live throughput graph takes you straight to Network & Security.",
                 ["Onb_OptDesc"] = "Pick “Office Mode” or “Gaming Mode” for ready-made power/setting profiles, click “Check for Driver Updates” for one merged list from multiple sources (Windows Update, vendors, and more), and use the Software Update Manager to bulk-update your installed apps.",
                 ["Onb_HealthDesc"] = "Run one-click checks and repairs for system files (SFC/DISM), disks (CHKDSK), or WinRE, clear your browsers' cache in a click, and use Registry Cleanup (it backs up before every change).",
@@ -4494,7 +4494,7 @@ namespace OptimizerWpf.Services
                 ["Main_CloseWindowAuto"] = "Fenster schließen",
 
                 ["Onb_WelcomeTitle"] = "Willkommen!",
-                ["Onb_WelcomeDesc"] = "Machen wir einen kurzen Rundgang durch die 10 Tabs des Tools, damit Sie genau wissen, wo Sie was finden.",
+                ["Onb_WelcomeDesc"] = "Machen wir einen kurzen Rundgang durch die 9 Tabs des Tools, damit Sie genau wissen, wo Sie was finden.",
                 ["Onb_HomeDesc"] = "Behalten Sie CPU, RAM, Laufwerk und GPU in Echtzeit im Blick, prüfen Sie die Zustandsbewertung Ihres PCs und klicken Sie auf „Alles reparieren“, um Befunde automatisch zu beheben. Die Netzwerkstatus-Kachel mit Live-Durchsatzdiagramm führt Sie direkt zu Netzwerk & Sicherheit.",
                 ["Onb_OptDesc"] = "Wählen Sie „Büromodus“ oder „Spielemodus“ für fertige Energie-/Einstellungsprofile, klicken Sie auf „Nach Treiber-Updates suchen“ für eine zusammengeführte Liste aus mehreren Quellen (Windows Update, Hersteller u. a.), und nutzen Sie den Software-Update-Manager, um Ihre installierten Apps gesammelt zu aktualisieren.",
                 ["Onb_HealthDesc"] = "Führen Sie Prüfungen/Reparaturen für Systemdateien (SFC/DISM), Laufwerke (CHKDSK) oder WinRE per Klick aus, leeren Sie den Cache Ihrer Browser mit einem Klick, und nutzen Sie die Registrierungsbereinigung (sichert vor jeder Änderung).",
@@ -6105,7 +6105,7 @@ namespace OptimizerWpf.Services
                 ["Main_CloseWindowAuto"] = "Fermer la fenêtre",
 
                 ["Onb_WelcomeTitle"] = "Bienvenue !",
-                ["Onb_WelcomeDesc"] = "Faisons un tour rapide des 10 onglets de l'outil pour que vous sachiez exactement où trouver ce dont vous avez besoin.",
+                ["Onb_WelcomeDesc"] = "Faisons un tour rapide des 9 onglets de l'outil pour que vous sachiez exactement où trouver ce dont vous avez besoin.",
                 ["Onb_HomeDesc"] = "Suivez le CPU, la RAM, le disque et le GPU en temps réel, consultez le score de santé de votre PC et cliquez sur « Tout Corriger » pour une réparation automatique. La tuile d'état réseau avec son graphique de débit en direct vous mène directement à Réseau & Sécurité.",
                 ["Onb_OptDesc"] = "Choisissez « Mode Bureau » ou « Mode Jeu » pour des profils d'alimentation/réglages prêts à l'emploi, cliquez sur « Vérifier les Mises à Jour des Pilotes » pour une liste unique issue de plusieurs sources (Windows Update, fabricants, etc.), et utilisez le Gestionnaire de Mises à Jour Logicielles pour mettre à jour vos applications installées en bloc.",
                 ["Onb_HealthDesc"] = "Lancez en un clic des vérifications/réparations des fichiers système (SFC/DISM), du disque (CHKDSK) ou de WinRE, videz le cache de vos navigateurs en un clic, et utilisez le Nettoyage du Registre (avec sauvegarde avant chaque modification).",
@@ -7716,7 +7716,7 @@ namespace OptimizerWpf.Services
                 ["Main_CloseWindowAuto"] = "Cerrar ventana",
 
                 ["Onb_WelcomeTitle"] = "¡Bienvenido!",
-                ["Onb_WelcomeDesc"] = "Hagamos un recorrido rápido por las 10 pestañas de la herramienta para que sepa dónde encontrar cada cosa.",
+                ["Onb_WelcomeDesc"] = "Hagamos un recorrido rápido por las 9 pestañas de la herramienta para que sepa dónde encontrar cada cosa.",
                 ["Onb_HomeDesc"] = "Monitoriza la CPU, la RAM, el disco y la GPU en tiempo real, comprueba la Puntuación de Salud de tu PC y pulsa \"Corregir Todo\" para reparar automáticamente lo que encuentre. El panel de estado de red con su gráfico de rendimiento en vivo te lleva directo a Red y Seguridad.",
                 ["Onb_OptDesc"] = "Elige \"Office Mode\" o \"Gaming Mode\" para perfiles de energía/configuración ya preparados, pulsa \"Buscar Actualizaciones de Controladores\" para obtener una lista combinada de múltiples fuentes (Windows Update, fabricantes y más), y usa el Gestor de Actualización de Software para actualizar en bloque tus apps instaladas.",
                 ["Onb_HealthDesc"] = "Ejecuta comprobaciones y reparaciones con un clic para archivos del sistema (SFC/DISM), discos (CHKDSK) o WinRE, borra la caché de tus navegadores con un clic, y usa la Limpieza del Registro (crea copia de seguridad antes de cada cambio).",
@@ -9326,7 +9326,7 @@ namespace OptimizerWpf.Services
                 ["Main_MaximizeAuto"] = "최대화/이전 크기로 복원",
                 ["Main_CloseWindowAuto"] = "창 닫기",
                 ["Onb_WelcomeTitle"] = "환영합니다!",
-                ["Onb_WelcomeDesc"] = "도구의 10개 탭을 빠르게 둘러보고 필요한 것이 어디 있는지 알아봅시다.",
+                ["Onb_WelcomeDesc"] = "도구의 9개 탭을 빠르게 둘러보고 필요한 것이 어디 있는지 알아봅시다.",
                 ["Onb_HomeDesc"] = "CPU, RAM, 디스크, GPU를 실시간으로 추적하고 PC의 상태 점수를 확인하며 \"모두 수정\"을 클릭하여 발견된 문제를 자동으로 복구하세요. 실시간 처리량 그래프가 있는 네트워크 상태 타일은 네트워크 및 보안으로 바로 이동합니다.",
                 ["Onb_OptDesc"] = "\"오피스 모드\" 또는 \"게이밍 모드\"를 선택하여 미리 만들어진 전원/설정 프로필을 적용하고, \"드라이버 업데이트 확인\"을 클릭하여 여러 소스(Windows Update, 제조사 등)에서 통합된 하나의 목록을 확인하며, 소프트웨어 업데이트 관리자로 설치된 앱을 일괄 업데이트하세요.",
                 ["Onb_HealthDesc"] = "시스템 파일(SFC/DISM), 디스크(CHKDSK), WinRE에 대한 원클릭 검사와 복구를 실행하고, 클릭 한 번으로 브라우저 캐시를 지우며, 레지스트리 정리를 사용하세요(모든 변경 전에 백업합니다).",
@@ -10937,7 +10937,7 @@ namespace OptimizerWpf.Services
                 ["Main_CloseWindowAuto"] = "关闭窗口",
 
                 ["Onb_WelcomeTitle"] = "欢迎!",
-                ["Onb_WelcomeDesc"] = "让我们快速浏览该工具的 10 个标签页，帮助您了解各功能的位置。",
+                ["Onb_WelcomeDesc"] = "让我们快速浏览该工具的 9 个标签页，帮助您了解各功能的位置。",
                 ["Onb_HomeDesc"] = "实时追踪 CPU、内存、磁盘和 GPU,查看电脑的健康评分,点击「一键修复」自动修复发现的问题。带实时吞吐量图表的网络状态卡片可直接带您前往「网络与安全」。",
                 ["Onb_OptDesc"] = "选择「办公模式」或「游戏模式」以获取预设的电源/设置配置文件,点击「检查驱动程序更新」获取来自多个来源(Windows Update、厂商等)的合并列表,并使用软件更新管理器批量更新已安装的应用。",
                 ["Onb_HealthDesc"] = "为系统文件(SFC/DISM)、磁盘(CHKDSK)或 WinRE 运行一键检查和修复,一键清除浏览器缓存,并使用注册表清理(每次更改前都会备份)。",
@@ -12548,7 +12548,7 @@ namespace OptimizerWpf.Services
                 ["Main_CloseWindowAuto"] = "Chiudi finestra",
 
                 ["Onb_WelcomeTitle"] = "Benvenuto!",
-                ["Onb_WelcomeDesc"] = "Facciamo un rapido giro delle 10 schede dello strumento, così sai dove trovare ciò che ti serve.",
+                ["Onb_WelcomeDesc"] = "Facciamo un rapido giro delle 9 schede dello strumento, così sai dove trovare ciò che ti serve.",
                 ["Onb_HomeDesc"] = "Monitora CPU, RAM, disco e GPU in tempo reale, controlla il Punteggio di Salute del tuo PC e fai clic su \"Correggi Tutto\" per riparare automaticamente cio che trova. Il riquadro dello stato di rete con il suo grafico di velocita in tempo reale ti porta direttamente a Rete e Sicurezza.",
                 ["Onb_OptDesc"] = "Scegli \"Modalita Ufficio\" o \"Modalita Gioco\" per profili di alimentazione/impostazioni gia pronti, fai clic su \"Verifica Aggiornamenti Driver\" per un elenco unificato da piu fonti (Windows Update, produttori e altro), e usa il Gestore Aggiornamento Software per aggiornare in blocco le tue app installate.",
                 ["Onb_HealthDesc"] = "Esegui controlli e riparazioni con un clic per i file di sistema (SFC/DISM), i dischi (CHKDSK) o WinRE, cancella la cache dei tuoi browser con un clic e usa la Pulizia Registro (esegue un backup prima di ogni modifica).",
@@ -14159,7 +14159,7 @@ namespace OptimizerWpf.Services
                 ["Main_CloseWindowAuto"] = "Закрыть окно",
 
                 ["Onb_WelcomeTitle"] = "Добро пожаловать!",
-                ["Onb_WelcomeDesc"] = "Давайте быстро познакомимся с 10 вкладками программы, чтобы вы знали, где что находится.",
+                ["Onb_WelcomeDesc"] = "Давайте быстро познакомимся с 9 вкладками программы, чтобы вы знали, где что находится.",
                 ["Onb_HomeDesc"] = "Отслеживайте ЦП, ОЗУ, диск и ГП в реальном времени, проверяйте Оценку Состояния вашего ПК и нажимайте \"Исправить Все\" для автоматического устранения найденного. Плитка статуса сети с графиком пропускной способности в реальном времени ведет прямо в Сеть и Безопасность.",
                 ["Onb_OptDesc"] = "Выберите \"Офисный Режим\" или \"Игровой Режим\" для готовых профилей питания/настроек, нажмите \"Проверить Обновления Драйверов\" для единого объединенного списка из нескольких источников (Windows Update, производители и другие), и используйте Менеджер Обновления ПО для массового обновления установленных приложений.",
                 ["Onb_HealthDesc"] = "Выполняйте проверки и исправления одним щелчком для системных файлов (SFC/DISM), дисков (CHKDSK) или WinRE, очищайте кэш браузеров одним щелчком, и используйте Очистку Реестра (создает резервную копию перед каждым изменением).",
@@ -15770,7 +15770,7 @@ namespace OptimizerWpf.Services
                 ["Main_CloseWindowAuto"] = "ウィンドウを閉じる",
 
                 ["Onb_WelcomeTitle"] = "ようこそ！",
-                ["Onb_WelcomeDesc"] = "ツールの10個のタブをざっと見て、必要なものがどこにあるか確認しましょう。",
+                ["Onb_WelcomeDesc"] = "ツールの9個のタブをざっと見て、必要なものがどこにあるか確認しましょう。",
                 ["Onb_HomeDesc"] = "CPU、RAM、ディスク、GPUをリアルタイムで追跡し、PCの健全性スコアを確認し、「すべて修正」をクリックすると見つかった問題を自動修復します。リアルタイムのスループットグラフを持つネットワーク状態タイルから、直接「ネットワークとセキュリティ」に移動できます。",
                 ["Onb_OptDesc"] = "既製の電源/設定プロファイル用に「オフィスモード」または「ゲームモード」を選択し、「ドライバー更新を確認」をクリックすると複数のソース（Windows Update、ベンダーなど）からの統合リストが表示されます。ソフトウェア更新マネージャーでインストール済みアプリを一括更新できます。",
                 ["Onb_HealthDesc"] = "システムファイル（SFC/DISM）、ディスク（CHKDSK）、またはWinREのワンクリックチェックと修復を実行し、ブラウザーのキャッシュをワンクリックでクリアし、レジストリクリーンアップ（変更前に毎回バックアップを作成）を使用できます。",
@@ -17381,7 +17381,7 @@ namespace OptimizerWpf.Services
                 ["Main_CloseWindowAuto"] = "Fechar janela",
 
                 ["Onb_WelcomeTitle"] = "Bem-vindo!",
-                ["Onb_WelcomeDesc"] = "Vamos fazer uma visita rápida aos 10 separadores da ferramenta, para saber onde encontrar o que precisa.",
+                ["Onb_WelcomeDesc"] = "Vamos fazer uma visita rápida aos 9 separadores da ferramenta, para saber onde encontrar o que precisa.",
                 ["Onb_HomeDesc"] = "Acompanhe o CPU, a RAM, o disco e a GPU em tempo real, verifique a Pontuação de Estado do seu PC e clique em \"Corrigir Tudo\" para reparar automaticamente o que for encontrado. O bloco de estado de rede com o seu gráfico de desempenho em tempo real leva-o diretamente a Rede e Segurança.",
                 ["Onb_OptDesc"] = "Escolha o \"Modo Escritório\" ou o \"Modo de Jogo\" para perfis de energia/definições já preparados, clique em \"Verificar Atualizações de Controladores\" para uma lista única combinada de várias fontes (Windows Update, fabricantes e mais), e utilize o Gestor de Atualização de Software para atualizar em massa as suas aplicações instaladas.",
                 ["Onb_HealthDesc"] = "Execute verificações e reparações com um clique para ficheiros do sistema (SFC/DISM), discos (CHKDSK) ou WinRE, limpe a cache dos seus navegadores com um clique, e utilize a Limpeza de Registo (cria uma cópia de segurança antes de cada alteração).",
@@ -18992,7 +18992,7 @@ namespace OptimizerWpf.Services
                 ["Main_CloseWindowAuto"] = "Pencereyi kapat",
 
                 ["Onb_WelcomeTitle"] = "Hoş Geldiniz!",
-                ["Onb_WelcomeDesc"] = "Aracın 10 sekmesine hızlıca göz atalım; neyin nerede olduğunu bilin.",
+                ["Onb_WelcomeDesc"] = "Aracın 9 sekmesine hızlıca göz atalım; neyin nerede olduğunu bilin.",
                 ["Onb_HomeDesc"] = "CPU, RAM, disk ve GPU'yu gerçek zamanlı izleyin, PC'nizin Sağlık Puanını kontrol edin ve bulunanları otomatik onarmak için \"Tümünü Düzelt\"e tıklayın. Canlı verim grafiğine sahip ağ durumu kartı sizi doğrudan Ağ ve Güvenlik'e götürür.",
                 ["Onb_OptDesc"] = "Hazır güç/ayar profilleri için \"Ofis Modu\" veya \"Oyun Modu\"nu seçin, birden fazla kaynaktan (Windows Update, üreticiler ve daha fazlası) birleştirilmiş bir liste için \"Sürücü Güncellemelerini Kontrol Et\"e tıklayın ve yüklü uygulamalarınızı toplu güncellemek için Yazılım Güncelleme Yöneticisini kullanın.",
                 ["Onb_HealthDesc"] = "Sistem dosyaları (SFC/DISM), diskler (CHKDSK) veya WinRE için tek tıkla kontrol ve onarım yapın, tarayıcılarınızın önbelleğini tek tıkla temizleyin ve Kayıt Defteri Temizliğini kullanın (her değişiklikten önce yedek alır).",
@@ -20602,7 +20602,7 @@ namespace OptimizerWpf.Services
                 ["Main_MaximizeAuto"] = "تكبير/استعادة",
                 ["Main_CloseWindowAuto"] = "إغلاق النافذة",
                 ["Onb_WelcomeTitle"] = "مرحباً!",
-                ["Onb_WelcomeDesc"] = "لنقم بجولة سريعة في علامات التبويب العشر للأداة لتعرف أين تجد ما تحتاجه.",
+                ["Onb_WelcomeDesc"] = "لنقم بجولة سريعة في علامات التبويب التسع للأداة لتعرف أين تجد ما تحتاجه.",
                 ["Onb_HomeDesc"] = "تتبّع CPU والذاكرة والقرص وGPU في الوقت الفعلي، تحقق من درجة صحة جهازك، واضغط \"إصلاح الكل\" للإصلاح التلقائي لما يُعثر عليه. بلاطة حالة الشبكة برسمها البياني المباشر للنقل تأخذك مباشرة إلى الشبكة والأمان.",
                 ["Onb_OptDesc"] = "اختر \"وضع المكتب\" أو \"وضع الألعاب\" لملفات تعريف طاقة/إعدادات جاهزة، اضغط \"فحص تحديثات برامج التشغيل\" للحصول على قائمة واحدة مدمجة من مصادر متعددة (Windows Update، الشركات المصنّعة، والمزيد)، واستخدم مدير تحديث البرامج لتحديث تطبيقاتك المثبتة دفعة واحدة.",
                 ["Onb_HealthDesc"] = "شغّل فحوصات وإصلاحات بنقرة واحدة لملفات النظام (SFC/DISM)، الأقراص (CHKDSK)، أو WinRE، امسح ذاكرة التخزين المؤقتة لمتصفحاتك بنقرة، واستخدم تنظيف السجل (يأخذ نسخة احتياطية قبل كل تغيير).",
@@ -22212,7 +22212,7 @@ namespace OptimizerWpf.Services
                 ["Main_MaximizeAuto"] = "बड़ा करें/पुनर्स्थापित करें",
                 ["Main_CloseWindowAuto"] = "विंडो बंद करें",
                 ["Onb_WelcomeTitle"] = "स्वागत है!",
-                ["Onb_WelcomeDesc"] = "आइए टूल के 10 टैब पर एक त्वरित नज़र डालें ताकि आपको पता रहे कि क्या कहाँ मिलेगा।",
+                ["Onb_WelcomeDesc"] = "आइए टूल के 9 टैब पर एक त्वरित नज़र डालें ताकि आपको पता रहे कि क्या कहाँ मिलेगा।",
                 ["Onb_HomeDesc"] = "CPU, RAM, डिस्क, और GPU को वास्तविक समय में ट्रैक करें, अपने पीसी का स्वास्थ्य स्कोर जाँचें, और जो मिलता है उसे स्वचालित रूप से ठीक करने के लिए \"सब ठीक करें\" पर क्लिक करें। लाइव थ्रूपुट ग्राफ़ वाली नेटवर्क स्थिति टाइल आपको सीधे नेटवर्क और सुरक्षा में ले जाती है।",
                 ["Onb_OptDesc"] = "तैयार पावर/सेटिंग्स प्रोफ़ाइल के लिए \"ऑफ़िस मोड\" या \"गेमिंग मोड\" चुनें, कई स्रोतों (Windows Update, निर्माता, और अधिक) से एक एकीकृत सूची के लिए \"ड्राइवर अपडेट जाँचें\" पर क्लिक करें, और अपने स्थापित ऐप्स को थोक में अपडेट करने के लिए सॉफ़्टवेयर अपडेट प्रबंधक का उपयोग करें।",
                 ["Onb_HealthDesc"] = "सिस्टम फ़ाइलों (SFC/DISM), डिस्क (CHKDSK), या WinRE के लिए एक-क्लिक जाँच और मरम्मत चलाएँ, एक क्लिक में अपने ब्राउज़रों का कैश साफ़ करें, और रजिस्ट्री सफ़ाई का उपयोग करें (यह हर बदलाव से पहले बैकअप लेती है)।",

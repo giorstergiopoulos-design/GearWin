@@ -7,7 +7,7 @@ riunire in un unico posto tutto ciò di cui un utente ha bisogno per mantenere i
 pulito, sicuro e sotto il proprio controllo - basta cercare tra decine di strumenti separati o
 modificare manualmente il registro di Windows.
 
-L'app è organizzata in 8 schede:
+L'app è organizzata in 9 schede:
 
 * Home - Panoramica del tuo PC a colpo d'occhio: punteggio di salute del sistema (con un grafico
   di tendenza e un badge di salute del disco S.M.A.R.T.), azioni di manutenzione rapida, analisi
@@ -30,6 +30,8 @@ L'app è organizzata in 8 schede:
   attivabili con un clic, con ripristino sicuro al valore originale, voci personalizzate del menu
   contestuale, e profili di impostazioni con nome o basati su file che puoi salvare e tra cui
   passare istantaneamente.
+
+* Giochi e Multimedia - La tua libreria Steam/Epic/GOG/Ubisoft/Xbox con avvio, profili GPU/gaming per gioco e pulizia della cache dei launcher; controllo di schermi, audio e fotocamera/microfono, rilevamento dei codec e convertitore video/audio con conversione in batch.
 
 * Rimozione Bloatware - Rimuovi in sicurezza le app preinstallate di cui non hai bisogno, con
   l'opzione di reinstallarle, oltre all'installazione con un clic di app consigliate tramite winget.

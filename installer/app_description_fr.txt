@@ -7,7 +7,7 @@ réunir en un seul endroit tout ce dont un utilisateur a besoin pour garder son 
 sécurisé et sous son propre contrôle - fini la recherche parmi des dizaines d'outils séparés ou la
 modification manuelle du registre Windows.
 
-L'application est organisée en 8 onglets :
+L'application est organisée en 9 onglets :
 
 * Accueil - La vue d'ensemble de votre PC en un coup d'œil : score de santé du système (avec un
   graphique de tendance et un badge d'état S.M.A.R.T. du disque), actions de maintenance rapides,
@@ -30,6 +30,8 @@ L'application est organisée en 8 onglets :
   activables en un clic, avec restauration sûre de la valeur d'origine, des entrées de menu
   contextuel personnalisées, et des profils de paramètres nommés ou basés sur des fichiers que
   vous pouvez enregistrer et changer instantanément.
+
+* Jeux & Multimédia - Votre bibliothèque Steam/Epic/GOG/Ubisoft/Xbox avec lancement, profils GPU/gaming par jeu et nettoyage du cache des launchers ; vérification des écrans, de l'audio et de la caméra/du micro, détection des codecs et convertisseur vidéo/audio avec conversion par lot.
 
 * Suppression des Bloatwares - Supprimez en toute sécurité les applications préinstallées dont
   vous n'avez pas besoin, avec possibilité de restauration, ainsi que l'installation en un clic

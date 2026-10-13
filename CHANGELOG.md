@@ -6,6 +6,17 @@ available inside the app itself, via Help/Instructions → the "Version History"
 
 Format loosely follows [Keep a Changelog](https://keepachangelog.com/).
 
+## v6.3.5 — Games & Multimedia merged, per-game profiles, universal button fit, Store updates
+
+- **Games & Multimedia** are now one tab (9 tabs total). Games: per-game GPU/FSO plus per-game profiles for the global gaming tweaks, launcher-cache cleanup (Steam/Epic), game-save backup (Saved Games + Documents\My Games), GPU-driver freshness hint. Multimedia: third-party codec detection (K-Lite etc.), batch conversion with drag-and-drop, WebM/MKV/OGG/AAC/WAV/FLAC presets with Low/Medium/High quality, live camera/microphone test shortcuts, HDR hint.
+- **Home:** Boost button next to the full Health Check; "Cumulative Benefit" folded into the health-score messages.
+- **Buttons:** a single `ButtonAutoFit` behavior measures every button's text and padding so a Grid can no longer squeeze it (fixes text touching the button edges, in every language).
+- **Updates:** msstore apps are now updated through the Microsoft Store GUI (mechanism taken from WMT 6.7) with a confirmed result; winget failures show the real reason; the automatic check at startup is visible in the status bar and no longer blocked by the first-run wizard or a late-resolving winget path.
+- **Drivers:** "Clean Old Drivers" keeps the in-use package first, then the highest version, then the newest date.
+- **Popups:** tray/clipboard popups are placed correctly on high-DPI monitors.
+- **Platform:** upgraded to .NET 10; installer gained an optional "Start with Windows" task; Maintenance Center sizes its window so all tabs fit on one line.
+- Reference script `reference/WMT-GUI.ps1` synced to WMT 6.7.
+
 ## v6.2.5 — Unified skin sidebar, window sizing, Classic tabs
 
 - Skins with a vertical bar (PC Manager, Windows 11 Settings, Gaming Hub) share the MotionDesk Studio collapse mechanism: 232/80 px animated width, ‹ › toggle, remembered state (`RailCollapsed`), icon-only with tooltips when collapsed, no clipping scrollbar. Gaming Hub starts collapsed.

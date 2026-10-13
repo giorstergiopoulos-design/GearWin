@@ -7,7 +7,7 @@ reunir num só lugar tudo o que um utilizador precisa para manter o seu PC rápi
 sob o seu próprio controlo - já não é preciso procurar em dezenas de ferramentas separadas ou
 editar manualmente o registo do Windows.
 
-A aplicação está organizada em 8 separadores:
+A aplicação está organizada em 9 separadores:
 
 * Início - Visão geral do seu PC num relance: pontuação de saúde do sistema (com um gráfico de
   tendência e um selo de saúde do disco S.M.A.R.T.), ações rápidas de manutenção, análise do espaço
@@ -29,6 +29,8 @@ A aplicação está organizada em 8 separadores:
   ativados com um só clique, com restauro seguro ao valor original, entradas personalizadas do menu
   de contexto, e perfis de definições com nome ou baseados em ficheiro que pode guardar e alternar
   instantaneamente.
+
+* Jogos e Multimédia - A sua biblioteca Steam/Epic/GOG/Ubisoft/Xbox com arranque, perfis de GPU/gaming por jogo e limpeza da cache dos launchers; verificação de ecrãs, áudio e câmara/microfone, deteção de codecs e conversor de vídeo/áudio com conversão em lote.
 
 * Remoção de Bloatware - Remova em segurança as aplicações pré-instaladas de que não precisa, com a
   opção de as reinstalar, além de instalação num clique de aplicações recomendadas através do winget.

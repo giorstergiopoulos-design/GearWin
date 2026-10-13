@@ -6,7 +6,7 @@ A free, open-source maintenance and optimization tool for Windows 11, built to b
 user needs to keep their PC fast, clean, secure, and under their own control into one place -
 no more hunting through dozens of separate tools or manually editing the Windows registry.
 
-The app is organized into 8 tabs:
+The app is organized into 9 tabs:
 
 * Home - Your PC's overview at a glance: system health score (with a trend sparkline and a S.M.A.R.T.
   disk health badge), quick maintenance actions, disk space analysis, and network connection status
@@ -26,6 +26,8 @@ The app is organized into 8 tabs:
 * Tweaks - Dozens of Windows interface/performance/privacy tweaks, toggled with a single click, with
   safe restore to the original value, custom right-click menu entries, and named or file-based
   settings profiles you can save and switch between instantly.
+
+* Games & Multimedia - Your Steam/Epic/GOG/Ubisoft/Xbox library with launch, per-game GPU/gaming profiles and launcher-cache cleanup; display, audio and camera/microphone checks, codec detection, and a video/audio converter with batch conversion.
 
 * Bloatware Removal - Safely remove pre-installed apps you don't need, with the option to reinstall
   them, plus one-click installs of recommended apps via winget.

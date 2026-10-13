@@ -9,7 +9,7 @@
 
 ### Πριν ξεκινήσεις
 
-- Η ενεργή εφαρμογή είναι στο `wpf/OptimizerWpf/` (.NET 8, WPF/C#). Το `Optimizer.ps1` (PowerShell/
+- Η ενεργή εφαρμογή είναι στο `wpf/OptimizerWpf/` (.NET 10, WPF/C#). Το `Optimizer.ps1` (PowerShell/
   WinForms) είναι το αρχικό εργαλείο, διατηρείται μόνο ως ιστορική αναφορά — **μην** προσθέτεις νέες
   λειτουργίες εκεί.
 - Για γενική προσανατολισμό στη δομή/λογική του κώδικα, δες το `HANDOFF.md` (κυρίως ελληνικά,
@@ -49,7 +49,7 @@ a PR:
 
 ### Before you start
 
-- The active app lives in `wpf/OptimizerWpf/` (.NET 8, WPF/C#). `Optimizer.ps1` (PowerShell/WinForms)
+- The active app lives in `wpf/OptimizerWpf/` (.NET 10, WPF/C#). `Optimizer.ps1` (PowerShell/WinForms)
   is the original tool, kept only as historical reference — **do not** add new features there.
 - For orientation on the codebase, see `HANDOFF.md` (mostly Greek, English summary at the top) and
   `README.md`.

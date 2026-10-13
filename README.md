@@ -17,7 +17,7 @@
 
 ### Λειτουργίες
 
-Η εφαρμογή είναι οργανωμένη σε 8 καρτέλες:
+Η εφαρμογή είναι οργανωμένη σε 9 καρτέλες:
 
 | Καρτέλα | Τι κάνει |
 |---|---|
@@ -26,6 +26,7 @@
 | ❤ Υγεία Συστήματος | Έλεγχος υγείας δίσκων/μνήμης/συστήματος αρχείων, ανάλυση χώρου δίσκου ανά κατηγορία |
 | 🌐 Δίκτυο & Ασφάλεια | Διαγνωστικά δικτύου, DNS, Windows Defender, μπλοκάρισμα τηλεμετρίας, εργαλεία απορρήτου |
 | 🔧 Επιπλέον Ρυθμίσεις | Δεκάδες tweaks διεπαφής/απόδοσης/απορρήτου, με ασφαλή επαναφορά στην αρχική τιμή |
+| 🎮 Παιχνίδια & Πολυμέσα | Βιβλιοθήκη Steam/Epic/GOG/Ubisoft/Xbox με εκκίνηση, προφίλ GPU/gaming ανά παιχνίδι, καθαρισμός cache launcher και αντίγραφο ασφαλείας αποθηκεύσεων· έλεγχος οθονών/ήχου/κάμερας/μικροφώνου, εντοπισμός codecs, μετατροπέας βίντεο/ήχου με μαζική μετατροπή |
 | 🧹 Εφαρμογές & Bloat | Ασφαλής αφαίρεση προεγκατεστημένων εφαρμογών/προαιρετικών λειτουργιών Windows, με δυνατότητα επαναφοράς |
 | 🛠 Προηγμένα Εργαλεία | Συντήρηση συστήματος, custom δεξί-κλικ μενού, ενημερώσεις οδηγών, συσκευές-φαντάσματα |
 | 🖥 Σύστημα | Πλήρης ανάλυση υλικού/λειτουργικού ("Η Συσκευή Μου"), διαχείριση διεργασιών/δίσκων/ενημερώσεων, εύρεση διπλότυπων/μεγάλων αρχείων |
@@ -78,7 +79,7 @@ ISCC.exe installer/OptimizerWpf.iss
 
 ### Δομή αποθετηρίου
 
-- `wpf/OptimizerWpf/` — η τρέχουσα εφαρμογή (.NET 8, WPF/C#, MVVM-style views ανά καρτέλα)
+- `wpf/OptimizerWpf/` — η τρέχουσα εφαρμογή (.NET 10, WPF/C#, MVVM-style views ανά καρτέλα)
 - `wpf/OptimizerWpf.Tests/` — unit tests (xUnit)
 - `Optimizer.ps1` — το αρχικό PowerShell/WinForms εργαλείο (διατηρείται για ιστορικούς λόγους)
 - `installer/` — Inno Setup script + άδεια χρήσης/περιγραφή ανά γλώσσα
@@ -91,7 +92,7 @@ more hunting through dozens of separate tools or manually editing the Windows re
 
 ### Features
 
-The app is organized into 8 tabs:
+The app is organized into 9 tabs:
 
 | Tab | What it does |
 |---|---|
@@ -100,6 +101,7 @@ The app is organized into 8 tabs:
 | ❤ System Health | Disk/memory/file-system health checks, disk space analysis by category |
 | 🌐 Network & Security | Network diagnostics, DNS, Windows Defender, telemetry blocking, privacy tools |
 | 🔧 Tweaks | Dozens of interface/performance/privacy tweaks, safely restorable to their original value |
+| 🎮 Games & Multimedia | Steam/Epic/GOG/Ubisoft/Xbox library with launch, per-game GPU/gaming profiles, launcher-cache cleanup and game-save backup; display/audio/camera/microphone checks, codec detection, a video/audio converter with batch conversion |
 | 🧹 Apps & Bloat | Safely remove pre-installed apps/optional Windows features, with the option to restore them |
 | 🛠 Advanced Tools | System maintenance, custom right-click menus, driver updates, ghost-device cleanup |
 | 🖥 System | Full hardware/OS breakdown ("My Device"), process/disk/update management, duplicate/large-file finder |
@@ -111,7 +113,7 @@ app changed on your system.
 
 ### Screenshots
 
-See the [screenshot gallery](#στιγμιότυπα-οθόνης--screenshots) above (all 8 tabs).
+See the [screenshot gallery](#στιγμιότυπα-οθόνης--screenshots) above (it predates the merged Games & Multimedia tab, which has no screenshot yet).
 
 ### Installation
 
@@ -135,7 +137,7 @@ The final `GearWin-Setup-<version>.exe` lands in `installer/Output/`.
 
 ### Repository layout
 
-- `wpf/OptimizerWpf/` — the current app (.NET 8, WPF/C#, one view per tab)
+- `wpf/OptimizerWpf/` — the current app (.NET 10, WPF/C#, one view per tab)
 - `wpf/OptimizerWpf.Tests/` — unit tests (xUnit)
 - `Optimizer.ps1` — the original PowerShell/WinForms tool (kept for historical reasons)
 - `installer/` — Inno Setup script + per-language license/description files

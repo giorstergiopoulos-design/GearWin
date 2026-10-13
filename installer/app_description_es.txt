@@ -7,7 +7,7 @@ creada para reunir en un solo lugar todo lo que un usuario necesita para mantene
 limpio, seguro y bajo su propio control - se acabó buscar entre docenas de herramientas separadas
 o editar manualmente el registro de Windows.
 
-La aplicación está organizada en 8 pestañas:
+La aplicación está organizada en 9 pestañas:
 
 * Inicio - Vista general de tu PC de un vistazo: puntuación de salud del sistema (con un gráfico de
   tendencia y una insignia de salud del disco S.M.A.R.T.), acciones rápidas de mantenimiento,
@@ -29,6 +29,8 @@ La aplicación está organizada en 8 pestañas:
   clic, con restauración segura al valor original, entradas personalizadas de menú contextual, y
   perfiles de configuración con nombre o basados en archivo que puedes guardar y alternar
   instantáneamente.
+
+* Juegos y Multimedia - Su biblioteca de Steam/Epic/GOG/Ubisoft/Xbox con inicio, perfiles de GPU/gaming por juego y limpieza de la caché de los launchers; revisión de pantallas, audio y cámara/micrófono, detección de códecs y un conversor de vídeo/audio con conversión por lotes.
 
 * Eliminación de Bloatware - Elimina de forma segura las apps preinstaladas que no necesitas, con la
   opción de reinstalarlas, además de instalación con un clic de apps recomendadas mediante winget.

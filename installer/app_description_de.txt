@@ -7,7 +7,7 @@ Benutzer braucht, um seinen PC schnell, sauber, sicher und unter eigener Kontrol
 einem Ort vereint - ohne Dutzende einzelner Tools durchsuchen oder die Windows-Registrierung von
 Hand bearbeiten zu müssen.
 
-Die Anwendung ist in 8 Registerkarten gegliedert:
+Die Anwendung ist in 9 Registerkarten gegliedert:
 
 * Start - Der Überblick über Ihren PC auf einen Blick: Systemzustandsbewertung (mit
   Trendverlauf und einem S.M.A.R.T.-Festplattenzustand-Abzeichen), Schnellwartungsaktionen,
@@ -29,6 +29,8 @@ Die Anwendung ist in 8 Registerkarten gegliedert:
   Klick umschaltbar, mit sicherer Wiederherstellung des ursprünglichen Werts, benutzerdefinierte
   Kontextmenüeinträge und benannte oder dateibasierte Einstellungsprofile, die Sie speichern und
   sofort wechseln können.
+
+* Spiele & Multimedia - Ihre Steam/Epic/GOG/Ubisoft/Xbox-Bibliothek mit Start, GPU-/Gaming-Profilen pro Spiel und Launcher-Cache-Bereinigung; Prüfung von Bildschirmen, Audio und Kamera/Mikrofon, Codec-Erkennung sowie ein Video-/Audio-Konverter mit Stapelkonvertierung.
 
 * Bloatware entfernen - Entfernen Sie sicher vorinstallierte Apps, die Sie nicht benötigen, mit
   der Möglichkeit zur Wiederherstellung, sowie Ein-Klick-Installation empfohlener Apps über winget.
