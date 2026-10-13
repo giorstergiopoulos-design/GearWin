@@ -6,7 +6,9 @@ available inside the app itself, via Help/Instructions → the "Version History"
 
 Format loosely follows [Keep a Changelog](https://keepachangelog.com/).
 
-## v6.3.5 — Games & Multimedia merged, per-game profiles, universal button fit, Store updates
+## v6.3.6 — Games & Multimedia merged, per-game profiles, universal button fit, Store updates
+
+(Also contains the 6.3.5 work: the Games + Multimedia tab merge, Boost button, new converter formats.)
 
 - **Games & Multimedia** are now one tab (9 tabs total). Games: per-game GPU/FSO plus per-game profiles for the global gaming tweaks, launcher-cache cleanup (Steam/Epic), game-save backup (Saved Games + Documents\My Games), GPU-driver freshness hint. Multimedia: third-party codec detection (K-Lite etc.), batch conversion with drag-and-drop, WebM/MKV/OGG/AAC/WAV/FLAC presets with Low/Medium/High quality, live camera/microphone test shortcuts, HDR hint.
 - **Home:** Boost button next to the full Health Check; "Cumulative Benefit" folded into the health-score messages.

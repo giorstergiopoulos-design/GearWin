@@ -199,7 +199,7 @@ Separate project, separate repo, at `C:\Users\gstrj\Documents\MotionDeskStudio` 
 Build: `dotnet build -c Release` (net10.0-windows) — succeeded, 0 errors.
 Tests: `dotnet test` (OptimizerWpf.Tests) — 182/182 passed, including the 14-language key-parity test, `ButtonAutoFitTests`, and the new `GamesMediaViewConstructsWithoutThrowing`.
 Publish: `dotnet publish -c Release -r win-x64 --self-contained true -o publish/win-x64` (run from `wpf/OptimizerWpf` - NOT `../../publish/win-x64`, a path mistake made once this session that left `Run_OptimizerWpf.bat` launching a stale build; fixed, confirmed via `publish/win-x64/GearWin.exe` timestamp matching the latest build).
-Installer: `ISCC.exe installer/OptimizerWpf.iss` — succeeded, `GearWin-Setup-6.3.5.exe`, sent to user.
+Installer: `ISCC.exe installer/OptimizerWpf.iss` — succeeded, `GearWin-Setup-6.3.6.exe` (v6.3.6 released 2026-10-14), sent to user.
 Date: 2026-10-07.
 **Still NOT visually/manually verified** (no GUI-automation/elevation capability in this session, all UI verification depends on the user testing and reporting back): v6.3.5's UI changes (Boost button, searchbar, tab wheel-scroll, shield icon, codec grid, converter quality combo), the Dashboard Preview pilot window, both rounds of button-padding/sizing fixes, the Maintenance Center one-line-tabs fix, and the v5.10.1 borderless-window rebuild (drag, resize, maximize, edge-snap, real transparency).
 
