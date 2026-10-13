@@ -10,9 +10,6 @@ namespace OptimizerWpf.Views
 {
     public partial class ClipboardHistoryWindow : Window
     {
-        [DllImport("user32.dll")] private static extern bool GetCursorPos(out POINT lpPoint);
-        private struct POINT { public int X; public int Y; }
-
         private List<string> _all = new();
 
         public ClipboardHistoryWindow()
@@ -26,13 +23,9 @@ namespace OptimizerWpf.Views
             // ΝΕΟ - εμφανίζεται κοντά στη θέση του δρομέα (Win32 GetCursorPos) αντί για σταθερή γωνία -
             // ο χρήστης καλεί το hotkey ενώ γράφει οπουδήποτε, οπότε το popup πρέπει να εμφανιστεί εκεί.
             // Περιορίζεται μέσα στα όρια της διαθέσιμης οθόνης ώστε να μην "κόβεται" σε άκρη οθόνης.
-            var area = SystemParameters.WorkArea;
-            var x = 100.0; var y = 100.0;
-            if (GetCursorPos(out var pt)) { x = pt.X; y = pt.Y; }
-            Left = System.Math.Min(x, area.Right - Width - 8);
-            Top = System.Math.Min(y, area.Bottom - Height - 8);
-            Left = System.Math.Max(Left, area.Left + 8);
-            Top = System.Math.Max(Top, area.Top + 8);
+            // Το GetCursorPos δίνει ΦΥΣΙΚΑ pixels - πριν ανατίθονταν απευθείας σε Left/Top (DIPs), λάθος σε
+            // scaling > 100% (βλ. PopupPlacement). Πλέον όλα σε φυσικά pixels, στην οθόνη του δρομέα.
+            PopupPlacement.PlaceNearCursor(this);
 
             RefreshList();
             TxtSearch.Focus();

@@ -83,6 +83,17 @@ namespace OptimizerWpf.Services
         // λίστα (μόνο ενεργοποιεί σάρωση στο παρασκήνιο), τα αποτελέσματα εμφανίζονται ΜΕΣΑ στο Store.
         public static void TriggerMsStoreUpdateScanAndOpen()
         {
+            TriggerMsStoreUpdateScan();
+            try
+            {
+                Process.Start(new ProcessStartInfo("ms-windows-store://downloadsandupdates") { UseShellExecute = true });
+            }
+            catch { }
+        }
+
+        // Μόνο το MDM UpdateScanMethod (Invoke-WmtStoreAppUpdateScan του WMT) - χωρίς άνοιγμα Store.
+        public static void TriggerMsStoreUpdateScan()
+        {
             try
             {
                 using var searcher = new ManagementObjectSearcher(@"root\cimv2\mdm\dmmap",
@@ -96,14 +107,8 @@ namespace OptimizerWpf.Services
             catch
             {
                 // Ίδια ανοχή με το ps1 original - αν ο MDM provider δεν είναι διαθέσιμος σε αυτό το
-                // build Windows, απλά παραλείπεται το ενεργό trigger, το Store ανοίγει ούτως ή άλλως.
+                // build Windows, απλά παραλείπεται το ενεργό trigger.
             }
-
-            try
-            {
-                Process.Start(new ProcessStartInfo("ms-windows-store://downloadsandupdates") { UseShellExecute = true });
-            }
-            catch { }
         }
 
         public static async Task<bool> UpgradeAsync(string id, string source)

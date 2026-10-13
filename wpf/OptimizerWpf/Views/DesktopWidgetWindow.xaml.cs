@@ -26,11 +26,10 @@ namespace OptimizerWpf.Views
         private void Window_Loaded(object sender, RoutedEventArgs e)
         {
             var settings = AppSettingsService.Current;
-            var area = SystemParameters.WorkArea;
-            // ΝΕΟ - θέση null (πρώτη φορά) -> ίδια προεπιλογή κάτω-δεξιά με το tray popup. Αλλιώς
-            // επαναφέρει την τελευταία θέση όπου το άφησε ο χρήστης (Window_Closing παρακάτω).
-            Left = settings.DesktopWidgetX ?? (area.Right - Width - 12);
-            Top = settings.DesktopWidgetY ?? (area.Bottom - Height - 12);
+            // ΝΕΟ - θέση null (πρώτη φορά) -> ίδια προεπιλογή κάτω-δεξιά με το tray popup (DPI-ασφαλής, βλ.
+            // PopupPlacement). Αλλιώς επαναφέρει την τελευταία θέση όπου το άφησε ο χρήστης (Window_Closing).
+            if (settings.DesktopWidgetX is { } wx && settings.DesktopWidgetY is { } wy) { Left = wx; Top = wy; }
+            else PopupPlacement.PlaceBottomRightOnCursorMonitor(this);
 
             try { _cpuCounter = new PerformanceCounter("Processor", "% Processor Time", "_Total"); _cpuCounter.NextValue(); }
             catch { _cpuCounter = null; }

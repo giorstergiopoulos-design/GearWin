@@ -22,9 +22,9 @@ namespace OptimizerWpf.Views
 
         private void Window_Loaded(object sender, RoutedEventArgs e)
         {
-            var area = SystemParameters.WorkArea;
-            Left = area.Right - Width - 12;
-            Top = area.Bottom - Height - 12;
+            // DPI-ασφαλής τοποθέτηση στην οθόνη του δρομέα (βλ. PopupPlacement) - το SystemParameters.WorkArea
+            // έβγαζε λάθος θέση σε οθόνες με scaling > 100%.
+            PopupPlacement.PlaceBottomRightOnCursorMonitor(this);
 
             try { _cpuCounter = new PerformanceCounter("Processor", "% Processor Time", "_Total"); _cpuCounter.NextValue(); }
             catch { _cpuCounter = null; }

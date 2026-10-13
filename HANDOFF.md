@@ -1770,3 +1770,6 @@ CLI)**. Σημαντική διαφορά μεθοδολογίας μεταξύ 
 5. Μετά από ΚΑΘΕ αλλαγή: ξανατρέξε τους ελέγχους της ενότητας 3.
 6. Πριν οποιαδήποτε παράδοση: πλήρες μαζικό pass μεταφράσεων (αν προστέθηκε νέο ελληνικό κείμενο) + version bump + changelog entry (με 🔧/➕ πρόθεμα, χωρίς meta-αναφορές τεχνικού debugging στον χρήστη) + export.
 7. Δώσε προτεραιότητα στα αιτήματα της ενότητας 4.Α πριν προχωρήσεις σε τη 4.Β (νέα, μη-ρητά ζητημένα features).
+
+## WMT reference sync log
+- 2026-10-13: `reference/WMT-GUI.ps1` updated 6.5 -> **6.7** (upstream repo: `ios12checker/Windows-Maintenance-Tool`, `gh api repos/ios12checker/Windows-Maintenance-Tool/contents/WMT-GUI.ps1`). Ported so far: the msstore update mechanism (`Invoke-WmtStoreGuiUpdate`/`Close-WmtStoreGui`/MDM `UpdateScanMethod`) -> `wpf/OptimizerWpf/Services/StoreGuiUpdateService.cs`. 6.6/6.7 features NOT yet reviewed for porting: Drivers page rework (In Use/Old/Unattached classification, service/filter-driver detection), tweak JSON export/import, Compact utility, richer winget failure logs (installer-technology-change errors), SHA-256 self-update verification.

@@ -256,10 +256,23 @@ namespace OptimizerWpf.Views
 
                 if (row.Update.Source == "msstore")
                 {
-                    // Μία φορά αρκεί - η σελίδα Downloads & Updates καλύπτει ΟΛΑ τα Store apps, όχι
-                    // ένα-ένα (αποφεύγει πολλαπλά ταυτόχρονα ανοίγματα του Store σε bulk επιλογή).
-                    if (!triggeredStoreOnce) { WingetService.TriggerMsStoreUpdateScanAndOpen(); triggeredStoreOnce = true; }
-                    openedInStore.Add(row.Update.Name);
+                    // Μηχανισμός WMT 6.7 (StoreGuiUpdateService): MDM update scan μία φορά, μετά για κάθε
+                    // εφαρμογή αυτοματισμός του Store UI (πάτημα "Update" + παρακολούθηση της γραμμής) -
+                    // πλέον επιβεβαιωμένο αποτέλεσμα αντί για απλό άνοιγμα του Store.
+                    if (!triggeredStoreOnce) { await Task.Run(WingetService.TriggerMsStoreUpdateScan); triggeredStoreOnce = true; }
+                    StoreUpdateOutcome outcome;
+                    try { outcome = await StoreGuiUpdateService.UpdateAsync(row.Update.Name, null, System.Threading.CancellationToken.None); }
+                    catch { outcome = StoreUpdateOutcome.Failed; }
+                    switch (outcome)
+                    {
+                        case StoreUpdateOutcome.Updated:
+                        case StoreUpdateOutcome.AlreadyCurrent:
+                            succeeded.Add(row.Update.Name); _updates.Remove(row); break;
+                        case StoreUpdateOutcome.TimedOut:
+                            openedInStore.Add(row.Update.Name); break;
+                        default:
+                            failed.Add(row.Update.Name); break;
+                    }
                     continue;
                 }
 
@@ -271,6 +284,10 @@ namespace OptimizerWpf.Views
             }
             }
             finally { SetBusy(false); }
+
+            // Όπως το Close-WmtStoreGui: το Store κλείνει μόνο όταν όλες οι ενημερώσεις του επιβεβαιώθηκαν.
+            if (triggeredStoreOnce && openedInStore.Count == 0 && failed.Count == 0)
+                await Task.Run(StoreGuiUpdateService.CloseStoreWindow);
 
             var summary = failed.Count == 0
                 ? $"{LanguageService.T("Opt_UpgradeAllSucceededPrefix")}{succeeded.Count}{LanguageService.T("Opt_UpgradeAllSucceededSuffix")}"
