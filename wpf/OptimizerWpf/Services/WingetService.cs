@@ -111,11 +111,50 @@ namespace OptimizerWpf.Services
             }
         }
 
-        public static async Task<bool> UpgradeAsync(string id, string source)
+        public static async Task<bool> UpgradeAsync(string id, string source) => (await UpgradeDetailedAsync(id, source)).Ok;
+
+        // Όπως το WMT 6.7 (Winget failure logs / ErrorCodes): επιστρέφει ΚΑΙ τον πραγματικό λόγο αποτυχίας
+        // από τον exit code (HRESULT του winget), ώστε το UI να λέει π.χ. "άλλη τεχνολογία εγκατάστασης"
+        // αντί για μια αόριστη αποτυχία.
+        public static async Task<(bool Ok, string? Reason)> UpgradeDetailedAsync(string id, string source)
         {
             var (fileName, arguments) = GetUpgradeCommandForSource(source, id);
             var (_, exitCode, started) = await RunToolAsync(fileName, arguments, TimeSpan.FromMinutes(5));
-            return started && exitCode == 0;
+            if (!started) return (false, null);
+            return exitCode == 0 ? (true, null) : (false, DescribeExitCode(exitCode));
+        }
+
+        // Υποσύνολο του $ErrorCodes του WMT 6.7 (winget AppInstallerErrors.h + συνήθεις MSI/Windows κωδικοί).
+        public static string? DescribeExitCode(int exitCode)
+        {
+            var hex = "0x" + unchecked((uint)exitCode).ToString("x");
+            return hex switch
+            {
+                "0x8a150001" => "WinGet internal error",
+                "0x8a150002" => "Invalid WinGet arguments",
+                "0x8a150003" => "WinGet command failed",
+                "0x8a150004" => "Opening manifest failed",
+                "0x8a150005" => "Cancelled",
+                "0x8a150006" => "Running installer failed",
+                "0x8a150008" => "Downloading installer failed",
+                "0x8a15000b" => "WinGet source information is corrupt",
+                "0x8a150010" => "No applicable installer for this system",
+                "0x8a150011" => "Installer hash does not match the manifest",
+                "0x8a150014" => "No packages found",
+                "0x8a15008e" => "Different install technology than the current installation (uninstall and reinstall the app)",
+                "0x80070005" => "Access denied",
+                "0x80072ee7" => "DNS lookup failed",
+                "0x80072f8f" => "SSL certificate error",
+                "0x80073d02" => "Resources currently in use (close the app and retry)",
+                _ => exitCode switch
+                {
+                    1602 => "Cancelled by user",
+                    1603 => "Fatal MSI error",
+                    1618 => "Another installation is in progress",
+                    3010 => "Reboot required",
+                    _ => null,
+                },
+            };
         }
 
         // ΝΕΟ - roadmap "νεότερες δυνατότητες winget στο UI" (pin/export/import). Το "winget pin"

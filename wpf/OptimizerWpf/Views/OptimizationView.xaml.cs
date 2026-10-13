@@ -276,11 +276,11 @@ namespace OptimizerWpf.Views
                     continue;
                 }
 
-                bool ok;
-                try { ok = await WingetService.UpgradeAsync(row.Update.Id, row.Update.Source); }
+                bool ok; string? reason = null;
+                try { (ok, reason) = await WingetService.UpgradeDetailedAsync(row.Update.Id, row.Update.Source); }
                 catch { ok = false; } // ένα προβληματικό πακέτο δεν πρέπει να σταματά τα υπόλοιπα
                 if (ok) { succeeded.Add(row.Update.Name); _updates.Remove(row); }
-                else { failed.Add(row.Update.Name); }
+                else { failed.Add(reason == null ? row.Update.Name : $"{row.Update.Name} [{reason}]"); }
             }
             }
             finally { SetBusy(false); }
@@ -669,13 +669,8 @@ namespace OptimizerWpf.Views
             {
                 var all = await DriverService.ScanStoreAsync();
 
-                // Ομαδοποίηση κατά OriginalFileName - κρατάμε πάντα την πιο πρόσφατη (κατά ημερομηνία),
-                // προτείνουμε προς διαγραφή ΜΟΝΟ τις παλιότερες, ίδια λογική με το ps1 original.
-                var duplicates = all
-                    .GroupBy(d => d.OriginalFileName)
-                    .Where(g => g.Count() > 1)
-                    .SelectMany(g => g.OrderByDescending(d => d.Date).Skip(1))
-                    .ToList();
+                // Λογική WMT 6.6: κρατάμε ό,τι είναι σε χρήση, μετά υψηλότερη έκδοση, μετά ημερομηνία (βλ. SelectOldDrivers).
+                var duplicates = DriverService.SelectOldDrivers(all).ToList();
 
                 foreach (var d in duplicates) _driverStoreEntries.Add(d);
                 TxtDriverStoreStatus.Text = duplicates.Count == 0

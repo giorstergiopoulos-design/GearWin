@@ -9,7 +9,7 @@ Name: GearWin - Complete PC Care (WPF port of the original Optimizer.ps1)
 - UI: WPF, `wpf/OptimizerWpf/` — Views (XAML + code-behind, no MVVM/ViewModels — direct code-behind is the established pattern here), Services (static classes), Themes/Styles.xaml. WPF-UI 4.3.0 nuget also in use for the standalone `DashboardPreviewWindow` pilot only (normal app/MainWindow untouched).
 - Mobile: none
 - Backend: none (fully local desktop app)
-- Tests: `wpf/OptimizerWpf.Tests/` (xUnit-style, run via `dotnet test`), 182 tests in the default battery (all passing as of last verification), plus one opt-in UI Automation click-through test (`GEARWIN_UI_CLICKTHROUGH=1`, shows real windows - not run by default)
+- Tests: `wpf/OptimizerWpf.Tests/` (xUnit-style, run via `dotnet test`), 190 tests in the default battery (all passing as of last verification), plus one opt-in UI Automation click-through test (`GEARWIN_UI_CLICKTHROUGH=1`, shows real windows - not run by default)
 - Installer: Inno Setup, `installer/OptimizerWpf.iss` → `installer/Output/GearWin-Setup-<version>.exe`. Build: `dotnet publish -c Release -r win-x64 --self-contained true -o wpf/OptimizerWpf/publish/win-x64` then `ISCC.exe installer/OptimizerWpf.iss`. ISCC lives at `AppData\Local\Programs\Inno Setup 6\ISCC.exe` (not Program Files).
 - 14 supported UI languages, all strings in `Services/LanguageService.cs` (huge file, ~18k lines, one dictionary block per language in fixed order: el, en, de, fr, es, ko, zh, it, ru, ja, pt, tr, ar, hi). New keys must be added to all 14 blocks (use a small Python script to insert by anchor-key line number, descending order, rather than hand-editing).
 - Repo: `giorstergiopoulos-design/GearWin` on GitHub. `gh release create` works from this environment (has previously needed a retry after an auto-mode permission block).
@@ -46,6 +46,7 @@ Maintenance Center one-line-tabs sizing fix - see Completed for details. Publish
 ROADMAP.md) adopted 2026-09-29 at user's request.
 
 ## Completed
+- WMT sync 6.5 -> 6.7 + fixes (2026-10-13): msstore updates now use WMT's Store GUI automation (`StoreGuiUpdateService.cs`: UI Automation on Downloads & updates, MDM UpdateScanMethod first; unconfirmed result = "opened in Store", never a fake success - Greek status strings are GUESSED, verify on a real Greek Store); tray/clipboard/widget popups placed DPI-safely (`PopupPlacement.cs`, fixes wrong position at scaling > 100%); Clean Old Drivers ranks in-use > version > date (`DriverService.SelectOldDrivers`) and shows the kept package; winget failures show the real reason (`WingetService.DescribeExitCode`). 190 tests passing. NOT visually verified.
 - Games & Multimedia additions (2026-10-07, user asked for suggestions then "κανε τα ολα" - do them
   all): checked each idea against existing code first (Game Mode toggle turned out to already exist
   in `GamingTweaksService.GlobalTweaks()` - skipped, not duplicated). Games: per-game tweak profiles

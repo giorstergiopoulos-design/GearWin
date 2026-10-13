@@ -15,7 +15,7 @@ namespace OptimizerWpf.Services
 {
     public record DriverUpdate(string UpdateId, string Title, string? DriverClass, string? Manufacturer, string? Model, string? Date);
     public record DriverScanResult(bool PolicyBlocked, IReadOnlyList<DriverUpdate> Updates);
-    public record DriverStoreEntry(string Driver, string OriginalFileName, string? Version, string? Date, string? Class);
+    public record DriverStoreEntry(string Driver, string OriginalFileName, string? Version, string? Date, string? Class, bool InUse = false, string? KeptInfo = null);
     public record PnpDeviceInfo(string DeviceName, string HardwareId, Version CurrentVersion, DateTime CurrentDate)
     {
         public string PnpClass { get; init; } = "";
@@ -748,6 +748,9 @@ try {{
             const string script = @"
 $ErrorActionPreference = 'Continue'
 $drivers = Get-WindowsDriver -Online -ErrorAction SilentlyContinue | Where-Object { -not $_.Inbox }
+# WMT 6.6: πακέτο ""σε χρήση"" = το InfName που είναι δεσμευμένο σε κάποια συσκευή (Win32_PnPSignedDriver).
+$inUse = @{}
+Get-CimInstance Win32_PnPSignedDriver -ErrorAction SilentlyContinue | ForEach-Object { if ($_.InfName) { $inUse[([string]$_.InfName).ToLowerInvariant()] = 1 } }
 $result = @($drivers | ForEach-Object {
     [PSCustomObject]@{
         Driver           = $_.Driver
@@ -755,6 +758,7 @@ $result = @($drivers | ForEach-Object {
         Version          = $_.Version
         Date             = if ($_.Date) { $_.Date.ToString('yyyy-MM-dd') } else { $null }
         ClassName        = $_.ClassName
+        InUse            = $inUse.ContainsKey(([string]$_.Driver).ToLowerInvariant())
     }
 })
 $result | ConvertTo-Json -Depth 4 -Compress
@@ -774,7 +778,8 @@ $result | ConvertTo-Json -Depth 4 -Compress
                         d.GetProperty("OriginalFileName").GetString() ?? "",
                         d.TryGetProperty("Version", out var v) ? v.GetString() : null,
                         d.TryGetProperty("Date", out var dt) ? dt.GetString() : null,
-                        d.TryGetProperty("ClassName", out var c) ? c.GetString() : null));
+                        d.TryGetProperty("ClassName", out var c) ? c.GetString() : null,
+                        d.TryGetProperty("InUse", out var iu) && iu.ValueKind == JsonValueKind.True));
                 }
                 return entries;
             }
@@ -782,6 +787,26 @@ $result | ConvertTo-Json -Depth 4 -Compress
             {
                 return Array.Empty<DriverStoreEntry>();
             }
+        }
+
+        // WMT 6.6 ("Reworked Clean Old Drivers"): ανά ομάδα πακέτων με το ίδιο OriginalFileName, κρατιέται
+        // ΠΡΩΤΑ ό,τι είναι σε χρήση, μετά η ΥΨΗΛΟΤΕΡΗ ΕΚΔΟΣΗ, μετά η νεότερη ημερομηνία (πριν: μόνο ημερομηνία -
+        // ένας νεότερος οδηγός με παλιότερη ημερομηνία κυκλοφορίας κρατούσε λάθος πακέτο). Πακέτο σε χρήση δεν
+        // προτείνεται ΠΟΤΕ προς διαγραφή. Το KeptInfo λέει ποιο πακέτο/έκδοση επιβιώνει.
+        public static IReadOnlyList<DriverStoreEntry> SelectOldDrivers(IEnumerable<DriverStoreEntry> all)
+        {
+            static Version V(string? s) => Version.TryParse(s, out var v) ? v : new Version(0, 0);
+            var result = new List<DriverStoreEntry>();
+            foreach (var g in all.GroupBy(d => d.OriginalFileName, StringComparer.OrdinalIgnoreCase).Where(g => g.Count() > 1))
+            {
+                var ordered = g.OrderByDescending(d => d.InUse).ThenByDescending(d => V(d.Version))
+                    .ThenByDescending(d => d.Date ?? "", StringComparer.Ordinal).ToList();
+                var keeper = ordered[0];
+                var info = string.Format(LanguageService.T("Opt_DriverKeptInfo"), keeper.Driver, keeper.Version ?? "?");
+                foreach (var d in ordered.Skip(1))
+                    if (!d.InUse) result.Add(d with { KeptInfo = info });
+            }
+            return result;
         }
 
         // pnputil αρνείται από μόνο του να διαγράψει driver που βρίσκεται ενεργά σε χρήση - καμία
