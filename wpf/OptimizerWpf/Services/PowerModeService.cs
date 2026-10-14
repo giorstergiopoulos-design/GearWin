@@ -46,8 +46,10 @@ namespace OptimizerWpf.Services
             SetRegSafe(Registry.CurrentUser, @"Control Panel\Desktop", "MenuShowDelay", "0", RegistryValueKind.String);
             SetRegSafe(Registry.LocalMachine, @"SYSTEM\CurrentControlSet\Control\PriorityControl", "Win32PrioritySeparation", 38);
             SetRegSafe(Registry.LocalMachine, @"SYSTEM\CurrentControlSet\Control\GraphicsDrivers", "HwSchMode", 2);
-            SetRegSafe(Registry.LocalMachine, @"SYSTEM\CurrentControlSet\Control\DeviceGuard\Scenarios\HypervisorEnforcedCodeIntegrity", "Enabled", 0);
-            SetRegSafe(Registry.LocalMachine, @"SYSTEM\CurrentControlSet\Control\DeviceGuard", "EnableVirtualizationBasedSecurity", 0);
+            // ΑΣΦΑΛΕΙΑ: ΔΕΝ απενεργοποιούνται πια τα VBS/Memory Integrity (HVCI) εδώ. Προστατεύουν τον πυρήνα των
+            // Windows από φόρτωση κακόβουλων/ευάλωτων οδηγών· το Gaming Mode τα έκλεινε (μόνιμα, μέχρι επανεκκίνηση και
+            // μετά) για πολύ μικρό κέρδος FPS, και το "τέλος" του mode τα ξαναενεργοποιούσε ΑΚΟΜΑ ΚΙ ΑΝ ο χρήστης τα
+            // είχε σκόπιμα κλειστά. Ό,τι ήταν ήδη ρυθμισμένο από τον χρήστη/τα Windows μένει ως έχει.
         }
 
         public static void DisableGamingMode()
@@ -56,8 +58,6 @@ namespace OptimizerWpf.Services
             SetRegSafe(Registry.CurrentUser, @"System\GameConfigStore", "GameDVR_Enabled", 1);
             SetRegSafe(Registry.LocalMachine, @"SOFTWARE\Microsoft\Windows NT\CurrentVersion\Multimedia\SystemProfile", "NetworkThrottlingIndex", 10);
             SetRegSafe(Registry.LocalMachine, @"SOFTWARE\Microsoft\Windows NT\CurrentVersion\Multimedia\SystemProfile", "SystemResponsiveness", 14);
-            SetRegSafe(Registry.LocalMachine, @"SYSTEM\CurrentControlSet\Control\DeviceGuard\Scenarios\HypervisorEnforcedCodeIntegrity", "Enabled", 1);
-            SetRegSafe(Registry.LocalMachine, @"SYSTEM\CurrentControlSet\Control\DeviceGuard", "EnableVirtualizationBasedSecurity", 1);
             RestartExplorer();
         }
 

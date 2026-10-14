@@ -36,6 +36,9 @@ namespace OptimizerWpf.Services
             try
             {
                 Directory.CreateDirectory(Path.GetDirectoryName(LogPath)!);
+                // Όριο μεγέθους: το αρχείο διαγνωστικών δεν πρέπει να μεγαλώνει επ' αόριστον (έλεγχος ανά ώρα, μήνες χρήσης).
+                if (File.Exists(LogPath) && new FileInfo(LogPath).Length > 256 * 1024)
+                    File.WriteAllLines(LogPath, File.ReadLines(LogPath).Skip(File.ReadLines(LogPath).Count() / 2));
                 File.AppendAllText(LogPath, $"[{DateTime.Now:yyyy-MM-dd HH:mm:ss}] {message}{Environment.NewLine}");
             }
             catch { /* η ίδια η καταγραφή δεν πρέπει ποτέ να ρίξει τον έλεγχο ενημερώσεων */ }

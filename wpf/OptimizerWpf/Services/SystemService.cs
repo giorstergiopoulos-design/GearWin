@@ -116,6 +116,11 @@ namespace OptimizerWpf.Services
             }
 
             var exePath = Environment.ProcessPath ?? System.Reflection.Assembly.GetExecutingAssembly().Location;
+            // ΑΣΦΑΛΕΙΑ: η εργασία ξεκινά το exe με HighestAvailable ΧΩΡΙΣ UAC σε κάθε σύνδεση. Αν το exe βρίσκεται σε φάκελο
+            // εγγράψιμο από τον χρήστη (Downloads, φάκελος ανάπτυξης, Desktop...), οποιοδήποτε μη-elevated πρόγραμμα
+            // θα μπορούσε να το αντικαταστήσει και να τρέχει ως Administrator σε κάθε εκκίνηση - γι' αυτό ΔΕΝ δημιουργείται.
+            // Η εγκατάσταση μέσω installer (Program Files) πληροί πάντα την προϋπόθεση.
+            if (!SecureStorage.IsDirectoryAdminOnlyWritable(System.IO.Path.GetDirectoryName(exePath))) return false;
             // 15 δευτερόλεπτα καθυστέρηση: ο desktop/δίκτυο προλαβαίνουν να σηκωθούν πριν ξεκινήσει ο έλεγχος ενημερώσεων.
             var xml = TaskSchedulerService.BuildLogonTaskXml(exePath, "--tray", 15, TaskSchedulerService.CurrentUserId(), "GearWin - start with Windows (tray)");
             return await TaskSchedulerService.CreateAsync(AutostartTaskName, xml);
@@ -613,7 +618,7 @@ namespace OptimizerWpf.Services
             var psi = new ProcessStartInfo
             {
                 FileName = "powershell.exe",
-                Arguments = $"-NoProfile -ExecutionPolicy Bypass -Command \"{command.Replace("\"", "\\\"")}\"",
+                Arguments = PowerShellArgs.Command(command),
                 RedirectStandardOutput = true,
                 RedirectStandardError = true,
                 UseShellExecute = false,
@@ -633,7 +638,7 @@ namespace OptimizerWpf.Services
             var psi = new ProcessStartInfo
             {
                 FileName = "powershell.exe",
-                Arguments = $"-NoProfile -ExecutionPolicy Bypass -Command \"{command.Replace("\"", "\\\"")}\"",
+                Arguments = PowerShellArgs.Command(command),
                 UseShellExecute = false,
                 CreateNoWindow = true,
                 RedirectStandardOutput = true,

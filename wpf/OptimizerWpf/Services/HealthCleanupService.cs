@@ -395,7 +395,7 @@ namespace OptimizerWpf.Services
         // επιστρέφει μη-μηδενικό κωδικό εξόδου - honest failure, καμία ψεύτικη αναφορά.
         public static async Task<bool> GenerateBatteryReportAsync()
         {
-            var path = System.IO.Path.Combine(System.IO.Path.GetTempPath(), "OptimizerWpf_BatteryReport.html");
+            var path = System.IO.Path.Combine(System.IO.Path.GetTempPath(), $"OptimizerWpf_BatteryReport_{Guid.NewGuid():N}.html");
             var exit = await Task.Run(() => RunAndWait("powercfg.exe", $"/batteryreport /output \"{path}\""));
             if (exit != 0 || !System.IO.File.Exists(path)) return false;
             System.Diagnostics.Process.Start(new System.Diagnostics.ProcessStartInfo(path) { UseShellExecute = true });
@@ -561,14 +561,15 @@ Write-Output $brokenCount
 
         private static async Task<string> RunPowerShellScriptAsync(string script)
         {
-            var scriptFile = Path.Combine(Path.GetTempPath(), $"OptimizerWpfHealth_{Guid.NewGuid():N}.ps1");
-            File.WriteAllText(scriptFile, script);
+            // ΑΣΦΑΛΕΙΑ: -EncodedCommand αντί για script στο %TEMP% (βλ. PowerShellArgs).
+            var scriptFile = PowerShellArgs.Fits(script) ? null : SecureStorage.NewPrivateTempFile("pshealth", ".ps1");
+            if (scriptFile != null) File.WriteAllText(scriptFile, script);
             try
             {
                 var psi = new ProcessStartInfo
                 {
                     FileName = "powershell.exe",
-                    Arguments = $"-NoProfile -ExecutionPolicy Bypass -File \"{scriptFile}\"",
+                    Arguments = scriptFile == null ? PowerShellArgs.Command(script) : $"-NoProfile -ExecutionPolicy Bypass -File \"{scriptFile}\"",
                     RedirectStandardOutput = true,
                     UseShellExecute = false,
                     CreateNoWindow = true,
@@ -582,7 +583,7 @@ Write-Output $brokenCount
             }
             finally
             {
-                try { File.Delete(scriptFile); } catch { }
+                if (scriptFile != null) { try { File.Delete(scriptFile); } catch { } }
             }
         }
     }

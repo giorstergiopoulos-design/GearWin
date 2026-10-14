@@ -97,13 +97,14 @@ namespace OptimizerWpf.Services
 
         public static async Task<bool> CreateAsync(string taskName, string xml)
         {
-            var tmp = Path.Combine(Path.GetTempPath(), $"gearwin_task_{Guid.NewGuid():N}.xml");
+            // ΑΣΦΑΛΕΙΑ: το XML ορίζει εντολή που τρέχει με Highest privileges - ΟΧΙ από %TEMP% (αντικαταστάσιμο πριν το διαβάσει το schtasks).
+            var tmp = SecureStorage.NewPrivateTempFile("task", ".xml");
             try
             {
                 File.WriteAllText(tmp, xml, Encoding.Unicode); // UTF-16, όπως δηλώνει το XML
                 return await RunAsync("/Create", "/TN", taskName, "/XML", tmp, "/F");
             }
-            finally { try { File.Delete(tmp); } catch { } }
+            finally { try { Directory.Delete(Path.GetDirectoryName(tmp)!, true); } catch { } }
         }
 
         public static Task<bool> DeleteAsync(string taskName) => RunAsync("/Delete", "/TN", taskName, "/F");

@@ -266,8 +266,9 @@ namespace OptimizerWpf.Services
         // πραγματικού CDN link από την απάντηση.
         public static async Task<bool> InstallCatalogDriverAsync(CatalogCandidate candidate)
         {
-            var tempDir = Path.Combine(Path.GetTempPath(), $"OptimizerWpfDriverCatalog_{Guid.NewGuid():N}");
-            Directory.CreateDirectory(tempDir);
+            // ΑΣΦΑΛΕΙΑ: το πακέτο οδηγού κατεβαίνει, επαληθεύεται (Authenticode) και ΜΕΤΑ εγκαθίσταται elevated (pnputil/wusa) -
+            // σε φάκελο μόνο-Administrators, ώστε να μην αντικατασταθεί ανάμεσα στον έλεγχο και την εγκατάσταση (TOCTOU).
+            var tempDir = SecureStorage.NewPrivateTempDir("DriverCatalog");
             try
             {
                 var downloadUrl = await ResolveCatalogDownloadUrlAsync(candidate.UpdateId);
@@ -335,7 +336,7 @@ namespace OptimizerWpf.Services
         private static async Task<bool> VerifyAuthenticodeAsync(string filePath)
         {
             var psi = new ProcessStartInfo("powershell.exe",
-                $"-NoProfile -Command \"(Get-AuthenticodeSignature -LiteralPath '{filePath}').Status\"")
+                PowerShellArgs.Command($"(Get-AuthenticodeSignature -LiteralPath '{filePath.Replace("'", "''")}').Status"))
             { RedirectStandardOutput = true, UseShellExecute = false, CreateNoWindow = true };
             using var process = Process.Start(psi);
             if (process == null) return false;
@@ -824,14 +825,16 @@ $result | ConvertTo-Json -Depth 4 -Compress
 
         private static async Task<string> RunPowerShellScriptAsync(string script, TimeSpan timeout)
         {
-            var scriptFile = Path.Combine(Path.GetTempPath(), $"OptimizerWpfDriver_{Guid.NewGuid():N}.ps1");
-            File.WriteAllText(scriptFile, script);
+            // ΑΣΦΑΛΕΙΑ: -EncodedCommand αντί για script στο %TEMP% (βλ. PowerShellArgs) - αρχείο μόνο αν το
+            // script ξεπερνά το όριο γραμμής εντολών.
+            var scriptFile = PowerShellArgs.Fits(script) ? null : SecureStorage.NewPrivateTempFile("ps", ".ps1");
+            if (scriptFile != null) File.WriteAllText(scriptFile, script);
             try
             {
                 var psi = new ProcessStartInfo
                 {
                     FileName = "powershell.exe",
-                    Arguments = $"-NoProfile -ExecutionPolicy Bypass -File \"{scriptFile}\"",
+                    Arguments = scriptFile == null ? PowerShellArgs.Command(script) : $"-NoProfile -ExecutionPolicy Bypass -File \"{scriptFile}\"",
                     RedirectStandardOutput = true,
                     RedirectStandardError = true,
                     UseShellExecute = false,
@@ -849,7 +852,7 @@ $result | ConvertTo-Json -Depth 4 -Compress
             }
             finally
             {
-                try { File.Delete(scriptFile); } catch { }
+                if (scriptFile != null) { try { File.Delete(scriptFile); } catch { } }
             }
         }
 
@@ -857,14 +860,16 @@ $result | ConvertTo-Json -Depth 4 -Compress
         // λεπτά, δεν χρειάζεται να την περιμένει η εφαρμογή· ο χρήστης βλέπει μόνο ότι ξεκίνησε).
         private static void RunPowerShellScriptDetached(string script)
         {
-            var scriptFile = Path.Combine(Path.GetTempPath(), $"OptimizerWpfDriverInstall_{Guid.NewGuid():N}.ps1");
-            File.WriteAllText(scriptFile, script);
+            // ΑΣΦΑΛΕΙΑ: η εγκατάσταση οδηγού τρέχει elevated - ΟΧΙ script στο %TEMP% (αντικαταστάσιμο από μη-elevated
+            // κώδικα πριν εκτελεστεί), βλ. PowerShellArgs.
+            var scriptFile = PowerShellArgs.Fits(script) ? null : SecureStorage.NewPrivateTempFile("psinstall", ".ps1");
+            if (scriptFile != null) File.WriteAllText(scriptFile, script);
             try
             {
                 Process.Start(new ProcessStartInfo
                 {
                     FileName = "powershell.exe",
-                    Arguments = $"-NoProfile -ExecutionPolicy Bypass -Command \"& '{scriptFile}'; Remove-Item '{scriptFile}' -Force\"",
+                    Arguments = scriptFile == null ? PowerShellArgs.Command(script) : $"-NoProfile -ExecutionPolicy Bypass -Command \"& '{scriptFile}'; Remove-Item '{scriptFile}' -Force\"",
                     WindowStyle = ProcessWindowStyle.Hidden,
                     UseShellExecute = false,
                     CreateNoWindow = true,

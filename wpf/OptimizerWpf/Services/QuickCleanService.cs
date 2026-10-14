@@ -177,6 +177,9 @@ namespace OptimizerWpf.Services
             }
             foreach (var d in SafeDirs(dir))
             {
+                // ΑΣΦΑΛΕΙΑ: ποτέ διαγραφή μέσω junction/symlink - η εφαρμογή τρέχει elevated και οι φάκελοι Temp είναι
+                // εγγράψιμοι από κάθε διεργασία χρήστη· ένα junction προς π.χ. C:\Windows\System32 θα οδηγούσε σε διαγραφή εκεί.
+                try { if ((File.GetAttributes(d) & FileAttributes.ReparsePoint) != 0) continue; } catch { continue; }
                 try { Directory.Delete(d, true); } catch { }
             }
         }

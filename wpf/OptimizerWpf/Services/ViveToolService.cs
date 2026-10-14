@@ -49,14 +49,23 @@ namespace OptimizerWpf.Services
         // Πριν αντιγραφόταν στον φάκελο εγκατάστασης της ίδιας της εφαρμογής (Program Files — χωρίς δικαιώματα εγγραφής
         // σε μη-admin) ΜΑΖΙ με ΟΛΑ τα .dll του zip, που μπορούσαν να αντικαταστήσουν ομώνυμα assemblies του GearWin
         // (π.χ. System.*.dll) και να το σπάσουν.
-        private static string ToolsDir => Path.Combine(
-            Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "OptimizerWpf", "tools", "vivetool");
+        // ΑΣΦΑΛΕΙΑ (έλεγχος ευπαθειών): το vivetool.exe τρέχει ΜΕ ΥΨΗΛΑ ΔΙΚΑΙΩΜΑΤΑ. Ο φάκελος στο %LocalAppData% είναι
+        // εγγράψιμος από κάθε μη-elevated διεργασία του χρήστη (θα μπορούσε να αντικαταστήσει το exe → privilege
+        // escalation χωρίς UAC). Τώρα ζει στο %ProgramData%\GearWin με ACL μόνο-Administrators/SYSTEM εγγραφής
+        // (οι Users έχουν μόνο ανάγνωση/εκτέλεση), και το zip ΔΕΝ περνά ποτέ από το %TEMP% (εξαγωγή από τη μνήμη).
+        private static string RootDir => SecureStorage.RootDir;
+        private static string ToolsDir => Path.Combine(RootDir, "tools", "vivetool");
+        private static void SecureDirectory(string dir) => SecureStorage.SecureDirectory(dir);
         private static string ExePath => Path.Combine(ToolsDir, "vivetool.exe");
         private static string LegacyExePath => Path.Combine(AppContext.BaseDirectory, "vivetool.exe");
 
         public static async Task<string?> EnsureAvailableAsync(IProgress<string>? progress = null)
         {
-            if (File.Exists(ExePath)) return ExePath;
+            if (File.Exists(ExePath))
+            {
+                try { SecureDirectory(RootDir); } catch { return null; } // ποτέ εκτέλεση από φάκελο που δεν μπορεί να κλειδωθεί
+                return ExePath;
+            }
             if (File.Exists(LegacyExePath)) return LegacyExePath; // εγκατάσταση από παλιότερη έκδοση
 
             progress?.Report(LanguageService.T("Vive_Downloading"));
@@ -86,25 +95,24 @@ namespace OptimizerWpf.Services
                     !(assetUri.Host.EndsWith("github.com", StringComparison.OrdinalIgnoreCase) || assetUri.Host.EndsWith("githubusercontent.com", StringComparison.OrdinalIgnoreCase)))
                     throw new InvalidOperationException(LanguageService.T("Vive_NoAssetFound"));
 
-                var zipPath = Path.Combine(Path.GetTempPath(), "vivetool_dl.zip");
                 var bytes = await http.GetByteArrayAsync(assetUrl);
-                await File.WriteAllBytesAsync(zipPath, bytes);
+                using var archive = new ZipArchive(new MemoryStream(bytes), ZipArchiveMode.Read);
+                var exeEntry = archive.Entries.FirstOrDefault(en => string.Equals(en.Name, "ViVeTool.exe", StringComparison.OrdinalIgnoreCase));
+                if (exeEntry == null) throw new InvalidOperationException(LanguageService.T("Vive_ExeNotFound"));
 
-                var extractDir = Path.Combine(Path.GetTempPath(), "vivetool_extract");
-                if (Directory.Exists(extractDir)) Directory.Delete(extractDir, true);
-                ZipFile.ExtractToDirectory(zipPath, extractDir);
-
-                var foundExe = Directory.EnumerateFiles(extractDir, "ViVeTool.exe", SearchOption.AllDirectories).FirstOrDefault();
-                if (foundExe == null) throw new InvalidOperationException(LanguageService.T("Vive_ExeNotFound"));
+                SecureDirectory(RootDir);
                 Directory.CreateDirectory(ToolsDir);
-                // Αντιγράφουμε ΜΟΝΟ τα αρχεία του φακέλου όπου βρίσκεται το ViVeTool.exe, στον ιδιωτικό του φάκελο.
-                var exeDir = Path.GetDirectoryName(foundExe)!;
-                foreach (var file in Directory.EnumerateFiles(exeDir))
-                    File.Copy(file, Path.Combine(ToolsDir, Path.GetFileName(file)), true);
-                if (!File.Exists(ExePath)) File.Copy(foundExe, ExePath, true);
+                // Αντιγράφουμε ΜΟΝΟ τα αρχεία του φακέλου όπου βρίσκεται το ViVeTool.exe (όχι υποφάκελοι), με όνομα
+                // αρχείου χωρίς διαδρομή (Path.GetFileName) - καμία δυνατότητα "zip slip" εκτός του φακέλου εργαλείου.
+                var prefix = exeEntry.FullName[..^exeEntry.Name.Length];
+                foreach (var entry in archive.Entries)
+                {
+                    if (entry.Name.Length == 0 || !entry.FullName.StartsWith(prefix, StringComparison.Ordinal)) continue;
+                    if (entry.FullName.Length != prefix.Length + entry.Name.Length) continue;
+                    entry.ExtractToFile(Path.Combine(ToolsDir, Path.GetFileName(entry.Name)), true);
+                }
+                if (!File.Exists(ExePath)) throw new InvalidOperationException(LanguageService.T("Vive_ExeNotFound"));
 
-                File.Delete(zipPath);
-                Directory.Delete(extractDir, true);
                 progress?.Report(LanguageService.T("Vive_DownloadSuccess"));
                 return ExePath;
             }

@@ -10,8 +10,14 @@ namespace OptimizerWpf.Services
     // μεταβάσεις ΔΕΝ καταγράφονται (θόρυβος, όχι ουσιαστικές ενέργειες).
     public static class ActionLogService
     {
+        // ΔΙΟΡΘΩΣΗ (έλεγχος RAM/σφαλμάτων): η λίστα ήταν απεριόριστη (μεγάλες συνεδρίες → συνεχής αύξηση μνήμης) και
+        // ΧΩΡΙΣ κλείδωμα (το StatusService.Changed μπορεί να έρθει από νήμα παρασκηνίου ενώ το UI διαβάζει τη λίστα →
+        // InvalidOperationException "Collection was modified"). Τώρα: κλείδωμα, όριο 500 εγγραφών, snapshot στην ανάγνωση,
+        // και το Changed φτάνει πάντα στο UI νήμα (οι συνδρομητές ενημερώνουν στοιχεία διεπαφής).
+        private const int MaxEntries = 500;
+        private static readonly object Lock = new();
         private static readonly List<string> _entries = new();
-        public static IReadOnlyList<string> Entries => _entries;
+        public static IReadOnlyList<string> Entries { get { lock (Lock) return _entries.ToArray(); } }
         public static event Action? Changed;
 
         static ActionLogService()
@@ -19,8 +25,14 @@ namespace OptimizerWpf.Services
             StatusService.Changed += (message, isBusy) =>
             {
                 if (!isBusy) return;
-                _entries.Add($"[{DateTime.Now:HH:mm:ss}] {message}");
-                Changed?.Invoke();
+                lock (Lock)
+                {
+                    _entries.Add($"[{DateTime.Now:HH:mm:ss}] {message}");
+                    if (_entries.Count > MaxEntries) _entries.RemoveRange(0, _entries.Count - MaxEntries);
+                }
+                var d = System.Windows.Application.Current?.Dispatcher;
+                if (d != null && !d.CheckAccess()) d.BeginInvoke(() => Changed?.Invoke());
+                else Changed?.Invoke();
             };
         }
 

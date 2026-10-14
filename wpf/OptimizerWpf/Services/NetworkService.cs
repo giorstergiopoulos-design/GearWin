@@ -274,7 +274,7 @@ namespace OptimizerWpf.Services
 
         private static async Task<string> RunPowerShellCaptureAsync(string command)
         {
-            var psi = new ProcessStartInfo("powershell.exe", $"-NoProfile -ExecutionPolicy Bypass -Command \"{command.Replace("\"", "\\\"")}\"")
+            var psi = new ProcessStartInfo("powershell.exe", PowerShellArgs.Command(command))
             { RedirectStandardOutput = true, UseShellExecute = false, CreateNoWindow = true, StandardOutputEncoding = System.Text.Encoding.UTF8 };
             using var process = Process.Start(psi);
             if (process == null) return "";
@@ -285,7 +285,7 @@ namespace OptimizerWpf.Services
 
         private static async Task<bool> RunPowerShellForSuccessAsync(string command)
         {
-            var psi = new ProcessStartInfo("powershell.exe", $"-NoProfile -ExecutionPolicy Bypass -Command \"{command.Replace("\"", "\\\"")}\"")
+            var psi = new ProcessStartInfo("powershell.exe", PowerShellArgs.Command(command))
             { UseShellExecute = false, CreateNoWindow = true };
             using var process = Process.Start(psi);
             if (process == null) return false;
@@ -295,7 +295,7 @@ namespace OptimizerWpf.Services
 
         private static void RunPowerShellDetached(string command)
         {
-            try { Process.Start(new ProcessStartInfo("powershell.exe", $"-NoProfile -ExecutionPolicy Bypass -WindowStyle Hidden -Command \"{command.Replace("\"", "\\\"")}\"") { UseShellExecute = false, CreateNoWindow = true }); }
+            try { Process.Start(new ProcessStartInfo("powershell.exe", PowerShellArgs.Command(command, hidden: true)) { UseShellExecute = false, CreateNoWindow = true }); }
             catch { }
         }
 

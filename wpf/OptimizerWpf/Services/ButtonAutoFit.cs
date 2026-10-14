@@ -32,30 +32,52 @@ namespace OptimizerWpf.Services
         private static readonly DependencyPropertyDescriptor ContentDescriptor =
             DependencyPropertyDescriptor.FromProperty(ContentControl.ContentProperty, typeof(Button))!;
 
+        // ΔΙΟΡΘΩΣΗ (έλεγχος διαρροής μνήμης): το DependencyPropertyDescriptor.AddValueChanged κρατά ισχυρή αναφορά
+        // στο κουμπί σε ΣΤΑΤΙΚΟ πίνακα μέχρι να γίνει RemoveValueChanged. Επειδή κάθε εναλλαγή καρτέλας ξαναχτίζει το
+        // view (νέα κουμπιά), η προηγούμενη εκδοχή (AddValueChanged χωρίς ποτέ Remove) διέρρεε ΟΛΑ τα κουμπιά κάθε
+        // φορά. Τώρα το hook υπάρχει ΜΟΝΟ όσο το κουμπί είναι φορτωμένο (Loaded -> Add, Unloaded -> Remove).
         private static void OnEnabledChanged(DependencyObject d, DependencyPropertyChangedEventArgs e)
         {
             if (d is not Button button) return;
 
             if ((bool)e.NewValue)
             {
-                button.Loaded += Button_LoadedOrContentChanged;
-                ContentDescriptor.AddValueChanged(button, Button_LoadedOrContentChanged);
+                button.Loaded += Button_Loaded;
+                button.Unloaded += Button_Unloaded;
+                if (button.IsLoaded) Attach(button);
             }
             else
             {
-                button.Loaded -= Button_LoadedOrContentChanged;
-                ContentDescriptor.RemoveValueChanged(button, Button_LoadedOrContentChanged);
+                button.Loaded -= Button_Loaded;
+                button.Unloaded -= Button_Unloaded;
+                Detach(button);
             }
         }
 
-        private static void Button_LoadedOrContentChanged(object? sender, EventArgs e)
+        private static void Attach(Button button)
+        {
+            Detach(button); // ποτέ διπλή εγγραφή του ίδιου handler
+            ContentDescriptor.AddValueChanged(button, Button_ContentChanged);
+            ApplyMinWidth(button);
+        }
+
+        private static void Detach(Button button) => ContentDescriptor.RemoveValueChanged(button, Button_ContentChanged);
+
+        private static void Button_Loaded(object sender, RoutedEventArgs e)
+        {
+            if (sender is Button button) Attach(button);
+        }
+
+        private static void Button_Unloaded(object sender, RoutedEventArgs e)
+        {
+            if (sender is Button button) Detach(button);
+        }
+
+        private static void Button_ContentChanged(object? sender, EventArgs e)
         {
             // IsLoaded εδώ (όχι μέσα στο ApplyMinWidth) ώστε το ApplyMinWidth να είναι μονάδα-ελέγξιμο
-            // ανεξάρτητα από το αν το κουμπί είναι προσαρτημένο σε ζωντανό visual tree (βλ.
-            // ButtonAutoFitTests.cs) - FontFamily/Padding/BorderThickness που θέτει κανείς απευθείας
-            // (χωρίς Style) είναι ήδη επίσημα τη στιγμή της κλήσης.
-            if (sender is Button button && button.IsLoaded)
-                ApplyMinWidth(button);
+            // ανεξάρτητα από live visual tree (βλ. ButtonAutoFitTests.cs).
+            if (sender is Button button && button.IsLoaded) ApplyMinWidth(button);
         }
 
         internal static void ApplyMinWidth(Button button)

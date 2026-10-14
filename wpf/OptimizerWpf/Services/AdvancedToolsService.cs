@@ -59,7 +59,7 @@ namespace OptimizerWpf.Services
 
         public static void CreateSystemReport()
         {
-            var path = Path.Combine(Path.GetTempPath(), "OptimizerWpfSystemReport.txt");
+            var path = Path.Combine(Path.GetTempPath(), $"OptimizerWpfSystemReport_{Guid.NewGuid():N}.txt");
             try
             {
                 using var p = Process.Start(new ProcessStartInfo("cmd.exe", $"/c systeminfo > \"{path}\"") { UseShellExecute = false, CreateNoWindow = true });
@@ -427,13 +427,13 @@ namespace OptimizerWpf.Services
 
         private static void RunPsDetached(string command)
         {
-            try { Process.Start(new ProcessStartInfo("powershell.exe", $"-NoProfile -ExecutionPolicy Bypass -WindowStyle Hidden -Command \"{command}\"") { UseShellExecute = false, CreateNoWindow = true }); }
+            try { Process.Start(new ProcessStartInfo("powershell.exe", PowerShellArgs.Command(command, hidden: true)) { UseShellExecute = false, CreateNoWindow = true }); }
             catch { }
         }
 
         private static async Task<string> RunPsCaptureAsync(string command)
         {
-            using var process = Process.Start(new ProcessStartInfo("powershell.exe", $"-NoProfile -ExecutionPolicy Bypass -Command \"{command.Replace("\"", "\\\"")}\"")
+            using var process = Process.Start(new ProcessStartInfo("powershell.exe", PowerShellArgs.Command(command))
             { RedirectStandardOutput = true, UseShellExecute = false, CreateNoWindow = true, StandardOutputEncoding = System.Text.Encoding.UTF8 });
             if (process == null) return "";
             var output = await process.StandardOutput.ReadToEndAsync();
@@ -460,7 +460,7 @@ namespace OptimizerWpf.Services
         private static async Task<(string Output, string Error)> RunPsCaptureWithErrorAsync(string command)
         {
             command = "[Console]::OutputEncoding = [System.Text.Encoding]::UTF8; " + command;
-            using var process = Process.Start(new ProcessStartInfo("powershell.exe", $"-NoProfile -ExecutionPolicy Bypass -Command \"{command.Replace("\"", "\\\"")}\"")
+            using var process = Process.Start(new ProcessStartInfo("powershell.exe", PowerShellArgs.Command(command))
             {
                 RedirectStandardOutput = true,
                 RedirectStandardError = true,
@@ -479,7 +479,7 @@ namespace OptimizerWpf.Services
 
         private static async Task<bool> RunPsForSuccessAsync(string command)
         {
-            using var process = Process.Start(new ProcessStartInfo("powershell.exe", $"-NoProfile -ExecutionPolicy Bypass -Command \"{command.Replace("\"", "\\\"")}\"")
+            using var process = Process.Start(new ProcessStartInfo("powershell.exe", PowerShellArgs.Command(command))
             { UseShellExecute = false, CreateNoWindow = true });
             if (process == null) return false;
             await process.WaitForExitAsync();

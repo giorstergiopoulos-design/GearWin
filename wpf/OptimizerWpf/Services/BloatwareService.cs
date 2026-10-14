@@ -85,14 +85,15 @@ namespace OptimizerWpf.Services
             var xmlLines = string.Join("\r\n", associations.Select(kv =>
                 $"  <Association Identifier=\"{kv.Key}\" ProgId=\"{kv.Value}\" ApplicationName=\"\" />"));
             var xmlContent = $"<?xml version=\"1.0\" encoding=\"UTF-8\"?>\r\n<DefaultAssociations>\r\n{xmlLines}\r\n</DefaultAssociations>";
-            var xmlPath = Path.Combine(Path.GetTempPath(), $"OptimizerWpfDefaultAppAssoc_{Guid.NewGuid():N}.xml");
+            // ΑΣΦΑΛΕΙΑ: το dism (elevated) διαβάζει αυτό το XML - γράφεται σε φάκελο μόνο-Administrators, όχι στο %TEMP%.
+            var xmlPath = SecureStorage.NewPrivateTempFile("assoc", ".xml");
             try
             {
                 await File.WriteAllTextAsync(xmlPath, xmlContent, System.Text.Encoding.UTF8);
                 return await RunProcessForSuccessAsync("dism.exe", $"/Online /Import-DefaultAppAssociations:\"{xmlPath}\"");
             }
             catch { return false; }
-            finally { try { File.Delete(xmlPath); } catch { } }
+            finally { try { Directory.Delete(Path.GetDirectoryName(xmlPath)!, true); } catch { } }
         }
 
         // Port του Add-TaskbarPin (~10837) - η Microsoft δεν προσφέρει επίσημο API για προγραμματιστικό
@@ -113,19 +114,16 @@ try {{
     if ($pinVerb) {{ $pinVerb.DoIt(); exit 0 }} else {{ exit 1 }}
 }} catch {{ exit 1 }}
 ";
-            var scriptFile = Path.Combine(Path.GetTempPath(), $"OptimizerWpfTaskbarPin_{Guid.NewGuid():N}.ps1");
             try
             {
-                await File.WriteAllTextAsync(scriptFile, script);
-                using var process = Process.Start(new ProcessStartInfo("powershell.exe",
-                    $"-NoProfile -ExecutionPolicy Bypass -File \"{scriptFile}\"")
+                // ΑΣΦΑΛΕΙΑ: -EncodedCommand αντί για script στο %TEMP% (βλ. PowerShellArgs).
+                using var process = Process.Start(new ProcessStartInfo("powershell.exe", PowerShellArgs.Command(script))
                 { UseShellExecute = false, CreateNoWindow = true });
                 if (process == null) return false;
                 await process.WaitForExitAsync();
                 return process.ExitCode == 0;
             }
             catch { return false; }
-            finally { try { File.Delete(scriptFile); } catch { } }
         }
 
         public static Task<bool> RemoveWindowsMediaPlayerAsync() => RunPsForSuccessAsync(
@@ -312,7 +310,7 @@ try {{
         {
             try
             {
-                using var process = Process.Start(new ProcessStartInfo("powershell.exe", $"-NoProfile -ExecutionPolicy Bypass -Command \"{command.Replace("\"", "\\\"")}\"")
+                using var process = Process.Start(new ProcessStartInfo("powershell.exe", PowerShellArgs.Command(command))
                 { UseShellExecute = false, CreateNoWindow = true });
                 if (process == null) return false;
                 await process.WaitForExitAsync();
@@ -323,7 +321,7 @@ try {{
 
         private static async Task<string> RunPsCaptureAsync(string command)
         {
-            using var process = Process.Start(new ProcessStartInfo("powershell.exe", $"-NoProfile -ExecutionPolicy Bypass -Command \"{command.Replace("\"", "\\\"")}\"")
+            using var process = Process.Start(new ProcessStartInfo("powershell.exe", PowerShellArgs.Command(command))
             { RedirectStandardOutput = true, UseShellExecute = false, CreateNoWindow = true, StandardOutputEncoding = System.Text.Encoding.UTF8 });
             if (process == null) return "";
             var output = await process.StandardOutput.ReadToEndAsync();

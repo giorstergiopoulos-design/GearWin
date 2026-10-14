@@ -6,6 +6,14 @@ available inside the app itself, via Help/Instructions → the "Version History"
 
 Format loosely follows [Keep a Changelog](https://keepachangelog.com/).
 
+## v6.3.7 — Security and memory audit
+
+- **Security (the app runs elevated):** every PowerShell call now uses `-EncodedCommand` (no data inside quoted command lines, no scripts left in `%TEMP%` for an elevated process to run); files consumed by elevated tools (scheduled-task XML, driver packages, default-app XML, script fallbacks) live in `%ProgramData%\GearWin` with an administrators-only ACL; ViVeTool is installed there too and extracted from memory; package ids coming from npm/pip/gem/scoop/etc. are whitelist-validated before they reach `cmd.exe`; cleanup and game-save backup never traverse junctions; the elevated "Start with Windows" task is only registered when the executable's folder is not writable by normal users.
+- **Gaming Mode** no longer disables VBS / Memory Integrity (HVCI), and no longer force-enables them when switched off.
+- **Memory:** fixed a leak where every button stayed referenced by a static handler table after its view was recreated; the action history (500) and the update-check log (256 KB) are now bounded, and the action history is thread-safe.
+- New regression tests for injection payloads, encoded-command round-trip, ACL checks and Gaming Mode (212 tests).
+- Known remaining risk: tools found through the user's PATH (ffmpeg, python, npm...) run with the app's elevation.
+
 ## v6.3.6 — Games & Multimedia merged, per-game profiles, universal button fit, Store updates
 
 (Also contains the 6.3.5 work: the Games + Multimedia tab merge, Boost button, new converter formats.)

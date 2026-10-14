@@ -43,8 +43,29 @@ namespace OptimizerWpf.Services
 
         private static long DirSize(string dir)
         {
-            try { return new DirectoryInfo(dir).EnumerateFiles("*", SearchOption.AllDirectories).Sum(f => f.Length); }
-            catch { return 0; }
+            long total = 0;
+            foreach (var f in EnumerateFilesNoReparse(dir)) { try { total += new FileInfo(f).Length; } catch { } }
+            return total;
+        }
+
+        // Ίδια λογική με την αναδρομική απαρίθμηση, αλλά ΔΕΝ διασχίζει φακέλους-junction/symlink (κύκλοι → ατέρμονο
+        // zip / διαρροή αρχείων εκτός των δύο φακέλων αποθήκευσης). Αρχεία-placeholder (OneDrive) περιλαμβάνονται.
+        private static IEnumerable<string> EnumerateFilesNoReparse(string root)
+        {
+            var stack = new Stack<string>();
+            stack.Push(root);
+            while (stack.Count > 0)
+            {
+                var dir = stack.Pop();
+                string[] files = Array.Empty<string>(), dirs = Array.Empty<string>();
+                try { files = Directory.GetFiles(dir); dirs = Directory.GetDirectories(dir); } catch { }
+                foreach (var f in files) yield return f;
+                foreach (var d in dirs)
+                {
+                    try { if ((File.GetAttributes(d) & FileAttributes.ReparsePoint) != 0) continue; } catch { continue; }
+                    stack.Push(d);
+                }
+            }
         }
 
         public static Task<bool> BackupAsync(string destinationZipPath) => Task.Run(() =>
@@ -56,8 +77,9 @@ namespace OptimizerWpf.Services
                 foreach (var folder in KnownSaveFolders().Where(Directory.Exists))
                 {
                     var root = Path.GetFileName(folder.TrimEnd(Path.DirectorySeparatorChar));
-                    foreach (var file in Directory.EnumerateFiles(folder, "*", SearchOption.AllDirectories))
+                    foreach (var file in EnumerateFilesNoReparse(folder))
                     {
+                        if (string.Equals(file, destinationZipPath, StringComparison.OrdinalIgnoreCase)) continue; // ποτέ το ίδιο το zip
                         try { zip.CreateEntryFromFile(file, Path.Combine(root, Path.GetRelativePath(folder, file))); }
                         catch { /* ένα κλειδωμένο/απρόσιτο αρχείο δεν ακυρώνει όλο το backup */ }
                     }

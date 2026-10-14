@@ -118,10 +118,24 @@ namespace OptimizerWpf.Services
         // αντί για μια αόριστη αποτυχία.
         public static async Task<(bool Ok, string? Reason)> UpgradeDetailedAsync(string id, string source)
         {
+            if (!IsSafePackageId(id, source)) return (false, "Unsafe package id rejected");
             var (fileName, arguments) = GetUpgradeCommandForSource(source, id);
             var (_, exitCode, started) = await RunToolAsync(fileName, arguments, TimeSpan.FromMinutes(5));
             if (!started) return (false, null);
             return exitCode == 0 ? (true, null) : (false, DescribeExitCode(exitCode));
+        }
+
+        // ΑΣΦΑΛΕΙΑ: τα ids των npm/pnpm/scoop/gem/composer/pip/cargo/dotnet/choco προέρχονται από την ΕΞΟΔΟ εξωτερικών
+        // εργαλείων (όνομα πακέτου που ελέγχει ο συγγραφέας του πακέτου) και μπαίνουν σε γραμμή εντολών μέσω
+        // `cmd.exe /c ...` ΜΕ ΥΨΗΛΑ ΔΙΚΑΙΩΜΑΤΑ - ένα id όπως `x" & calc & "` θα εκτελούσε αυθαίρετο κώδικα ως Administrator.
+        // Άρα: αυστηρό whitelist (γράμματα, ψηφία, . _ - @ / + ~) για κάθε πηγή που περνά από cmd. Για winget/msstore
+        // (κλήση χωρίς shell, ids όπως "ARP\Machine\X64\{GUID}" ή με κενά) αρκεί να μην υπάρχουν εισαγωγικά/χαρακτήρες ελέγχου.
+        public static bool IsSafePackageId(string? id, string source)
+        {
+            if (string.IsNullOrWhiteSpace(id) || id.Length > 200) return false;
+            if (source is "winget" or "msstore")
+                return !id.Any(c => c == '"' || char.IsControl(c));
+            return System.Text.RegularExpressions.Regex.IsMatch(id, @"^[A-Za-z0-9._@/+~\-]+$");
         }
 
         // Υποσύνολο του $ErrorCodes του WMT 6.7 (winget AppInstallerErrors.h + συνήθεις MSI/Windows κωδικοί).
