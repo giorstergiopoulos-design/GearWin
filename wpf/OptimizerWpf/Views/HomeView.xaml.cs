@@ -212,12 +212,16 @@ namespace OptimizerWpf.Views
         private void LoadPinnedTweaks()
         {
             var pins = AppSettingsService.Current.PinnedTweakKeys;
-            var all = TweakService.AllMainTweaks().Select(t => new TweakRowVm(t, "Main"))
-                .Concat(TweakService.AiCopilotTweaksSimple().Select(t => new TweakRowVm(t, "Ai")))
-                .Concat(TweakService.PerfTweaksSimple().Select(t => new TweakRowVm(t, "Perf")))
-                .Concat(TweakService.LighterWindowsTweaksSimple().Select(t => new TweakRowVm(t, "Lighter")))
+            // ΒΕΛΤΙΩΣΗ ΑΠΟΔΟΣΗΣ: τα rows χτίζονται χωρίς ανίχνευση (φθηνό - μόνο κλειδιά), φιλτράρονται στα καρφιτσωμένα,
+            // και ΜΟΝΟ γι' αυτά διαβάζεται η πραγματική κατάσταση, στο παρασκήνιο (πριν: ανίχνευση ΟΛΩΝ των tweaks
+            // σύγχρονα στο UI νήμα κάθε φορά που άνοιγε η Αρχική, συμπεριλαμβανομένων powercfg processes).
+            var all = TweakService.AllMainTweaks().Select(t => new TweakRowVm(t, "Main", detectNow: false))
+                .Concat(TweakService.AiCopilotTweaksSimple().Select(t => new TweakRowVm(t, "Ai", detectNow: false)))
+                .Concat(TweakService.PerfTweaksSimple().Select(t => new TweakRowVm(t, "Perf", detectNow: false)))
+                .Concat(TweakService.LighterWindowsTweaksSimple().Select(t => new TweakRowVm(t, "Lighter", detectNow: false)))
                 .Where(r => pins.Contains(r.PinKey) || pins.Contains(r.LegacyPinKey))
                 .ToList();
+            _ = TweakRowVm.DetectAllAsync(all);
 
             ListPinnedTweaks.ItemsSource = all;
             TxtNoPinned.Visibility = all.Count == 0 ? Visibility.Visible : Visibility.Collapsed;

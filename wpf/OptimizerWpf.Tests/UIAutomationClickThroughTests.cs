@@ -103,7 +103,11 @@ namespace OptimizerWpf.Tests
                             // περιλαμβάνει ήδη άλλα κουμπιά (π.χ. "Next") που δοκιμάζουμε να
                             // πατήσουμε ΜΕΤΑ - πραγματικός χρήστης δεν θα μπορούσε ποτέ να κάνει αυτό
                             // το φυσικά αδύνατο διάδοχο κλικ σε ήδη κλειστό παράθυρο.
-                            var isKnownTestArtifact = text.Contains("shown as dialog") || text.Contains("while a Window is closing");
+                            // Το "Εξαγωγή ρυθμίσεων" (v5.11.0, μετά την τελευταία πλήρη εκτέλεση του harness) ολοκληρώνεται κανονικά όταν ο watcher
+                            // επιβεβαιώσει το native Save dialog - το μήνυμα επιτυχίας είναι ΑΠΟΤΕΛΕΣΜΑ της δοκιμής, όχι εύρημα.
+                            var isKnownTestArtifact = text.Contains("shown as dialog") || text.Contains("while a Window is closing") || text.Contains("εξήχθησαν με επιτυχία")
+                                || text.Contains("θα αντικαταστήσει τις τρέχουσες ρυθμίσεις")  // επιβεβαίωση εισαγωγής ρυθμίσεων (σκόπιμη, το harness την κλείνει)
+                                || text.Contains("Η εκκίνηση με τα Windows δεν ενεργοποιήθηκε");  // dev/test build εκτός Program Files: σκόπιμη άρνηση ασφαλείας (βλ. SecureStorage)
                             if (isKnownTestArtifact)
                                 Console.WriteLine($"(auto-dismissed, known test-harness artifact, not a real finding) {text.Replace("\n", " ")}");
                             else

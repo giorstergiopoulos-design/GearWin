@@ -1,4 +1,4 @@
-﻿using System.Configuration;
+﻿﻿using System.Configuration;
 using System.Data;
 using System.Linq;
 using System.Windows;
@@ -24,6 +24,7 @@ public partial class App : Application
     protected override void OnStartup(StartupEventArgs e)
     {
         base.OnStartup(e);
+        Services.CrashLogService.Install();
 
         // ΝΕΟ - headless λειτουργία, καλείται ΜΟΝΟ από τον installer's [UninstallRun] (βλ.
         // installer/OptimizerWpf.iss, TweakService.RestoreAllTrackedTweaks) - ρητό αίτημα χρήστη:
@@ -81,6 +82,7 @@ public partial class App : Application
             // χωρίς όριο ο χρήστης έβλεπε ατέλειωτη αλληλουχία modal διαλόγων. Ένας διάλογος ανά 30s.
             if ((DateTime.Now - _lastErrorDialog).TotalSeconds < 30) { args.Handled = true; return; }
             _lastErrorDialog = DateTime.Now;
+            Services.CrashLogService.Write("Dispatcher unhandled", args.Exception);
             ThemedMessageBox.Show($"{Services.LanguageService.T("App_UnhandledErrorPrefix")}{args.Exception.Message}{Services.LanguageService.T("App_UnhandledErrorSuffix")}",
                 Services.LanguageService.T("App_ErrorTitle"), MessageBoxButton.OK, MessageBoxImage.Error);
             args.Handled = true;

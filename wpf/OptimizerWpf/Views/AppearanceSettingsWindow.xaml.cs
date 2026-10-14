@@ -206,7 +206,10 @@ namespace OptimizerWpf.Views
             {
                 // Η εργασία δεν δημιουργήθηκε - ειλικρινής επαναφορά του checkbox αντί για ψεύτικο "ενεργό".
                 _loading = true; ChkLaunchToTray.IsChecked = !enabled; _loading = false;
-                ThemedMessageBox.Show(LanguageService.T("Autostart_Failed"), LanguageService.T("AppearanceSettingsTitle"), MessageBoxButton.OK, MessageBoxImage.Warning);
+                // Ξεχωριστό, ειλικρινές μήνυμα όταν ο λόγος είναι η ΑΣΦΑΛΕΙΑ (exe σε φάκελο εγγράψιμο από απλούς χρήστες),
+                // όχι το παραπλανητικό "βεβαιωθείτε ότι τρέχει ως διαχειριστής" (τρέχει ήδη ως διαχειριστής).
+                var key = enabled && !SystemService.IsAutostartLocationSafe() ? "Autostart_UnsafeLocation" : "Autostart_Failed";
+                ThemedMessageBox.Show(LanguageService.T(key), LanguageService.T("AppearanceSettingsTitle"), MessageBoxButton.OK, MessageBoxImage.Warning);
                 return;
             }
             AppSettingsService.Current.LaunchWithWindowsToTray = enabled;

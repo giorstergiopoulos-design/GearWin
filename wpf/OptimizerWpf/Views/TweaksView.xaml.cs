@@ -23,10 +23,10 @@ namespace OptimizerWpf.Views
         public TweaksView()
         {
             InitializeComponent();
-            ListMainTweaks.ItemsSource = TweakService.AllMainTweaks().Select(t => new TweakRowVm(t, "Main")).ToList();
-            ListAiTweaks.ItemsSource = TweakService.AiCopilotTweaksSimple().Select(t => new TweakRowVm(t, "Ai")).ToList();
-            ListPerfTweaks.ItemsSource = TweakService.PerfTweaksSimple().Select(t => new TweakRowVm(t, "Perf")).ToList();
-            ListLighterWindows.ItemsSource = TweakService.LighterWindowsTweaksSimple().Select(t => new TweakRowVm(t, "Lighter")).ToList();
+            ListMainTweaks.ItemsSource = TweakRowVm.CreateDeferred(TweakService.AllMainTweaks(), "Main");
+            ListAiTweaks.ItemsSource = TweakRowVm.CreateDeferred(TweakService.AiCopilotTweaksSimple(), "Ai");
+            ListPerfTweaks.ItemsSource = TweakRowVm.CreateDeferred(TweakService.PerfTweaksSimple(), "Perf");
+            ListLighterWindows.ItemsSource = TweakRowVm.CreateDeferred(TweakService.LighterWindowsTweaksSimple(), "Lighter");
             ListCustomMenu.ItemsSource = _customMenuItems;
             foreach (var item in CustomContextMenuService.Load()) _customMenuItems.Add(item);
 
@@ -112,7 +112,7 @@ namespace OptimizerWpf.Views
             if (ThemedMessageBox.Show(LanguageService.T("Tweaks_LowResourceConfirm"),
                     LanguageService.T("Tweaks_ConfirmTitle"), MessageBoxButton.YesNo, MessageBoxImage.Warning) != MessageBoxResult.Yes) return;
             TweakService.ApplyLowResourceProfile();
-            ListLighterWindows.ItemsSource = TweakService.LighterWindowsTweaksSimple().Select(t => new TweakRowVm(t, "Lighter")).ToList();
+            ListLighterWindows.ItemsSource = TweakRowVm.CreateDeferred(TweakService.LighterWindowsTweaksSimple(), "Lighter");
         }
 
         private void ToggleTakeOwnership_Click(object sender, RoutedEventArgs e)
@@ -199,10 +199,10 @@ namespace OptimizerWpf.Views
                 catch { /* ένα μεμονωμένο tweak μπορεί να αποτύχει (π.χ. δεν υποστηρίζεται σε αυτό το build) - τα υπόλοιπα συνεχίζουν */ }
             }
 
-            ListMainTweaks.ItemsSource = TweakService.AllMainTweaks().Select(t => new TweakRowVm(t, "Main")).ToList();
-            ListAiTweaks.ItemsSource = TweakService.AiCopilotTweaksSimple().Select(t => new TweakRowVm(t, "Ai")).ToList();
-            ListPerfTweaks.ItemsSource = TweakService.PerfTweaksSimple().Select(t => new TweakRowVm(t, "Perf")).ToList();
-            ListLighterWindows.ItemsSource = TweakService.LighterWindowsTweaksSimple().Select(t => new TweakRowVm(t, "Lighter")).ToList();
+            ListMainTweaks.ItemsSource = TweakRowVm.CreateDeferred(TweakService.AllMainTweaks(), "Main");
+            ListAiTweaks.ItemsSource = TweakRowVm.CreateDeferred(TweakService.AiCopilotTweaksSimple(), "Ai");
+            ListPerfTweaks.ItemsSource = TweakRowVm.CreateDeferred(TweakService.PerfTweaksSimple(), "Perf");
+            ListLighterWindows.ItemsSource = TweakRowVm.CreateDeferred(TweakService.LighterWindowsTweaksSimple(), "Lighter");
 
             var settings = AppSettingsService.Current;
             if (full.ThemeName != null)
@@ -335,7 +335,38 @@ namespace OptimizerWpf.Views
         public string PinKey { get; }
         public string LegacyPinKey { get; }
         private bool _isOn;
-        public bool IsOn { get => _isOn; set { _isOn = value; PropertyChanged?.Invoke(this, new(nameof(IsOn))); } }
+        private bool _userSet;
+        public bool IsOn { get => _isOn; set { _userSet = true; _isOn = value; PropertyChanged?.Invoke(this, new(nameof(IsOn))); } }
+
+        // Εφαρμογή αποτελέσματος ανίχνευσης χωρίς να θεωρηθεί ενέργεια χρήστη.
+        private void ApplyDetected(bool value)
+        {
+            if (_userSet || _isOn == value) return; // ο χρήστης πρόλαβε να πατήσει τον διακόπτη - δεν τον αλλάζουμε
+            _isOn = value;
+            PropertyChanged?.Invoke(this, new(nameof(IsOn)));
+        }
+
+        // ΒΕΛΤΙΩΣΗ ΑΠΟΔΟΣΗΣ: το DetectState κάθε tweak (registry, και ΕΝΑ ΝΕΟ powercfg.exe process για τα ρυθμίσεις
+        // ενέργειας) έτρεχε ΣΥΓΧΡΟΝΑ στον constructor, στο UI νήμα - το άνοιγμα της καρτέλας Επιπλέον Ρυθμίσεων (και της
+        // Αρχικής, που έφτιαχνε ΟΛΑ τα rows μόνο για να βρει τα καρφιτσωμένα) πάγωνε το παράθυρο. Τώρα τα rows
+        // δημιουργούνται αμέσως και οι πραγματικές καταστάσεις διαβάζονται στο παρασκήνιο (σειριακά - όχι καταιγισμός
+        // processes) και εφαρμόζονται στο UI νήμα.
+        public static List<TweakRowVm> CreateDeferred(IEnumerable<SimpleTweak> tweaks, string listKey, bool startDetection = true)
+        {
+            var rows = tweaks.Select(t => new TweakRowVm(t, listKey, detectNow: false)).ToList();
+            if (startDetection) _ = DetectAllAsync(rows);
+            return rows;
+        }
+
+        public static async System.Threading.Tasks.Task DetectAllAsync(IReadOnlyList<TweakRowVm> rows)
+        {
+            var states = await System.Threading.Tasks.Task.Run(() => rows.Select(r =>
+            {
+                try { return r.Tweak.DetectState?.Invoke(); } catch { return (bool?)null; }
+            }).ToList());
+            for (var i = 0; i < rows.Count; i++)
+                if (states[i] is bool b) rows[i].ApplyDetected(b);
+        }
 
         // ΝΕΟ - roadmap "Καρφιτσωμένες συντομεύσεις" - βλ. AppSettingsService.PinnedTweakKeys.
         private bool _isPinned;
@@ -365,14 +396,14 @@ namespace OptimizerWpf.Views
         // την πραγματική κατάσταση του μητρώου/powercfg στην κατασκευή της γραμμής, αντί ο διακόπτης
         // να ξεκινά πάντα false. Σφάλμα κατά την ανίχνευση (π.χ. μη αναμενόμενη τιμή μητρώου) υποβαθμίζει
         // σε false αντί να ρίξει την κάρτα - καλύτερα ένας λάθος-ανενεργός διακόπτης παρά κρασάρισμα.
-        public TweakRowVm(SimpleTweak tweak, string listKey)
+        public TweakRowVm(SimpleTweak tweak, string listKey, bool detectNow = true)
         {
             Tweak = tweak;
             // Σταθερό ID (αν υπάρχει) αντί για τη μεταφρασμένη ετικέτα, ώστε pins/προφίλ να μην εξαρτώνται από
             // τη γλώσσα. LegacyPinKey = παλιό κλειδί βασισμένο στο label, για συμβατότητα με υπάρχοντα δεδομένα.
             LegacyPinKey = $"{listKey}:{tweak.Label}";
             PinKey = tweak.Id != null ? $"{listKey}:{tweak.Id}" : LegacyPinKey;
-            try { _isOn = tweak.DetectState?.Invoke() ?? false; } catch { _isOn = false; }
+            if (detectNow) { try { _isOn = tweak.DetectState?.Invoke() ?? false; } catch { _isOn = false; } }
             var pins = AppSettingsService.Current.PinnedTweakKeys;
             _isPinned = pins.Contains(PinKey) || pins.Contains(LegacyPinKey);
             // Μετανάστευση παλιού pin στο σταθερό κλειδί

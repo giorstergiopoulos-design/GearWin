@@ -100,6 +100,14 @@ namespace OptimizerWpf.Services
         // TaskSchedulerService). Η παλιά τιμή του Run key αφαιρείται πάντα (μετανάστευση).
         public const string AutostartTaskName = @"GearWin\Autostart";
 
+        // Το exe βρίσκεται σε φάκελο που ΔΕΝ μπορούν να τροποποιήσουν απλοί χρήστες (π.χ. Program Files) - προϋπόθεση για
+        // εργασία που ξεκινά elevated χωρίς UAC (βλ. SecureStorage.IsDirectoryAdminOnlyWritable).
+        public static bool IsAutostartLocationSafe()
+        {
+            var exePath = Environment.ProcessPath ?? System.Reflection.Assembly.GetExecutingAssembly().Location;
+            return SecureStorage.IsDirectoryAdminOnlyWritable(System.IO.Path.GetDirectoryName(exePath));
+        }
+
         public static async System.Threading.Tasks.Task<bool> SetLaunchWithWindowsToTrayAsync(bool enabled)
         {
             try
@@ -120,7 +128,7 @@ namespace OptimizerWpf.Services
             // εγγράψιμο από τον χρήστη (Downloads, φάκελος ανάπτυξης, Desktop...), οποιοδήποτε μη-elevated πρόγραμμα
             // θα μπορούσε να το αντικαταστήσει και να τρέχει ως Administrator σε κάθε εκκίνηση - γι' αυτό ΔΕΝ δημιουργείται.
             // Η εγκατάσταση μέσω installer (Program Files) πληροί πάντα την προϋπόθεση.
-            if (!SecureStorage.IsDirectoryAdminOnlyWritable(System.IO.Path.GetDirectoryName(exePath))) return false;
+            if (!IsAutostartLocationSafe()) return false;
             // 15 δευτερόλεπτα καθυστέρηση: ο desktop/δίκτυο προλαβαίνουν να σηκωθούν πριν ξεκινήσει ο έλεγχος ενημερώσεων.
             var xml = TaskSchedulerService.BuildLogonTaskXml(exePath, "--tray", 15, TaskSchedulerService.CurrentUserId(), "GearWin - start with Windows (tray)");
             return await TaskSchedulerService.CreateAsync(AutostartTaskName, xml);

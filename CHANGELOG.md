@@ -6,6 +6,14 @@ available inside the app itself, via Help/Instructions → the "Version History"
 
 Format loosely follows [Keep a Changelog](https://keepachangelog.com/).
 
+## v6.3.8 — Faster tabs, updated libraries, crash log
+
+- **Performance:** the Tweaks tab no longer reads every switch state (registry + `powercfg.exe` processes) synchronously on the UI thread - states are detected in the background; Home builds rows only for pinned tweaks and detects just those.
+- **Security:** `Microsoft.Data.Sqlite` 8.0.10 -> 10.0.13 (removes the transitive `SQLitePCLRaw.lib.e_sqlite3` 2.1.6 high-severity advisory GHSA-2m69-gcr7-jv3q); `System.Management` updated; redundant `System.Diagnostics.PerformanceCounter` reference removed.
+- **Stability:** unhandled/unobserved exceptions on background threads are written to `%LocalAppData%\OptimizerWpf\crash.log` (256 KB cap) instead of silently ending the process.
+- **Start with Windows:** when the executable is in a folder normal users can modify, the message now says so (instead of "make sure the app runs as administrator").
+- Tests: deferred-detection tests, live UI-Automation click-through updated for the settings export/import dialogs (216 tests).
+
 ## v6.3.7 — Security and memory audit
 
 - **Security (the app runs elevated):** every PowerShell call now uses `-EncodedCommand` (no data inside quoted command lines, no scripts left in `%TEMP%` for an elevated process to run); files consumed by elevated tools (scheduled-task XML, driver packages, default-app XML, script fallbacks) live in `%ProgramData%\GearWin` with an administrators-only ACL; ViVeTool is installed there too and extracted from memory; package ids coming from npm/pip/gem/scoop/etc. are whitelist-validated before they reach `cmd.exe`; cleanup and game-save backup never traverse junctions; the elevated "Start with Windows" task is only registered when the executable's folder is not writable by normal users.
