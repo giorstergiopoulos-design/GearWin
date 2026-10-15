@@ -70,8 +70,19 @@ namespace OptimizerWpf.Views
             RefreshList();
         }
 
-        private void BtnClose_Click(object sender, RoutedEventArgs e) => Close();
+        private void BtnClose_Click(object sender, RoutedEventArgs e) => CloseOnce();
 
-        private void Window_Deactivated(object sender, System.EventArgs e) => Close();
+        // ΔΙΟΡΘΩΣΗ (βρέθηκε από το live click-through): το Deactivated μπορεί να έρθει ΕΝΩ το παράθυρο ήδη κλείνει (π.χ. Close από
+        // κουμπί/Esc → απώλεια focus → δεύτερο Close). Το WPF τότε ρίχνει InvalidOperationException ("...while a Window is
+        // closing") από μέσα στο WmActivate - μη χειρίσιμο από τον καθολικό handler και σε ορισμένα σενάρια τερμάτιζε τη διεργασία.
+        private bool _closeRequested;
+        private void CloseOnce()
+        {
+            if (_closeRequested) return;
+            _closeRequested = true;
+            try { Close(); } catch (System.InvalidOperationException) { /* ήδη κλείνει */ }
+        }
+
+        private void Window_Deactivated(object sender, System.EventArgs e) => CloseOnce();
     }
 }

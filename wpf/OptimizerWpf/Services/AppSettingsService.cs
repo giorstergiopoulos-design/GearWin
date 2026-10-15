@@ -129,8 +129,15 @@ namespace OptimizerWpf.Services
     // σε κάθε εκκίνηση.
     public static class AppSettingsService
     {
+        // ΑΣΦΑΛΕΙΑ ΔΕΔΟΜΕΝΩΝ ΧΡΗΣΤΗ: το GEARWIN_DATA_DIR (ορίζεται ΜΟΝΟ από το test assembly, βλ. TestIsolation.cs) στέλνει τις
+        // ρυθμίσεις σε προσωρινό φάκελο. Πριν, το live UI-Automation click-through πατούσε κάθε διακόπτη και ΑΠΟΘΗΚΕΥΕ στο
+        // πραγματικό AppSettings.json του χρήστη - έκλεισε π.χ. τις ειδοποιήσεις ενημερώσεων και ο αυτόματος έλεγχος
+        // σταμάτησε (UpdateNotificationsEnabled=false).
         private static readonly string StorePath = Path.Combine(
-            Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "OptimizerWpf", "AppSettings.json");
+            Environment.GetEnvironmentVariable("GEARWIN_DATA_DIR") is { Length: > 0 } custom
+                ? custom
+                : Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "OptimizerWpf"),
+            "AppSettings.json");
 
         private static AppSettings? _cache;
 

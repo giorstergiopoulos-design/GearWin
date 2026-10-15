@@ -297,6 +297,10 @@ namespace OptimizerWpf.Tests
                     // παραθύρου χωρίς exception, το UwpAppManagerWindow ΔΕΝ σαρώνει αυτόματα στην
                     // κατασκευή - μόνο στο κλικ).
                     if (windowName == "UwpAppManagerWindow" && controlName.Contains("Σάρωση")) continue;
+                    // Κουμπιά που ανοίγουν ΝΑΤΙΒ διάλογο αρχείου (Save/Open): το harness δεν έχει watcher για native Win32
+                    // διαλόγους, οπότε μένει για πάντα σε αναμονή (WATCHDOG). Η εξαγωγή/εισαγωγή ρυθμίσεων καλύπτεται από το
+                    // AppSettingsService και τα unit tests, όχι από το click-through.
+                    if (windowName == "AppearanceSettingsWindow" && (controlName.Contains("Εξαγωγή Ρυθμίσεων") || controlName.Contains("Εισαγωγή Ρυθμίσεων"))) continue;
 
                     object? pattern = null;
                     if (control.TryGetCurrentPattern(InvokePattern.Pattern, out var invokeObj)) pattern = invokeObj;

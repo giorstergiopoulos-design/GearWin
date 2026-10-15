@@ -6,6 +6,13 @@ available inside the app itself, via Help/Instructions → the "Version History"
 
 Format loosely follows [Keep a Changelog](https://keepachangelog.com/).
 
+## v6.3.9 — Windows updates in the update list, test isolation
+
+- **Windows Update:** available Windows updates (including optional ones) are now listed in the Optimization tab's update list and installed from there through the Windows Update Agent, mirroring WMT 6.7 (`IsInstalled=0 and IsHidden=0`, `Online=true`; updates already installed since boot and awaiting a restart are counted separately, drivers stay in the driver scan). Verified with a real scan on a machine with 5 pending updates.
+- **Root cause of "updates not detected":** the live UI-Automation test clicked every toggle and persisted the result into the user's real `AppSettings.json`, which turned `UpdateNotificationsEnabled` off and silently stopped the automatic check. Tests now use an isolated data folder (`GEARWIN_DATA_DIR`), run the test host without the normal app startup (`GEARWIN_TEST_HOST`), and skip buttons that open native file dialogs.
+- **Fix:** tray/clipboard popups no longer throw when closed while losing focus ("...while a Window is closing").
+- 219 tests.
+
 ## v6.3.8 — Faster tabs, updated libraries, crash log
 
 - **Performance:** the Tweaks tab no longer reads every switch state (registry + `powercfg.exe` processes) synchronously on the UI thread - states are detected in the background; Home builds rows only for pinned tweaks and detects just those.

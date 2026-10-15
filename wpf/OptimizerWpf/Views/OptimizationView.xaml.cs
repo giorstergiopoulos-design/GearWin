@@ -246,6 +246,7 @@ namespace OptimizerWpf.Views
             var failed = new List<string>();
             var openedInStore = new List<string>();
             var triggeredStoreOnce = false;
+            WingetService.RestartRequiredAfterUpdates = false;
             // try/finally: μια εξαίρεση στη μέση του βρόχου άφηνε το progress bar μόνιμα ορατό και τα κουμπιά
             // απενεργοποιημένα (ίδιο μοτίβο που ήδη διορθώθηκε στο BtnScanWinget_Click).
             try
@@ -294,6 +295,8 @@ namespace OptimizerWpf.Views
                 : $"{LanguageService.T("Opt_UpgradePartialPrefix")}{succeeded.Count}{LanguageService.T("Opt_UpgradePartialMid")}{failed.Count}{LanguageService.T("Opt_UpgradePartialSuffix")}{string.Join(", ", failed)}).";
             if (openedInStore.Count > 0)
                 summary += $" {openedInStore.Count}{LanguageService.T("Opt_UpgradeOpenedInStoreSuffix")}";
+            if (WingetService.RestartRequiredAfterUpdates)
+                summary += " " + LanguageService.T("Opt_RestartRequiredAfterUpdates");
             TxtWingetStatus.Text = summary;
             s_wingetStatusCache = summary;
             ThemedMessageBox.Show(summary, LanguageService.T("Opt_UpgradeAppsTitle"), MessageBoxButton.OK,

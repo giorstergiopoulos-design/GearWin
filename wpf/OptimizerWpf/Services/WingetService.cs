@@ -26,6 +26,11 @@ namespace OptimizerWpf.Services
             var results = new List<WingetUpdate>();
             var seenIds = new HashSet<string>();
 
+            // Windows Update (μηχανισμός WMT 6.7, βλ. WindowsUpdateService): ανεξάρτητο από το winget - πριν, οι ενημερώσεις
+            // Windows δεν εμφανίζονταν ΠΟΥΘΕΝΑ στη λίστα (μόνο ένας αριθμός στην Αρχική από το background check).
+            foreach (var wu in await ScanWindowsUpdatesAsync())
+                if (seenIds.Add($"windowsupdate:{wu.Id}")) results.Add(wu);
+
             var (wingetOutput, _, wingetStarted) = await RunToolAsync("winget.exe",
                 "upgrade --include-unknown --accept-source-agreements --disable-interactivity");
             if (!wingetStarted)
@@ -74,6 +79,27 @@ namespace OptimizerWpf.Services
             return results;
         }
 
+        private static async Task<List<WingetUpdate>> ScanWindowsUpdatesAsync()
+        {
+            var list = new List<WingetUpdate>();
+            try
+            {
+                var scan = await WindowsUpdateService.ScanDetailedAsync();
+                if (!scan.Success) return list;
+                foreach (var u in scan.Updates)
+                {
+                    var name = u.IsOptional ? $"[{LanguageService.T("WU_Optional")}] {u.Title}" : u.Title;
+                    if (!string.IsNullOrEmpty(u.KbArticleId) && !name.Contains(u.KbArticleId, StringComparison.OrdinalIgnoreCase)) name += $" ({u.KbArticleId})";
+                    var kind = u.IsOptional ? LanguageService.T("WU_Optional")
+                        : u.Severity != null ? $"{LanguageService.T("WU_Security")}: {u.Severity}"
+                        : LanguageService.T("WU_Important");
+                    list.Add(new WingetUpdate(name, u.RowId, string.IsNullOrEmpty(u.Category) ? "Windows Update" : u.Category.Split(',')[0].Trim(), kind, "windowsupdate"));
+                }
+            }
+            catch { /* best-effort όπως οι υπόλοιποι πάροχοι */ }
+            return list;
+        }
+
         // Port του $global:btnCheckMsStore του ps1 (~11240): το "store updates" CLI ΔΕΝ πιάνει πάντα
         // ΟΛΕΣ τις εκκρεμείς ενημερώσεις Metro/UWP εφαρμογών (επιβεβαιωμένο, τεκμηριωμένο όριο -
         // παραμένει "Preview" tool). Αυτό ενεργοποιεί ΠΡΑΓΜΑΤΙΚΗ σάρωση μέσω του επίσημου
@@ -111,6 +137,9 @@ namespace OptimizerWpf.Services
             }
         }
 
+        // Ορίζεται όταν μια ενημέρωση Windows ολοκληρώθηκε αλλά απαιτεί επανεκκίνηση - το UI το δείχνει στη σύνοψη.
+        public static bool RestartRequiredAfterUpdates { get; set; }
+
         public static async Task<bool> UpgradeAsync(string id, string source) => (await UpgradeDetailedAsync(id, source)).Ok;
 
         // Όπως το WMT 6.7 (Winget failure logs / ErrorCodes): επιστρέφει ΚΑΙ τον πραγματικό λόγο αποτυχίας
@@ -119,6 +148,12 @@ namespace OptimizerWpf.Services
         public static async Task<(bool Ok, string? Reason)> UpgradeDetailedAsync(string id, string source)
         {
             if (!IsSafePackageId(id, source)) return (false, "Unsafe package id rejected");
+            if (source == "windowsupdate")
+            {
+                var (ok, reboot, error) = await WindowsUpdateService.InstallAsync(id);
+                if (ok && reboot) RestartRequiredAfterUpdates = true;
+                return (ok, ok ? null : error);
+            }
             var (fileName, arguments) = GetUpgradeCommandForSource(source, id);
             var (_, exitCode, started) = await RunToolAsync(fileName, arguments, TimeSpan.FromMinutes(5));
             if (!started) return (false, null);
@@ -133,6 +168,8 @@ namespace OptimizerWpf.Services
         public static bool IsSafePackageId(string? id, string source)
         {
             if (string.IsNullOrWhiteSpace(id) || id.Length > 200) return false;
+            if (source == "windowsupdate") // "UpdateID|Revision" όπως το επιστρέφει το WUA
+                return System.Text.RegularExpressions.Regex.IsMatch(id, @"^[0-9a-fA-F-]{36}\|\d{1,6}$");
             if (source is "winget" or "msstore")
                 return !id.Any(c => c == '"' || char.IsControl(c));
             return System.Text.RegularExpressions.Regex.IsMatch(id, @"^[A-Za-z0-9._@/+~\-]+$");

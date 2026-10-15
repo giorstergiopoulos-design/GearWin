@@ -24,6 +24,10 @@ public partial class App : Application
     protected override void OnStartup(StartupEventArgs e)
     {
         base.OnStartup(e);
+        // Το test assembly (βλ. TestIsolation.cs) δημιουργεί ένα App μόνο για να φορτώσει τα resources (Themes/Styles.xaml) - ΔΕΝ
+        // πρέπει να τρέξει η κανονική εκκίνηση (tray, ενημερώσεις, single-instance mutex). Πριν, με ήδη τρέχον GearWin το
+        // mutex έκανε το test App να κάνει Shutdown() και κάθε window test αποτύγχανε ("no HWND after Show()").
+        if (Environment.GetEnvironmentVariable("GEARWIN_TEST_HOST") == "1") { ShutdownMode = ShutdownMode.OnExplicitShutdown; return; }
         Services.CrashLogService.Install();
 
         // ΝΕΟ - headless λειτουργία, καλείται ΜΟΝΟ από τον installer's [UninstallRun] (βλ.

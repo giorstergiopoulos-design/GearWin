@@ -100,3 +100,25 @@ namespace OptimizerWpf.Tests
             Assert.False(SecureStorage.IsDirectoryAdminOnlyWritable(@"C:\this\does\not\exist"));
     }
 }
+
+namespace OptimizerWpf.Tests
+{
+    public class WindowsUpdateIdTests
+    {
+        [Fact]
+        public void WindowsUpdateRowIdsAreAcceptedOnlyInWuaFormat()
+        {
+            Assert.True(WingetService.IsSafePackageId("4dbb6451-7253-47b0-af26-ebc863e1ecec|200", "windowsupdate"));
+            Assert.False(WingetService.IsSafePackageId("4dbb6451-7253-47b0-af26-ebc863e1ecec|200 & calc", "windowsupdate"));
+            Assert.False(WingetService.IsSafePackageId("not-a-guid|1", "windowsupdate"));
+        }
+
+        [Fact]
+        public void RowIdMatchesWmtFormat() =>
+            Assert.Equal("abc|5", new WindowsUpdateItem("t", null, false, "abc", 5).RowId);
+
+        [Fact]
+        public void TestsNeverUseTheRealUserDataFolder() =>
+            Assert.StartsWith(System.IO.Path.GetTempPath(), Environment.GetEnvironmentVariable("GEARWIN_DATA_DIR"));
+    }
+}

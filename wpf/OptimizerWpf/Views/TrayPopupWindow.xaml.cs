@@ -56,7 +56,18 @@ namespace OptimizerWpf.Views
                 : LanguageService.T("Tray_Disconnected");
         }
 
-        private void Window_Deactivated(object sender, EventArgs e) => Close();
+        // ΔΙΟΡΘΩΣΗ (βρέθηκε από το live click-through): το Deactivated μπορεί να έρθει ΕΝΩ το παράθυρο ήδη κλείνει (π.χ. Close από
+        // κουμπί/Esc → απώλεια focus → δεύτερο Close). Το WPF τότε ρίχνει InvalidOperationException ("...while a Window is
+        // closing") από μέσα στο WmActivate - μη χειρίσιμο από τον καθολικό handler και σε ορισμένα σενάρια τερμάτιζε τη διεργασία.
+        private bool _closeRequested;
+        private void CloseOnce()
+        {
+            if (_closeRequested) return;
+            _closeRequested = true;
+            try { Close(); } catch (System.InvalidOperationException) { /* ήδη κλείνει */ }
+        }
+
+        private void Window_Deactivated(object sender, EventArgs e) => CloseOnce();
 
         private void BtnOpenMain_Click(object sender, RoutedEventArgs e)
         {

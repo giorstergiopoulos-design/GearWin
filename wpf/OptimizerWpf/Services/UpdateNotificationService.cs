@@ -1,5 +1,6 @@
 using System;
 using System.IO;
+using System.Linq;
 using System.Threading.Tasks;
 using System.Windows.Threading;
 
@@ -150,8 +151,10 @@ namespace OptimizerWpf.Services
             // Services/WindowsUpdateService.cs. Ίδιο μοτίβο best-effort/MaybeNotify με τα δύο παραπάνω.
             try
             {
-                var (success, winUpdates, _) = await WindowsUpdateService.ScanAsync();
-                Log($"RunCheckAsync: Windows Update scan success={success}, found {winUpdates.Count} update(s)");
+                var (success, allWinUpdates, winError) = await WindowsUpdateService.ScanAsync();
+                // Οι προαιρετικές ενημερώσεις (π.χ. προεπισκοπήσεις) δεν ενοχλούν με ειδοποίηση - εμφανίζονται στη λίστα της καρτέλας.
+                var winUpdates = allWinUpdates.Where(u => !u.IsOptional).ToList();
+                Log($"RunCheckAsync: Windows Update scan success={success}, found {winUpdates.Count} update(s) (+{allWinUpdates.Count - winUpdates.Count} optional){(success ? "" : ", error: " + winError)}");
                 if (success)
                 {
                     UpdatesHubService.ReportWindowsUpdateScan(winUpdates.Count);
