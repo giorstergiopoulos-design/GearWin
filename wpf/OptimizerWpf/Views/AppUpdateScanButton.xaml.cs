@@ -35,6 +35,10 @@ namespace OptimizerWpf.Views
         {
             ProgressArc.Visibility = scanning ? Visibility.Visible : Visibility.Collapsed;
             IconGroup.Opacity = scanning ? 1.0 : 0.55;
+            // captionKey != null <=> εγκατάσταση (βλ. OptimizationView.SetBusy): βέλος προς τα ΚΑΤΩ + γραμμή αντί για βέλος αναβάθμισης.
+            var installing = scanning && captionKey != null;
+            ScanArrow.Visibility = installing ? Visibility.Collapsed : Visibility.Visible;
+            InstallIcon.Visibility = installing ? Visibility.Visible : Visibility.Collapsed;
             if (captionKey != null)
             {
                 TxtCaption.Text = Services.LanguageService.T(captionKey);
@@ -51,11 +55,19 @@ namespace OptimizerWpf.Views
                 ArcRotate.BeginAnimation(RotateTransform.AngleProperty, arcAnim);
                 var bobAnim = new DoubleAnimation { From = 0, To = -8, Duration = TimeSpan.FromSeconds(0.55), AutoReverse = true, RepeatBehavior = RepeatBehavior.Forever, EasingFunction = new QuadraticEase { EasingMode = EasingMode.EaseInOut } };
                 IconBob.BeginAnimation(TranslateTransform.YProperty, bobAnim);
+                if (installing)
+                {
+                    // Το βέλος "πέφτει" προς τη γραμμή και επανέρχεται - λήψη/εγκατάσταση σε εξέλιξη.
+                    var dropAnim = new DoubleAnimation { From = -3, To = 7, Duration = TimeSpan.FromSeconds(0.6), AutoReverse = true, RepeatBehavior = RepeatBehavior.Forever, EasingFunction = new QuadraticEase { EasingMode = EasingMode.EaseInOut } };
+                    InstallBob.BeginAnimation(TranslateTransform.YProperty, dropAnim);
+                    IconBob.BeginAnimation(TranslateTransform.YProperty, null); // η ομάδα εικονιδίων μένει σταθερή, κινείται μόνο το βέλος
+                }
             }
             else
             {
                 ArcRotate.BeginAnimation(RotateTransform.AngleProperty, null);
                 IconBob.BeginAnimation(TranslateTransform.YProperty, null);
+                InstallBob.BeginAnimation(TranslateTransform.YProperty, null);
             }
         }
     }

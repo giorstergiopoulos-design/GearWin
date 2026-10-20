@@ -33,7 +33,18 @@
             <Grid.RenderTransform>
                 <TranslateTransform x:Name="IconBob"/>
             </Grid.RenderTransform>
-            <Path Data="M32,4 L56,30 L42,30 L42,60 L22,60 L22,30 L8,30 Z" Fill="White"/>
+            <Path x:Name="ScanArrow" Data="M32,4 L56,30 L42,30 L42,60 L22,60 L22,30 L8,30 Z" Fill="White"/>
+            <!-- ΒΕΛΤΙΩΣΗ (ρητό αίτημα χρήστη): κατά την ΕΓΚΑΤΑΣΤΑΣΗ το εικονίδιο γίνεται βέλος που δείχνει ΚΑΤΩ με μια οριζόντια
+                 γραμμή κάτω από αυτό ("λήψη & εγκατάσταση") - το βέλος κατεβαίνει προς τη γραμμή. Στη σάρωση μένει το βέλος
+                 αναβάθμισης προς τα πάνω. -->
+            <Grid x:Name="InstallIcon" Visibility="Collapsed">
+                <Path x:Name="InstallArrow" Data="M22,2 L42,2 L42,28 L56,28 L32,50 L8,28 L22,28 Z" Fill="White" RenderTransformOrigin="0.5,0.5">
+                    <Path.RenderTransform>
+                        <TranslateTransform x:Name="InstallBob"/>
+                    </Path.RenderTransform>
+                </Path>
+                <Rectangle Width="52" Height="5" RadiusX="2.5" RadiusY="2.5" Fill="White" HorizontalAlignment="Center" VerticalAlignment="Bottom" Margin="0,0,0,1"/>
+            </Grid>
         </Grid>
         <!-- ΔΙΟΡΘΩΣΗ (GEARWIN.MD: "όταν γίνεται εγκατάσταση αντί του σάρωση στο κουμπί να εμφανίζεται
              εγκατάσταση, εντός του περιθωρίου του κουμπιού") - το κείμενο ήταν πάντα δεμένο στο
