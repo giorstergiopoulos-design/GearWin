@@ -375,8 +375,13 @@
                          DynamicResource - 0/αόρατο σε όλα τα μοντέρνα θέματα (καμία οπτική αλλαγή εκεί),
                          αλλά τετράγωνο+ορατό περίγραμμα (απλοποιημένη προσέγγιση classic bevel) όταν
                          είναι ενεργό το "Windows Classic" - βλ. ThemeManager.Apply(). -->
+                    <!-- ΠΡΑΓΜΑΤΙΚΗ ΡΙΖΑ του "το κείμενο εφάπτεται στις άκρες των κουμπιών" (ανέφερε ο χρήστης επί μήνες): αυτό το template
+                         ΔΕΝ διάβαζε ΠΟΤΕ την ιδιότητα Padding (το ContentPresenter δεν είχε Margin/Padding), οπότε ΚΑΘΕ
+                         Padding="16,8" σε κουμπί FlatButtonStyle/AccentButtonStyle ήταν νεκρό - μόνο ρητό Width/Height/MinWidth έδινε αέρα.
+                         (Τα pill styles παρακάτω είχαν ήδη Padding="{TemplateBinding Padding}".) Τώρα το Padding εφαρμόζεται πραγματικά. -->
                     <Border x:Name="Bg" CornerRadius="{DynamicResource AppCornerRadius}" Background="{TemplateBinding Background}"
-                            BorderBrush="{DynamicResource AppButtonBorderBrush}" BorderThickness="{DynamicResource AppButtonBorderThickness}">
+                            BorderBrush="{DynamicResource AppButtonBorderBrush}" BorderThickness="{DynamicResource AppButtonBorderThickness}"
+                            Padding="{TemplateBinding Padding}">
                         <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/>
                     </Border>
                     <ControlTemplate.Triggers>

@@ -21,6 +21,7 @@
                  "Οδηγοί πρώτα, μετά Λογισμικό" - το σωστό νόημα ήταν "Λογισμικό ΠΡΩΤΑ (πάνω πάνω στην
                  καρτέλα), Οδηγοί αμέσως μετά". Τώρα πρώτη κάρτα της καρτέλας (καμία πάνω περιθώριο,
                  όπως κάθε πρώτη κάρτα εδώ) - η κάρτα Ενημερώσεων Οδηγών ακολουθεί αμέσως από κάτω. -->
+            <TextBlock Text="{tr:Tr Opt_SectionUpdates}" Style="{StaticResource CardTitleStyle}" FontSize="15" Margin="4,0,0,8"/>
             <Border Style="{StaticResource CardStyle}">
                 <StackPanel>
                     <TextBlock Text="{tr:Tr Optimization_SoftwareUpdate}" Style="{StaticResource CardTitleStyle}" Margin="0,0,0,4"/>
@@ -159,7 +160,8 @@
                  (port του New-DriverScanButton, ~5555) αντί για απλό ορθογώνιο κουμπί - βλ.
                  DriverScanButton.xaml. Η λίστα αποτελεσμάτων μένει κρυφή μέχρι να υπάρξουν
                  αποτελέσματα (καθαρή "δεν έχει σαρωθεί ακόμα" κατάσταση, όπως στο screenshot). -->
-            <Border Style="{StaticResource CardStyle}" Margin="0,16,0,0">
+            <TextBlock Text="{tr:Tr Opt_SectionDrivers}" Style="{StaticResource CardTitleStyle}" FontSize="15" Margin="4,22,0,8"/>
+            <Border Style="{StaticResource CardStyle}" Margin="0,0,0,0">
                 <StackPanel>
                     <Grid Margin="0,0,0,4">
                         <Grid.ColumnDefinitions><ColumnDefinition Width="Auto"/><ColumnDefinition Width="*"/></Grid.ColumnDefinitions>
@@ -270,123 +272,77 @@
                 </StackPanel>
             </Border>
 
-            <!-- Office Mode/Gaming Mode - ρητό αίτημα χρήστη: "τα Office & Gaming mode θα τα βάλεις
-                 μαζί με την προγραμματισμένη συντήρηση και το αυτόματο Gaming mode" - μετακινήθηκαν
-                 εδώ (πριν ήταν στην κορυφή της καρτέλας) ώστε και οι 4 κάρτες "λειτουργίας/
-                 προφίλ" (Office, Gaming, Προγραμματισμένη Συντήρηση, Αυτόματο Gaming Mode) να
-                 εμφανίζονται μαζί, ως μία ενότητα, στο τέλος της καρτέλας.
-                 ΔΙΟΡΘΩΣΗ (bug εντοπίστηκε - χρήστης έστειλε screenshot: "πίσω από το gaming mode
-                 φαίνεται σαν να υπάρχει κάτι") - το προηγούμενο τεχνητά στενό κενό (8px, βλ. ιστορικό
-                 σχόλιο στο git) ανάμεσα σε αυτές τις δύο κάρτες ήταν αρκετά στενό ώστε η ζωντανή σκιά/
-                 ανύψωση του CardStyle σε hover (DropShadowEffect, βλ. Themes/Styles.xaml) να
-                 "μπλέκεται" οπτικά με την επόμενη κάρτα - τώρα κανονικό 16px κενό, ίδιο με όλες τις
-                 άλλες κάρτες της εφαρμογής, χωρίς να χάνεται η οπτική ομαδοποίηση αφού είναι πλέον
-                 και οι 4 συνεχόμενες. -->
-            <Border Style="{StaticResource CardStyle}" Margin="0,16,0,0">
-                <Grid>
-                    <Grid.ColumnDefinitions>
-                        <ColumnDefinition Width="*"/>
-                        <ColumnDefinition Width="Auto"/>
-                    </Grid.ColumnDefinitions>
-                    <StackPanel Grid.Column="0">
-                        <Grid Margin="0,0,0,6">
-                            <Grid.ColumnDefinitions><ColumnDefinition Width="Auto"/><ColumnDefinition Width="*"/></Grid.ColumnDefinitions>
-                            <views:HeaderGlyphIcon Grid.Column="0" Kind="Gear" Width="16" Height="16" Margin="0,0,8,0" VerticalAlignment="Center"/>
-                            <TextBlock Grid.Column="1" Text="{tr:Tr Optimization_OfficeMode}" Style="{StaticResource CardTitleStyle}"/>
-                        </Grid>
-                        <TextBlock Text="{tr:Tr Opt_OfficeModeDesc}" Style="{StaticResource SubTextStyle}"/>
-                    </StackPanel>
-                    <ToggleButton x:Name="ToggleOfficeMode" Grid.Column="1" VerticalAlignment="Center"
-                                  Style="{StaticResource ToggleSwitchStyle}" Click="ToggleOfficeMode_Click"/>
-                </Grid>
-            </Border>
-
-            <Border Style="{StaticResource CardStyle}" Margin="0,16,0,0">
-                <Grid>
-                    <Grid.ColumnDefinitions>
-                        <ColumnDefinition Width="*"/>
-                        <ColumnDefinition Width="Auto"/>
-                    </Grid.ColumnDefinitions>
-                    <StackPanel Grid.Column="0">
-                        <Grid Margin="0,0,0,6">
-                            <Grid.ColumnDefinitions><ColumnDefinition Width="Auto"/><ColumnDefinition Width="*"/></Grid.ColumnDefinitions>
-                            <views:HeaderGlyphIcon Grid.Column="0" Kind="Gamepad" Width="16" Height="16" Margin="0,0,8,0" VerticalAlignment="Center"/>
-                            <TextBlock Grid.Column="1" Text="{tr:Tr Optimization_GamingMode}" Style="{StaticResource CardTitleStyle}"/>
-                        </Grid>
-                        <TextBlock Text="{tr:Tr Opt_GamingModeDesc}" Style="{StaticResource SubTextStyle}"/>
-                    </StackPanel>
-                    <ToggleButton x:Name="ToggleGamingMode" Grid.Column="1" VerticalAlignment="Center"
-                                  Style="{StaticResource ToggleSwitchStyle}" Click="ToggleGamingMode_Click"/>
-                </Grid>
-            </Border>
-
-            <!-- ΝΕΟ - ROADMAP.md REQ-570-03 (ρητό αίτημα χρήστη: "αυτόματο gaming mode κάτω από
-                 gaming mode & ultimate performance") - το tweak "Ultimate Performance" ζούσε πριν
-                 θαμμένο μέσα στη γενική λίστα tweaks της καρτέλας Επιπλέον Ρυθμίσεις
-                 (TweakService.AllMainTweaks, αφαιρέθηκε από εκεί) - μετακινήθηκε εδώ, δίπλα στο
-                 θεματικά συναφές Gaming Mode (ΙΔΙΕΣ TweakService.UltimatePerformanceOn/Off/DetectState
-                 μέθοδοι, καμία διπλή υλοποίηση - βλ. ToggleUltimatePerformance_Click στο code-behind). -->
-            <Border Style="{StaticResource CardStyle}" Margin="0,16,0,0">
-                <Grid>
-                    <Grid.ColumnDefinitions>
-                        <ColumnDefinition Width="*"/>
-                        <ColumnDefinition Width="Auto"/>
-                    </Grid.ColumnDefinitions>
-                    <StackPanel Grid.Column="0">
-                        <Grid Margin="0,0,0,6">
-                            <Grid.ColumnDefinitions><ColumnDefinition Width="Auto"/><ColumnDefinition Width="*"/></Grid.ColumnDefinitions>
-                            <views:HeaderGlyphIcon Grid.Column="0" Kind="Bolt" Width="16" Height="16" Margin="0,0,8,0" VerticalAlignment="Center"/>
-                            <TextBlock Grid.Column="1" Text="{tr:Tr Opt_UltimatePerformance}" Style="{StaticResource CardTitleStyle}"/>
-                        </Grid>
-                        <TextBlock Text="{tr:Tr Opt_UltimatePerformanceDesc}" Style="{StaticResource SubTextStyle}" TextWrapping="Wrap"/>
-                    </StackPanel>
-                    <ToggleButton x:Name="ToggleUltimatePerformance" Grid.Column="1" VerticalAlignment="Center"
-                                  Style="{StaticResource ToggleSwitchStyle}" Click="ToggleUltimatePerformance_Click"/>
-                </Grid>
-            </Border>
-
-            <!-- ΝΕΟ - roadmap "Αυτόματο Gaming Mode" - βλ. AutoGamingModeService. Μετακινήθηκε ΕΔΩ
-                 (ρητό αίτημα χρήστη, REQ-570-03) - ακριβώς κάτω από Gaming Mode & Ultimate Performance,
-                 πριν ήταν στο τέλος της καρτέλας μετά την Προγραμματισμένη Συντήρηση. -->
-            <Border Style="{StaticResource CardStyle}" Margin="0,16,0,0">
-                <Grid>
-                    <Grid.ColumnDefinitions>
-                        <ColumnDefinition Width="*"/>
-                        <ColumnDefinition Width="Auto"/>
-                    </Grid.ColumnDefinitions>
-                    <StackPanel Grid.Column="0">
-                        <StackPanel Orientation="Horizontal" Margin="0,0,0,6">
-                            <views:HeaderGlyphIcon Kind="Gamepad" Width="16" Height="16" Margin="0,0,8,0" VerticalAlignment="Center"/>
-                            <TextBlock Text="{tr:Tr Opt_AutoGamingMode}" Style="{StaticResource CardTitleStyle}"/>
+            <!-- ΕΝΟΠΟΙΗΣΗ (πρόταση "καλύτερη κατηγοριοποίηση/ομαδοποίηση"): οι 5 διαδοχικές κάρτες λειτουργίας (Office, Gaming,
+                 Ultimate Performance, Αυτόματο Gaming, Προγραμματισμένη Συντήρηση) έγιναν ΜΙΑ κάρτα με γραμμές - ΙΔΙΑ ονόματα
+                 στοιχείων/handlers/κλειδιά μετάφρασης, καμία αλλαγή λογικής. Το Gaming Mode μένει ως το μοναδικό "ένα κλικ"
+                 κουμπί· οι αναλυτικές ρυθμίσεις παιχνιδιών (Game Mode/HAGS/VRR/προφίλ ανά παιχνίδι) ζουν στην καρτέλα Παιχνίδια
+                 & Πολυμέσα και συνδέονται με το κουμπί στο τέλος. -->
+            <TextBlock Text="{tr:Tr Opt_ModesSection}" Style="{StaticResource CardTitleStyle}" FontSize="15" Margin="4,22,0,8"/>
+            <Border Style="{StaticResource CardStyle}">
+                <StackPanel>
+                    <Grid Margin="0,0,0,0">
+                        <Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions>
+                        <StackPanel Grid.Column="0" Margin="0,0,12,0">
+                            <StackPanel Orientation="Horizontal" Margin="0,0,0,4">
+                                <views:HeaderGlyphIcon Kind="Gear" Width="15" Height="15" Margin="0,0,8,0" VerticalAlignment="Center"/>
+                                <TextBlock Text="{tr:Tr Optimization_OfficeMode}" FontWeight="SemiBold" Foreground="{DynamicResource TextBrush}"/>
+                            </StackPanel>
+                            <TextBlock Text="{tr:Tr Opt_OfficeModeDesc}" Style="{StaticResource SubTextStyle}" TextWrapping="Wrap"/>
                         </StackPanel>
-                        <TextBlock Text="{tr:Tr Opt_AutoGamingModeDesc}" Style="{StaticResource SubTextStyle}" TextWrapping="Wrap"/>
-                    </StackPanel>
-                    <ToggleButton x:Name="ToggleAutoGamingMode" Grid.Column="1" VerticalAlignment="Center"
-                                  Style="{StaticResource ToggleSwitchStyle}" Click="ToggleAutoGamingMode_Click"/>
-                </Grid>
-            </Border>
-
-            <!-- ΝΕΟ - roadmap "Προγραμματισμένη συντήρηση" - πραγματική εβδομαδιαία εργασία Task
-                 Scheduler (ΟΧΙ timer μέσα στην εφαρμογή - δεν χρειάζεται η εφαρμογή να τρέχει συνέχεια),
-                 βλ. AdvancedToolsService.SetScheduledMaintenanceAsync/RunScheduledMaintenance. Μετακινήθηκε
-                 στο τέλος (REQ-570-03) - πριν ήταν ανάμεσα σε Gaming Mode και Αυτόματο Gaming Mode. -->
-            <Border Style="{StaticResource CardStyle}" Margin="0,16,0,0">
-                <Grid>
-                    <Grid.ColumnDefinitions>
-                        <ColumnDefinition Width="*"/>
-                        <ColumnDefinition Width="Auto"/>
-                    </Grid.ColumnDefinitions>
-                    <StackPanel Grid.Column="0">
-                        <StackPanel Orientation="Horizontal" Margin="0,0,0,6">
-                            <views:HeaderGlyphIcon Kind="Clock" Width="16" Height="16" Margin="0,0,8,0" VerticalAlignment="Center"/>
-                            <TextBlock Text="{tr:Tr Opt_ScheduledMaintenance}" Style="{StaticResource CardTitleStyle}"/>
+                        <ToggleButton x:Name="ToggleOfficeMode" Grid.Column="1" VerticalAlignment="Center" Style="{StaticResource ToggleSwitchStyle}" Click="ToggleOfficeMode_Click"/>
+                    </Grid>
+                    <Border Height="1" Background="{DynamicResource CardBorderBrush}" Opacity="0.6" Margin="0,12,0,12"/>
+                    <Grid Margin="0,0,0,0">
+                        <Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions>
+                        <StackPanel Grid.Column="0" Margin="0,0,12,0">
+                            <StackPanel Orientation="Horizontal" Margin="0,0,0,4">
+                                <views:HeaderGlyphIcon Kind="Gamepad" Width="15" Height="15" Margin="0,0,8,0" VerticalAlignment="Center"/>
+                                <TextBlock Text="{tr:Tr Optimization_GamingMode}" FontWeight="SemiBold" Foreground="{DynamicResource TextBrush}"/>
+                            </StackPanel>
+                            <TextBlock Text="{tr:Tr Opt_GamingModeDesc}" Style="{StaticResource SubTextStyle}" TextWrapping="Wrap"/>
+                            <TextBlock x:Name="TxtGamingModeStatus" Style="{StaticResource SubTextStyle}" TextWrapping="Wrap" Margin="0,4,0,0"/>
                         </StackPanel>
-                        <TextBlock Text="{tr:Tr Opt_ScheduledMaintenanceDesc}" Style="{StaticResource SubTextStyle}" TextWrapping="Wrap"/>
-                        <TextBlock x:Name="TxtScheduledMaintenanceStatus" Style="{StaticResource SubTextStyle}" Margin="0,6,0,0"/>
-                    </StackPanel>
-                    <ToggleButton x:Name="ToggleScheduledMaintenance" Grid.Column="1" VerticalAlignment="Center"
-                                  Style="{StaticResource ToggleSwitchStyle}" Click="ToggleScheduledMaintenance_Click"/>
-                </Grid>
+                        <ToggleButton x:Name="ToggleGamingMode" Grid.Column="1" VerticalAlignment="Center" Style="{StaticResource ToggleSwitchStyle}" Click="ToggleGamingMode_Click"/>
+                    </Grid>
+                    <Border Height="1" Background="{DynamicResource CardBorderBrush}" Opacity="0.6" Margin="0,12,0,12"/>
+                    <Grid Margin="0,0,0,0">
+                        <Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions>
+                        <StackPanel Grid.Column="0" Margin="0,0,12,0">
+                            <StackPanel Orientation="Horizontal" Margin="0,0,0,4">
+                                <views:HeaderGlyphIcon Kind="Bolt" Width="15" Height="15" Margin="0,0,8,0" VerticalAlignment="Center"/>
+                                <TextBlock Text="{tr:Tr Opt_UltimatePerformance}" FontWeight="SemiBold" Foreground="{DynamicResource TextBrush}"/>
+                            </StackPanel>
+                            <TextBlock Text="{tr:Tr Opt_UltimatePerformanceDesc}" Style="{StaticResource SubTextStyle}" TextWrapping="Wrap"/>
+                        </StackPanel>
+                        <ToggleButton x:Name="ToggleUltimatePerformance" Grid.Column="1" VerticalAlignment="Center" Style="{StaticResource ToggleSwitchStyle}" Click="ToggleUltimatePerformance_Click"/>
+                    </Grid>
+                    <Border Height="1" Background="{DynamicResource CardBorderBrush}" Opacity="0.6" Margin="0,12,0,12"/>
+                    <Grid Margin="0,0,0,0">
+                        <Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions>
+                        <StackPanel Grid.Column="0" Margin="0,0,12,0">
+                            <StackPanel Orientation="Horizontal" Margin="0,0,0,4">
+                                <views:HeaderGlyphIcon Kind="Gamepad" Width="15" Height="15" Margin="0,0,8,0" VerticalAlignment="Center"/>
+                                <TextBlock Text="{tr:Tr Opt_AutoGamingMode}" FontWeight="SemiBold" Foreground="{DynamicResource TextBrush}"/>
+                            </StackPanel>
+                            <TextBlock Text="{tr:Tr Opt_AutoGamingModeDesc}" Style="{StaticResource SubTextStyle}" TextWrapping="Wrap"/>
+                        </StackPanel>
+                        <ToggleButton x:Name="ToggleAutoGamingMode" Grid.Column="1" VerticalAlignment="Center" Style="{StaticResource ToggleSwitchStyle}" Click="ToggleAutoGamingMode_Click"/>
+                    </Grid>
+                    <Border Height="1" Background="{DynamicResource CardBorderBrush}" Opacity="0.6" Margin="0,12,0,12"/>
+                    <Grid Margin="0,0,0,0">
+                        <Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions>
+                        <StackPanel Grid.Column="0" Margin="0,0,12,0">
+                            <StackPanel Orientation="Horizontal" Margin="0,0,0,4">
+                                <views:HeaderGlyphIcon Kind="Clock" Width="15" Height="15" Margin="0,0,8,0" VerticalAlignment="Center"/>
+                                <TextBlock Text="{tr:Tr Opt_ScheduledMaintenance}" FontWeight="SemiBold" Foreground="{DynamicResource TextBrush}"/>
+                            </StackPanel>
+                            <TextBlock Text="{tr:Tr Opt_ScheduledMaintenanceDesc}" Style="{StaticResource SubTextStyle}" TextWrapping="Wrap"/>
+                            <TextBlock x:Name="TxtScheduledMaintenanceStatus" Style="{StaticResource SubTextStyle}" Margin="0,6,0,0"/>
+                        </StackPanel>
+                        <ToggleButton x:Name="ToggleScheduledMaintenance" Grid.Column="1" VerticalAlignment="Center" Style="{StaticResource ToggleSwitchStyle}" Click="ToggleScheduledMaintenance_Click"/>
+                    </Grid>
+                    <Button Content="{tr:Tr Opt_GamingDetailsLink}" Style="{StaticResource FlatButtonStyle}" Padding="16,6" HorizontalAlignment="Left" Margin="0,14,0,0" Click="BtnOpenGamesTab_Click"/>
+                </StackPanel>
             </Border>
 
         </StackPanel>

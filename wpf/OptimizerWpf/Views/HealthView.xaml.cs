@@ -285,28 +285,6 @@ namespace OptimizerWpf.Views
             await RefreshWinREAsync();
         }
 
-        // ΝΕΟ - roadmap "Αναφορά μπαταρίας".
-        private async void BtnBatteryReport_Click(object sender, RoutedEventArgs e)
-        {
-            using var busy = BusyScope.Begin(LanguageService.T("Health_GeneratingBatteryReport"));
-            var ok = await HealthCleanupService.GenerateBatteryReportAsync();
-            TxtBatteryReportStatus.Text = ok ? LanguageService.T("Health_BatteryReportOpened") : LanguageService.T("Health_BatteryReportFailed");
-            if (ok) (Window.GetWindow(this) as OptimizerWpf.MainWindow)?.ShowToast(LanguageService.T("Health_BatteryReportOpened"));
-        }
-
-        // ΝΕΟ - roadmap "Διαγνωστική αναφορά με ένα κλικ".
-        private async void BtnDiagnosticsZip_Click(object sender, RoutedEventArgs e)
-        {
-            using var busy = BusyScope.Begin(LanguageService.T("Health_GeneratingDiagnosticsZip"));
-            var path = await HealthCleanupService.GenerateDiagnosticsZipAsync();
-            TxtDiagnosticsZipStatus.Text = path != null
-                ? $"{LanguageService.T("Health_DiagnosticsZipSavedPrefix")}{path}"
-                : LanguageService.T("Health_DiagnosticsZipFailed");
-            // ΝΕΟ - roadmap "Toast/snackbar για ολοκλήρωση εργασιών παρασκηνίου" - ακριβώς το
-            // παράδειγμα που περιγράφηκε στο ίδιο το roadmap item.
-            if (path != null) (Window.GetWindow(this) as OptimizerWpf.MainWindow)?.ShowToast(LanguageService.T("Health_DiagnosticsZipToast"));
-        }
-
         private async System.Threading.Tasks.Task RefreshWinREAsync()
         {
             WinREStatus result;

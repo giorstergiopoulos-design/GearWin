@@ -130,6 +130,7 @@
                         <TextBlock Grid.Column="1" Text="{tr:Tr Games_TweaksTitle}" Style="{StaticResource CardTitleStyle}"/>
                     </Grid>
                     <ItemsControl x:Name="ListGameTweaks" ItemTemplate="{StaticResource GameTweakRowTemplate}"/>
+                    <Button Content="{tr:Tr Games_QuickModeLink}" Style="{StaticResource FlatButtonStyle}" Padding="16,6" HorizontalAlignment="Left" Margin="0,6,0,0" Click="BtnOpenOptimizationTab_Click"/>
                 </StackPanel>
             </Border>
 

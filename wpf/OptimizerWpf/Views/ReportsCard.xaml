@@ -1,0 +1,28 @@
+<UserControl x:Class="OptimizerWpf.Views.ReportsCard"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:tr="clr-namespace:OptimizerWpf"
+             xmlns:views="clr-namespace:OptimizerWpf.Views">
+    <!-- ΕΝΟΠΟΙΗΣΗ (πρόταση "έλεγξε αν υπάρχουν παρόμοιες λειτουργίες"): οι αναφορές ζούσαν σε 5 διαφορετικά σημεία (Υγεία: μπαταρία +
+         διαγνωστικό zip, Προηγμένα: "Αναφορά Συστήματος" (systeminfo) + "Deep Diagnostics Report", Κέντρο Συντήρησης: TXT/PDF). Εδώ
+         μία κάρτα με όλες. Το Κέντρο Συντήρησης κρατά τη δική του καρτέλα Αναφοράς (ίδιο SystemReportService). Το "Deep Diagnostics
+         Report" ήταν ένα αρχείο 6 γραμμών (έκδοση OS/όνομα μηχανής) - καλύπτεται πλήρως από τη Σύνοψη Συστήματος και αφαιρέθηκε. -->
+    <Border Style="{StaticResource CardStyle}">
+        <StackPanel>
+            <Grid Margin="0,0,0,4">
+                <Grid.ColumnDefinitions><ColumnDefinition Width="Auto"/><ColumnDefinition Width="*"/></Grid.ColumnDefinitions>
+                <views:HeaderGlyphIcon Grid.Column="0" Kind="Document" Width="16" Height="16" Margin="0,0,8,0" VerticalAlignment="Center"/>
+                <TextBlock Grid.Column="1" Text="{tr:Tr Reports_Title}" Style="{StaticResource CardTitleStyle}"/>
+            </Grid>
+            <TextBlock Text="{tr:Tr Reports_Desc}" Style="{StaticResource SubTextStyle}" Margin="0,0,0,10" TextWrapping="Wrap"/>
+            <WrapPanel>
+                <Button x:Name="BtnSummaryTxt" Content="{tr:Tr Reports_SystemSummaryTxt}" Style="{StaticResource AccentButtonStyle}" Padding="16,8" Margin="0,0,10,10" Click="BtnSummaryTxt_Click"/>
+                <Button x:Name="BtnSummaryPdf" Content="{tr:Tr Reports_SystemSummaryPdf}" Style="{StaticResource FlatButtonStyle}" Padding="16,8" Margin="0,0,10,10" Click="BtnSummaryPdf_Click"/>
+                <Button x:Name="BtnDiagZip" Content="{tr:Tr Reports_Diagnostics}" Style="{StaticResource FlatButtonStyle}" Padding="16,8" Margin="0,0,10,10" Click="BtnDiagZip_Click"/>
+                <Button x:Name="BtnBattery" Content="{tr:Tr Reports_Battery}" Style="{StaticResource FlatButtonStyle}" Padding="16,8" Margin="0,0,10,10" Click="BtnBattery_Click"/>
+                <Button x:Name="BtnSystemInfo" Content="{tr:Tr Reports_SystemInfo}" Style="{StaticResource FlatButtonStyle}" Padding="16,8" Margin="0,0,10,10" Click="BtnSystemInfo_Click"/>
+            </WrapPanel>
+            <TextBlock x:Name="TxtReportsStatus" Style="{StaticResource SubTextStyle}" TextWrapping="Wrap"/>
+        </StackPanel>
+    </Border>
+</UserControl>

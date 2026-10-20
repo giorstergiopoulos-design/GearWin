@@ -64,6 +64,9 @@ namespace OptimizerWpf.Services
 
         // ΝΕΟ - roadmap "Αυτόματο Gaming Mode" - βλ. AutoGamingModeService.
         public bool AutoGamingModeEnabled { get; set; }
+        // Τελευταία γνωστή κατάσταση των χειροκίνητων Office/Gaming Mode (το view ξαναχτίζεται σε κάθε εναλλαγή καρτέλας).
+        public bool GamingModeActive { get; set; }
+        public bool OfficeModeActive { get; set; }
 
         // ΝΕΟ - roadmap "Καρφιτσωμένες συντομεύσεις" - κλειδιά μορφής "<λίστα>:<Label>" (βλ.
         // TweakRowVm.PinKey στο TweaksView.xaml.cs) για tweaks καρφιτσωμένα στην Αρχική. ΣΗΜΕΙΩΣΗ

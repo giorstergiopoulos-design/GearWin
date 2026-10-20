@@ -25,12 +25,13 @@ namespace OptimizerWpf.Services
             SetRegSafe(Registry.CurrentUser, @"Software\Microsoft\Windows\CurrentVersion\ContentDeliveryManager", "SystemPaneSuggestionsEnabled", 0);
         }
 
-        public static void DisableOfficeMode()
+        // restartExplorer=false όταν γίνεται εναλλαγή απευθείας σε άλλο mode (το επόμενο Set* ορίζει τα δικά του εφέ) - αποφεύγεται άσκοπο flicker.
+        public static void DisableOfficeMode(bool restartExplorer = true)
         {
             SetRegSafe(Registry.CurrentUser, @"Software\Microsoft\Windows\CurrentVersion\Explorer\VisualEffects", "VisualFXSetting", 0);
             SetRegSafe(Registry.CurrentUser, @"Software\Microsoft\Windows\CurrentVersion\UserProfileEngagement", "ScoobeSystemSettingEnabled", 1);
             SetRegSafe(Registry.CurrentUser, @"Software\Microsoft\Windows\CurrentVersion\ContentDeliveryManager", "SystemPaneSuggestionsEnabled", 1);
-            RestartExplorer();
+            if (restartExplorer) RestartExplorer();
         }
 
         public static void SetGamingMode()
@@ -38,6 +39,8 @@ namespace OptimizerWpf.Services
             RunPowercfg("/setactive SCHEME_MIN");
             SetRegSafe(Registry.CurrentUser, @"Software\Microsoft\Windows\CurrentVersion\Explorer\VisualEffects", "VisualFXSetting", 2);
             SetRegSafe(Registry.CurrentUser, @"Software\Microsoft\GameBar", "AllowAutoGameMode", 1);
+            // Ίδια τιμή που διαβάζει/γράφει ο διακόπτης "Game Mode" της καρτέλας Παιχνίδια (GamingTweaksService) - οι δύο ενδείξεις συμφωνούν.
+            SetRegSafe(Registry.CurrentUser, @"Software\Microsoft\GameBar", "AutoGameModeEnabled", 1);
             SetRegSafe(Registry.CurrentUser, @"System\GameConfigStore", "GameDVR_Enabled", 0);
             SetRegSafe(Registry.LocalMachine, @"SOFTWARE\Microsoft\Windows NT\CurrentVersion\Multimedia\SystemProfile", "NetworkThrottlingIndex", 255);
             SetRegSafe(Registry.LocalMachine, @"SOFTWARE\Microsoft\Windows NT\CurrentVersion\Multimedia\SystemProfile", "SystemResponsiveness", 0);
@@ -52,13 +55,13 @@ namespace OptimizerWpf.Services
             // είχε σκόπιμα κλειστά. Ό,τι ήταν ήδη ρυθμισμένο από τον χρήστη/τα Windows μένει ως έχει.
         }
 
-        public static void DisableGamingMode()
+        public static void DisableGamingMode(bool restartExplorer = true)
         {
             RunPowercfg("/setactive SCHEME_BALANCED");
             SetRegSafe(Registry.CurrentUser, @"System\GameConfigStore", "GameDVR_Enabled", 1);
             SetRegSafe(Registry.LocalMachine, @"SOFTWARE\Microsoft\Windows NT\CurrentVersion\Multimedia\SystemProfile", "NetworkThrottlingIndex", 10);
             SetRegSafe(Registry.LocalMachine, @"SOFTWARE\Microsoft\Windows NT\CurrentVersion\Multimedia\SystemProfile", "SystemResponsiveness", 14);
-            RestartExplorer();
+            if (restartExplorer) RestartExplorer();
         }
 
         // Ίδιο με το Stop-Process -Name explorer -Force του ps1 original - δεν επανεκκινεί χειροκίνητα

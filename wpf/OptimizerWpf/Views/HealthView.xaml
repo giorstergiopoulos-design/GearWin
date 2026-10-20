@@ -214,35 +214,7 @@
                 </StackPanel>
             </Border>
 
-            <!-- ΝΕΟ - roadmap "Αναφορά μπαταρίας" - powercfg /batteryreport, ανοίγει στον browser -
-                 βλ. HealthCleanupService.GenerateBatteryReportAsync. -->
-            <Border Style="{StaticResource CardStyle}" Margin="0,16,0,0">
-                <StackPanel>
-                    <Grid Margin="0,0,0,4">
-                        <Grid.ColumnDefinitions><ColumnDefinition Width="Auto"/><ColumnDefinition Width="*"/></Grid.ColumnDefinitions>
-                        <views:HeaderGlyphIcon Grid.Column="0" Kind="Battery" Width="16" Height="16" Margin="0,0,8,0" VerticalAlignment="Center"/>
-                        <TextBlock Grid.Column="1" Text="{tr:Tr Health_BatteryReport}" Style="{StaticResource CardTitleStyle}"/>
-                    </Grid>
-                    <TextBlock Text="{tr:Tr Health_BatteryReportDesc}" Style="{StaticResource SubTextStyle}" Margin="0,0,0,10" TextWrapping="Wrap"/>
-                    <Button Content="{tr:Tr Health_GenerateBatteryReport}" Style="{StaticResource FlatButtonStyle}" Width="240" Height="40" HorizontalAlignment="Left" Click="BtnBatteryReport_Click"/>
-                    <TextBlock x:Name="TxtBatteryReportStatus" Style="{StaticResource SubTextStyle}" Margin="0,8,0,0"/>
-                </StackPanel>
-            </Border>
-
-            <!-- ΝΕΟ - roadmap "Διαγνωστική αναφορά με ένα κλικ" - βλ.
-                 HealthCleanupService.GenerateDiagnosticsZipAsync. -->
-            <Border Style="{StaticResource CardStyle}" Margin="0,16,0,0">
-                <StackPanel>
-                    <Grid Margin="0,0,0,4">
-                        <Grid.ColumnDefinitions><ColumnDefinition Width="Auto"/><ColumnDefinition Width="*"/></Grid.ColumnDefinitions>
-                        <views:HeaderGlyphIcon Grid.Column="0" Kind="Document" Width="16" Height="16" Margin="0,0,8,0" VerticalAlignment="Center"/>
-                        <TextBlock Grid.Column="1" Text="{tr:Tr Health_DiagnosticsZip}" Style="{StaticResource CardTitleStyle}"/>
-                    </Grid>
-                    <TextBlock Text="{tr:Tr Health_DiagnosticsZipDesc}" Style="{StaticResource SubTextStyle}" Margin="0,0,0,10" TextWrapping="Wrap"/>
-                    <Button Content="{tr:Tr Health_GenerateDiagnosticsZip}" Style="{StaticResource FlatButtonStyle}" Width="240" Height="40" HorizontalAlignment="Left" Click="BtnDiagnosticsZip_Click"/>
-                    <TextBlock x:Name="TxtDiagnosticsZipStatus" Style="{StaticResource SubTextStyle}" Margin="0,8,0,0"/>
-                </StackPanel>
-            </Border>
+            <views:ReportsCard Margin="0,16,0,0"/>
 
             <!-- ΝΕΟ - roadmap "Τάση υγείας δίσκου (S.M.A.R.T.)" - στιγμιότυπα στον χρόνο (βλ.
                  DiskHealthHistoryService, καταγράφονται όταν φορτώνει η καρτέλα Σύστημα) ώστε να

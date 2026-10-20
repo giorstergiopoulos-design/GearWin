@@ -44,16 +44,6 @@ namespace OptimizerWpf.Services
 
         public static void CollectGarbage() { GC.Collect(); GC.WaitForPendingFinalizers(); }
 
-        public static string WriteDeepDiagnosticsReport()
-        {
-            var path = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.DesktopDirectory), "Deep_Diagnostics.txt");
-            var text = $"OS: {Environment.OSVersion}\nMachine: {Environment.MachineName}\nCPU count: {Environment.ProcessorCount}\n" +
-                       $"64-bit OS: {Environment.Is64BitOperatingSystem}\n.NET: {Environment.Version}\nDate: {DateTime.Now}\n";
-            File.WriteAllText(path, text);
-            Process.Start(new ProcessStartInfo("notepad.exe", $"\"{path}\"") { UseShellExecute = true });
-            return path;
-        }
-
         public static void OpenDeviceManager() => Process.Start(new ProcessStartInfo("devmgmt.msc") { UseShellExecute = true });
         public static void OpenWindowsUpdateTroubleshooter() => Process.Start(new ProcessStartInfo("ms-settings:troubleshoot") { UseShellExecute = true });
 

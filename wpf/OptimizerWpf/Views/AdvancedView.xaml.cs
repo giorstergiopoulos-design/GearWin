@@ -194,10 +194,8 @@ namespace OptimizerWpf.Views
         }
 
         private void BtnGc_Click(object sender, RoutedEventArgs e) { AdvancedToolsService.CollectGarbage(); TxtMaintenanceStatus.Text = LanguageService.T("Adv_Completed"); }
-        private void BtnDeepDiagnostics_Click(object sender, RoutedEventArgs e) { var path = AdvancedToolsService.WriteDeepDiagnosticsReport(); TxtMaintenanceStatus.Text = $"{LanguageService.T("Adv_SavedPrefix")}{path}"; }
         private void BtnDeviceManager_Click(object sender, RoutedEventArgs e) => AdvancedToolsService.OpenDeviceManager();
         private void BtnWuTroubleshoot_Click(object sender, RoutedEventArgs e) => AdvancedToolsService.OpenWindowsUpdateTroubleshooter();
-        private void BtnSystemReport_Click(object sender, RoutedEventArgs e) => AdvancedToolsService.CreateSystemReport();
         private void BtnResetWuServices_Click(object sender, RoutedEventArgs e) { AdvancedToolsService.ResetWindowsUpdateServices(); TxtMaintenanceStatus.Text = LanguageService.T("Adv_WuResetStarted"); }
         private void BtnCleanXbox_Click(object sender, RoutedEventArgs e) { var count = AdvancedToolsService.CleanXboxCredentials(); TxtMaintenanceStatus.Text = $"{LanguageService.T("Adv_XboxClearedPrefix")}{count}{LanguageService.T("Adv_XboxClearedSuffix")}"; }
         private void BtnInstallGpedit_Click(object sender, RoutedEventArgs e) { AdvancedToolsService.InstallGroupPolicyEditor(); TxtMaintenanceStatus.Text = LanguageService.T("Adv_InstallStarted"); }

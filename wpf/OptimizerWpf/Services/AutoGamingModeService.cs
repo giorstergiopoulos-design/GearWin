@@ -41,13 +41,15 @@ namespace OptimizerWpf.Services
         {
             _timer?.Stop();
             _timer = null;
-            if (_isActive) { try { PowerModeService.DisableGamingMode(); } catch { } _isActive = false; }
+            if (_isActive) { try { PowerModeService.DisableGamingMode(restartExplorer: false); } catch { } _isActive = false; }
         }
 
         private static void Tick()
         {
             try
             {
+                // Αν ο χρήστης έχει ενεργοποιήσει χειροκίνητα το Gaming Mode (Βελτιστοποίηση), το αυτόματο δεν το αγγίζει - ούτε το ενεργοποιεί ξανά ούτε το απενεργοποιεί στο τέλος του παιχνιδιού.
+                if (!_isActive && AppSettingsService.Current.GamingModeActive) return;
                 var hwnd = GetForegroundWindow();
                 if (hwnd == IntPtr.Zero || !IsFullscreen(hwnd) || IsSelfOrShell(hwnd))
                 {
@@ -57,7 +59,8 @@ namespace OptimizerWpf.Services
                     // τρεμόπαιγμα σε σύντομη εναλλαγή παραθύρου (π.χ. Alt+Tab στιγμιαία).
                     if (_isActive && _consecutiveNonFullscreenTicks >= 2)
                     {
-                        PowerModeService.DisableGamingMode();
+                        // Χωρίς επανεκκίνηση του Explorer: το αυτόματο mode δεν πρέπει να κλείνει τα ανοιχτά παράθυρα του χρήστη κάθε φορά που τελειώνει ένα παιχνίδι.
+                        PowerModeService.DisableGamingMode(restartExplorer: false);
                         _isActive = false;
                     }
                     return;
