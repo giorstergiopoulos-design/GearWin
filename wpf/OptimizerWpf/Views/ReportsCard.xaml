@@ -21,6 +21,7 @@
                 <Button x:Name="BtnDiagZip" Content="{tr:Tr Reports_Diagnostics}" Style="{StaticResource FlatButtonStyle}" Padding="16,8" Margin="0,0,10,10" Click="BtnDiagZip_Click"/>
                 <Button x:Name="BtnBattery" Content="{tr:Tr Reports_Battery}" Style="{StaticResource FlatButtonStyle}" Padding="16,8" Margin="0,0,10,10" Click="BtnBattery_Click"/>
                 <Button x:Name="BtnSystemInfo" Content="{tr:Tr Reports_SystemInfo}" Style="{StaticResource FlatButtonStyle}" Padding="16,8" Margin="0,0,10,10" Click="BtnSystemInfo_Click"/>
+                <Button x:Name="BtnProblem" Content="{tr:Tr Reports_ProblemBundle}" Style="{StaticResource FlatButtonStyle}" Padding="16,8" Margin="0,0,10,10" Click="BtnProblem_Click" ToolTip="{tr:Tr Reports_ProblemBundleTip}"/>
             </WrapPanel>
             <TextBlock x:Name="TxtReportsStatus" Style="{StaticResource SubTextStyle}" TextWrapping="Wrap"/>
         </StackPanel>

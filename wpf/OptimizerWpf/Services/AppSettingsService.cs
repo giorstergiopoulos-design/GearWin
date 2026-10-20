@@ -66,6 +66,7 @@ namespace OptimizerWpf.Services
         public bool AutoGamingModeEnabled { get; set; }
         // Τελευταία γνωστή κατάσταση των χειροκίνητων Office/Gaming Mode (το view ξαναχτίζεται σε κάθε εναλλαγή καρτέλας).
         public bool GamingModeActive { get; set; }
+        public bool NightlyUpdatesEnabled { get; set; }
         public bool OfficeModeActive { get; set; }
 
         // ΝΕΟ - roadmap "Καρφιτσωμένες συντομεύσεις" - κλειδιά μορφής "<λίστα>:<Label>" (βλ.

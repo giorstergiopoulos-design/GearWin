@@ -160,6 +160,22 @@
                  (port του New-DriverScanButton, ~5555) αντί για απλό ορθογώνιο κουμπί - βλ.
                  DriverScanButton.xaml. Η λίστα αποτελεσμάτων μένει κρυφή μέχρι να υπάρξουν
                  αποτελέσματα (καθαρή "δεν έχει σαρωθεί ακόμα" κατάσταση, όπως στο screenshot). -->
+            <!-- ΝΕΟ (πρόταση "χρονοδιάγραμμα ενημερώσεων"): βλ. AutoUpdateService - μόνο ενημερώσεις εφαρμογών winget, κάθε νύχτα 03:30. -->
+            <Border Style="{StaticResource CardStyle}" Margin="0,16,0,0">
+                <Grid>
+                    <Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions>
+                    <StackPanel Grid.Column="0" Margin="0,0,12,0">
+                        <StackPanel Orientation="Horizontal" Margin="0,0,0,4">
+                            <views:HeaderGlyphIcon Kind="Clock" Width="15" Height="15" Margin="0,0,8,0" VerticalAlignment="Center"/>
+                            <TextBlock Text="{tr:Tr Opt_NightlyUpdates}" FontWeight="SemiBold" Foreground="{DynamicResource TextBrush}"/>
+                        </StackPanel>
+                        <TextBlock Text="{tr:Tr Opt_NightlyUpdatesDesc}" Style="{StaticResource SubTextStyle}" TextWrapping="Wrap"/>
+                        <TextBlock x:Name="TxtNightlyUpdatesStatus" Style="{StaticResource SubTextStyle}" TextWrapping="Wrap" Margin="0,4,0,0"/>
+                    </StackPanel>
+                    <ToggleButton x:Name="ToggleNightlyUpdates" Grid.Column="1" VerticalAlignment="Center" Style="{StaticResource ToggleSwitchStyle}" Click="ToggleNightlyUpdates_Click"/>
+                </Grid>
+            </Border>
+
             <TextBlock Text="{tr:Tr Opt_SectionDrivers}" Style="{StaticResource CardTitleStyle}" FontSize="15" Margin="4,22,0,8"/>
             <Border Style="{StaticResource CardStyle}" Margin="0,0,0,0">
                 <StackPanel>

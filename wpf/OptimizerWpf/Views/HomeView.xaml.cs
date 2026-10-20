@@ -124,6 +124,7 @@ namespace OptimizerWpf.Views
             // (ή οι σαρώσεις της καρτέλας Βελτιστοποίηση) τροφοδοτούν το hub.
             RefreshUpdatesSummary();
             UpdatesHubService.Changed += RefreshUpdatesSummary;
+            _ = LoadSecuritySummaryAsync();
 
             // ΝΕΟ - roadmap ιδέα #5 - βλ. GetImpactSummaryLines/RenderHealthIssues παρακάτω.
             RenderHealthIssues();
@@ -226,6 +227,24 @@ namespace OptimizerWpf.Views
             ListPinnedTweaks.ItemsSource = all;
             TxtNoPinned.Visibility = all.Count == 0 ? Visibility.Visible : Visibility.Collapsed;
         }
+
+        // ΝΕΟ - σύνοψη ασφάλειας (βλ. σχόλιο στο XAML). Στο παρασκήνιο (WMI/registry/PowerShell), αγνοείται αν το view έχει ήδη φύγει.
+        private async Task LoadSecuritySummaryAsync()
+        {
+            try
+            {
+                var items = await SecurityStatusService.GetAsync();
+                if (_unloaded) return;
+                var good = items.Count(i => i.Level == SecurityLevel.Good);
+                var total = items.Count(i => i.Level != SecurityLevel.Info);
+                TxtSecuritySummary.Text = string.Format(LanguageService.T("Home_SecuritySummary"), good, total);
+                ListSecurity.ItemsSource = items.Select(i => new SecurityRowVm(i)).ToList();
+            }
+            catch { if (!_unloaded) TxtSecuritySummary.Text = "—"; }
+        }
+
+        private void BtnOpenSecurityCenter_Click(object sender, RoutedEventArgs e) =>
+            new MaintenanceCenterWindow { Owner = Window.GetWindow(this) }.Show();
 
         private void TogglePinnedTweak_Click(object sender, RoutedEventArgs e)
         {
@@ -848,5 +867,23 @@ namespace OptimizerWpf.Views
             status.dwLength = (uint)Marshal.SizeOf<MEMORYSTATUSEX>();
             return NativeGlobalMemoryStatusEx(ref status);
         }
+    }
+
+    public class SecurityRowVm
+    {
+        public SecurityRowVm(SecurityItem item)
+        {
+            Label = item.Label;
+            Detail = item.Detail;
+            Dot = new System.Windows.Media.SolidColorBrush(item.Level switch
+            {
+                SecurityLevel.Good => System.Windows.Media.Color.FromRgb(0x4C, 0xAF, 0x50),
+                SecurityLevel.Warning => System.Windows.Media.Color.FromRgb(0xF5, 0x9E, 0x0B),
+                _ => System.Windows.Media.Color.FromRgb(0x9E, 0x9E, 0x9E),
+            });
+        }
+        public string Label { get; }
+        public string Detail { get; }
+        public System.Windows.Media.Brush Dot { get; }
     }
 }

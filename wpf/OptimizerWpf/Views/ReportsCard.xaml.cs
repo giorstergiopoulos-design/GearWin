@@ -14,7 +14,7 @@ namespace OptimizerWpf.Views
 
         private void SetBusy(bool busy, string? message = null)
         {
-            foreach (var b in new[] { BtnSummaryTxt, BtnSummaryPdf, BtnDiagZip, BtnBattery, BtnSystemInfo }) b.IsEnabled = !busy;
+            foreach (var b in new[] { BtnSummaryTxt, BtnSummaryPdf, BtnDiagZip, BtnBattery, BtnSystemInfo, BtnProblem }) b.IsEnabled = !busy;
             if (busy) StatusService.SetBusy(message ?? ""); else StatusService.SetIdle(LanguageService.T("Ready"));
         }
 
@@ -65,6 +65,21 @@ namespace OptimizerWpf.Views
                 TxtReportsStatus.Text = LanguageService.T(ok ? "Health_BatteryReportOpened" : "Health_BatteryReportFailed");
                 if (ok) Toast(LanguageService.T("Health_BatteryReportOpened"));
             }
+            finally { SetBusy(false); }
+        }
+
+        private async void BtnProblem_Click(object sender, RoutedEventArgs e)
+        {
+            SetBusy(true, LanguageService.T("Reports_ProblemBundle"));
+            try
+            {
+                var version = typeof(App).Assembly.GetName().Version?.ToString(3) ?? "";
+                var path = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.DesktopDirectory), $"GearWin_ProblemReport_{DateTime.Now:yyyyMMdd_HHmmss}.zip");
+                await ProblemReportService.CreateAsync(path, version);
+                Process.Start(new ProcessStartInfo("explorer.exe", $"/select,\"{path}\"") { UseShellExecute = true });
+                TxtReportsStatus.Text = LanguageService.T("Reports_ProblemBundleDone") + path;
+            }
+            catch (Exception ex) { TxtReportsStatus.Text = ex.Message; }
             finally { SetBusy(false); }
         }
 

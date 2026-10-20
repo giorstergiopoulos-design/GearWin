@@ -57,6 +57,7 @@ namespace OptimizerWpf.Views
             ToggleScheduledMaintenance.IsChecked = AppSettingsService.Current.ScheduledMaintenanceEnabled;
             UpdateScheduledMaintenanceStatusText();
             ToggleAutoGamingMode.IsChecked = AppSettingsService.Current.AutoGamingModeEnabled;
+            ToggleNightlyUpdates.IsChecked = AppSettingsService.Current.NightlyUpdatesEnabled;
             // ΔΙΟΡΘΩΣΗ (έλεγχος ορθής λειτουργίας): οι διακόπτες Office/Gaming Mode δεν αρχικοποιούνταν ΠΟΤΕ - κάθε εναλλαγή
             // καρτέλας ξαναχτίζει το view, άρα ένα ενεργό Gaming Mode εμφανιζόταν ξανά ως "κλειστό" ενώ τα Windows έμεναν σε αυτό.
             ToggleOfficeMode.IsChecked = AppSettingsService.Current.OfficeModeActive;
@@ -204,6 +205,27 @@ namespace OptimizerWpf.Views
             }
             catch { StatusService.SetIdle(LanguageService.T("Ready")); }
             finally { ToggleGamingMode.IsEnabled = true; }
+        }
+
+        private async void ToggleNightlyUpdates_Click(object sender, RoutedEventArgs e)
+        {
+            var enable = ToggleNightlyUpdates.IsChecked == true;
+            ToggleNightlyUpdates.IsEnabled = false;
+            try
+            {
+                var ok = await AutoUpdateService.SetEnabledAsync(enable);
+                if (!ok)
+                {
+                    // Ειλικρινής επαναφορά του διακόπτη αντί για ψεύτικο "ενεργό" - ίδιο μοτίβο με την εκκίνηση με τα Windows.
+                    ToggleNightlyUpdates.IsChecked = !enable;
+                    TxtNightlyUpdatesStatus.Text = LanguageService.T(enable ? "Autostart_UnsafeLocation" : "Autostart_Failed");
+                    return;
+                }
+                AppSettingsService.Current.NightlyUpdatesEnabled = enable;
+                AppSettingsService.Save();
+                TxtNightlyUpdatesStatus.Text = enable ? LanguageService.T("Opt_NightlyUpdatesOn") : "";
+            }
+            finally { ToggleNightlyUpdates.IsEnabled = true; }
         }
 
         private void BtnOpenGamesTab_Click(object sender, RoutedEventArgs e) => TrayIconService.OpenTab("GamesMedia");

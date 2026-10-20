@@ -6,6 +6,16 @@ available inside the app itself, via Help/Instructions → the "Version History"
 
 Format loosely follows [Keep a Changelog](https://keepachangelog.com/).
 
+## v6.4.0 — Button padding root cause, grouped modes/reports, new tools
+
+- **Buttons (root cause):** the `FlatButtonStyle`/`AccentButtonStyle` template never applied `Padding`, so every padding value was dead and only explicit Width/Height/MinWidth gave spacing. The template now binds `Padding`; verified by rendering the tabs to images. (The universal `ButtonAutoFit` from 6.3.6 remains as protection against Grid compression.)
+- **Update manager button:** while installing, the circular button shows a down arrow with a horizontal line beneath it.
+- **Grouping:** Office/Gaming/Ultimate/auto-Gaming/scheduled-maintenance are one "Performance Modes" card; reports (summary TXT/PDF, diagnostics ZIP, battery, systeminfo, problem bundle) are one "Reports & Diagnostics" card; the Optimization tab has section headers (Updates / Drivers / Performance Modes). Removed the duplicate Advanced "System Report" and the 6-line "Deep Diagnostics Report".
+- **Gaming Mode:** state persisted (toggles were never initialised, so a tab switch showed "off" while Windows stayed in the mode); restore point + change-journal entry (undoable from the Maintenance Center); switching with Office Mode really disables the other; auto Gaming Mode respects a manual one and no longer restarts Explorer; Game Mode registry value kept in sync with the Games tab; Optimization <-> Games cross-links.
+- **New:** security summary card on Home (same `SecurityStatusService` as the Maintenance Center); global search indexes every card of every tab; optional automatic nightly winget app updates (03:30 scheduled task, runs `--auto-updates` headless; Windows Update/drivers/Store apps deliberately excluded); problem-report bundle (`ProblemReportService`, whitelist: crash.log, update-check.log, AppSettings.json + version info; nothing is sent automatically).
+- Scheduled maintenance and nightly-update tasks (run with highest privileges) are only created when the executable's folder is not writable by normal users, like the start-with-Windows task.
+- 221 tests.
+
 ## v6.3.9 — Windows updates in the update list, test isolation
 
 - **Windows Update:** available Windows updates (including optional ones) are now listed in the Optimization tab's update list and installed from there through the Windows Update Agent, mirroring WMT 6.7 (`IsInstalled=0 and IsHidden=0`, `Online=true`; updates already installed since boot and awaiting a restart are counted separately, drivers stay in the driver scan). Verified with a real scan on a machine with 5 pending updates.

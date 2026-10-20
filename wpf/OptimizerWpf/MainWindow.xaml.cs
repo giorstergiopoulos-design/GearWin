@@ -91,9 +91,7 @@ public partial class MainWindow : Window
         ListThemes.ItemsSource = ThemeCatalog.All;
         ListThemes.SelectedItem = ThemeManager.CurrentPair;
 
-        _searchIndex = ClassicMenuModel.Groups
-            .SelectMany(g => g.Items.SelectMany(l => l.Children ?? new[] { l }).Select(leaf => new SearchResultRow(leaf.Icon, leaf.Label, g.Header, leaf)))
-            .ToList();
+        _searchIndex = BuildSearchIndex();
 
         StatusService.Changed += OnStatusChanged;
         Closed += (_, _) => StatusService.Changed -= OnStatusChanged;
@@ -260,9 +258,7 @@ public partial class MainWindow : Window
         LblTabSystem.Text = LanguageService.T("TabSystem");
 
         PopulateClassicMenu();
-        _searchIndex = ClassicMenuModel.Groups
-            .SelectMany(g => g.Items.SelectMany(l => l.Children ?? new[] { l }).Select(leaf => new SearchResultRow(leaf.Icon, leaf.Label, g.Header, leaf)))
-            .ToList();
+        _searchIndex = BuildSearchIndex();
         ConfigureRail();
 
         // ΔΙΟΡΘΩΣΗ (χρήστης ανέφερε: "κάποια elements μένουν στην προηγούμενη γλώσσα μέχρι το
@@ -407,6 +403,41 @@ public partial class MainWindow : Window
     }
 
     private readonly Storyboard _spinnerStoryboard = BuildSpinnerStoryboard();
+    // ΒΕΛΤΙΩΣΗ (πρόταση "αναζήτηση παντού"): εκτός από τις εγγραφές του κλασικού μενού, το ευρετήριο περιλαμβάνει πλέον ΚΑΘΕ κάρτα
+    // κάθε καρτέλας (π.χ. "Βελτιστοποίηση › Gaming Mode") - η επιλογή ανοίγει την καρτέλα που τη φιλοξενεί.
+    private static readonly (string Tag, string[] CardKeys)[] CardIndex =
+    {
+        ("Home", new[] { "Home_PerfMonitoring", "Home_HealthScore", "Home_Pinned", "Home_UpdatesTitle", "Home_DiskAnalysis", "Home_RecentActivity" }),
+        ("Optimization", new[] { "Optimization_SoftwareUpdate", "Optimization_Drivers", "Optimization_DriverBackup", "Optimization_DriverStore", "Opt_ModesSection", "Optimization_GamingMode", "Optimization_OfficeMode", "Opt_UltimatePerformance", "Opt_AutoGamingMode", "Opt_ScheduledMaintenance" }),
+        ("Health", new[] { "Health_Tools", "Health_RegistryCleaner", "Health_RegBackupHistory", "Health_BrowserCache", "Health_WinRE", "Reports_Title", "Health_DiskTrend", "System_RestorePoints", "Backup_Title" }),
+        ("Network", new[] { "Network_TrafficPerApp", "Network_PrivacyTitle", "Network_FirewallRules", "Network_OpenPorts", "Network_FirewallPolicy", "Network_QuickDns", "Network_HostsEditor" }),
+        ("Tweaks", new[] { "Tweaks_NamedProfilesTitle", "Tweaks_Main", "Tweaks_AiCopilot", "Tweaks_Performance", "Tweaks_LighterWindows", "Tweaks_Encryption", "Tweaks_VisualEffects", "Tweaks_RightClick" }),
+        ("GamesMedia", new[] { "Games_LibraryTitle", "Games_PerGameTitle", "Games_TweaksTitle", "Games_ShaderTitle", "Games_SaveBackupTitle", "Media_DisplaysTitle", "Media_AudioTitle", "Media_PrivacyTitle", "Media_CodecsTitle", "Media_ConverterTitle" }),
+        ("Bloatware", new[] { "Bloatware_Builtin", "Advanced_OptionalFeatures", "Bloatware_Recommended", "Bloatware_UwpManager", "Bloatware_DeepUninstall" }),
+        ("Advanced", new[] { "Advanced_Maintenance", "Advanced_Toolbox", "Advanced_GhostDevices", "UsbHistory_Title", "Wsl_Title", "Rgb_Title", "Advanced_ScheduledTasks", "Advanced_BootTimeline", "Advanced_Autologon", "System_Startup", "System_Services", "Advanced_DuplicateFinder", "FolderLock_Title", "System_Benchmark" }),
+        ("System", new[] { "Sys_MbTitle", "Sys_DrivesTitle", "Sys_OsTitle", "Sys_NetTitle", "Sys_CpuTitle", "Sys_BatteryTitle", "Sys_RamTitle", "Sys_GpuTitle", "System_Processes", "System_Storage", "Timeline_Title" }),
+    };
+
+    private static List<SearchResultRow> BuildSearchIndex()
+    {
+        var rows = ClassicMenuModel.Groups
+            .SelectMany(g => g.Items.SelectMany(l => l.Children ?? new[] { l }).Select(leaf => new SearchResultRow(leaf.Icon, leaf.Label, g.Header, leaf)))
+            .ToList();
+        var tabs = NavItems.All.ToDictionary(n => n.Tag, n => n);
+        foreach (var (tag, keys) in CardIndex)
+        {
+            if (!tabs.TryGetValue(tag, out var tab)) continue;
+            foreach (var key in keys)
+            {
+                var text = LanguageService.T(key);
+                if (string.IsNullOrWhiteSpace(text) || text == key) continue;
+                var label = $"{tab.Label} › {text}";
+                rows.Add(new SearchResultRow(tab.Icon, label, tab.Label, new MenuLeaf(tab.Icon, label, new MenuAction(tag, null))));
+            }
+        }
+        return rows;
+    }
+
     private List<SearchResultRow> _searchIndex = new();
 
     private static Storyboard BuildSpinnerStoryboard()

@@ -330,6 +330,32 @@
                 </StackPanel>
             </Border>
 
+            <!-- ΝΕΟ (πρόταση "συνολικό σκορ ασφάλειας στην Αρχική"): η κατάσταση ασφάλειας (antivirus, firewall, UAC, Secure Boot, TPM, BitLocker,
+                 εκκρεμής επανεκκίνηση) υπήρχε ΜΟΝΟ στο Κέντρο Συντήρησης. Εδώ συνοπτικά, από το ΙΔΙΟ SecurityStatusService (καμία δεύτερη υλοποίηση). -->
+            <Border Style="{StaticResource CardStyle}" Margin="0,16,0,0">
+                <StackPanel>
+                    <Grid Margin="0,0,0,6">
+                        <Grid.ColumnDefinitions><ColumnDefinition Width="Auto"/><ColumnDefinition Width="*"/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions>
+                        <views:HeaderGlyphIcon Grid.Column="0" Kind="Shield" Width="16" Height="16" Margin="0,0,8,0" VerticalAlignment="Center"/>
+                        <TextBlock Grid.Column="1" Text="{tr:Tr Home_SecurityTitle}" Style="{StaticResource CardTitleStyle}"/>
+                        <Button Grid.Column="2" Content="{tr:Tr Home_SecurityOpen}" Style="{StaticResource FlatButtonStyle}" Padding="16,5" Click="BtnOpenSecurityCenter_Click"/>
+                    </Grid>
+                    <TextBlock x:Name="TxtSecuritySummary" Style="{StaticResource SubTextStyle}" Margin="0,0,0,8" Text="—"/>
+                    <ItemsControl x:Name="ListSecurity">
+                        <ItemsControl.ItemTemplate>
+                            <DataTemplate>
+                                <Grid Margin="0,0,0,4">
+                                    <Grid.ColumnDefinitions><ColumnDefinition Width="Auto"/><ColumnDefinition Width="Auto"/><ColumnDefinition Width="*"/></Grid.ColumnDefinitions>
+                                    <Ellipse Width="9" Height="9" Fill="{Binding Dot}" VerticalAlignment="Center" Margin="0,0,8,0"/>
+                                    <TextBlock Grid.Column="1" Text="{Binding Label}" Foreground="{DynamicResource TextBrush}" Margin="0,0,10,0"/>
+                                    <TextBlock Grid.Column="2" Text="{Binding Detail}" Style="{StaticResource SubTextStyle}" TextTrimming="CharacterEllipsis"/>
+                                </Grid>
+                            </DataTemplate>
+                        </ItemsControl.ItemTemplate>
+                    </ItemsControl>
+                </StackPanel>
+            </Border>
+
             <!-- Disk Analysis -->
             <!-- ΔΙΟΡΘΩΣΗ (χρήστης ανέφερε: "τα καρφιτσωμένα και η ανάλυση χώρου ως πλαίσια είναι το
                  ένα πάνω στο άλλο") - σε αντίθεση με ΚΑΘΕ άλλη κάρτα σε αυτή τη StackPanel (όλες με

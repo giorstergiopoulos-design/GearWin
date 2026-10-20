@@ -37,6 +37,13 @@ namespace OptimizerWpf.Services
                 "<ScheduleByWeek><DaysOfWeek><Sunday /></DaysOfWeek><WeeksInterval>1</WeeksInterval></ScheduleByWeek></CalendarTrigger>",
                 exePath, arguments, userId, description);
 
+        // Καθημερινά στις 03:30 (προγραμματισμένες ενημερώσεις εφαρμογών, βλ. AutoUpdateService).
+        public static string BuildDailyTaskXml(string exePath, string arguments, string userId, string description) =>
+            Wrap(
+                "<CalendarTrigger><StartBoundary>2026-01-01T03:30:00</StartBoundary><Enabled>true</Enabled>" +
+                "<ScheduleByDay><DaysInterval>1</DaysInterval></ScheduleByDay></CalendarTrigger>",
+                exePath, arguments, userId, description);
+
         private static string Wrap(string trigger, string exePath, string arguments, string userId, string description) =>
             $@"<?xml version=""1.0"" encoding=""UTF-16""?>
 <Task version=""1.4"" xmlns=""{Ns}"">

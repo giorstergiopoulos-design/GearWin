@@ -140,6 +140,15 @@ namespace OptimizerWpf.Services
         // Ορίζεται όταν μια ενημέρωση Windows ολοκληρώθηκε αλλά απαιτεί επανεκκίνηση - το UI το δείχνει στη σύνοψη.
         public static bool RestartRequiredAfterUpdates { get; set; }
 
+        // Για την προγραμματισμένη νυχτερινή ενημέρωση (AutoUpdateService): μόνο πηγές winget, σιωπηλά, χωρίς αλληλεπίδραση. Το winget
+        // σέβεται τα pins (winget pin) και παραλείπει πακέτα χωρίς γνωστή έκδοση (χωρίς --include-unknown) - ασφαλές για μη επιβλεπόμενη εκτέλεση.
+        public static async Task<(bool Started, int ExitCode, string Output)> UpgradeAllSilentAsync()
+        {
+            var (output, exitCode, started) = await RunToolAsync("winget.exe",
+                "upgrade --all --silent --accept-source-agreements --accept-package-agreements --disable-interactivity", TimeSpan.FromMinutes(90));
+            return (started, exitCode, output);
+        }
+
         public static async Task<bool> UpgradeAsync(string id, string source) => (await UpgradeDetailedAsync(id, source)).Ok;
 
         // Όπως το WMT 6.7 (Winget failure logs / ErrorCodes): επιστρέφει ΚΑΙ τον πραγματικό λόγο αποτυχίας

@@ -1,4 +1,4 @@
-﻿﻿using System.Configuration;
+﻿﻿﻿using System.Configuration;
 using System.Data;
 using System.Linq;
 using System.Windows;
@@ -49,6 +49,13 @@ public partial class App : Application
         {
             try { Services.AdvancedToolsService.RunScheduledMaintenance(); } catch { }
             Shutdown();
+            return;
+        }
+
+        // Νυχτερινές ενημερώσεις εφαρμογών (Task Scheduler, βλ. AutoUpdateService) - headless, καμία οθόνη.
+        if (e.Args.Contains("--auto-updates"))
+        {
+            _ = Services.AutoUpdateService.RunAsync().ContinueWith(_ => Dispatcher.Invoke(Shutdown));
             return;
         }
 

@@ -324,6 +324,8 @@ namespace OptimizerWpf.Services
 
             var exePath = Process.GetCurrentProcess().MainModule?.FileName ?? "";
             if (string.IsNullOrEmpty(exePath)) return false;
+            // Εργασία HighestAvailable χωρίς UAC: το exe πρέπει να είναι σε φάκελο που δεν τροποποιούν απλοί χρήστες (βλ. SecureStorage).
+            if (!SecureStorage.IsDirectoryAdminOnlyWritable(Path.GetDirectoryName(exePath))) return false;
             var xml = TaskSchedulerService.BuildWeeklyTaskXml(exePath, "--auto-maintenance", TaskSchedulerService.CurrentUserId(), "GearWin - weekly maintenance");
             return await TaskSchedulerService.CreateAsync(ScheduledMaintenanceTaskName, xml);
         }
