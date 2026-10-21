@@ -214,7 +214,7 @@ namespace OptimizerWpf.Views
 
         // ── Παιχνίδια: Προφίλ ανά παιχνίδι (REQ-590-06) ──────────────────────────────────
 
-        private void BtnOpenOptimizationTab_Click(object sender, RoutedEventArgs e) => TrayIconService.OpenTab("Optimization");
+        private void BtnOpenOptimizationTab_Click(object sender, RoutedEventArgs e) => TrayIconService.OpenTab("Optimization#0");
 
         private void BtnSaveGameProfile_Click(object sender, RoutedEventArgs e)
         {

@@ -13,34 +13,36 @@ La aplicación está organizada en 9 pestañas:
   tendencia y una insignia de salud del disco S.M.A.R.T.), acciones rápidas de mantenimiento,
   análisis del espacio en disco y estado de la conexión de red con un gráfico de rendimiento en vivo.
 
-* Optimización - Limpieza de archivos temporales/basura, gestión del inicio, planes de energía,
-  mantenimiento semanal programado y actualizaciones de controladores desde múltiples fuentes
-  (Windows Update, Catálogo de Microsoft Update, AMD/NVIDIA/Dell/SDIO).
+* Actualizaciones y Aplicaciones - Busque una sola vez actualizaciones de aplicaciones, Windows y
+  controladores en varias fuentes fiables, instálelas en bloque, elimine componentes de Windows que
+  no necesita o instale aplicaciones recomendadas con un clic.
 
-* Salud del Sistema - Comprobaciones de salud de disco/memoria/sistema de archivos (SFC/DISM/CHKDSK),
-  un limpiador de registro con copia de seguridad automática e historial de restauración, análisis
-  del espacio en disco por categoría, y una Comprobación de Salud completa al estilo PC Manager con
-  un botón de reparación total con un solo clic.
+* Limpieza y Rendimiento - Active el modo Oficina, Juego o Ultimate Performance, libere RAM al
+  instante (con una cifra real antes/después), limpie archivos temporales y cachés, y controle lo
+  que se inicia con Windows.
 
-* Red y Seguridad - Diagnóstico de red, puertos abiertos/en escucha, configuración de DNS, Windows
-  Defender, bloqueo de telemetría, y todas las herramientas de privacidad en una sola sección.
+* Salud y Reparación - Compruebe y repare archivos del sistema (SFC/DISM), el disco (CHKDSK) y
+  WinRE, limpie el registro con seguridad (con copia automática antes de cada cambio) y siga la
+  salud del disco a lo largo del tiempo.
 
-* Ajustes - Docenas de ajustes de interfaz/rendimiento/privacidad de Windows, activables con un solo
+* Seguridad y Privacidad - Ejecute un análisis rápido con Windows Defender, revise reglas del
+  firewall y puertos abiertos, bloquee la telemetría de Microsoft, administre localmente las
+  contraseñas del navegador y restablezca o ajuste la red (DNS, hosts) con un clic.
+
+* Juegos y Multimedia - Su biblioteca de Steam/Epic/GOG/Ubisoft/Xbox con inicio, perfiles de GPU/gaming por juego y limpieza de la caché de los launchers; revisión de pantallas, audio y cámara/micrófono, detección de códecs y un conversor de vídeo/audio con conversión por lotes.
+
+* Ajustes de Windows - Docenas de ajustes de interfaz/rendimiento/privacidad de Windows, activables con un solo
   clic, con restauración segura al valor original, entradas personalizadas de menú contextual, y
   perfiles de configuración con nombre o basados en archivo que puedes guardar y alternar
   instantáneamente.
 
-* Juegos y Multimedia - Su biblioteca de Steam/Epic/GOG/Ubisoft/Xbox con inicio, perfiles de GPU/gaming por juego y limpieza de la caché de los launchers; revisión de pantallas, audio y cámara/micrófono, detección de códecs y un conversor de vídeo/audio con conversión por lotes.
+* Copias e Informes - Exporte informes (PDF/TXT, ZIP de diagnóstico, informe de batería, paquete de
+  problema) y administre puntos de restauración, copias del registro y de controladores en un solo
+  lugar.
 
-* Eliminación de Bloatware - Elimina de forma segura las apps preinstaladas que no necesitas, con la
-  opción de reinstalarlas, además de instalación con un clic de apps recomendadas mediante winget.
-
-* Herramientas Avanzadas - Mantenimiento completo del sistema, características opcionales de
-  Windows, buscador de archivos duplicados, limpieza de dispositivos "fantasma", y una caja de
-  herramientas de Windows con acceso rápido a utilidades integradas.
-
-* Sistema - Desglose completo de hardware/SO ("Mi Dispositivo") con exportación a PDF, gestión de
-  inicio/procesos/servicios, prueba de velocidad de disco y puntos de restauración.
+* Sistema y Herramientas - Vea un análisis completo de su hardware en «Mi dispositivo» y use las
+  herramientas: mantenimiento completo con un clic, caja de herramientas de Windows, WSL, historial
+  USB y más.
 
 Extras: un icono en la bandeja del sistema con acciones rápidas (Limpieza Rápida, Comprobación de
 Salud, mini ventana emergente en vivo de CPU/RAM/red) y un widget de escritorio opcional siempre

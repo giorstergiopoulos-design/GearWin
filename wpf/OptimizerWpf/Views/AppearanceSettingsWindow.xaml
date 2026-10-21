@@ -63,6 +63,21 @@
                     </Grid>
                     <TextBlock x:Name="TxtUpdateCheckStatus" Style="{StaticResource SubTextStyle}" TextWrapping="Wrap"/>
 
+                    <!-- ΝΕΟ (6.5.0, ρητό αίτημα χρήστη: "κουμπί ενημέρωσης της εφαρμογής από το GitHub, βάλτο στις ρυθμίσεις") -
+                         βλ. Services/SelfUpdateService.cs: έλεγχος GitHub Releases, λήψη με επαλήθευση SHA-256, σιωπηλή εγκατάσταση και επανεκκίνηση. -->
+                    <Separator Margin="0,16,0,14"/>
+                    <TextBlock Text="{tr:Tr Appr_SelfUpdateTitle}" Style="{StaticResource CardTitleStyle}" Margin="0,0,0,4"/>
+                    <TextBlock Text="{tr:Tr Appr_SelfUpdateDesc}" Style="{StaticResource SubTextStyle}" TextWrapping="Wrap" Margin="0,0,0,8"/>
+                    <CheckBox x:Name="ChkSelfUpdateCheck" Content="{tr:Tr Appr_SelfUpdateCheckBox}" Foreground="{DynamicResource TextBrush}" FontWeight="Bold"
+                              Click="ChkSelfUpdateCheck_Click" Margin="0,0,0,8"/>
+                    <WrapPanel Margin="0,0,0,6">
+                        <Button x:Name="BtnSelfUpdateCheck" Content="{tr:Tr Appr_SelfUpdateCheckNow}" Style="{StaticResource FlatButtonStyle}" Padding="16,6" MinWidth="160" Margin="0,0,10,6" Click="BtnSelfUpdateCheck_Click"/>
+                        <Button x:Name="BtnSelfUpdateInstall" Content="{tr:Tr Appr_SelfUpdateInstall}" Style="{StaticResource AccentButtonStyle}" Padding="16,6" MinWidth="200" Margin="0,0,10,6" Visibility="Collapsed" Click="BtnSelfUpdateInstall_Click"/>
+                        <Button x:Name="BtnSelfUpdateNotes" Content="{tr:Tr Appr_SelfUpdateNotes}" Style="{StaticResource FlatButtonStyle}" Padding="16,6" MinWidth="160" Margin="0,0,10,6" Visibility="Collapsed" Click="BtnSelfUpdateNotes_Click"/>
+                    </WrapPanel>
+                    <ProgressBar x:Name="BarSelfUpdate" Height="6" Minimum="0" Maximum="1" Margin="0,0,0,6" Visibility="Collapsed"/>
+                    <TextBlock x:Name="TxtSelfUpdateStatus" Style="{StaticResource SubTextStyle}" TextWrapping="Wrap"/>
+
                     <!-- ΝΕΟ - roadmap ιδέα #4 (ρητό αίτημα χρήστη: "κάνε τα 4-7") - ίδιο μηχανισμό
                          ειδοποίησης με τα παραπάνω, βλ. UpdateNotificationService.CheckLowDiskSpace. -->
                     <Separator Margin="0,16,0,14"/>

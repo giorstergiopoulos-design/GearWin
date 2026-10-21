@@ -150,13 +150,20 @@ namespace OptimizerWpf.Services
         public static void ShowNotificationBalloon(string title, string text, Action? onClick = null)
         {
             if (_icon == null) return;
-            _balloonClickAction = onClick ?? (() => OpenTab("Optimization"));
+            _balloonClickAction = onClick ?? (() => OpenTab("Bloatware#0"));
             _icon.ShowBalloonTip(8000, title, text, ToolTipIcon.Info);
         }
 
         // ΝΕΟ - βοηθητική μέθοδος: επαναφέρει το κύριο παράθυρο και επιλέγει την καρτέλα tag -
         // εξήχθη από το προεπιλεγμένο onClick παραπάνω ώστε να την ξαναχρησιμοποιεί ΚΑΙ το
-        // UpdateNotificationService.CheckLowDiskSpace (ανοίγει "System" αντί για "Optimization").
+        // UpdateNotificationService.CheckLowDiskSpace (ανοίγει τον Καθαρισμό αντί για τις Ενημερώσεις).
+        // Άνοιγμα των Ρυθμίσεων (πρώτη καρτέλα, όπου βρίσκεται η Ενημέρωση GearWin) - κλικ στην ειδοποίηση νέας έκδοσης.
+        public static void OpenSettings()
+        {
+            RestoreMainWindow();
+            new Views.AppearanceSettingsWindow(0) { Owner = _mainWindow }.ShowDialog();
+        }
+
         public static void OpenTab(string tag)
         {
             RestoreMainWindow();

@@ -22,14 +22,14 @@
 | Καρτέλα | Τι κάνει |
 |---|---|
 | 🏠 Αρχική | Βαθμολογία υγείας συστήματος, γρήγορες ενέργειες συντήρησης, κατάσταση σύνδεσης δικτύου με ζωντανό γράφημα ταχύτητας |
-| ⚡ Βελτιστοποίηση | Καθαρισμός προσωρινών/άχρηστων αρχείων, διαχείριση εκκίνησης, σχέδια ενέργειας, εργαλεία απόδοσης |
-| ❤ Υγεία Συστήματος | Έλεγχος υγείας δίσκων/μνήμης/συστήματος αρχείων, ανάλυση χώρου δίσκου ανά κατηγορία |
-| 🌐 Δίκτυο & Ασφάλεια | Διαγνωστικά δικτύου, DNS, Windows Defender, μπλοκάρισμα τηλεμετρίας, εργαλεία απορρήτου |
-| 🔧 Επιπλέον Ρυθμίσεις | Δεκάδες tweaks διεπαφής/απόδοσης/απορρήτου, με ασφαλή επαναφορά στην αρχική τιμή |
+| 📦 Ενημερώσεις & Εφαρμογές | Ενημερώσεις εφαρμογών, Windows και οδηγών από πολλές πηγές, προαιρετικές νυχτερινές ενημερώσεις, ασφαλής αφαίρεση προεγκατεστημένων εφαρμογών και εγκατάσταση προτεινόμενων |
+| ⚡ Καθαρισμός & Απόδοση | Λειτουργίες Office/Gaming/Ultimate, άμεση ελευθέρωση RAM με πραγματική μέτρηση, καθαρισμός προσωρινών/cache, διαχείριση εκκίνησης, προγραμματισμένη συντήρηση |
+| ❤ Υγεία & Επισκευή | SFC/DISM/CHKDSK, Καθαριστής Μητρώου με αυτόματο αντίγραφο, WinRE, τάση υγείας δίσκου |
+| 🛡 Ασφάλεια & Απόρρητο | Windows Defender, κανόνες Firewall και ανοιχτές θύρες, μπλοκάρισμα τηλεμετρίας, διαχειριστής κωδικών browser, DNS/hosts και εργαλεία δικτύου |
 | 🎮 Παιχνίδια & Πολυμέσα | Βιβλιοθήκη Steam/Epic/GOG/Ubisoft/Xbox με εκκίνηση, προφίλ GPU/gaming ανά παιχνίδι, καθαρισμός cache launcher και αντίγραφο ασφαλείας αποθηκεύσεων· έλεγχος οθονών/ήχου/κάμερας/μικροφώνου, εντοπισμός codecs, μετατροπέας βίντεο/ήχου με μαζική μετατροπή |
-| 🧹 Εφαρμογές & Bloat | Ασφαλής αφαίρεση προεγκατεστημένων εφαρμογών/προαιρετικών λειτουργιών Windows, με δυνατότητα επαναφοράς |
-| 🛠 Προηγμένα Εργαλεία | Συντήρηση συστήματος, custom δεξί-κλικ μενού, ενημερώσεις οδηγών, συσκευές-φαντάσματα |
-| 🖥 Σύστημα | Πλήρης ανάλυση υλικού/λειτουργικού ("Η Συσκευή Μου"), διαχείριση διεργασιών/δίσκων/ενημερώσεων, εύρεση διπλότυπων/μεγάλων αρχείων |
+| 🔧 Ρυθμίσεις Windows | Δεκάδες tweaks διεπαφής/απόδοσης/απορρήτου, με ασφαλή επαναφορά στην αρχική τιμή και ονομασμένα προφίλ |
+| 💾 Αντίγραφα & Αναφορές | Αναφορές (PDF/TXT, ZIP διαγνωστικών, μπαταρία, πακέτο προβλήματος), σημεία επαναφοράς, αντίγραφα μητρώου και οδηγών |
+| 🖥 Σύστημα & Εργαλεία | Πλήρης ανάλυση υλικού/λειτουργικού ("Η Συσκευή Μου"), πλήρης συντήρηση, Εργαλειοθήκη Windows, WSL, ιστορικό USB |
 
 Επίσης: πλήρης υποστήριξη 14 γλωσσών (Ελληνικά, Αγγλικά, Γερμανικά, Γαλλικά, Ισπανικά, Ιταλικά,
 Ρωσικά, Κινέζικα, Ιαπωνικά, Πορτογαλικά, Κορεατικά, Τουρκικά, Αραβικά, Χίντι), θέματα εμφάνισης
@@ -37,6 +37,8 @@
 ενεργειών για πλήρη διαφάνεια στο τι άλλαξε η εφαρμογή στο σύστημα.
 
 ### Στιγμιότυπα οθόνης / Screenshots
+
+_Τα στιγμιότυπα δείχνουν την προηγούμενη διάταξη καρτελών (έως 6.4.0) / The screenshots show the previous tab layout (up to 6.4.0)._
 
 <table>
 <tr>
@@ -97,14 +99,14 @@ The app is organized into 9 tabs:
 | Tab | What it does |
 |---|---|
 | 🏠 Home | System health score, quick maintenance actions, network status with a live throughput graph |
-| ⚡ Optimization | Temp/junk file cleanup, startup management, power plans, performance tools |
-| ❤ System Health | Disk/memory/file-system health checks, disk space analysis by category |
-| 🌐 Network & Security | Network diagnostics, DNS, Windows Defender, telemetry blocking, privacy tools |
-| 🔧 Tweaks | Dozens of interface/performance/privacy tweaks, safely restorable to their original value |
+| 📦 Updates & Apps | App, Windows and driver updates from several sources, optional nightly updates, safe removal of pre-installed apps and one-click installs of recommended apps |
+| ⚡ Cleanup & Performance | Office/Gaming/Ultimate modes, instant RAM release with a real before/after reading, temp/cache cleanup, startup management, scheduled maintenance |
+| ❤ Health & Repair | SFC/DISM/CHKDSK, Registry Cleaner with automatic backups, WinRE, disk-health trend |
+| 🛡 Security & Privacy | Windows Defender, firewall rules and open ports, telemetry blocking, browser password manager, DNS/hosts and network tools |
 | 🎮 Games & Multimedia | Steam/Epic/GOG/Ubisoft/Xbox library with launch, per-game GPU/gaming profiles, launcher-cache cleanup and game-save backup; display/audio/camera/microphone checks, codec detection, a video/audio converter with batch conversion |
-| 🧹 Apps & Bloat | Safely remove pre-installed apps/optional Windows features, with the option to restore them |
-| 🛠 Advanced Tools | System maintenance, custom right-click menus, driver updates, ghost-device cleanup |
-| 🖥 System | Full hardware/OS breakdown ("My Device"), process/disk/update management, duplicate/large-file finder |
+| 🔧 Windows Tweaks | Dozens of interface/performance/privacy tweaks, safely restorable to their original value, with named profiles |
+| 💾 Backups & Reports | Reports (PDF/TXT, diagnostics ZIP, battery, problem bundle), restore points, registry and driver backups |
+| 🖥 System & Tools | Full hardware/OS breakdown ("My Device"), full maintenance, Windows toolbox, WSL, USB history |
 
 Also: full support for 14 languages (Greek, English, German, French, Spanish, Italian, Russian,
 Chinese, Japanese, Portuguese, Korean, Turkish, Arabic, Hindi), Light/Dark appearance themes with

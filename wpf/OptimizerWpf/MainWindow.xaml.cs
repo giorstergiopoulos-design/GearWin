@@ -408,14 +408,21 @@ public partial class MainWindow : Window
     private static readonly (string Tag, string[] CardKeys)[] CardIndex =
     {
         ("Home", new[] { "Home_PerfMonitoring", "Home_HealthScore", "Home_Pinned", "Home_UpdatesTitle", "Home_DiskAnalysis", "Home_RecentActivity" }),
-        ("Optimization", new[] { "Optimization_SoftwareUpdate", "Optimization_Drivers", "Optimization_DriverBackup", "Optimization_DriverStore", "Opt_ModesSection", "Optimization_GamingMode", "Optimization_OfficeMode", "Opt_UltimatePerformance", "Opt_AutoGamingMode", "Opt_ScheduledMaintenance" }),
-        ("Health", new[] { "Health_Tools", "Health_RegistryCleaner", "Health_RegBackupHistory", "Health_BrowserCache", "Health_WinRE", "Reports_Title", "Health_DiskTrend", "System_RestorePoints", "Backup_Title" }),
-        ("Network", new[] { "Network_TrafficPerApp", "Network_PrivacyTitle", "Network_FirewallRules", "Network_OpenPorts", "Network_FirewallPolicy", "Network_QuickDns", "Network_HostsEditor" }),
+        ("Bloatware#0", new[] { "Optimization_SoftwareUpdate", "Opt_NightlyUpdates" }),
+        ("Bloatware#1", new[] { "Optimization_Drivers", "Optimization_DriverStore", "Advanced_GhostDevices" }),
+        ("Bloatware#2", new[] { "Bloatware_Builtin", "Advanced_OptionalFeatures", "Bloatware_Recommended", "Bloatware_UwpManager", "Bloatware_DeepUninstall" }),
+        ("Optimization#0", new[] { "Opt_ModesSection", "Optimization_GamingMode", "Optimization_OfficeMode", "Opt_UltimatePerformance", "Opt_AutoGamingMode", "Opt_ScheduledMaintenance", "System_Processes", "System_Benchmark" }),
+        ("Optimization#1", new[] { "Health_BrowserCache", "System_Storage", "Advanced_DuplicateFinder" }),
+        ("Optimization#2", new[] { "Advanced_ScheduledTasks", "Advanced_BootTimeline", "System_Startup", "System_Services" }),
+        ("Health", new[] { "Health_Tools", "Health_RegistryCleaner", "Health_WinRE", "Health_DiskTrend" }),
+        ("Network#0", new[] { "Network_PrivacyTitle", "Network_FirewallRules", "Network_OpenPorts", "Network_FirewallPolicy", "Advanced_Autologon", "FolderLock_Title" }),
+        ("Network#1", new[] { "Network_TrafficPerApp", "Network_QuickDns", "Network_HostsEditor" }),
         ("Tweaks", new[] { "Tweaks_NamedProfilesTitle", "Tweaks_Main", "Tweaks_AiCopilot", "Tweaks_Performance", "Tweaks_LighterWindows", "Tweaks_Encryption", "Tweaks_VisualEffects", "Tweaks_RightClick" }),
         ("GamesMedia", new[] { "Games_LibraryTitle", "Games_PerGameTitle", "Games_TweaksTitle", "Games_ShaderTitle", "Games_SaveBackupTitle", "Media_DisplaysTitle", "Media_AudioTitle", "Media_PrivacyTitle", "Media_CodecsTitle", "Media_ConverterTitle" }),
-        ("Bloatware", new[] { "Bloatware_Builtin", "Advanced_OptionalFeatures", "Bloatware_Recommended", "Bloatware_UwpManager", "Bloatware_DeepUninstall" }),
-        ("Advanced", new[] { "Advanced_Maintenance", "Advanced_Toolbox", "Advanced_GhostDevices", "UsbHistory_Title", "Wsl_Title", "Rgb_Title", "Advanced_ScheduledTasks", "Advanced_BootTimeline", "Advanced_Autologon", "System_Startup", "System_Services", "Advanced_DuplicateFinder", "FolderLock_Title", "System_Benchmark" }),
-        ("System", new[] { "Sys_MbTitle", "Sys_DrivesTitle", "Sys_OsTitle", "Sys_NetTitle", "Sys_CpuTitle", "Sys_BatteryTitle", "Sys_RamTitle", "Sys_GpuTitle", "System_Processes", "System_Storage", "Timeline_Title" }),
+        ("Advanced#0", new[] { "Reports_Title" }),
+        ("Advanced#1", new[] { "Health_RegBackupHistory", "System_RestorePoints", "Backup_Title", "Optimization_DriverBackup" }),
+        ("System#0", new[] { "Sys_MbTitle", "Sys_DrivesTitle", "Sys_OsTitle", "Sys_NetTitle", "Sys_CpuTitle", "Sys_BatteryTitle", "Sys_RamTitle", "Sys_GpuTitle", "Timeline_Title", "Appr_FontsInstalledTitle" }),
+        ("System#1", new[] { "Advanced_Maintenance", "Advanced_Toolbox", "UsbHistory_Title", "Wsl_Title", "Rgb_Title" }),
     };
 
     private static List<SearchResultRow> BuildSearchIndex()
@@ -426,7 +433,7 @@ public partial class MainWindow : Window
         var tabs = NavItems.All.ToDictionary(n => n.Tag, n => n);
         foreach (var (tag, keys) in CardIndex)
         {
-            if (!tabs.TryGetValue(tag, out var tab)) continue;
+            if (!tabs.TryGetValue(tag.Split('#')[0], out var tab)) continue;
             foreach (var key in keys)
             {
                 var text = LanguageService.T(key);
@@ -535,12 +542,12 @@ public partial class MainWindow : Window
         var tag = e.Key switch
         {
             Key.D1 or Key.NumPad1 => "Home",
-            Key.D2 or Key.NumPad2 => "Optimization",
-            Key.D3 or Key.NumPad3 => "Health",
-            Key.D4 or Key.NumPad4 => "Network",
-            Key.D5 or Key.NumPad5 => "Tweaks",
+            Key.D2 or Key.NumPad2 => "Bloatware",
+            Key.D3 or Key.NumPad3 => "Optimization",
+            Key.D4 or Key.NumPad4 => "Health",
+            Key.D5 or Key.NumPad5 => "Network",
             Key.D6 or Key.NumPad6 => "GamesMedia",
-            Key.D7 or Key.NumPad7 => "Bloatware",
+            Key.D7 or Key.NumPad7 => "Tweaks",
             Key.D8 or Key.NumPad8 => "Advanced",
             Key.D9 or Key.NumPad9 => "System",
             _ => null,
@@ -620,22 +627,21 @@ public partial class MainWindow : Window
 
     // Shared by the tab strip's RadioButtons AND the classic menu's "Προβολή" submenu (ρητό αίτημα
     // χρήστη) - keeps both navigation paths in sync instead of duplicating the switch logic.
+    private int _pendingSubPage;
+
     private void ShowTabContent(string tag, string label)
     {
         _currentTabTag = tag;
+        var subPage = _pendingSubPage;
+        _pendingSubPage = 0;
         // Only the Home/Optimization tabs are fully ported so far - every other tab shows a labeled
         // placeholder until it's ported in a later session (see the staged migration plan).
-        ContentHost.Content = tag switch
+        // 6.5.0: οι καρτέλες που ανασυντέθηκαν (βλ. TabLayout.cs) χτίζονται από κάρτες υπαρχουσών προβολών, με υπο-σελίδες (chips).
+        ContentHost.Content = TabLayout.IsComposite(tag) ? new CompositeTabView(tag, subPage) : tag switch
         {
             "Home" => ThemeManager.CurrentSkin?.HeroHome == true ? new PcManagerHomeView() : new HomeView(),
-            "Optimization" => new OptimizationView(),
-            "Health" => new HealthView(),
-            "System" => new SystemView(),
-            "Network" => new NetworkView(),
             "GamesMedia" => new GamesMediaView(),
-            "Bloatware" => new BloatwareView(),
             "Tweaks" => new TweaksView(),
-            "Advanced" => new AdvancedView(),
             _ => new PlaceholderView(label)
         };
 
@@ -719,11 +725,19 @@ public partial class MainWindow : Window
     // internal (όχι private) - v3.2.0: το HomeView's νέο κουμπί κατάστασης δικτύου το καλεί
     // απευθείας για να πηδήξει στην καρτέλα Δίκτυο & Ασφάλεια (βλ. HomeView.xaml.cs's
     // BtnOpenNetworkTab_Click) - ίδιο assembly, ασφαλές χωρίς να γίνει πλήρως public API.
-    internal void SelectTab(string tag)
+    // tagSpec: "Tag" ή "Tag#N" (N = υπο-σελίδα της καρτέλας, βλ. TabLayout).
+    internal void SelectTab(string tagSpec)
     {
+        var hash = tagSpec.IndexOf('#');
+        var tag = hash < 0 ? tagSpec : tagSpec[..hash];
+        var sub = hash >= 0 && int.TryParse(tagSpec[(hash + 1)..], out var n) ? n : 0;
         foreach (var child in TabStrip.Children)
         {
-            if (child is RadioButton rb && rb.Tag as string == tag) { rb.IsChecked = true; return; }
+            if (child is not RadioButton rb || rb.Tag as string != tag) continue;
+            _pendingSubPage = sub;
+            if (rb.IsChecked == true) ShowTabContent(tag, GetTabLabel(rb) ?? tag); // ήδη επιλεγμένη καρτέλα: ανανέωση σε άλλη υπο-σελίδα
+            else rb.IsChecked = true;
+            return;
         }
     }
 

@@ -159,7 +159,7 @@ namespace OptimizerWpf.Views
         }
 
         private void BtnOpenUpdatesTab_Click(object sender, RoutedEventArgs e) =>
-            (Window.GetWindow(this) as MainWindow)?.SelectTab("Optimization");
+            (Window.GetWindow(this) as MainWindow)?.SelectTab("Bloatware#0");
 
         // ΔΙΟΡΘΩΣΗ (GEARWIN.MD: "το συνολικό όφελος να μην είναι σε ξεχωριστό πλαίσιο, ενσωμάτωσέ το
         // στα μηνύματα της βαθμολογίας υγείας συστήματος") - πριν ήταν δική του κάρτα (TxtImpactFreed/
@@ -202,9 +202,12 @@ namespace OptimizerWpf.Views
             var baseRows = _lastHealthIssues.Count == 0
                 ? new[] { new HealthIssueRow(LanguageService.T("Home_NoIssuesFound"), _lastScoreColor) }
                 : _lastHealthIssues.Select(i => new HealthIssueRow(i.Title, _lastScoreColor));
-            ListHealthIssues.ItemsSource = baseRows
+            var rows = baseRows
                 .Concat(GetImpactSummaryLines().Select(line => new HealthIssueRow(line, _lastScoreColor)))
                 .ToList();
+            if (_healthCheckReminderText != null)
+                rows.Add(new HealthIssueRow(_healthCheckReminderText, new SolidColorBrush(Color.FromRgb(230, 170, 60))));
+            ListHealthIssues.ItemsSource = rows;
         }
 
         // ΝΕΟ - roadmap "Καρφιτσωμένες συντομεύσεις" - συγκεντρώνει τα καρφιτσωμένα tweaks από όλες
@@ -262,23 +265,17 @@ namespace OptimizerWpf.Views
         private void BtnRunHealthCheck_Click(object sender, RoutedEventArgs e) =>
             new HealthCheckWindow { Owner = Window.GetWindow(this) }.ShowDialog();
 
-        // ΔΙΟΡΘΩΣΗ (GEARWIN.MD: κουμπί Boost δίπλα στον Πλήρη Έλεγχο Υγείας, "ίδια ακριβώς λειτουργία"
-        // με το PcManagerHomeView's BtnBoost_Click) - ελευθερώνει μνήμη παρασκηνίου + καθαρίζει μόνο τα
-        // "προτεινόμενα" προσωρινά (QuickCleanService) - γρήγορο/στενό, σε αντίθεση με τον Πλήρη Έλεγχο
-        // Υγείας που καθαρίζει ό,τι επιλέξει ο χρήστης (πιο ενδελεχές, βλ. HealthCheckWindow).
+        // Ενίσχυση (Boost): ΜΟΝΟ άμεση ελευθέρωση RAM (κλάδεμα διεργασιών παρασκηνίου + cache μνήμης, MemoryCleanerService)
+        // με πραγματική μέτρηση πριν/μετά. ΔΕΝ διαγράφει αρχεία - ο καθαρισμός αρχείων ανήκει στον Πλήρη Έλεγχο Υγείας
+        // (πριν, το Boost, η Διόρθωση Όλων και ο Πλήρης Έλεγχος καθάριζαν και τα τρία τα ίδια προσωρινά).
         private async void BtnBoost_Click(object sender, RoutedEventArgs e)
         {
             BtnBoost.IsEnabled = false;
             StatusService.SetBusy(LanguageService.T("PcmHome_Boosting"));
             try
             {
-                var (_, freedMb) = await SystemService.FreeBackgroundMemoryAsync();
-                var items = await QuickCleanService.ScanAsync();
-                var keys = items.Where(i => i.Recommended).Select(i => i.Key).ToList();
-                var freedBytes = await QuickCleanService.CleanAsync(keys);
-                ImpactTrackingService.RecordBytesFreed(freedBytes);
-                var message = string.Format(LanguageService.T("PcmHome_BoostDone"), Math.Round(freedMb), QuickCleanService.FormatSize(freedBytes));
-                (Window.GetWindow(this) as MainWindow)?.ShowToast(message);
+                var result = await MemoryCleanerService.CleanAsync();
+                (Window.GetWindow(this) as MainWindow)?.ShowToast(MemoryCleanerService.Describe(result));
             }
             catch (Exception ex) { (Window.GetWindow(this) as MainWindow)?.ShowToast(ex.Message); }
             finally
@@ -286,7 +283,6 @@ namespace OptimizerWpf.Views
                 StatusService.SetIdle(LanguageService.T("Ready"));
                 BtnBoost.IsEnabled = true;
             }
-            await RefreshHealthScoreAsync();
         }
 
         private void RefreshRecentActivity()
@@ -349,7 +345,7 @@ namespace OptimizerWpf.Views
                 : LanguageService.T("Home_NetworkDisconnected");
         }
 
-        private void BtnOpenNetworkTab_Click(object sender, RoutedEventArgs e) => (System.Windows.Window.GetWindow(this) as OptimizerWpf.MainWindow)?.SelectTab("Network");
+        private void BtnOpenNetworkTab_Click(object sender, RoutedEventArgs e) => (System.Windows.Window.GetWindow(this) as OptimizerWpf.MainWindow)?.SelectTab("Network#1");
 
         // ΝΕΟ (χρήστης ζήτησε: "graph δίπλα στο δίκτυο, όπως στη Διαχείριση Εργασιών") - απλό,
         // αυτο-κλιμακούμενο sparkline: bytes/sec υπολογίζεται από τη διαφορά δύο διαδοχικών
@@ -606,55 +602,51 @@ namespace OptimizerWpf.Views
             catch { /* drive can become unready (removable media ejected mid-run) */ }
         }
 
+        private bool _healthBusy;
+
         private async void BtnRefreshHealth_Click(object sender, System.Windows.RoutedEventArgs e) => await RefreshHealthScoreAsync();
 
+        // Διορθώνει ΜΟΝΟ τα ευρήματα της βαθμολογίας και λέει ειλικρινά τι έγινε: χώρος δίσκου -> καθαρισμός των "προτεινόμενων"
+        // προσωρινών (QuickCleanService, ίδιος μηχανισμός με τον Πλήρη Έλεγχο· όχι διαγραφή ολόκληρου του TEMP), έλλειψη
+        // σημείου επαναφοράς -> δημιουργία σημείου. Ασφάλεια (Defender), εκκρεμής επανεκκίνηση και προγράμματα εκκίνησης
+        // ΔΕΝ αλλάζουν αυτόματα - αναφέρονται ως "χρειάζονται δική σας ενέργεια".
         private async void BtnFixAllHealth_Click(object sender, System.Windows.RoutedEventArgs e)
         {
-            // Port of the "Διόρθωση Όλων" button in Optimizer.ps1 (only the safe, reversible fixes -
-            // startup apps/pending restart are surfaced but never touched automatically, same as the
-            // WinForms version).
-            // ΔΙΟΡΘΩΣΗ (γενικός έλεγχος γραμμής κατάστασης) - η διαγραφή προσωρινών αρχείων παρακάτω
-            // γινόταν χωρίς κανένα κυκλάκι/ένδειξη - μόνο το τελικό RefreshHealthScoreAsync() έδειχνε
-            // busy, ΑΦΟΥ είχε ήδη ολοκληρωθεί η ίδια η δουλειά.
+            if (_healthBusy) return;
+            _healthBusy = true;
             StatusService.SetBusy(LanguageService.T("Home_AutoFixDone"));
-            var result = await Task.Run(HealthScoreService.Compute);
-            var fixedSomething = false;
-
-            foreach (var issue in result.Issues)
+            var done = new List<string>();
+            var manual = new List<string>();
+            try
             {
-                switch (issue.FixType)
+                var result = await Task.Run(HealthScoreService.Compute);
+                foreach (var issue in result.Issues)
                 {
-                    case "Storage":
-                        try
-                        {
-                            var temp = Environment.GetEnvironmentVariable("TEMP");
-                            if (!string.IsNullOrEmpty(temp))
-                            {
-                                // Εκτός UI thread: ο βρόχος διαγραφής χιλιάδων αρχείων/φακέλων έτρεχε πάνω στο UI thread
-                                // (μετά το await) και πάγωνε ολόκληρο το παράθυρο όσο διαρκούσε ο καθαρισμός.
-                                await Task.Run(() =>
-                                {
-                                    foreach (var f in Directory.EnumerateFileSystemEntries(temp))
-                                    {
-                                        try { if (Directory.Exists(f)) Directory.Delete(f, true); else File.Delete(f); } catch { }
-                                    }
-                                });
-                            }
-                            fixedSomething = true;
-                        }
-                        catch { }
-                        break;
-                    case "Defender":
-                        // Toggling Defender real-time protection needs elevation + the Defender
-                        // PowerShell/WMI provider - not wired up in this slice yet.
-                        break;
+                    switch (issue.FixType)
+                    {
+                        case "Storage":
+                            var items = await QuickCleanService.ScanAsync();
+                            var freed = await QuickCleanService.CleanAsync(items.Where(i => i.Recommended).Select(i => i.Key).ToList());
+                            ImpactTrackingService.RecordBytesFreed(freed);
+                            done.Add(string.Format(LanguageService.T("Home_FixAllSpace"), QuickCleanService.FormatSize(freed)));
+                            break;
+                        case "RestorePoint":
+                            if (await SystemService.CreateRestorePointAsync()) done.Add(LanguageService.T("Home_FixAllRestorePoint"));
+                            else manual.Add(issue.Title);
+                            break;
+                        default:
+                            manual.Add(issue.Title);
+                            break;
+                    }
                 }
             }
+            catch (Exception ex) { manual.Add(ex.Message); }
+            finally { _healthBusy = false; }
 
-            if (fixedSomething)
-            {
-                TxtHealthLabel.Text = LanguageService.T("Home_AutoFixDone");
-            }
+            var summary = new List<string>(done);
+            if (manual.Count > 0) summary.Add(string.Format(LanguageService.T("Home_FixAllManual"), string.Join(" / ", manual)));
+            if (summary.Count == 0) summary.Add(LanguageService.T("Home_FixAllNothing"));
+            (Window.GetWindow(this) as MainWindow)?.ShowToast(string.Join("  •  ", summary));
             await RefreshHealthScoreAsync();
         }
 
@@ -765,23 +757,31 @@ namespace OptimizerWpf.Views
         // 7+ μέρες από την τελευταία φορά (βλ. AppSettings.LastHealthCheckRunAt, γράφεται από
         // HealthCheckWindow όταν ολοκληρώνεται σάρωση), δείχνει ήπιο banner με απευθείας κουμπί - καμία
         // αυτόματη σάρωση/ενέργεια στο παρασκήνιο.
+        // Η υπενθύμιση "έχουν περάσει Χ μέρες από τον Πλήρη Έλεγχο" εμφανίζεται ως ΜΙΑ ΓΡΑΜΜΗ μέσα στη λίστα μηνυμάτων της Βαθμολογίας
+        // Υγείας (μαζί με τα υπόλοιπα ευρήματα) - όχι ως ξεχωριστό πλαίσιο με δεύτερο κουμπί "Πλήρης Έλεγχος Υγείας".
+        private string? _healthCheckReminderText;
+
         private void CheckHealthCheckReminder()
         {
             var lastRun = AppSettingsService.Current.LastHealthCheckRunAt;
             var daysSince = lastRun.HasValue ? (DateTime.Now - lastRun.Value).TotalDays : (double?)null;
-            if (lastRun.HasValue && daysSince < 7)
-            {
-                BorderHealthCheckReminder.Visibility = Visibility.Collapsed;
-                return;
-            }
-
-            TxtHealthCheckReminder.Text = lastRun.HasValue
-                ? string.Format(LanguageService.T("Home_HealthCheckReminderDays"), (int)daysSince!.Value)
-                : LanguageService.T("Home_HealthCheckReminderNever");
-            BorderHealthCheckReminder.Visibility = Visibility.Visible;
+            _healthCheckReminderText = lastRun.HasValue && daysSince < 7
+                ? null
+                : lastRun.HasValue
+                    ? string.Format(LanguageService.T("Home_HealthCheckReminderDays"), (int)daysSince!.Value)
+                    : LanguageService.T("Home_HealthCheckReminderNever");
+            RenderHealthIssues();
         }
 
         private async Task RefreshHealthScoreAsync()
+        {
+            if (_healthBusy) return;
+            _healthBusy = true;
+            try { await RefreshHealthScoreCoreAsync(); }
+            finally { _healthBusy = false; }
+        }
+
+        private async Task RefreshHealthScoreCoreAsync()
         {
             TxtHealthLabel.Text = LanguageService.T("Home_Calculating");
             StatusService.SetBusy(LanguageService.T("Home_CalculatingHealthScore"));
@@ -831,6 +831,7 @@ namespace OptimizerWpf.Views
             _lastHealthIssues = result.Issues;
             _lastScoreColor = scoreColor;
             RenderHealthIssues();
+            TxtHealthUpdated.Text = string.Format(LanguageService.T("Home_UpdatedAt"), DateTime.Now.ToString("HH:mm:ss"));
         }
     }
 

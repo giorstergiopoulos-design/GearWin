@@ -289,6 +289,34 @@
         </Setter>
     </Style>
 
+    <!-- 6.5.0 - chip υπο-σελίδας μέσα σε καρτέλα (CompositeTabView): μικρότερο από το TabPillStyle, επιλεγμένο = γεμάτο accent. -->
+    <Style x:Key="SubPageChipStyle" TargetType="RadioButton">
+        <Setter Property="Foreground" Value="{DynamicResource TextBrush}"/>
+        <Setter Property="FontSize" Value="12"/>
+        <Setter Property="FontWeight" Value="SemiBold"/>
+        <Setter Property="Padding" Value="16,7"/>
+        <Setter Property="Margin" Value="0,0,8,0"/>
+        <Setter Property="Cursor" Value="Hand"/>
+        <Setter Property="Template">
+            <Setter.Value>
+                <ControlTemplate TargetType="RadioButton">
+                    <Border x:Name="Bg" CornerRadius="{DynamicResource AppCornerRadius}" Background="{DynamicResource BtnDefaultBrush}" Padding="{TemplateBinding Padding}">
+                        <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center" TextElement.Foreground="{TemplateBinding Foreground}"/>
+                    </Border>
+                    <ControlTemplate.Triggers>
+                        <Trigger Property="IsMouseOver" Value="True">
+                            <Setter TargetName="Bg" Property="Background" Value="{DynamicResource BtnHoverBrush}"/>
+                        </Trigger>
+                        <Trigger Property="IsChecked" Value="True">
+                            <Setter TargetName="Bg" Property="Background" Value="{DynamicResource AccentBrush}"/>
+                            <Setter Property="Foreground" Value="White"/>
+                        </Trigger>
+                    </ControlTemplate.Triggers>
+                </ControlTemplate>
+            </Setter.Value>
+        </Setter>
+    </Style>
+
     <!-- 6.1.0 - στοιχείο πλατιάς κάθετης πλοήγησης (skins PC Manager / Windows 11 Settings): αριστερά-στοιχισμένο
          εικονίδιο+κείμενο, επιλεγμένο = απαλό pill (TabSelect) + λεπτή accent γραμμή αριστερά, όπως στο αυθεντικό. -->
     <Style x:Key="RailPillStyle" TargetType="RadioButton">

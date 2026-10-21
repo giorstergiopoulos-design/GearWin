@@ -91,7 +91,7 @@ namespace OptimizerWpf.Services
                     _lastFired[a.Key] = now;
                     var alert = a;
                     var dispatcher = System.Windows.Application.Current?.Dispatcher;
-                    void Show() => TrayIconService.ShowNotificationBalloon(alert.Title, alert.Body, () => TrayIconService.OpenTab("System"));
+                    void Show() => TrayIconService.ShowNotificationBalloon(alert.Title, alert.Body, () => TrayIconService.OpenTab("System#0"));
                     if (dispatcher != null) dispatcher.BeginInvoke((Action)Show); else Show();
                 }
             }

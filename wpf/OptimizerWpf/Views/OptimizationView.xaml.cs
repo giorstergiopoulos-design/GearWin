@@ -229,9 +229,7 @@ namespace OptimizerWpf.Views
             try
             {
                 var r = await MemoryCleanerService.CleanAsync();
-                var text = string.Format(LanguageService.T("Opt_FreeRamResult"), r.Before.FreeGb.ToString("0.0"), r.After.FreeGb.ToString("0.0"));
-                if (!r.ListsPurged) text += LanguageService.T("Opt_FreeRamTrimOnly");
-                TxtFreeRamResult.Text = text;
+                TxtFreeRamResult.Text = MemoryCleanerService.Describe(r);
             }
             catch { TxtFreeRamResult.Text = ""; }
             finally { StatusService.SetIdle(LanguageService.T("Ready")); }

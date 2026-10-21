@@ -172,6 +172,24 @@ namespace OptimizerWpf.Services
             }
             catch (Exception ex) { Log($"RunCheckAsync: Windows Update scan threw - {ex}"); }
 
+            // ΝΕΟ (6.5.0) - νέα έκδοση του ίδιου του GearWin στο GitHub (βλ. SelfUpdateService). Ειδοποίηση ΜΙΑ φορά ανά έκδοση
+            // (ή σε κάθε έλεγχο εκκίνησης, announce=true)· η εγκατάσταση γίνεται μόνο από Ρυθμίσεις › Ενημέρωση GearWin, με επιβεβαίωση.
+            try
+            {
+                if (AppSettingsService.Current.SelfUpdateCheckEnabled)
+                {
+                    var (info, error) = await SelfUpdateService.CheckAsync();
+                    Log($"RunCheckAsync: GearWin self-update check -> {(error != null ? "error: " + error : info == null ? "up to date" : "available " + info.Tag)}");
+                    if (info != null && (announce || AppSettingsService.Current.LastNotifiedSelfUpdate != info.Tag))
+                    {
+                        AppSettingsService.Current.LastNotifiedSelfUpdate = info.Tag;
+                        TrayIconService.ShowNotificationBalloon(LanguageService.T("SelfUpdate_NotifyTitle"),
+                            string.Format(LanguageService.T("SelfUpdate_NotifyBody"), info.Version), TrayIconService.OpenSettings);
+                    }
+                }
+            }
+            catch (Exception ex) { Log($"RunCheckAsync: GearWin self-update check threw - {ex}"); }
+
             AppSettingsService.Save();
 
             // ΝΕΟ - roadmap ιδέα #4 (ρητό αίτημα χρήστη: "κάνε τα 4-7") - "Ειδοποίηση χαμηλού χώρου
@@ -221,7 +239,7 @@ namespace OptimizerWpf.Services
                 TrayIconService.ShowNotificationBalloon(
                     LanguageService.T("LowDisk_Title"),
                     string.Format(LanguageService.T("LowDisk_Body"), driveName, freeGb.ToString("0.#")),
-                    () => TrayIconService.OpenTab("System"));
+                    () => TrayIconService.OpenTab("Optimization#1"));
                 return;
             }
         }

@@ -12,31 +12,33 @@ The app is organized into 9 tabs:
   disk health badge), quick maintenance actions, disk space analysis, and network connection status
   with a live throughput graph.
 
-* Optimization - Temporary/junk file cleanup, startup management, power plans, scheduled weekly
-  maintenance, and driver updates from multiple sources (Windows Update, Microsoft Update Catalog,
-  AMD/NVIDIA/Dell/SDIO).
+* Updates & Apps - Scan once for updates to apps, Windows and drivers from several trusted sources,
+  install them in bulk, remove built-in Windows components you don't need, or install recommended
+  apps with one click.
 
-* System Health - Disk/memory/file-system health checks (SFC/DISM/CHKDSK), a Registry Cleaner with
-  automatic backup and restore history, disk space analysis by category, and a full PC Manager-style
-  Health Check with a one-click Fix All.
+* Cleanup & Performance - Switch Office, Gaming or Ultimate Performance modes, free RAM instantly
+  (with a real before/after number), clean temporary files and caches, and tame what starts with
+  Windows.
 
-* Network & Security - Network diagnostics, open/listening ports, DNS settings, Windows Defender,
-  telemetry blocking, and all privacy tools in a single section.
+* Health & Repair - Check and repair system files (SFC/DISM), the disk (CHKDSK) and WinRE, clean the
+  registry safely (with an automatic backup before every change), and follow your disk health over
+  time.
 
-* Tweaks - Dozens of Windows interface/performance/privacy tweaks, toggled with a single click, with
-  safe restore to the original value, custom right-click menu entries, and named or file-based
-  settings profiles you can save and switch between instantly.
+* Security & Privacy - Run a Quick Scan with Windows Defender, review firewall rules and open ports,
+  block Microsoft telemetry, manage browser passwords locally, and reset or tune the network (DNS,
+  hosts) in one click.
 
 * Games & Multimedia - Your Steam/Epic/GOG/Ubisoft/Xbox library with launch, per-game GPU/gaming profiles and launcher-cache cleanup; display, audio and camera/microphone checks, codec detection, and a video/audio converter with batch conversion.
 
-* Bloatware Removal - Safely remove pre-installed apps you don't need, with the option to reinstall
-  them, plus one-click installs of recommended apps via winget.
+* Windows Tweaks - Dozens of Windows interface/performance/privacy tweaks, toggled with a single click, with
+  safe restore to the original value, custom right-click menu entries, and named or file-based
+  settings profiles you can save and switch between instantly.
 
-* Advanced Tools - Full system maintenance, optional Windows features, duplicate file finder, "ghost"
-  device cleanup, and a Windows toolbox with quick access to built-in tools.
+* Backups & Reports - Export reports (PDF/TXT, diagnostics ZIP, battery report, problem bundle) and
+  manage restore points, registry backups and driver backups in one place.
 
-* System - Full hardware/OS breakdown ("My Device") with PDF export, startup/process/service
-  management, disk benchmark, and restore points.
+* System & Tools - See a full analysis of your hardware under "My Device", then use the tools: full
+  maintenance in one click, the Windows toolbox, WSL, USB history and more.
 
 Extras: a system tray icon with quick actions (Quick Clean, Health Check, live CPU/RAM/network mini
 popup) and an optional always-visible desktop widget, 21 visual themes with Light/Dark modes and

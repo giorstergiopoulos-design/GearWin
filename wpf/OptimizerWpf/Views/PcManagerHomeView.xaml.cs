@@ -57,8 +57,8 @@ namespace OptimizerWpf.Views
             return geo;
         }
 
-        // Ενίσχυση (Boost): ελευθερώνει μνήμη από διεργασίες παρασκηνίου + καθαρίζει τα "προτεινόμενα"
-        // προσωρινά (QuickCleanService, ίδιο σύνολο με τον Έλεγχο Υγείας) - χωρίς άλλες αλλαγές συστήματος.
+        // Ενίσχυση (Boost): ΜΟΝΟ άμεση ελευθέρωση RAM (MemoryCleanerService) - βλ. HomeView.BtnBoost_Click. Ο καθαρισμός αρχείων
+        // γίνεται από τον Πλήρη Έλεγχο Υγείας.
         private async void BtnBoost_Click(object sender, RoutedEventArgs e)
         {
             BtnBoost.IsEnabled = false;
@@ -66,12 +66,7 @@ namespace OptimizerWpf.Views
             StatusService.SetBusy(LanguageService.T("PcmHome_Boosting"));
             try
             {
-                var (_, freedMb) = await SystemService.FreeBackgroundMemoryAsync();
-                var items = await QuickCleanService.ScanAsync();
-                var keys = items.Where(i => i.Recommended).Select(i => i.Key).ToList();
-                var freedBytes = await QuickCleanService.CleanAsync(keys);
-                ImpactTrackingService.RecordBytesFreed(freedBytes);
-                TxtBoostResult.Text = string.Format(LanguageService.T("PcmHome_BoostDone"), Math.Round(freedMb), QuickCleanService.FormatSize(freedBytes));
+                TxtBoostResult.Text = MemoryCleanerService.Describe(await MemoryCleanerService.CleanAsync());
                 (Window.GetWindow(this) as MainWindow)?.ShowToast(TxtBoostResult.Text);
             }
             catch (Exception ex) { TxtBoostResult.Text = ex.Message; }
@@ -80,7 +75,6 @@ namespace OptimizerWpf.Views
                 StatusService.SetIdle(LanguageService.T("Ready"));
                 BtnBoost.IsEnabled = true;
             }
-            await RefreshScoreAsync();
         }
 
         private void BtnHealthCheck_Click(object sender, RoutedEventArgs e) =>

@@ -573,6 +573,9 @@
             <RadioButton x:Name="TabHome" Tag="Home" Style="{StaticResource TabPillStyle}" Checked="TabButton_Checked">
                 <StackPanel Orientation="Horizontal"><views:HeaderGlyphIcon Kind="Home" Width="20" Height="20" Margin="0,0,7,0"/><TextBlock x:Name="LblTabHome" Text="Αρχική"/></StackPanel>
             </RadioButton>
+            <RadioButton Tag="Bloatware" Style="{StaticResource TabPillStyle}" Checked="TabButton_Checked">
+                <StackPanel Orientation="Horizontal"><views:HeaderGlyphIcon Kind="Package" Width="20" Height="20" Margin="0,0,7,0"/><TextBlock x:Name="LblTabBloatware" Text="Εφαρμογές &amp; Bloat"/></StackPanel>
+            </RadioButton>
             <RadioButton Tag="Optimization" Style="{StaticResource TabPillStyle}" Checked="TabButton_Checked">
                 <StackPanel Orientation="Horizontal"><views:HeaderGlyphIcon Kind="Bolt" Width="20" Height="20" Margin="0,0,7,0"/><TextBlock x:Name="LblTabOptimization" Text="Βελτιστοποίηση"/></StackPanel>
             </RadioButton>
@@ -593,19 +596,16 @@
                 </StackPanel>
             </RadioButton>
             <RadioButton Tag="Network" Style="{StaticResource TabPillStyle}" Checked="TabButton_Checked">
-                <StackPanel Orientation="Horizontal"><views:HeaderGlyphIcon Kind="Globe" Width="20" Height="20" Margin="0,0,7,0"/><TextBlock x:Name="LblTabNetwork" Text="Δίκτυο &amp; Ασφάλεια"/></StackPanel>
-            </RadioButton>
-            <RadioButton Tag="Tweaks" Style="{StaticResource TabPillStyle}" Checked="TabButton_Checked">
-                <StackPanel Orientation="Horizontal"><views:HeaderGlyphIcon Kind="Wrench" Width="20" Height="20" Margin="0,0,7,0"/><TextBlock x:Name="LblTabTweaks" Text="Επιπλέον Ρυθμίσεις"/></StackPanel>
+                <StackPanel Orientation="Horizontal"><views:HeaderGlyphIcon Kind="Shield" Width="20" Height="20" Margin="0,0,7,0"/><TextBlock x:Name="LblTabNetwork" Text="Δίκτυο &amp; Ασφάλεια"/></StackPanel>
             </RadioButton>
             <RadioButton Tag="GamesMedia" Style="{StaticResource TabPillStyle}" Checked="TabButton_Checked">
                 <StackPanel Orientation="Horizontal"><views:HeaderGlyphIcon Kind="Gamepad" Width="20" Height="20" Margin="0,0,7,0"/><TextBlock x:Name="LblTabGamesMedia" Text="Παιχνίδια &amp; Πολυμέσα"/></StackPanel>
             </RadioButton>
-            <RadioButton Tag="Bloatware" Style="{StaticResource TabPillStyle}" Checked="TabButton_Checked">
-                <StackPanel Orientation="Horizontal"><views:HeaderGlyphIcon Kind="Broom" Width="20" Height="20" Margin="0,0,7,0"/><TextBlock x:Name="LblTabBloatware" Text="Εφαρμογές &amp; Bloat"/></StackPanel>
+            <RadioButton Tag="Tweaks" Style="{StaticResource TabPillStyle}" Checked="TabButton_Checked">
+                <StackPanel Orientation="Horizontal"><views:HeaderGlyphIcon Kind="Wrench" Width="20" Height="20" Margin="0,0,7,0"/><TextBlock x:Name="LblTabTweaks" Text="Επιπλέον Ρυθμίσεις"/></StackPanel>
             </RadioButton>
             <RadioButton Tag="Advanced" Style="{StaticResource TabPillStyle}" Checked="TabButton_Checked">
-                <StackPanel Orientation="Horizontal"><views:HeaderGlyphIcon Kind="Tools" Width="20" Height="20" Margin="0,0,7,0"/><TextBlock x:Name="LblTabAdvanced" Text="Προηγμένα Εργαλεία"/></StackPanel>
+                <StackPanel Orientation="Horizontal"><views:HeaderGlyphIcon Kind="Document" Width="20" Height="20" Margin="0,0,7,0"/><TextBlock x:Name="LblTabAdvanced" Text="Προηγμένα Εργαλεία"/></StackPanel>
             </RadioButton>
             <RadioButton Tag="System" Style="{StaticResource TabPillStyle}" Checked="TabButton_Checked">
                 <StackPanel Orientation="Horizontal"><views:HeaderGlyphIcon Kind="Monitor" Width="20" Height="20" Margin="0,0,7,0"/><TextBlock x:Name="LblTabSystem" Text="Σύστημα"/></StackPanel>

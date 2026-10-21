@@ -37,6 +37,8 @@
                     <StackPanel Margin="12">
                         <TextBlock Text="GearWin - Complete PC Care" Style="{StaticResource CardTitleStyle}" FontSize="16" Margin="0,0,0,4"/>
                         <TextBlock Text="{tr:Tr Help_Shortcuts}" Style="{StaticResource SubTextStyle}" TextWrapping="Wrap" Margin="0,0,0,10"/>
+                        <TextBlock Text="{tr:Tr Help_TabMapTitle}" Style="{StaticResource CardTitleStyle}" Margin="0,0,0,4"/>
+                        <TextBlock Text="{tr:Tr Help_TabMapDesc}" Style="{StaticResource SubTextStyle}" TextWrapping="Wrap" Margin="0,0,0,10"/>
                         <!-- ΝΕΟ - ρητό αίτημα χρήστη: "από τις ρυθμίσεις αν θέλει στη βοήθεια να το
                              ξαναδεί" - επανάληψη της "πρώτης κουρτίνας" οδηγού χρήσης (OnboardingWindow)
                              όποτε ο χρήστης θέλει, όχι μόνο στο πρώτο άνοιγμα.
@@ -457,10 +459,13 @@
 
                         <Border Background="{DynamicResource AccentBrush}" CornerRadius="6" Padding="12" Margin="0,0,0,16">
                             <StackPanel>
-                                <TextBlock Text="{tr:Tr VerHist_640Title}" FontWeight="Bold" Foreground="White" FontSize="14" Margin="0,0,0,6"/>
-                                <TextBlock Foreground="White" TextWrapping="Wrap" Opacity="0.95" Text="{tr:Tr VerHist_640Desc}"/>
+                                <TextBlock Text="{tr:Tr VerHist_650Title}" FontWeight="Bold" Foreground="White" FontSize="14" Margin="0,0,0,6"/>
+                                <TextBlock Foreground="White" TextWrapping="Wrap" Opacity="0.95" Text="{tr:Tr VerHist_650Desc}"/>
                             </StackPanel>
                         </Border>
+
+                        <TextBlock Text="{tr:Tr VerHist_640Title}" Style="{StaticResource CardTitleStyle}" Margin="0,0,0,4"/>
+                        <TextBlock Style="{StaticResource SubTextStyle}" TextWrapping="Wrap" Text="{tr:Tr VerHist_640Desc}" Margin="0,0,0,14"/>
 
                         <TextBlock Text="{tr:Tr VerHist_639Title}" Style="{StaticResource CardTitleStyle}" Margin="0,0,0,4"/>
                         <TextBlock Style="{StaticResource SubTextStyle}" TextWrapping="Wrap" Text="{tr:Tr VerHist_639Desc}" Margin="0,0,0,14"/>

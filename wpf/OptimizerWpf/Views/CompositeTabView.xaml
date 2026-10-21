@@ -1,0 +1,16 @@
+<UserControl x:Class="OptimizerWpf.Views.CompositeTabView"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+    <!-- Καρτέλα που συνθέτεται από κάρτες υπαρχουσών προβολών (βλ. TabLayout.cs): μια λωρίδα υπο-σελίδων (chips) πάνω και
+         ένα ενιαίο ScrollViewer κάτω. Οι φιλοξενούμενες προβολές έχουν το ΔΙΚΟ τους ScrollViewer απενεργοποιημένο (κυλά ο εξωτερικός). -->
+    <Grid>
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="*"/>
+        </Grid.RowDefinitions>
+        <StackPanel x:Name="SubStrip" Grid.Row="0" Orientation="Horizontal" Margin="0,4,0,10" Visibility="Collapsed"/>
+        <ScrollViewer x:Name="PageScroll" Grid.Row="1" VerticalScrollBarVisibility="Auto">
+            <StackPanel x:Name="PageHost" Margin="0,0,0,24"/>
+        </ScrollViewer>
+    </Grid>
+</UserControl>

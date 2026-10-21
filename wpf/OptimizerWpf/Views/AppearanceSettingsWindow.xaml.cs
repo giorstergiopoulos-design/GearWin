@@ -36,6 +36,9 @@ namespace OptimizerWpf.Views
             if (ComboUpdateInterval.SelectedItem == null && ComboUpdateInterval.Items.Count > 3) ComboUpdateInterval.SelectedIndex = 3;
             RefreshUpdateCheckStatus();
 
+            ChkSelfUpdateCheck.IsChecked = AppSettingsService.Current.SelfUpdateCheckEnabled;
+            TxtSelfUpdateStatus.Text = string.Format(LanguageService.T("SelfUpdate_Current"), SelfUpdateService.Current);
+
             ChkLowDiskNotifications.IsChecked = AppSettingsService.Current.LowDiskNotificationsEnabled;
             foreach (var pct in new[] { 5, 10, 15, 20 })
             {
@@ -142,6 +145,98 @@ namespace OptimizerWpf.Views
         }
 
         // ΝΕΟ - βλ. σχόλιο στο XAML/UpdateNotificationService.cs.
+        private SelfUpdateInfo? _selfUpdate;
+        private bool _selfUpdateBusy;
+
+        private void ChkSelfUpdateCheck_Click(object sender, RoutedEventArgs e)
+        {
+            AppSettingsService.Current.SelfUpdateCheckEnabled = ChkSelfUpdateCheck.IsChecked == true;
+            AppSettingsService.Save();
+        }
+
+        private async void BtnSelfUpdateCheck_Click(object sender, RoutedEventArgs e)
+        {
+            if (_selfUpdateBusy) return;
+            _selfUpdateBusy = true;
+            BtnSelfUpdateCheck.IsEnabled = false;
+            BtnSelfUpdateInstall.Visibility = Visibility.Collapsed;
+            BtnSelfUpdateNotes.Visibility = Visibility.Collapsed;
+            TxtSelfUpdateStatus.Text = LanguageService.T("SelfUpdate_Checking");
+            try
+            {
+                var (info, error) = await SelfUpdateService.CheckAsync();
+                _selfUpdate = info;
+                if (error != null) TxtSelfUpdateStatus.Text = string.Format(LanguageService.T("SelfUpdate_Failed"), error);
+                else if (info == null) TxtSelfUpdateStatus.Text = string.Format(LanguageService.T("SelfUpdate_UpToDate"), SelfUpdateService.Current);
+                else
+                {
+                    TxtSelfUpdateStatus.Text = string.Format(LanguageService.T("SelfUpdate_Available"), info.Version, SelfUpdateService.Current);
+                    BtnSelfUpdateInstall.Visibility = Visibility.Visible;
+                    BtnSelfUpdateNotes.Visibility = Visibility.Visible;
+                }
+            }
+            finally
+            {
+                BtnSelfUpdateCheck.IsEnabled = true;
+                _selfUpdateBusy = false;
+            }
+        }
+
+        private void BtnSelfUpdateNotes_Click(object sender, RoutedEventArgs e)
+        {
+            if (_selfUpdate == null) return;
+            try { System.Diagnostics.Process.Start(new System.Diagnostics.ProcessStartInfo(_selfUpdate.ReleaseUrl) { UseShellExecute = true }); } catch { }
+        }
+
+        private async void BtnSelfUpdateInstall_Click(object sender, RoutedEventArgs e)
+        {
+            var info = _selfUpdate;
+            if (info == null || _selfUpdateBusy) return;
+            // Χωρίς επαληθεύσιμο SHA-256 (ή χωρίς δικαιώματα διαχειριστή για τον προστατευμένο φάκελο) ΔΕΝ εκτελείται τίποτα αυτόματα.
+            if (info.Sha256 == null || !AdminService.IsElevated)
+            {
+                TxtSelfUpdateStatus.Text = LanguageService.T("SelfUpdate_NoDigest");
+                BtnSelfUpdateNotes_Click(sender, e);
+                return;
+            }
+            if (ThemedMessageBox.Show(string.Format(LanguageService.T("SelfUpdate_Confirm"), info.Version),
+                    LanguageService.T("SelfUpdate_ConfirmTitle"), MessageBoxButton.YesNo, MessageBoxImage.Question) != MessageBoxResult.Yes) return;
+
+            _selfUpdateBusy = true;
+            BtnSelfUpdateInstall.IsEnabled = false;
+            BtnSelfUpdateCheck.IsEnabled = false;
+            BarSelfUpdate.Value = 0;
+            BarSelfUpdate.Visibility = Visibility.Visible;
+            try
+            {
+                var progress = new Progress<double>(p =>
+                {
+                    BarSelfUpdate.Value = p;
+                    TxtSelfUpdateStatus.Text = string.Format(LanguageService.T("SelfUpdate_Downloading"), (int)Math.Round(p * 100));
+                });
+                var path = await SelfUpdateService.DownloadAsync(info, progress);
+                TxtSelfUpdateStatus.Text = LanguageService.T("SelfUpdate_Installing");
+                ChangeJournalService.Record(string.Format(LanguageService.T("SelfUpdate_Journal"), info.Version), (Action?)null);
+                SelfUpdateService.LaunchInstallerAfterExit(path);
+                TrayIconService.ExitApplication();
+            }
+            catch (System.IO.InvalidDataException)
+            {
+                TxtSelfUpdateStatus.Text = LanguageService.T("SelfUpdate_HashMismatch");
+            }
+            catch (Exception ex)
+            {
+                TxtSelfUpdateStatus.Text = string.Format(LanguageService.T("SelfUpdate_Failed"), ex.Message);
+            }
+            finally
+            {
+                BarSelfUpdate.Visibility = Visibility.Collapsed;
+                BtnSelfUpdateInstall.IsEnabled = true;
+                BtnSelfUpdateCheck.IsEnabled = true;
+                _selfUpdateBusy = false;
+            }
+        }
+
         private void ChkUpdateNotifications_Changed(object sender, RoutedEventArgs e)
         {
             if (_loading) return;

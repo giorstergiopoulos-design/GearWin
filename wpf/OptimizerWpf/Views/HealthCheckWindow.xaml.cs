@@ -371,13 +371,21 @@ namespace OptimizerWpf.Views
                     // "App Uninstall" ΔΕΝ απεγκαθιστά αυτόματα (μη αναστρέψιμη ενέργεια) - ανοίγει την
                     // καρτέλα Εφαρμογές & Bloat για έλεγχο/επιβεβαίωση από τον χρήστη, ίδιο πνεύμα
                     // ασφάλειας με όλες τις υπόλοιπες καταστροφικές ενέργειες της εφαρμογής.
-                    mw.SelectTab("Bloatware");
+                    mw.SelectTab("Bloatware#2");
                     break;
                 case "Score":
                     // ΝΕΟ - βλ. σχόλιο στο BuildResults(): τα ευρήματα HealthScoreService (Defender/
                     // reboot/startup/restore point) ΔΕΝ διορθώνονται αυτόματα εδώ - πηγαίνει στην
                     // καρτέλα Σύστημα για χειροκίνητο έλεγχο/ενέργεια.
-                    mw.SelectTab("System");
+                    // Προορισμός ανάλογα με το πρώτο εύρημα: εκκίνηση -> Εκκίνηση, σημείο επαναφοράς -> Αντίγραφα, ασφάλεια -> Ασφάλεια.
+                    var first = _scoreResult?.Issues.FirstOrDefault()?.FixType;
+                    mw.SelectTab(first switch
+                    {
+                        "Startup" => "Optimization#2",
+                        "RestorePoint" => "Advanced#1",
+                        "Defender" or "DefenderOtherAV" => "Network#0",
+                        _ => "Health",
+                    });
                     break;
                 default:
                     return;

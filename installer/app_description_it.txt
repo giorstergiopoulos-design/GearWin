@@ -14,34 +14,35 @@ L'app è organizzata in 9 schede:
   dello spazio su disco e stato della connessione di rete con un grafico del throughput in tempo
   reale.
 
-* Ottimizzazione - Pulizia dei file temporanei/inutili, gestione dell'avvio, piani di alimentazione,
-  manutenzione settimanale programmata e aggiornamenti dei driver da più fonti (Windows Update,
-  Catalogo di Microsoft Update, AMD/NVIDIA/Dell/SDIO).
+* Aggiornamenti e App - Cerchi una volta sola gli aggiornamenti di app, Windows e driver da più
+  fonti affidabili, li installi in blocco, rimuova i componenti Windows non necessari o installi le
+  app consigliate con un clic.
 
-* Salute del Sistema - Controlli di salute di disco/memoria/file system (SFC/DISM/CHKDSK), un
-  Registry Cleaner con backup automatico e cronologia di ripristino, analisi dello spazio su disco
-  per categoria, e un Controllo Salute completo in stile PC Manager con un pulsante "Correggi Tutto"
-  con un clic.
+* Pulizia e Prestazioni - Attivi la modalità Ufficio, Gaming o Ultimate Performance, liberi subito
+  la RAM (con un numero reale prima/dopo), pulisca file temporanei e cache e tenga sotto controllo
+  ciò che si avvia con Windows.
 
-* Rete e Sicurezza - Diagnostica di rete, porte aperte/in ascolto, impostazioni DNS, Windows
-  Defender, blocco della telemetria, e tutti gli strumenti sulla privacy in un'unica sezione.
+* Salute e Riparazione - Controlli e ripari i file di sistema (SFC/DISM), il disco (CHKDSK) e WinRE,
+  pulisca il registro in sicurezza (con backup automatico prima di ogni modifica) e segua nel tempo
+  lo stato del disco.
 
-* Impostazioni Aggiuntive - Decine di ottimizzazioni di interfaccia/prestazioni/privacy di Windows,
+* Sicurezza e Privacy - Esegua una scansione rapida con Windows Defender, verifichi regole del
+  firewall e porte aperte, blocchi la telemetria Microsoft, gestisca in locale le password dei
+  browser e reimposti o regoli la rete (DNS, hosts) con un clic.
+
+* Giochi e Multimedia - La tua libreria Steam/Epic/GOG/Ubisoft/Xbox con avvio, profili GPU/gaming per gioco e pulizia della cache dei launcher; controllo di schermi, audio e fotocamera/microfono, rilevamento dei codec e convertitore video/audio con conversione in batch.
+
+* Ottimizzazioni Windows - Decine di ottimizzazioni di interfaccia/prestazioni/privacy di Windows,
   attivabili con un clic, con ripristino sicuro al valore originale, voci personalizzate del menu
   contestuale, e profili di impostazioni con nome o basati su file che puoi salvare e tra cui
   passare istantaneamente.
 
-* Giochi e Multimedia - La tua libreria Steam/Epic/GOG/Ubisoft/Xbox con avvio, profili GPU/gaming per gioco e pulizia della cache dei launcher; controllo di schermi, audio e fotocamera/microfono, rilevamento dei codec e convertitore video/audio con conversione in batch.
+* Backup e Report - Esporti report (PDF/TXT, ZIP di diagnostica, report della batteria, pacchetto
+  problema) e gestisca punti di ripristino, backup del registro e dei driver in un unico posto.
 
-* Rimozione Bloatware - Rimuovi in sicurezza le app preinstallate di cui non hai bisogno, con
-  l'opzione di reinstallarle, oltre all'installazione con un clic di app consigliate tramite winget.
-
-* Strumenti Avanzati - Manutenzione completa del sistema, funzionalità opzionali di Windows,
-  ricerca di file duplicati, pulizia dei dispositivi "fantasma", e una cassetta degli attrezzi di
-  Windows con accesso rapido agli strumenti integrati.
-
-* Sistema - Dettaglio completo di hardware/SO ("Il Mio Dispositivo") con esportazione PDF, gestione
-  di avvio/processi/servizi, benchmark della velocità del disco, e punti di ripristino.
+* Sistema e Strumenti - Veda un'analisi completa dell'hardware in «Il mio dispositivo» e usi gli
+  strumenti: manutenzione completa con un clic, cassetta degli attrezzi di Windows, WSL, cronologia
+  USB e altro.
 
 Extra: un'icona nella system tray con azioni rapide (Pulizia Rapida, Controllo Salute, mini popup
 in tempo reale di CPU/RAM/rete) e un widget desktop opzionale sempre visibile, 21 temi visivi con

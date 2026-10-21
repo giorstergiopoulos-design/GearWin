@@ -32,16 +32,16 @@ namespace OptimizerWpf
         public static IReadOnlyList<NavItem> All => new[]
         {
             new NavItem("Home", "\U0001F3E0", LanguageService.T("TabHome"), GlyphKind.Home),
+            // 6.5.0 - νέα δομή 9 καρτελών (βλ. TabLayout.cs): τα tags μένουν ίδια, αλλάζει το περιεχόμενο/όνομα και η σειρά.
+            new NavItem("Bloatware", "\U0001F4E6", LanguageService.T("TabBloatware"), GlyphKind.Package),
             new NavItem("Optimization", "⚡", LanguageService.T("TabOptimization"), GlyphKind.Bolt),
             new NavItem("Health", "❤", LanguageService.T("TabHealth"), GlyphKind.Heart),
-            new NavItem("Network", "\U0001F310", LanguageService.T("TabNetwork"), GlyphKind.Globe),
-            new NavItem("Tweaks", "\U0001F527", LanguageService.T("TabTweaks"), GlyphKind.Wrench),
-            // 6.3.5 - συγχώνευση Παιχνίδια+Πολυμέσα σε μία καρτέλα (βλ. GamesMediaView, Tag="GamesMedia"
-            // στο MainWindow.xaml) - το tag εδώ ΠΡΕΠΕΙ να ταιριάζει, αλλιώς το κλασικό μενού/PC Manager
-            // rail καλούν SelectTab με tag που δεν αντιστοιχεί σε κανένα RadioButton (no-op).
+            new NavItem("Network", "\U0001F6E1", LanguageService.T("TabNetwork"), GlyphKind.Shield),
+            // 6.3.5 - συγχώνευση Παιχνίδια+Πολυμέσα σε μία καρτέλα (βλ. GamesMediaView, Tag="GamesMedia" στο MainWindow.xaml) -
+            // το tag εδώ ΠΡΕΠΕΙ να ταιριάζει, αλλιώς το κλασικό μενού/PC Manager rail καλούν SelectTab με tag χωρίς RadioButton.
             new NavItem("GamesMedia", "\U0001F3AE", LanguageService.T("TabGamesMedia"), GlyphKind.Gamepad),
-            new NavItem("Bloatware", "\U0001F9F9", LanguageService.T("TabBloatware"), GlyphKind.Broom),
-            new NavItem("Advanced", "\U0001F6E0", LanguageService.T("TabAdvanced"), GlyphKind.Tools),
+            new NavItem("Tweaks", "\U0001F527", LanguageService.T("TabTweaks"), GlyphKind.Wrench),
+            new NavItem("Advanced", "\U0001F4BE", LanguageService.T("TabAdvanced"), GlyphKind.Document),
             new NavItem("System", "\U0001F5A5", LanguageService.T("TabSystem"), GlyphKind.Monitor),
         };
     }

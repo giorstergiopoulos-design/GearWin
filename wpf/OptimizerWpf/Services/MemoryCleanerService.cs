@@ -88,6 +88,13 @@ namespace OptimizerWpf.Services
             finally { CloseHandle(token); }
         }
 
+        // Κείμενο αποτελέσματος με την ΠΡΑΓΜΑΤΙΚΗ μέτρηση ελεύθερης μνήμης πριν/μετά (κοινό για Gaming Mode, Boost, Ρυθμίσεις).
+        public static string Describe(MemoryCleanResult r)
+        {
+            var text = string.Format(LanguageService.T("Opt_FreeRamResult"), r.Before.FreeGb.ToString("0.0"), r.After.FreeGb.ToString("0.0"));
+            return r.ListsPurged ? text : text + LanguageService.T("Opt_FreeRamTrimOnly");
+        }
+
         public static Task<MemoryCleanResult> CleanAsync() => Task.Run(async () =>
         {
             var before = Snapshot();

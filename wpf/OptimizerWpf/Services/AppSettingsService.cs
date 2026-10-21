@@ -69,6 +69,9 @@ namespace OptimizerWpf.Services
         // Ελευθέρωση RAM (κλάδεμα διεργασιών παρασκηνίου + cache μνήμης, όπως το RAMMap) κατά την ενεργοποίηση του Gaming Mode.
         public bool GamingModeFreeRam { get; set; } = true;
         public bool NightlyUpdatesEnabled { get; set; }
+        // Έλεγχος για νέα έκδοση του ίδιου του GearWin στο GitHub (βλ. SelfUpdateService) και η τελευταία έκδοση για την οποία ειδοποιήθηκε ο χρήστης.
+        public bool SelfUpdateCheckEnabled { get; set; } = true;
+        public string? LastNotifiedSelfUpdate { get; set; }
         public bool OfficeModeActive { get; set; }
 
         // ΝΕΟ - roadmap "Καρφιτσωμένες συντομεύσεις" - κλειδιά μορφής "<λίστα>:<Label>" (βλ.

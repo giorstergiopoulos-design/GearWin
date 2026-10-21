@@ -32,13 +32,14 @@ namespace OptimizerWpf.Views
             {
                 (GlyphKind.Gear, LanguageService.T("Onb_WelcomeTitle"), LanguageService.T("Onb_WelcomeDesc")),
                 (GlyphKind.Home, LanguageService.T("TabHome"), LanguageService.T("Onb_HomeDesc")),
+                // 6.5.0: ίδια σειρά με τη νέα δομή καρτελών (βλ. TabLayout.cs / NavItems.All).
+                (GlyphKind.Package, LanguageService.T("TabBloatware"), LanguageService.T("Onb_BloatwareDesc")),
                 (GlyphKind.Bolt, LanguageService.T("TabOptimization"), LanguageService.T("Onb_OptDesc")),
                 (GlyphKind.Heart, LanguageService.T("TabHealth"), LanguageService.T("Onb_HealthDesc")),
-                (GlyphKind.Globe, LanguageService.T("TabNetwork"), LanguageService.T("Onb_NetworkDesc")),
-                (GlyphKind.Wrench, LanguageService.T("TabTweaks"), LanguageService.T("Onb_TweaksDesc")),
+                (GlyphKind.Shield, LanguageService.T("TabNetwork"), LanguageService.T("Onb_NetworkDesc")),
                 (GlyphKind.Gamepad, LanguageService.T("TabGamesMedia"), LanguageService.T("Onb_GamesMediaDesc")),
-                (GlyphKind.Broom, LanguageService.T("TabBloatware"), LanguageService.T("Onb_BloatwareDesc")),
-                (GlyphKind.Tools, LanguageService.T("TabAdvanced"), LanguageService.T("Onb_AdvancedDesc")),
+                (GlyphKind.Wrench, LanguageService.T("TabTweaks"), LanguageService.T("Onb_TweaksDesc")),
+                (GlyphKind.Document, LanguageService.T("TabAdvanced"), LanguageService.T("Onb_AdvancedDesc")),
                 (GlyphKind.Monitor, LanguageService.T("TabSystem"), LanguageService.T("Onb_SystemDesc")),
                 (GlyphKind.Check, LanguageService.T("Onb_FinishTitle"), LanguageService.T("Onb_FinishDesc")),
             };

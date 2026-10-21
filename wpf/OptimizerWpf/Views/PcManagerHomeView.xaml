@@ -38,28 +38,28 @@
             </Border>
 
             <UniformGrid Columns="4" Margin="0,16,0,0">
-                <Button Style="{StaticResource FlatButtonStyle}" Padding="16" Margin="0,0,8,0" Tag="System" Click="QuickCard_Click" HorizontalContentAlignment="Left">
+                <Button Style="{StaticResource FlatButtonStyle}" Padding="16" Margin="0,0,8,0" Tag="Optimization#1" Click="QuickCard_Click" HorizontalContentAlignment="Left">
                     <StackPanel>
                         <views:HeaderGlyphIcon Kind="Disk" Width="26" Height="26" HorizontalAlignment="Left"/>
                         <TextBlock Text="{tr:Tr System_Storage}" FontWeight="SemiBold" Margin="0,10,0,2" TextWrapping="Wrap" Foreground="{DynamicResource TextBrush}"/>
                         <TextBlock Text="{tr:Tr PcmHome_StorageDesc}" Style="{StaticResource SubTextStyle}" TextWrapping="Wrap"/>
                     </StackPanel>
                 </Button>
-                <Button Style="{StaticResource FlatButtonStyle}" Padding="16" Margin="8,0,8,0" Tag="System" Click="QuickCard_Click" HorizontalContentAlignment="Left">
+                <Button Style="{StaticResource FlatButtonStyle}" Padding="16" Margin="8,0,8,0" Tag="Optimization#0" Click="QuickCard_Click" HorizontalContentAlignment="Left">
                     <StackPanel>
                         <views:HeaderGlyphIcon Kind="Dial" Width="26" Height="26" HorizontalAlignment="Left"/>
                         <TextBlock Text="{tr:Tr System_Processes}" FontWeight="SemiBold" Margin="0,10,0,2" TextWrapping="Wrap" Foreground="{DynamicResource TextBrush}"/>
                         <TextBlock Text="{tr:Tr PcmHome_ProcessesDesc}" Style="{StaticResource SubTextStyle}" TextWrapping="Wrap"/>
                     </StackPanel>
                 </Button>
-                <Button Style="{StaticResource FlatButtonStyle}" Padding="16" Margin="8,0,8,0" Tag="Advanced" Click="QuickCard_Click" HorizontalContentAlignment="Left">
+                <Button Style="{StaticResource FlatButtonStyle}" Padding="16" Margin="8,0,8,0" Tag="Optimization#2" Click="QuickCard_Click" HorizontalContentAlignment="Left">
                     <StackPanel>
                         <views:HeaderGlyphIcon Kind="Bolt" Width="26" Height="26" HorizontalAlignment="Left"/>
                         <TextBlock Text="{tr:Tr System_Startup}" FontWeight="SemiBold" Margin="0,10,0,2" TextWrapping="Wrap" Foreground="{DynamicResource TextBrush}"/>
                         <TextBlock Text="{tr:Tr PcmHome_StartupDesc}" Style="{StaticResource SubTextStyle}" TextWrapping="Wrap"/>
                     </StackPanel>
                 </Button>
-                <Button Style="{StaticResource FlatButtonStyle}" Padding="16" Margin="8,0,0,0" Tag="Optimization" Click="QuickCard_Click" HorizontalContentAlignment="Left">
+                <Button Style="{StaticResource FlatButtonStyle}" Padding="16" Margin="8,0,0,0" Tag="Bloatware#0" Click="QuickCard_Click" HorizontalContentAlignment="Left">
                     <StackPanel>
                         <views:HeaderGlyphIcon Kind="Package" Width="26" Height="26" HorizontalAlignment="Left"/>
                         <TextBlock Text="{tr:Tr PcmHome_UpdatesTitle}" FontWeight="SemiBold" Margin="0,10,0,2" TextWrapping="Wrap" Foreground="{DynamicResource TextBrush}"/>
