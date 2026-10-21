@@ -247,6 +247,8 @@ public partial class MainWindow : Window
     // αυτό το πέρασμα - ρητό αίτημα χρήστη: "μετάφρασε τα όλα").
     private void ApplyLanguage()
     {
+        // Στατικοί συνδρομητές: μπορεί να κληθεί από άλλο thread (π.χ. υπηρεσία παρασκηνίου/δοκιμή) - εκτελείται στο thread του παραθύρου.
+        if (!Dispatcher.CheckAccess()) { Dispatcher.BeginInvoke(ApplyLanguage); return; }
         LblTabHome.Text = LanguageService.T("TabHome");
         LblTabOptimization.Text = LanguageService.T("TabOptimization");
         LblTabHealth.Text = LanguageService.T("TabHealth");
@@ -291,6 +293,8 @@ public partial class MainWindow : Window
     // πλατιά μπάρα / μόνο κλασικό μενού), ορατότητα γραμμής μενού, και εναλλαγή hero/κανονικής Αρχικής.
     private void ApplyPcManagerSkinLayout()
     {
+        // Στατικοί συνδρομητές: μπορεί να κληθεί από άλλο thread (π.χ. υπηρεσία παρασκηνίου/δοκιμή) - εκτελείται στο thread του παραθύρου.
+        if (!Dispatcher.CheckAccess()) { Dispatcher.BeginInvoke(ApplyPcManagerSkinLayout); return; }
         var skin = ThemeManager.CurrentSkin;
         var nav = skin?.Nav ?? SkinNav.Tabs;
         var isRail = nav is SkinNav.CompactRail or SkinNav.WideRail;
@@ -475,6 +479,7 @@ public partial class MainWindow : Window
 
     private void OnStatusChanged(string message, bool busy)
     {
+        if (!Dispatcher.CheckAccess()) { Dispatcher.BeginInvoke(() => OnStatusChanged(message, busy)); return; }
         _statusIsIdle = !busy;
         TxtStatus.Text = $"{LanguageService.T("StatusPrefix")}{message}";
         if (busy)

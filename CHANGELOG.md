@@ -6,6 +6,13 @@ available inside the app itself, via Help/Instructions → the "Version History"
 
 Format loosely follows [Keep a Changelog](https://keepachangelog.com/).
 
+## v6.5.2 — User guide rewritten, missing app logos, thread-safe language/theme switching
+
+- **Help (user guide)** rebuilt around the new tab/sub-page structure (`HelpWindow.xaml`): cards are described on the tab where they live; new entries for RAM release, nightly updates, GearWin self-update, the Reports card, registry backup history and the Home security summary; the maintenance entry lists the real 10 buttons; obsolete per-old-tab section texts (`Help_OptTitle` etc.) removed from all 14 languages.
+- **Recommended apps:** the 6 apps without a logo domain (Brave, OBS Studio, Telegram, Everything, ShareX, LibreOffice) now get their logo; all 29 verified with a contact sheet. `EveryRecommendedAppHasALogoSource` keeps it that way.
+- **Robustness:** `ThemeManager`/`MainWindow` static event handlers (theme, language, status) now run on the window's own thread instead of throwing when raised from another thread. `LocalizationCoverageTests` checks that every `{tr:Tr ...}` key in the XAML exists in all 14 languages (found no gaps).
+- Tests: 245, stable over repeated runs (test parallelisation stays disabled).
+
 ## v6.5.1 — Theme button label no longer cut off
 
 - The header "Light Theme"/"Dark Theme" button had a fixed 120 px width; since the 6.4.0 padding fix its label was clipped in Greek ("☀ Φωτεινό Θέμα" needs 126 px) and Russian (122 px). It now sizes to its text (`MinWidth`), and `HeaderLayoutTests` checks all 14 languages in both modes (verified to fail on the old layout).

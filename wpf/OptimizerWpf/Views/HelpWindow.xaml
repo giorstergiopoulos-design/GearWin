@@ -72,6 +72,11 @@
                             <Border Grid.Column="0" Style="{StaticResource PulsingIconContainerStyle}" Margin="0,2,8,0" VerticalAlignment="Top"><views:HeaderGlyphIcon Kind="Heart" Width="15" Height="15"/></Border>
                             <TextBlock Grid.Column="1" TextWrapping="Wrap"><Run Text="{tr:Tr Home_HealthScore}" FontWeight="Bold" Foreground="{DynamicResource TextBrush}"/><Run Text=" — "/><Run Text="{tr:Tr Help_Home_HealthScore}" Foreground="{DynamicResource SubTextBrush}"/></TextBlock>
                         </Grid>
+                        <Grid Margin="0,10,0,0">
+                            <Grid.ColumnDefinitions><ColumnDefinition Width="Auto"/><ColumnDefinition Width="*"/></Grid.ColumnDefinitions>
+                            <Border Grid.Column="0" Style="{StaticResource PulsingIconContainerStyle}" Margin="0,2,8,0" VerticalAlignment="Top"><views:HeaderGlyphIcon Kind="Shield" Width="15" Height="15"/></Border>
+                            <TextBlock Grid.Column="1" TextWrapping="Wrap"><Run Text="{tr:Tr Home_SecurityTitle}" FontWeight="Bold" Foreground="{DynamicResource TextBrush}"/><Run Text=" — "/><Run Text="{tr:Tr Help_Home_Security}" Foreground="{DynamicResource SubTextBrush}"/></TextBlock>
+                        </Grid>
                         <Grid Margin="0,8,0,0">
                             <Grid.ColumnDefinitions><ColumnDefinition Width="Auto"/><ColumnDefinition Width="*"/></Grid.ColumnDefinitions>
                             <Border Grid.Column="0" Style="{StaticResource PulsingIconContainerStyle}" Margin="0,2,8,0" VerticalAlignment="Top"><views:HeaderGlyphIcon Kind="Check" Width="15" Height="15"/></Border>
@@ -90,11 +95,74 @@
 
                         <Grid Margin="0,14,0,4">
                             <Grid.ColumnDefinitions><ColumnDefinition Width="Auto"/><ColumnDefinition Width="*"/></Grid.ColumnDefinitions>
-                            <Border Grid.Column="0" Style="{StaticResource PulsingIconContainerStyle}" Margin="0,0,8,0"><views:HeaderGlyphIcon Kind="Bolt" Width="19" Height="19"/></Border>
-                            <TextBlock Grid.Column="1" Text="{tr:Tr Help_OptTitle}" Style="{StaticResource CardTitleStyle}" VerticalAlignment="Center"/>
+                            <Border Grid.Column="0" Style="{StaticResource PulsingIconContainerStyle}" Margin="0,0,8,0"><views:HeaderGlyphIcon Kind="Package" Width="19" Height="19"/></Border>
+                            <TextBlock Grid.Column="1" Text="{tr:Tr TabBloatware}" Style="{StaticResource CardTitleStyle}" VerticalAlignment="Center"/>
                         </Grid>
-                        <TextBlock Style="{StaticResource SubTextStyle}" TextWrapping="Wrap" Text="{tr:Tr Help_OptDesc}"/>
+                        <TextBlock Text="{tr:Tr Sub_Updates}" FontWeight="SemiBold" Foreground="{DynamicResource AccentBrush}" Margin="0,14,0,0"/>
+                        <Grid Margin="0,8,0,0">
+                            <Grid.ColumnDefinitions><ColumnDefinition Width="Auto"/><ColumnDefinition Width="*"/></Grid.ColumnDefinitions>
+                            <Border Grid.Column="0" Style="{StaticResource PulsingIconContainerStyle}" Margin="0,2,8,0" VerticalAlignment="Top"><views:HeaderGlyphIcon Kind="Package" Width="15" Height="15"/></Border>
+                            <TextBlock Grid.Column="1" TextWrapping="Wrap"><Run Text="{tr:Tr Optimization_SoftwareUpdate}" FontWeight="Bold" Foreground="{DynamicResource TextBrush}"/><Run Text=" — "/><Run Text="{tr:Tr Help_Opt_SoftwareUpdate}" Foreground="{DynamicResource SubTextBrush}"/></TextBlock>
+                        </Grid>
+                        <Grid Margin="0,10,0,0">
+                            <Grid.ColumnDefinitions><ColumnDefinition Width="Auto"/><ColumnDefinition Width="*"/></Grid.ColumnDefinitions>
+                            <Border Grid.Column="0" Style="{StaticResource PulsingIconContainerStyle}" Margin="0,2,8,0" VerticalAlignment="Top"><views:HeaderGlyphIcon Kind="Clock" Width="15" Height="15"/></Border>
+                            <TextBlock Grid.Column="1" TextWrapping="Wrap"><Run Text="{tr:Tr Opt_NightlyUpdates}" FontWeight="Bold" Foreground="{DynamicResource TextBrush}"/><Run Text=" — "/><Run Text="{tr:Tr Help_Opt_NightlyUpdates}" Foreground="{DynamicResource SubTextBrush}"/></TextBlock>
+                        </Grid>
+                        <Grid Margin="0,10,0,0">
+                            <Grid.ColumnDefinitions><ColumnDefinition Width="Auto"/><ColumnDefinition Width="*"/></Grid.ColumnDefinitions>
+                            <Border Grid.Column="0" Style="{StaticResource PulsingIconContainerStyle}" Margin="0,2,8,0" VerticalAlignment="Top"><views:HeaderGlyphIcon Kind="Bolt" Width="15" Height="15"/></Border>
+                            <TextBlock Grid.Column="1" TextWrapping="Wrap"><Run Text="{tr:Tr Appr_SelfUpdateTitle}" FontWeight="Bold" Foreground="{DynamicResource TextBrush}"/><Run Text=" — "/><Run Text="{tr:Tr Help_SelfUpdate}" Foreground="{DynamicResource SubTextBrush}"/></TextBlock>
+                        </Grid>
+                        <TextBlock Text="{tr:Tr Sub_Drivers}" FontWeight="SemiBold" Foreground="{DynamicResource AccentBrush}" Margin="0,14,0,0"/>
+                        <Grid Margin="0,8,0,0">
+                            <Grid.ColumnDefinitions><ColumnDefinition Width="Auto"/><ColumnDefinition Width="*"/></Grid.ColumnDefinitions>
+                            <Border Grid.Column="0" Style="{StaticResource PulsingIconContainerStyle}" Margin="0,2,8,0" VerticalAlignment="Top"><views:HeaderGlyphIcon Kind="Wrench" Width="15" Height="15"/></Border>
+                            <TextBlock Grid.Column="1" TextWrapping="Wrap"><Run Text="{tr:Tr Optimization_Drivers}" FontWeight="Bold" Foreground="{DynamicResource TextBrush}"/><Run Text=" — "/><Run Text="{tr:Tr Help_Opt_Drivers}" Foreground="{DynamicResource SubTextBrush}"/></TextBlock>
+                        </Grid>
+                        <Grid Margin="0,8,0,0">
+                            <Grid.ColumnDefinitions><ColumnDefinition Width="Auto"/><ColumnDefinition Width="*"/></Grid.ColumnDefinitions>
+                            <Border Grid.Column="0" Style="{StaticResource PulsingIconContainerStyle}" Margin="0,2,8,0" VerticalAlignment="Top"><views:HeaderGlyphIcon Kind="Broom" Width="15" Height="15"/></Border>
+                            <TextBlock Grid.Column="1" TextWrapping="Wrap"><Run Text="{tr:Tr Optimization_DriverStore}" FontWeight="Bold" Foreground="{DynamicResource TextBrush}"/><Run Text=" — "/><Run Text="{tr:Tr Help_Opt_DriverStore}" Foreground="{DynamicResource SubTextBrush}"/></TextBlock>
+                        </Grid>
+                        <Grid Margin="0,8,0,0">
+                            <Grid.ColumnDefinitions><ColumnDefinition Width="Auto"/><ColumnDefinition Width="*"/></Grid.ColumnDefinitions>
+                            <Border Grid.Column="0" Style="{StaticResource PulsingIconContainerStyle}" Margin="0,2,8,0" VerticalAlignment="Top"><views:HeaderGlyphIcon Kind="Wrench" Width="15" Height="15"/></Border>
+                            <TextBlock Grid.Column="1" TextWrapping="Wrap"><Run Text="{tr:Tr Advanced_GhostDevices}" FontWeight="Bold" Foreground="{DynamicResource TextBrush}"/><Run Text=" — "/><Run Text="{tr:Tr Help_Adv_GhostDevices}" Foreground="{DynamicResource SubTextBrush}"/></TextBlock>
+                        </Grid>
+                        <TextBlock Text="{tr:Tr Sub_Apps}" FontWeight="SemiBold" Foreground="{DynamicResource AccentBrush}" Margin="0,14,0,0"/>
+                        <Grid Margin="0,10,0,0">
+                            <Grid.ColumnDefinitions><ColumnDefinition Width="Auto"/><ColumnDefinition Width="*"/></Grid.ColumnDefinitions>
+                            <Border Grid.Column="0" Style="{StaticResource PulsingIconContainerStyle}" Margin="0,2,8,0" VerticalAlignment="Top"><views:HeaderGlyphIcon Kind="Package" Width="15" Height="15"/></Border>
+                            <TextBlock Grid.Column="1" TextWrapping="Wrap"><Run Text="{tr:Tr Bloatware_Builtin}" FontWeight="Bold" Foreground="{DynamicResource TextBrush}"/><Run Text=" — "/><Run Text="{tr:Tr Help_Bloat_Builtin}" Foreground="{DynamicResource SubTextBrush}"/></TextBlock>
+                        </Grid>
+                        <Grid Margin="0,8,0,0">
+                            <Grid.ColumnDefinitions><ColumnDefinition Width="Auto"/><ColumnDefinition Width="*"/></Grid.ColumnDefinitions>
+                            <Border Grid.Column="0" Style="{StaticResource PulsingIconContainerStyle}" Margin="0,2,8,0" VerticalAlignment="Top"><views:HeaderGlyphIcon Kind="Phone" Width="15" Height="15"/></Border>
+                            <TextBlock Grid.Column="1" TextWrapping="Wrap"><Run Text="{tr:Tr Bloatware_Recommended}" FontWeight="Bold" Foreground="{DynamicResource TextBrush}"/><Run Text=" — "/><Run Text="{tr:Tr Help_Bloat_Recommended}" Foreground="{DynamicResource SubTextBrush}"/></TextBlock>
+                        </Grid>
+                        <Grid Margin="0,8,0,0">
+                            <Grid.ColumnDefinitions><ColumnDefinition Width="Auto"/><ColumnDefinition Width="*"/></Grid.ColumnDefinitions>
+                            <Border Grid.Column="0" Style="{StaticResource PulsingIconContainerStyle}" Margin="0,2,8,0" VerticalAlignment="Top"><views:HeaderGlyphIcon Kind="Tools" Width="15" Height="15"/></Border>
+                            <TextBlock Grid.Column="1" TextWrapping="Wrap"><Run Text="{tr:Tr Bloatware_UwpManager}" FontWeight="Bold" Foreground="{DynamicResource TextBrush}"/><Run Text=" — "/><Run Text="{tr:Tr Help_Bloat_UwpManager}" Foreground="{DynamicResource SubTextBrush}"/></TextBlock>
+                        </Grid>
+                        <Grid Margin="0,8,0,0">
+                            <Grid.ColumnDefinitions><ColumnDefinition Width="Auto"/><ColumnDefinition Width="*"/></Grid.ColumnDefinitions>
+                            <Border Grid.Column="0" Style="{StaticResource PulsingIconContainerStyle}" Margin="0,2,8,0" VerticalAlignment="Top"><views:HeaderGlyphIcon Kind="Phone" Width="15" Height="15"/></Border>
+                            <TextBlock Grid.Column="1" TextWrapping="Wrap"><Run Text="{tr:Tr Bloatware_DeepUninstall}" FontWeight="Bold" Foreground="{DynamicResource TextBrush}"/><Run Text=" — "/><Run Text="{tr:Tr Help_Bloat_DeepUninstall}" Foreground="{DynamicResource SubTextBrush}"/></TextBlock>
+                        </Grid>
 
+                        <Grid Margin="0,8,0,0">
+                            <Grid.ColumnDefinitions><ColumnDefinition Width="Auto"/><ColumnDefinition Width="*"/></Grid.ColumnDefinitions>
+                            <Border Grid.Column="0" Style="{StaticResource PulsingIconContainerStyle}" Margin="0,2,8,0" VerticalAlignment="Top"><views:HeaderGlyphIcon Kind="Wrench" Width="15" Height="15"/></Border>
+                            <TextBlock Grid.Column="1" TextWrapping="Wrap"><Run Text="{tr:Tr Advanced_OptionalFeatures}" FontWeight="Bold" Foreground="{DynamicResource TextBrush}"/><Run Text=" — "/><Run Text="{tr:Tr Help_Adv_OptionalFeatures}" Foreground="{DynamicResource SubTextBrush}"/></TextBlock>
+                        </Grid>
+                        <Grid Margin="0,14,0,4">
+                            <Grid.ColumnDefinitions><ColumnDefinition Width="Auto"/><ColumnDefinition Width="*"/></Grid.ColumnDefinitions>
+                            <Border Grid.Column="0" Style="{StaticResource PulsingIconContainerStyle}" Margin="0,0,8,0"><views:HeaderGlyphIcon Kind="Bolt" Width="19" Height="19"/></Border>
+                            <TextBlock Grid.Column="1" Text="{tr:Tr TabOptimization}" Style="{StaticResource CardTitleStyle}" VerticalAlignment="Center"/>
+                        </Grid>
+                        <TextBlock Text="{tr:Tr Sub_Performance}" FontWeight="SemiBold" Foreground="{DynamicResource AccentBrush}" Margin="0,14,0,0"/>
                         <Grid Margin="0,10,0,0">
                             <Grid.ColumnDefinitions><ColumnDefinition Width="Auto"/><ColumnDefinition Width="*"/></Grid.ColumnDefinitions>
                             <Border Grid.Column="0" Style="{StaticResource PulsingIconContainerStyle}" Margin="0,2,8,0" VerticalAlignment="Top"><views:HeaderGlyphIcon Kind="Dial" Width="15" Height="15"/></Border>
@@ -105,30 +173,10 @@
                             <Border Grid.Column="0" Style="{StaticResource PulsingIconContainerStyle}" Margin="0,2,8,0" VerticalAlignment="Top"><views:HeaderGlyphIcon Kind="Gamepad" Width="15" Height="15"/></Border>
                             <TextBlock Grid.Column="1" TextWrapping="Wrap"><Run Text="{tr:Tr Optimization_GamingMode}" FontWeight="Bold" Foreground="{DynamicResource TextBrush}"/><Run Text=" — "/><Run Text="{tr:Tr Help_Opt_GamingMode}" Foreground="{DynamicResource SubTextBrush}"/></TextBlock>
                         </Grid>
-                        <Grid Margin="0,8,0,0">
+                        <Grid Margin="0,10,0,0">
                             <Grid.ColumnDefinitions><ColumnDefinition Width="Auto"/><ColumnDefinition Width="*"/></Grid.ColumnDefinitions>
-                            <Border Grid.Column="0" Style="{StaticResource PulsingIconContainerStyle}" Margin="0,2,8,0" VerticalAlignment="Top"><views:HeaderGlyphIcon Kind="Wrench" Width="15" Height="15"/></Border>
-                            <TextBlock Grid.Column="1" TextWrapping="Wrap"><Run Text="{tr:Tr Optimization_Drivers}" FontWeight="Bold" Foreground="{DynamicResource TextBrush}"/><Run Text=" — "/><Run Text="{tr:Tr Help_Opt_Drivers}" Foreground="{DynamicResource SubTextBrush}"/></TextBlock>
-                        </Grid>
-                        <Grid Margin="0,8,0,0">
-                            <Grid.ColumnDefinitions><ColumnDefinition Width="Auto"/><ColumnDefinition Width="*"/></Grid.ColumnDefinitions>
-                            <Border Grid.Column="0" Style="{StaticResource PulsingIconContainerStyle}" Margin="0,2,8,0" VerticalAlignment="Top"><views:HeaderGlyphIcon Kind="Document" Width="15" Height="15"/></Border>
-                            <TextBlock Grid.Column="1" TextWrapping="Wrap"><Run Text="{tr:Tr Optimization_DriverBackup}" FontWeight="Bold" Foreground="{DynamicResource TextBrush}"/><Run Text=" — "/><Run Text="{tr:Tr Help_Opt_DriverBackup}" Foreground="{DynamicResource SubTextBrush}"/></TextBlock>
-                        </Grid>
-                        <Grid Margin="0,8,0,0">
-                            <Grid.ColumnDefinitions><ColumnDefinition Width="Auto"/><ColumnDefinition Width="*"/></Grid.ColumnDefinitions>
-                            <Border Grid.Column="0" Style="{StaticResource PulsingIconContainerStyle}" Margin="0,2,8,0" VerticalAlignment="Top"><views:HeaderGlyphIcon Kind="Broom" Width="15" Height="15"/></Border>
-                            <TextBlock Grid.Column="1" TextWrapping="Wrap"><Run Text="{tr:Tr Optimization_DriverStore}" FontWeight="Bold" Foreground="{DynamicResource TextBrush}"/><Run Text=" — "/><Run Text="{tr:Tr Help_Opt_DriverStore}" Foreground="{DynamicResource SubTextBrush}"/></TextBlock>
-                        </Grid>
-                        <Grid Margin="0,8,0,0">
-                            <Grid.ColumnDefinitions><ColumnDefinition Width="Auto"/><ColumnDefinition Width="*"/></Grid.ColumnDefinitions>
-                            <Border Grid.Column="0" Style="{StaticResource PulsingIconContainerStyle}" Margin="0,2,8,0" VerticalAlignment="Top"><views:HeaderGlyphIcon Kind="Package" Width="15" Height="15"/></Border>
-                            <TextBlock Grid.Column="1" TextWrapping="Wrap"><Run Text="{tr:Tr Optimization_SoftwareUpdate}" FontWeight="Bold" Foreground="{DynamicResource TextBrush}"/><Run Text=" — "/><Run Text="{tr:Tr Help_Opt_SoftwareUpdate}" Foreground="{DynamicResource SubTextBrush}"/></TextBlock>
-                        </Grid>
-                        <Grid Margin="0,8,0,0">
-                            <Grid.ColumnDefinitions><ColumnDefinition Width="Auto"/><ColumnDefinition Width="*"/></Grid.ColumnDefinitions>
-                            <Border Grid.Column="0" Style="{StaticResource PulsingIconContainerStyle}" Margin="0,2,8,0" VerticalAlignment="Top"><views:HeaderGlyphIcon Kind="Clock" Width="15" Height="15"/></Border>
-                            <TextBlock Grid.Column="1" TextWrapping="Wrap"><Run Text="{tr:Tr Opt_ScheduledMaintenance}" FontWeight="Bold" Foreground="{DynamicResource TextBrush}"/><Run Text=" — "/><Run Text="{tr:Tr Help_Opt_ScheduledMaintenance}" Foreground="{DynamicResource SubTextBrush}"/></TextBlock>
+                            <Border Grid.Column="0" Style="{StaticResource PulsingIconContainerStyle}" Margin="0,2,8,0" VerticalAlignment="Top"><views:HeaderGlyphIcon Kind="Brain" Width="15" Height="15"/></Border>
+                            <TextBlock Grid.Column="1" TextWrapping="Wrap"><Run Text="{tr:Tr Opt_FreeRamNow}" FontWeight="Bold" Foreground="{DynamicResource TextBrush}"/><Run Text=" — "/><Run Text="{tr:Tr Help_Opt_FreeRam}" Foreground="{DynamicResource SubTextBrush}"/></TextBlock>
                         </Grid>
                         <Grid Margin="0,8,0,0">
                             <Grid.ColumnDefinitions><ColumnDefinition Width="Auto"/><ColumnDefinition Width="*"/></Grid.ColumnDefinitions>
@@ -136,17 +184,58 @@
                             <TextBlock Grid.Column="1" TextWrapping="Wrap"><Run Text="{tr:Tr Opt_AutoGamingMode}" FontWeight="Bold" Foreground="{DynamicResource TextBrush}"/><Run Text=" — "/><Run Text="{tr:Tr Help_Opt_AutoGamingMode}" Foreground="{DynamicResource SubTextBrush}"/></TextBlock>
                         </Grid>
 
+                        <Grid Margin="0,8,0,0">
+                            <Grid.ColumnDefinitions><ColumnDefinition Width="Auto"/><ColumnDefinition Width="*"/></Grid.ColumnDefinitions>
+                            <Border Grid.Column="0" Style="{StaticResource PulsingIconContainerStyle}" Margin="0,2,8,0" VerticalAlignment="Top"><views:HeaderGlyphIcon Kind="Clock" Width="15" Height="15"/></Border>
+                            <TextBlock Grid.Column="1" TextWrapping="Wrap"><Run Text="{tr:Tr Opt_ScheduledMaintenance}" FontWeight="Bold" Foreground="{DynamicResource TextBrush}"/><Run Text=" — "/><Run Text="{tr:Tr Help_Opt_ScheduledMaintenance}" Foreground="{DynamicResource SubTextBrush}"/></TextBlock>
+                        </Grid>
+                        <Grid Margin="0,8,0,0">
+                            <Grid.ColumnDefinitions><ColumnDefinition Width="Auto"/><ColumnDefinition Width="*"/></Grid.ColumnDefinitions>
+                            <Border Grid.Column="0" Style="{StaticResource PulsingIconContainerStyle}" Margin="0,2,8,0" VerticalAlignment="Top"><views:HeaderGlyphIcon Kind="Brain" Width="15" Height="15"/></Border>
+                            <TextBlock Grid.Column="1" TextWrapping="Wrap"><Run Text="{tr:Tr System_Processes}" FontWeight="Bold" Foreground="{DynamicResource TextBrush}"/><Run Text=" — "/><Run Text="{tr:Tr Help_Sys_Processes}" Foreground="{DynamicResource SubTextBrush}"/></TextBlock>
+                        </Grid>
+                        <Grid Margin="0,8,0,0">
+                            <Grid.ColumnDefinitions><ColumnDefinition Width="Auto"/><ColumnDefinition Width="*"/></Grid.ColumnDefinitions>
+                            <Border Grid.Column="0" Style="{StaticResource PulsingIconContainerStyle}" Margin="0,2,8,0" VerticalAlignment="Top"><views:HeaderGlyphIcon Kind="Disk" Width="15" Height="15"/></Border>
+                            <TextBlock Grid.Column="1" TextWrapping="Wrap"><Run Text="{tr:Tr System_Benchmark}" FontWeight="Bold" Foreground="{DynamicResource TextBrush}"/><Run Text=" — "/><Run Text="{tr:Tr Help_Sys_Benchmark}" Foreground="{DynamicResource SubTextBrush}"/></TextBlock>
+                        </Grid>
+
+                        <TextBlock Text="{tr:Tr Sub_Cleanup}" FontWeight="SemiBold" Foreground="{DynamicResource AccentBrush}" Margin="0,14,0,0"/>
+                        <Grid Margin="0,8,0,0">
+                            <Grid.ColumnDefinitions><ColumnDefinition Width="Auto"/><ColumnDefinition Width="*"/></Grid.ColumnDefinitions>
+                            <Border Grid.Column="0" Style="{StaticResource PulsingIconContainerStyle}" Margin="0,2,8,0" VerticalAlignment="Top"><views:HeaderGlyphIcon Kind="Broom" Width="15" Height="15"/></Border>
+                            <TextBlock Grid.Column="1" TextWrapping="Wrap"><Run Text="{tr:Tr Health_BrowserCache}" FontWeight="Bold" Foreground="{DynamicResource TextBrush}"/><Run Text=" — "/><Run Text="{tr:Tr Help_Health_BrowserCache}" Foreground="{DynamicResource SubTextBrush}"/></TextBlock>
+                        </Grid>
+                        <Grid Margin="0,8,0,0">
+                            <Grid.ColumnDefinitions><ColumnDefinition Width="Auto"/><ColumnDefinition Width="*"/></Grid.ColumnDefinitions>
+                            <Border Grid.Column="0" Style="{StaticResource PulsingIconContainerStyle}" Margin="0,2,8,0" VerticalAlignment="Top"><views:HeaderGlyphIcon Kind="Disk" Width="15" Height="15"/></Border>
+                            <TextBlock Grid.Column="1" TextWrapping="Wrap"><Run Text="{tr:Tr System_Storage}" FontWeight="Bold" Foreground="{DynamicResource TextBrush}"/><Run Text=" — "/><Run Text="{tr:Tr Help_Sys_Storage}" Foreground="{DynamicResource SubTextBrush}"/></TextBlock>
+                        </Grid>
+                        <TextBlock Text="{tr:Tr Sub_Startup}" FontWeight="SemiBold" Foreground="{DynamicResource AccentBrush}" Margin="0,14,0,0"/>
+                        <Grid Margin="0,8,0,0">
+                            <Grid.ColumnDefinitions><ColumnDefinition Width="Auto"/><ColumnDefinition Width="*"/></Grid.ColumnDefinitions>
+                            <Border Grid.Column="0" Style="{StaticResource PulsingIconContainerStyle}" Margin="0,2,8,0" VerticalAlignment="Top"><views:HeaderGlyphIcon Kind="Clock" Width="15" Height="15"/></Border>
+                            <TextBlock Grid.Column="1" TextWrapping="Wrap"><Run Text="{tr:Tr System_Startup}" FontWeight="Bold" Foreground="{DynamicResource TextBrush}"/><Run Text=" — "/><Run Text="{tr:Tr Help_Sys_Startup}" Foreground="{DynamicResource SubTextBrush}"/></TextBlock>
+                        </Grid>
+                        <Grid Margin="0,8,0,0">
+                            <Grid.ColumnDefinitions><ColumnDefinition Width="Auto"/><ColumnDefinition Width="*"/></Grid.ColumnDefinitions>
+                            <Border Grid.Column="0" Style="{StaticResource PulsingIconContainerStyle}" Margin="0,2,8,0" VerticalAlignment="Top"><views:HeaderGlyphIcon Kind="Dial" Width="15" Height="15"/></Border>
+                            <TextBlock Grid.Column="1" TextWrapping="Wrap"><Run Text="{tr:Tr System_Services}" FontWeight="Bold" Foreground="{DynamicResource TextBrush}"/><Run Text=" — "/><Run Text="{tr:Tr Help_Sys_Services}" Foreground="{DynamicResource SubTextBrush}"/></TextBlock>
+                        </Grid>
+                        <Grid Margin="0,8,0,0">
+                            <Grid.ColumnDefinitions><ColumnDefinition Width="Auto"/><ColumnDefinition Width="*"/></Grid.ColumnDefinitions>
+                            <Border Grid.Column="0" Style="{StaticResource PulsingIconContainerStyle}" Margin="0,2,8,0" VerticalAlignment="Top"><views:HeaderGlyphIcon Kind="Clock" Width="15" Height="15"/></Border>
+                            <TextBlock Grid.Column="1" TextWrapping="Wrap"><Run Text="{tr:Tr Advanced_ScheduledTasks}" FontWeight="Bold" Foreground="{DynamicResource TextBrush}"/><Run Text=" — "/><Run Text="{tr:Tr Help_Adv_ScheduledTasks}" Foreground="{DynamicResource SubTextBrush}"/></TextBlock>
+                        </Grid>
+                        <Grid Margin="0,8,0,0">
+                            <Grid.ColumnDefinitions><ColumnDefinition Width="Auto"/><ColumnDefinition Width="*"/></Grid.ColumnDefinitions>
+                            <Border Grid.Column="0" Style="{StaticResource PulsingIconContainerStyle}" Margin="0,2,8,0" VerticalAlignment="Top"><views:HeaderGlyphIcon Kind="Clock" Width="15" Height="15"/></Border>
+                            <TextBlock Grid.Column="1" TextWrapping="Wrap"><Run Text="{tr:Tr Advanced_BootTimeline}" FontWeight="Bold" Foreground="{DynamicResource TextBrush}"/><Run Text=" — "/><Run Text="{tr:Tr Help_Adv_BootTimeline}" Foreground="{DynamicResource SubTextBrush}"/></TextBlock>
+                        </Grid>
                         <Grid Margin="0,14,0,4">
                             <Grid.ColumnDefinitions><ColumnDefinition Width="Auto"/><ColumnDefinition Width="*"/></Grid.ColumnDefinitions>
                             <Border Grid.Column="0" Style="{StaticResource PulsingIconContainerStyle}" Margin="0,0,8,0"><views:HeaderGlyphIcon Kind="Heart" Width="19" Height="19"/></Border>
-                            <TextBlock Grid.Column="1" Text="{tr:Tr Help_HealthTitle}" Style="{StaticResource CardTitleStyle}" VerticalAlignment="Center"/>
-                        </Grid>
-                        <TextBlock Style="{StaticResource SubTextStyle}" TextWrapping="Wrap" Text="{tr:Tr Help_HealthDesc}"/>
-
-                        <Grid Margin="0,10,0,0">
-                            <Grid.ColumnDefinitions><ColumnDefinition Width="Auto"/><ColumnDefinition Width="*"/></Grid.ColumnDefinitions>
-                            <Border Grid.Column="0" Style="{StaticResource PulsingIconContainerStyle}" Margin="0,2,8,0" VerticalAlignment="Top"><views:HeaderGlyphIcon Kind="Disk" Width="15" Height="15"/></Border>
-                            <TextBlock Grid.Column="1" TextWrapping="Wrap"><Run Text="{tr:Tr Health_DiskTrend}" FontWeight="Bold" Foreground="{DynamicResource TextBrush}"/><Run Text=" — "/><Run Text="{tr:Tr Help_Health_DiskTrend}" Foreground="{DynamicResource SubTextBrush}"/></TextBlock>
+                            <TextBlock Grid.Column="1" Text="{tr:Tr TabHealth}" Style="{StaticResource CardTitleStyle}" VerticalAlignment="Center"/>
                         </Grid>
                         <Grid Margin="0,8,0,0">
                             <Grid.ColumnDefinitions><ColumnDefinition Width="Auto"/><ColumnDefinition Width="*"/></Grid.ColumnDefinitions>
@@ -160,42 +249,20 @@
                         </Grid>
                         <Grid Margin="0,8,0,0">
                             <Grid.ColumnDefinitions><ColumnDefinition Width="Auto"/><ColumnDefinition Width="*"/></Grid.ColumnDefinitions>
-                            <Border Grid.Column="0" Style="{StaticResource PulsingIconContainerStyle}" Margin="0,2,8,0" VerticalAlignment="Top"><views:HeaderGlyphIcon Kind="Broom" Width="15" Height="15"/></Border>
-                            <TextBlock Grid.Column="1" TextWrapping="Wrap"><Run Text="{tr:Tr Health_BrowserCache}" FontWeight="Bold" Foreground="{DynamicResource TextBrush}"/><Run Text=" — "/><Run Text="{tr:Tr Help_Health_BrowserCache}" Foreground="{DynamicResource SubTextBrush}"/></TextBlock>
-                        </Grid>
-                        <Grid Margin="0,8,0,0">
-                            <Grid.ColumnDefinitions><ColumnDefinition Width="Auto"/><ColumnDefinition Width="*"/></Grid.ColumnDefinitions>
                             <Border Grid.Column="0" Style="{StaticResource PulsingIconContainerStyle}" Margin="0,2,8,0" VerticalAlignment="Top"><views:HeaderGlyphIcon Kind="Shield" Width="15" Height="15"/></Border>
                             <TextBlock Grid.Column="1" TextWrapping="Wrap"><Run Text="{tr:Tr Health_WinRE}" FontWeight="Bold" Foreground="{DynamicResource TextBrush}"/><Run Text=" — "/><Run Text="{tr:Tr Help_Health_WinRE}" Foreground="{DynamicResource SubTextBrush}"/></TextBlock>
                         </Grid>
-                        <Grid Margin="0,8,0,0">
-                            <Grid.ColumnDefinitions><ColumnDefinition Width="Auto"/><ColumnDefinition Width="*"/></Grid.ColumnDefinitions>
-                            <Border Grid.Column="0" Style="{StaticResource PulsingIconContainerStyle}" Margin="0,2,8,0" VerticalAlignment="Top"><views:HeaderGlyphIcon Kind="Battery" Width="15" Height="15"/></Border>
-                            <TextBlock Grid.Column="1" TextWrapping="Wrap"><Run Text="{tr:Tr Health_BatteryReport}" FontWeight="Bold" Foreground="{DynamicResource TextBrush}"/><Run Text=" — "/><Run Text="{tr:Tr Help_Health_BatteryReport}" Foreground="{DynamicResource SubTextBrush}"/></TextBlock>
-                        </Grid>
-                        <Grid Margin="0,8,0,0">
-                            <Grid.ColumnDefinitions><ColumnDefinition Width="Auto"/><ColumnDefinition Width="*"/></Grid.ColumnDefinitions>
-                            <Border Grid.Column="0" Style="{StaticResource PulsingIconContainerStyle}" Margin="0,2,8,0" VerticalAlignment="Top"><views:HeaderGlyphIcon Kind="Document" Width="15" Height="15"/></Border>
-                            <TextBlock Grid.Column="1" TextWrapping="Wrap"><Run Text="{tr:Tr Health_DiagnosticsZip}" FontWeight="Bold" Foreground="{DynamicResource TextBrush}"/><Run Text=" — "/><Run Text="{tr:Tr Help_Health_DiagnosticsZip}" Foreground="{DynamicResource SubTextBrush}"/></TextBlock>
-                        </Grid>
-
-                        <Grid Margin="0,14,0,4">
-                            <Grid.ColumnDefinitions><ColumnDefinition Width="Auto"/><ColumnDefinition Width="*"/></Grid.ColumnDefinitions>
-                            <Border Grid.Column="0" Style="{StaticResource PulsingIconContainerStyle}" Margin="0,0,8,0"><views:HeaderGlyphIcon Kind="Globe" Width="19" Height="19"/></Border>
-                            <TextBlock Grid.Column="1" Text="{tr:Tr Help_NetworkTitle}" Style="{StaticResource CardTitleStyle}" VerticalAlignment="Center"/>
-                        </Grid>
-                        <TextBlock Style="{StaticResource SubTextStyle}" TextWrapping="Wrap" Text="{tr:Tr Help_NetworkDesc}"/>
-
                         <Grid Margin="0,10,0,0">
                             <Grid.ColumnDefinitions><ColumnDefinition Width="Auto"/><ColumnDefinition Width="*"/></Grid.ColumnDefinitions>
-                            <Border Grid.Column="0" Style="{StaticResource PulsingIconContainerStyle}" Margin="0,2,8,0" VerticalAlignment="Top"><views:HeaderGlyphIcon Kind="SignalBars" Width="15" Height="15"/></Border>
-                            <TextBlock Grid.Column="1" TextWrapping="Wrap"><Run Text="{tr:Tr Network_TrafficPerApp}" FontWeight="Bold" Foreground="{DynamicResource TextBrush}"/><Run Text=" — "/><Run Text="{tr:Tr Help_Net_TrafficPerApp}" Foreground="{DynamicResource SubTextBrush}"/></TextBlock>
+                            <Border Grid.Column="0" Style="{StaticResource PulsingIconContainerStyle}" Margin="0,2,8,0" VerticalAlignment="Top"><views:HeaderGlyphIcon Kind="Disk" Width="15" Height="15"/></Border>
+                            <TextBlock Grid.Column="1" TextWrapping="Wrap"><Run Text="{tr:Tr Health_DiskTrend}" FontWeight="Bold" Foreground="{DynamicResource TextBrush}"/><Run Text=" — "/><Run Text="{tr:Tr Help_Health_DiskTrend}" Foreground="{DynamicResource SubTextBrush}"/></TextBlock>
                         </Grid>
-                        <Grid Margin="0,8,0,0">
+                        <Grid Margin="0,14,0,4">
                             <Grid.ColumnDefinitions><ColumnDefinition Width="Auto"/><ColumnDefinition Width="*"/></Grid.ColumnDefinitions>
-                            <Border Grid.Column="0" Style="{StaticResource PulsingIconContainerStyle}" Margin="0,2,8,0" VerticalAlignment="Top"><views:HeaderGlyphIcon Kind="Globe" Width="15" Height="15"/></Border>
-                            <TextBlock Grid.Column="1" TextWrapping="Wrap"><Run Text="{tr:Tr Help_Net_QuickActionsTitle}" FontWeight="Bold" Foreground="{DynamicResource TextBrush}"/><Run Text=" — "/><Run Text="{tr:Tr Help_Net_QuickActions}" Foreground="{DynamicResource SubTextBrush}"/></TextBlock>
+                            <Border Grid.Column="0" Style="{StaticResource PulsingIconContainerStyle}" Margin="0,0,8,0"><views:HeaderGlyphIcon Kind="Shield" Width="19" Height="19"/></Border>
+                            <TextBlock Grid.Column="1" Text="{tr:Tr TabNetwork}" Style="{StaticResource CardTitleStyle}" VerticalAlignment="Center"/>
                         </Grid>
+                        <TextBlock Text="{tr:Tr Sub_Security}" FontWeight="SemiBold" Foreground="{DynamicResource AccentBrush}" Margin="0,14,0,0"/>
                         <Grid Margin="0,8,0,0">
                             <Grid.ColumnDefinitions><ColumnDefinition Width="Auto"/><ColumnDefinition Width="*"/></Grid.ColumnDefinitions>
                             <Border Grid.Column="0" Style="{StaticResource PulsingIconContainerStyle}" Margin="0,2,8,0" VerticalAlignment="Top"><views:HeaderGlyphIcon Kind="Lock" Width="15" Height="15"/></Border>
@@ -219,6 +286,23 @@
                         </Grid>
                         <Grid Margin="0,8,0,0">
                             <Grid.ColumnDefinitions><ColumnDefinition Width="Auto"/><ColumnDefinition Width="*"/></Grid.ColumnDefinitions>
+                            <Border Grid.Column="0" Style="{StaticResource PulsingIconContainerStyle}" Margin="0,2,8,0" VerticalAlignment="Top"><views:HeaderGlyphIcon Kind="Lock" Width="15" Height="15"/></Border>
+                            <TextBlock Grid.Column="1" TextWrapping="Wrap"><Run Text="{tr:Tr Advanced_Autologon}" FontWeight="Bold" Foreground="{DynamicResource TextBrush}"/><Run Text=" — "/><Run Text="{tr:Tr Help_Adv_Autologon}" Foreground="{DynamicResource SubTextBrush}"/></TextBlock>
+                        </Grid>
+
+                        <TextBlock Text="{tr:Tr Sub_Network}" FontWeight="SemiBold" Foreground="{DynamicResource AccentBrush}" Margin="0,14,0,0"/>
+                        <Grid Margin="0,10,0,0">
+                            <Grid.ColumnDefinitions><ColumnDefinition Width="Auto"/><ColumnDefinition Width="*"/></Grid.ColumnDefinitions>
+                            <Border Grid.Column="0" Style="{StaticResource PulsingIconContainerStyle}" Margin="0,2,8,0" VerticalAlignment="Top"><views:HeaderGlyphIcon Kind="SignalBars" Width="15" Height="15"/></Border>
+                            <TextBlock Grid.Column="1" TextWrapping="Wrap"><Run Text="{tr:Tr Network_TrafficPerApp}" FontWeight="Bold" Foreground="{DynamicResource TextBrush}"/><Run Text=" — "/><Run Text="{tr:Tr Help_Net_TrafficPerApp}" Foreground="{DynamicResource SubTextBrush}"/></TextBlock>
+                        </Grid>
+                        <Grid Margin="0,8,0,0">
+                            <Grid.ColumnDefinitions><ColumnDefinition Width="Auto"/><ColumnDefinition Width="*"/></Grid.ColumnDefinitions>
+                            <Border Grid.Column="0" Style="{StaticResource PulsingIconContainerStyle}" Margin="0,2,8,0" VerticalAlignment="Top"><views:HeaderGlyphIcon Kind="Globe" Width="15" Height="15"/></Border>
+                            <TextBlock Grid.Column="1" TextWrapping="Wrap"><Run Text="{tr:Tr Help_Net_QuickActionsTitle}" FontWeight="Bold" Foreground="{DynamicResource TextBrush}"/><Run Text=" — "/><Run Text="{tr:Tr Help_Net_QuickActions}" Foreground="{DynamicResource SubTextBrush}"/></TextBlock>
+                        </Grid>
+                        <Grid Margin="0,8,0,0">
+                            <Grid.ColumnDefinitions><ColumnDefinition Width="Auto"/><ColumnDefinition Width="*"/></Grid.ColumnDefinitions>
                             <Border Grid.Column="0" Style="{StaticResource PulsingIconContainerStyle}" Margin="0,2,8,0" VerticalAlignment="Top"><views:HeaderGlyphIcon Kind="SignalBars" Width="15" Height="15"/></Border>
                             <TextBlock Grid.Column="1" TextWrapping="Wrap"><Run Text="{tr:Tr Network_QuickDns}" FontWeight="Bold" Foreground="{DynamicResource TextBrush}"/><Run Text=" — "/><Run Text="{tr:Tr Help_Net_QuickDns}" Foreground="{DynamicResource SubTextBrush}"/></TextBlock>
                         </Grid>
@@ -228,10 +312,23 @@
                             <TextBlock Grid.Column="1" TextWrapping="Wrap"><Run Text="{tr:Tr Network_HostsEditor}" FontWeight="Bold" Foreground="{DynamicResource TextBrush}"/><Run Text=" — "/><Run Text="{tr:Tr Help_Net_HostsEditor}" Foreground="{DynamicResource SubTextBrush}"/></TextBlock>
                         </Grid>
 
+                        <!-- 6.1.0 - νέες καρτέλες και Κέντρο Συντήρησης -->
+                        <Grid Margin="0,14,0,4">
+                            <Grid.ColumnDefinitions><ColumnDefinition Width="Auto"/><ColumnDefinition Width="*"/></Grid.ColumnDefinitions>
+                            <Border Grid.Column="0" Style="{StaticResource PulsingIconContainerStyle}" Margin="0,0,8,0"><views:HeaderGlyphIcon Kind="Gamepad" Width="19" Height="19"/></Border>
+                            <TextBlock Grid.Column="1" Text="{tr:Tr Help_GamesTitle}" Style="{StaticResource CardTitleStyle}" VerticalAlignment="Center"/>
+                        </Grid>
+                        <TextBlock Style="{StaticResource SubTextStyle}" TextWrapping="Wrap" Text="{tr:Tr Help_GamesDesc}"/>
+                        <Grid Margin="0,14,0,4">
+                            <Grid.ColumnDefinitions><ColumnDefinition Width="Auto"/><ColumnDefinition Width="*"/></Grid.ColumnDefinitions>
+                            <Border Grid.Column="0" Style="{StaticResource PulsingIconContainerStyle}" Margin="0,0,8,0"><views:HeaderGlyphIcon Kind="Play" Width="19" Height="19"/></Border>
+                            <TextBlock Grid.Column="1" Text="{tr:Tr Help_MediaTitle}" Style="{StaticResource CardTitleStyle}" VerticalAlignment="Center"/>
+                        </Grid>
+                        <TextBlock Style="{StaticResource SubTextStyle}" TextWrapping="Wrap" Text="{tr:Tr Help_MediaDesc}"/>
                         <Grid Margin="0,14,0,4">
                             <Grid.ColumnDefinitions><ColumnDefinition Width="Auto"/><ColumnDefinition Width="*"/></Grid.ColumnDefinitions>
                             <Border Grid.Column="0" Style="{StaticResource PulsingIconContainerStyle}" Margin="0,0,8,0"><views:HeaderGlyphIcon Kind="Wrench" Width="19" Height="19"/></Border>
-                            <TextBlock Grid.Column="1" Text="{tr:Tr Help_TweaksTitle}" Style="{StaticResource CardTitleStyle}" VerticalAlignment="Center"/>
+                            <TextBlock Grid.Column="1" Text="{tr:Tr TabTweaks}" Style="{StaticResource CardTitleStyle}" VerticalAlignment="Center"/>
                         </Grid>
                         <TextBlock Style="{StaticResource SubTextStyle}" TextWrapping="Wrap" Text="{tr:Tr Help_TweaksDesc}"/>
 
@@ -268,39 +365,54 @@
 
                         <Grid Margin="0,14,0,4">
                             <Grid.ColumnDefinitions><ColumnDefinition Width="Auto"/><ColumnDefinition Width="*"/></Grid.ColumnDefinitions>
-                            <Border Grid.Column="0" Style="{StaticResource PulsingIconContainerStyle}" Margin="0,0,8,0"><views:HeaderGlyphIcon Kind="Broom" Width="19" Height="19"/></Border>
-                            <TextBlock Grid.Column="1" Text="{tr:Tr Help_BloatwareTitle}" Style="{StaticResource CardTitleStyle}" VerticalAlignment="Center"/>
+                            <Border Grid.Column="0" Style="{StaticResource PulsingIconContainerStyle}" Margin="0,0,8,0"><views:HeaderGlyphIcon Kind="Document" Width="19" Height="19"/></Border>
+                            <TextBlock Grid.Column="1" Text="{tr:Tr TabAdvanced}" Style="{StaticResource CardTitleStyle}" VerticalAlignment="Center"/>
                         </Grid>
-                        <TextBlock Style="{StaticResource SubTextStyle}" TextWrapping="Wrap" Text="{tr:Tr Help_BloatwareDesc}"/>
-
+                        <TextBlock Text="{tr:Tr Sub_Reports}" FontWeight="SemiBold" Foreground="{DynamicResource AccentBrush}" Margin="0,14,0,0"/>
                         <Grid Margin="0,10,0,0">
                             <Grid.ColumnDefinitions><ColumnDefinition Width="Auto"/><ColumnDefinition Width="*"/></Grid.ColumnDefinitions>
-                            <Border Grid.Column="0" Style="{StaticResource PulsingIconContainerStyle}" Margin="0,2,8,0" VerticalAlignment="Top"><views:HeaderGlyphIcon Kind="Package" Width="15" Height="15"/></Border>
-                            <TextBlock Grid.Column="1" TextWrapping="Wrap"><Run Text="{tr:Tr Bloatware_Builtin}" FontWeight="Bold" Foreground="{DynamicResource TextBrush}"/><Run Text=" — "/><Run Text="{tr:Tr Help_Bloat_Builtin}" Foreground="{DynamicResource SubTextBrush}"/></TextBlock>
+                            <Border Grid.Column="0" Style="{StaticResource PulsingIconContainerStyle}" Margin="0,2,8,0" VerticalAlignment="Top"><views:HeaderGlyphIcon Kind="Document" Width="15" Height="15"/></Border>
+                            <TextBlock Grid.Column="1" TextWrapping="Wrap"><Run Text="{tr:Tr Reports_Title}" FontWeight="Bold" Foreground="{DynamicResource TextBrush}"/><Run Text=" — "/><Run Text="{tr:Tr Help_Reports}" Foreground="{DynamicResource SubTextBrush}"/></TextBlock>
                         </Grid>
                         <Grid Margin="0,8,0,0">
                             <Grid.ColumnDefinitions><ColumnDefinition Width="Auto"/><ColumnDefinition Width="*"/></Grid.ColumnDefinitions>
-                            <Border Grid.Column="0" Style="{StaticResource PulsingIconContainerStyle}" Margin="0,2,8,0" VerticalAlignment="Top"><views:HeaderGlyphIcon Kind="Phone" Width="15" Height="15"/></Border>
-                            <TextBlock Grid.Column="1" TextWrapping="Wrap"><Run Text="{tr:Tr Bloatware_Recommended}" FontWeight="Bold" Foreground="{DynamicResource TextBrush}"/><Run Text=" — "/><Run Text="{tr:Tr Help_Bloat_Recommended}" Foreground="{DynamicResource SubTextBrush}"/></TextBlock>
+                            <Border Grid.Column="0" Style="{StaticResource PulsingIconContainerStyle}" Margin="0,2,8,0" VerticalAlignment="Top"><views:HeaderGlyphIcon Kind="Battery" Width="15" Height="15"/></Border>
+                            <TextBlock Grid.Column="1" TextWrapping="Wrap"><Run Text="{tr:Tr Health_BatteryReport}" FontWeight="Bold" Foreground="{DynamicResource TextBrush}"/><Run Text=" — "/><Run Text="{tr:Tr Help_Health_BatteryReport}" Foreground="{DynamicResource SubTextBrush}"/></TextBlock>
                         </Grid>
                         <Grid Margin="0,8,0,0">
                             <Grid.ColumnDefinitions><ColumnDefinition Width="Auto"/><ColumnDefinition Width="*"/></Grid.ColumnDefinitions>
-                            <Border Grid.Column="0" Style="{StaticResource PulsingIconContainerStyle}" Margin="0,2,8,0" VerticalAlignment="Top"><views:HeaderGlyphIcon Kind="Tools" Width="15" Height="15"/></Border>
-                            <TextBlock Grid.Column="1" TextWrapping="Wrap"><Run Text="{tr:Tr Bloatware_UwpManager}" FontWeight="Bold" Foreground="{DynamicResource TextBrush}"/><Run Text=" — "/><Run Text="{tr:Tr Help_Bloat_UwpManager}" Foreground="{DynamicResource SubTextBrush}"/></TextBlock>
-                        </Grid>
-                        <Grid Margin="0,8,0,0">
-                            <Grid.ColumnDefinitions><ColumnDefinition Width="Auto"/><ColumnDefinition Width="*"/></Grid.ColumnDefinitions>
-                            <Border Grid.Column="0" Style="{StaticResource PulsingIconContainerStyle}" Margin="0,2,8,0" VerticalAlignment="Top"><views:HeaderGlyphIcon Kind="Phone" Width="15" Height="15"/></Border>
-                            <TextBlock Grid.Column="1" TextWrapping="Wrap"><Run Text="{tr:Tr Bloatware_DeepUninstall}" FontWeight="Bold" Foreground="{DynamicResource TextBrush}"/><Run Text=" — "/><Run Text="{tr:Tr Help_Bloat_DeepUninstall}" Foreground="{DynamicResource SubTextBrush}"/></TextBlock>
+                            <Border Grid.Column="0" Style="{StaticResource PulsingIconContainerStyle}" Margin="0,2,8,0" VerticalAlignment="Top"><views:HeaderGlyphIcon Kind="Document" Width="15" Height="15"/></Border>
+                            <TextBlock Grid.Column="1" TextWrapping="Wrap"><Run Text="{tr:Tr Health_DiagnosticsZip}" FontWeight="Bold" Foreground="{DynamicResource TextBrush}"/><Run Text=" — "/><Run Text="{tr:Tr Help_Health_DiagnosticsZip}" Foreground="{DynamicResource SubTextBrush}"/></TextBlock>
                         </Grid>
 
+                        <TextBlock Text="{tr:Tr Sub_Backups}" FontWeight="SemiBold" Foreground="{DynamicResource AccentBrush}" Margin="0,14,0,0"/>
+                        <Grid Margin="0,8,0,0">
+                            <Grid.ColumnDefinitions><ColumnDefinition Width="Auto"/><ColumnDefinition Width="*"/></Grid.ColumnDefinitions>
+                            <Border Grid.Column="0" Style="{StaticResource PulsingIconContainerStyle}" Margin="0,2,8,0" VerticalAlignment="Top"><views:HeaderGlyphIcon Kind="Clock" Width="15" Height="15"/></Border>
+                            <TextBlock Grid.Column="1" TextWrapping="Wrap"><Run Text="{tr:Tr System_RestorePoints}" FontWeight="Bold" Foreground="{DynamicResource TextBrush}"/><Run Text=" — "/><Run Text="{tr:Tr Help_Sys_RestorePoints}" Foreground="{DynamicResource SubTextBrush}"/></TextBlock>
+                        </Grid>
+                        <Grid Margin="0,10,0,0">
+                            <Grid.ColumnDefinitions><ColumnDefinition Width="Auto"/><ColumnDefinition Width="*"/></Grid.ColumnDefinitions>
+                            <Border Grid.Column="0" Style="{StaticResource PulsingIconContainerStyle}" Margin="0,2,8,0" VerticalAlignment="Top"><views:HeaderGlyphIcon Kind="Clock" Width="15" Height="15"/></Border>
+                            <TextBlock Grid.Column="1" TextWrapping="Wrap"><Run Text="{tr:Tr Health_RegBackupHistory}" FontWeight="Bold" Foreground="{DynamicResource TextBrush}"/><Run Text=" — "/><Run Text="{tr:Tr Help_Health_RegBackup}" Foreground="{DynamicResource SubTextBrush}"/></TextBlock>
+                        </Grid>
+                        <Grid Margin="0,8,0,0">
+                            <Grid.ColumnDefinitions><ColumnDefinition Width="Auto"/><ColumnDefinition Width="*"/></Grid.ColumnDefinitions>
+                            <Border Grid.Column="0" Style="{StaticResource PulsingIconContainerStyle}" Margin="0,2,8,0" VerticalAlignment="Top"><views:HeaderGlyphIcon Kind="Document" Width="15" Height="15"/></Border>
+                            <TextBlock Grid.Column="1" TextWrapping="Wrap"><Run Text="{tr:Tr Optimization_DriverBackup}" FontWeight="Bold" Foreground="{DynamicResource TextBrush}"/><Run Text=" — "/><Run Text="{tr:Tr Help_Opt_DriverBackup}" Foreground="{DynamicResource SubTextBrush}"/></TextBlock>
+                        </Grid>
                         <Grid Margin="0,14,0,4">
                             <Grid.ColumnDefinitions><ColumnDefinition Width="Auto"/><ColumnDefinition Width="*"/></Grid.ColumnDefinitions>
-                            <Border Grid.Column="0" Style="{StaticResource PulsingIconContainerStyle}" Margin="0,0,8,0"><views:HeaderGlyphIcon Kind="Tools" Width="19" Height="19"/></Border>
-                            <TextBlock Grid.Column="1" Text="{tr:Tr Help_AdvancedTitle}" Style="{StaticResource CardTitleStyle}" VerticalAlignment="Center"/>
+                            <Border Grid.Column="0" Style="{StaticResource PulsingIconContainerStyle}" Margin="0,0,8,0"><views:HeaderGlyphIcon Kind="Monitor" Width="19" Height="19"/></Border>
+                            <TextBlock Grid.Column="1" Text="{tr:Tr TabSystem}" Style="{StaticResource CardTitleStyle}" VerticalAlignment="Center"/>
                         </Grid>
-                        <TextBlock Style="{StaticResource SubTextStyle}" TextWrapping="Wrap" Text="{tr:Tr Help_AdvancedDesc}"/>
-
+                        <TextBlock Text="{tr:Tr Sub_Info}" FontWeight="SemiBold" Foreground="{DynamicResource AccentBrush}" Margin="0,14,0,0"/>
+                        <Grid Margin="0,10,0,0">
+                            <Grid.ColumnDefinitions><ColumnDefinition Width="Auto"/><ColumnDefinition Width="*"/></Grid.ColumnDefinitions>
+                            <Border Grid.Column="0" Style="{StaticResource PulsingIconContainerStyle}" Margin="0,2,8,0" VerticalAlignment="Top"><views:HeaderGlyphIcon Kind="Monitor" Width="15" Height="15"/></Border>
+                            <TextBlock Grid.Column="1" TextWrapping="Wrap"><Run Text="{tr:Tr Sys_InfoHeader}" FontWeight="Bold" Foreground="{DynamicResource TextBrush}"/><Run Text=" — "/><Run Text="{tr:Tr Help_Sys_MyDevice}" Foreground="{DynamicResource SubTextBrush}"/></TextBlock>
+                        </Grid>
+                        <TextBlock Text="{tr:Tr Sub_Tools}" FontWeight="SemiBold" Foreground="{DynamicResource AccentBrush}" Margin="0,14,0,0"/>
                         <Grid Margin="0,10,0,0">
                             <Grid.ColumnDefinitions><ColumnDefinition Width="Auto"/><ColumnDefinition Width="*"/></Grid.ColumnDefinitions>
                             <Border Grid.Column="0" Style="{StaticResource PulsingIconContainerStyle}" Margin="0,2,8,0" VerticalAlignment="Top"><views:HeaderGlyphIcon Kind="Wrench" Width="15" Height="15"/></Border>
@@ -311,89 +423,6 @@
                             <Border Grid.Column="0" Style="{StaticResource PulsingIconContainerStyle}" Margin="0,2,8,0" VerticalAlignment="Top"><views:HeaderGlyphIcon Kind="Tools" Width="15" Height="15"/></Border>
                             <TextBlock Grid.Column="1" TextWrapping="Wrap"><Run Text="{tr:Tr Advanced_Toolbox}" FontWeight="Bold" Foreground="{DynamicResource TextBrush}"/><Run Text=" — "/><Run Text="{tr:Tr Help_Adv_Toolbox}" Foreground="{DynamicResource SubTextBrush}"/></TextBlock>
                         </Grid>
-                        <Grid Margin="0,8,0,0">
-                            <Grid.ColumnDefinitions><ColumnDefinition Width="Auto"/><ColumnDefinition Width="*"/></Grid.ColumnDefinitions>
-                            <Border Grid.Column="0" Style="{StaticResource PulsingIconContainerStyle}" Margin="0,2,8,0" VerticalAlignment="Top"><views:HeaderGlyphIcon Kind="Wrench" Width="15" Height="15"/></Border>
-                            <TextBlock Grid.Column="1" TextWrapping="Wrap"><Run Text="{tr:Tr Advanced_OptionalFeatures}" FontWeight="Bold" Foreground="{DynamicResource TextBrush}"/><Run Text=" — "/><Run Text="{tr:Tr Help_Adv_OptionalFeatures}" Foreground="{DynamicResource SubTextBrush}"/></TextBlock>
-                        </Grid>
-                        <Grid Margin="0,8,0,0">
-                            <Grid.ColumnDefinitions><ColumnDefinition Width="Auto"/><ColumnDefinition Width="*"/></Grid.ColumnDefinitions>
-                            <Border Grid.Column="0" Style="{StaticResource PulsingIconContainerStyle}" Margin="0,2,8,0" VerticalAlignment="Top"><views:HeaderGlyphIcon Kind="Wrench" Width="15" Height="15"/></Border>
-                            <TextBlock Grid.Column="1" TextWrapping="Wrap"><Run Text="{tr:Tr Advanced_GhostDevices}" FontWeight="Bold" Foreground="{DynamicResource TextBrush}"/><Run Text=" — "/><Run Text="{tr:Tr Help_Adv_GhostDevices}" Foreground="{DynamicResource SubTextBrush}"/></TextBlock>
-                        </Grid>
-                        <Grid Margin="0,8,0,0">
-                            <Grid.ColumnDefinitions><ColumnDefinition Width="Auto"/><ColumnDefinition Width="*"/></Grid.ColumnDefinitions>
-                            <Border Grid.Column="0" Style="{StaticResource PulsingIconContainerStyle}" Margin="0,2,8,0" VerticalAlignment="Top"><views:HeaderGlyphIcon Kind="Clock" Width="15" Height="15"/></Border>
-                            <TextBlock Grid.Column="1" TextWrapping="Wrap"><Run Text="{tr:Tr Advanced_ScheduledTasks}" FontWeight="Bold" Foreground="{DynamicResource TextBrush}"/><Run Text=" — "/><Run Text="{tr:Tr Help_Adv_ScheduledTasks}" Foreground="{DynamicResource SubTextBrush}"/></TextBlock>
-                        </Grid>
-                        <Grid Margin="0,8,0,0">
-                            <Grid.ColumnDefinitions><ColumnDefinition Width="Auto"/><ColumnDefinition Width="*"/></Grid.ColumnDefinitions>
-                            <Border Grid.Column="0" Style="{StaticResource PulsingIconContainerStyle}" Margin="0,2,8,0" VerticalAlignment="Top"><views:HeaderGlyphIcon Kind="Clock" Width="15" Height="15"/></Border>
-                            <TextBlock Grid.Column="1" TextWrapping="Wrap"><Run Text="{tr:Tr Advanced_BootTimeline}" FontWeight="Bold" Foreground="{DynamicResource TextBrush}"/><Run Text=" — "/><Run Text="{tr:Tr Help_Adv_BootTimeline}" Foreground="{DynamicResource SubTextBrush}"/></TextBlock>
-                        </Grid>
-                        <Grid Margin="0,8,0,0">
-                            <Grid.ColumnDefinitions><ColumnDefinition Width="Auto"/><ColumnDefinition Width="*"/></Grid.ColumnDefinitions>
-                            <Border Grid.Column="0" Style="{StaticResource PulsingIconContainerStyle}" Margin="0,2,8,0" VerticalAlignment="Top"><views:HeaderGlyphIcon Kind="Lock" Width="15" Height="15"/></Border>
-                            <TextBlock Grid.Column="1" TextWrapping="Wrap"><Run Text="{tr:Tr Advanced_Autologon}" FontWeight="Bold" Foreground="{DynamicResource TextBrush}"/><Run Text=" — "/><Run Text="{tr:Tr Help_Adv_Autologon}" Foreground="{DynamicResource SubTextBrush}"/></TextBlock>
-                        </Grid>
-
-                        <Grid Margin="0,14,0,4">
-                            <Grid.ColumnDefinitions><ColumnDefinition Width="Auto"/><ColumnDefinition Width="*"/></Grid.ColumnDefinitions>
-                            <Border Grid.Column="0" Style="{StaticResource PulsingIconContainerStyle}" Margin="0,0,8,0"><views:HeaderGlyphIcon Kind="Monitor" Width="19" Height="19"/></Border>
-                            <TextBlock Grid.Column="1" Text="{tr:Tr Help_SystemTitle}" Style="{StaticResource CardTitleStyle}" VerticalAlignment="Center"/>
-                        </Grid>
-                        <TextBlock Style="{StaticResource SubTextStyle}" TextWrapping="Wrap" Text="{tr:Tr Help_SystemDesc}"/>
-                        <Grid Margin="0,10,0,0">
-                            <Grid.ColumnDefinitions><ColumnDefinition Width="Auto"/><ColumnDefinition Width="*"/></Grid.ColumnDefinitions>
-                            <Border Grid.Column="0" Style="{StaticResource PulsingIconContainerStyle}" Margin="0,2,8,0" VerticalAlignment="Top"><views:HeaderGlyphIcon Kind="Monitor" Width="15" Height="15"/></Border>
-                            <TextBlock Grid.Column="1" TextWrapping="Wrap"><Run Text="{tr:Tr Sys_InfoHeader}" FontWeight="Bold" Foreground="{DynamicResource TextBrush}"/><Run Text=" — "/><Run Text="{tr:Tr Help_Sys_MyDevice}" Foreground="{DynamicResource SubTextBrush}"/></TextBlock>
-                        </Grid>
-                        <Grid Margin="0,8,0,0">
-                            <Grid.ColumnDefinitions><ColumnDefinition Width="Auto"/><ColumnDefinition Width="*"/></Grid.ColumnDefinitions>
-                            <Border Grid.Column="0" Style="{StaticResource PulsingIconContainerStyle}" Margin="0,2,8,0" VerticalAlignment="Top"><views:HeaderGlyphIcon Kind="Clock" Width="15" Height="15"/></Border>
-                            <TextBlock Grid.Column="1" TextWrapping="Wrap"><Run Text="{tr:Tr System_Startup}" FontWeight="Bold" Foreground="{DynamicResource TextBrush}"/><Run Text=" — "/><Run Text="{tr:Tr Help_Sys_Startup}" Foreground="{DynamicResource SubTextBrush}"/></TextBlock>
-                        </Grid>
-                        <Grid Margin="0,8,0,0">
-                            <Grid.ColumnDefinitions><ColumnDefinition Width="Auto"/><ColumnDefinition Width="*"/></Grid.ColumnDefinitions>
-                            <Border Grid.Column="0" Style="{StaticResource PulsingIconContainerStyle}" Margin="0,2,8,0" VerticalAlignment="Top"><views:HeaderGlyphIcon Kind="Brain" Width="15" Height="15"/></Border>
-                            <TextBlock Grid.Column="1" TextWrapping="Wrap"><Run Text="{tr:Tr System_Processes}" FontWeight="Bold" Foreground="{DynamicResource TextBrush}"/><Run Text=" — "/><Run Text="{tr:Tr Help_Sys_Processes}" Foreground="{DynamicResource SubTextBrush}"/></TextBlock>
-                        </Grid>
-                        <Grid Margin="0,8,0,0">
-                            <Grid.ColumnDefinitions><ColumnDefinition Width="Auto"/><ColumnDefinition Width="*"/></Grid.ColumnDefinitions>
-                            <Border Grid.Column="0" Style="{StaticResource PulsingIconContainerStyle}" Margin="0,2,8,0" VerticalAlignment="Top"><views:HeaderGlyphIcon Kind="Disk" Width="15" Height="15"/></Border>
-                            <TextBlock Grid.Column="1" TextWrapping="Wrap"><Run Text="{tr:Tr System_Storage}" FontWeight="Bold" Foreground="{DynamicResource TextBrush}"/><Run Text=" — "/><Run Text="{tr:Tr Help_Sys_Storage}" Foreground="{DynamicResource SubTextBrush}"/></TextBlock>
-                        </Grid>
-                        <Grid Margin="0,8,0,0">
-                            <Grid.ColumnDefinitions><ColumnDefinition Width="Auto"/><ColumnDefinition Width="*"/></Grid.ColumnDefinitions>
-                            <Border Grid.Column="0" Style="{StaticResource PulsingIconContainerStyle}" Margin="0,2,8,0" VerticalAlignment="Top"><views:HeaderGlyphIcon Kind="Clock" Width="15" Height="15"/></Border>
-                            <TextBlock Grid.Column="1" TextWrapping="Wrap"><Run Text="{tr:Tr System_RestorePoints}" FontWeight="Bold" Foreground="{DynamicResource TextBrush}"/><Run Text=" — "/><Run Text="{tr:Tr Help_Sys_RestorePoints}" Foreground="{DynamicResource SubTextBrush}"/></TextBlock>
-                        </Grid>
-                        <Grid Margin="0,8,0,0">
-                            <Grid.ColumnDefinitions><ColumnDefinition Width="Auto"/><ColumnDefinition Width="*"/></Grid.ColumnDefinitions>
-                            <Border Grid.Column="0" Style="{StaticResource PulsingIconContainerStyle}" Margin="0,2,8,0" VerticalAlignment="Top"><views:HeaderGlyphIcon Kind="Dial" Width="15" Height="15"/></Border>
-                            <TextBlock Grid.Column="1" TextWrapping="Wrap"><Run Text="{tr:Tr System_Services}" FontWeight="Bold" Foreground="{DynamicResource TextBrush}"/><Run Text=" — "/><Run Text="{tr:Tr Help_Sys_Services}" Foreground="{DynamicResource SubTextBrush}"/></TextBlock>
-                        </Grid>
-                        <Grid Margin="0,8,0,0">
-                            <Grid.ColumnDefinitions><ColumnDefinition Width="Auto"/><ColumnDefinition Width="*"/></Grid.ColumnDefinitions>
-                            <Border Grid.Column="0" Style="{StaticResource PulsingIconContainerStyle}" Margin="0,2,8,0" VerticalAlignment="Top"><views:HeaderGlyphIcon Kind="Disk" Width="15" Height="15"/></Border>
-                            <TextBlock Grid.Column="1" TextWrapping="Wrap"><Run Text="{tr:Tr System_Benchmark}" FontWeight="Bold" Foreground="{DynamicResource TextBrush}"/><Run Text=" — "/><Run Text="{tr:Tr Help_Sys_Benchmark}" Foreground="{DynamicResource SubTextBrush}"/></TextBlock>
-                        </Grid>
-
-                        <TextBlock Style="{StaticResource SubTextStyle}" TextWrapping="Wrap" FontStyle="Italic" Margin="0,10,0,0" Text="{tr:Tr Help_MovedNote}"/>
-
-                        <!-- 6.1.0 - νέες καρτέλες και Κέντρο Συντήρησης -->
-                        <Grid Margin="0,14,0,4">
-                            <Grid.ColumnDefinitions><ColumnDefinition Width="Auto"/><ColumnDefinition Width="*"/></Grid.ColumnDefinitions>
-                            <Border Grid.Column="0" Style="{StaticResource PulsingIconContainerStyle}" Margin="0,0,8,0"><views:HeaderGlyphIcon Kind="Gamepad" Width="19" Height="19"/></Border>
-                            <TextBlock Grid.Column="1" Text="{tr:Tr Help_GamesTitle}" Style="{StaticResource CardTitleStyle}" VerticalAlignment="Center"/>
-                        </Grid>
-                        <TextBlock Style="{StaticResource SubTextStyle}" TextWrapping="Wrap" Text="{tr:Tr Help_GamesDesc}"/>
-                        <Grid Margin="0,14,0,4">
-                            <Grid.ColumnDefinitions><ColumnDefinition Width="Auto"/><ColumnDefinition Width="*"/></Grid.ColumnDefinitions>
-                            <Border Grid.Column="0" Style="{StaticResource PulsingIconContainerStyle}" Margin="0,0,8,0"><views:HeaderGlyphIcon Kind="Play" Width="19" Height="19"/></Border>
-                            <TextBlock Grid.Column="1" Text="{tr:Tr Help_MediaTitle}" Style="{StaticResource CardTitleStyle}" VerticalAlignment="Center"/>
-                        </Grid>
-                        <TextBlock Style="{StaticResource SubTextStyle}" TextWrapping="Wrap" Text="{tr:Tr Help_MediaDesc}"/>
                         <Grid Margin="0,14,0,4">
                             <Grid.ColumnDefinitions><ColumnDefinition Width="Auto"/><ColumnDefinition Width="*"/></Grid.ColumnDefinitions>
                             <Border Grid.Column="0" Style="{StaticResource PulsingIconContainerStyle}" Margin="0,0,8,0"><views:HeaderGlyphIcon Kind="Shield" Width="19" Height="19"/></Border>
@@ -459,10 +488,13 @@
 
                         <Border Background="{DynamicResource AccentBrush}" CornerRadius="6" Padding="12" Margin="0,0,0,16">
                             <StackPanel>
-                                <TextBlock Text="{tr:Tr VerHist_651Title}" FontWeight="Bold" Foreground="White" FontSize="14" Margin="0,0,0,6"/>
-                                <TextBlock Foreground="White" TextWrapping="Wrap" Opacity="0.95" Text="{tr:Tr VerHist_651Desc}"/>
+                                <TextBlock Text="{tr:Tr VerHist_652Title}" FontWeight="Bold" Foreground="White" FontSize="14" Margin="0,0,0,6"/>
+                                <TextBlock Foreground="White" TextWrapping="Wrap" Opacity="0.95" Text="{tr:Tr VerHist_652Desc}"/>
                             </StackPanel>
                         </Border>
+
+                        <TextBlock Text="{tr:Tr VerHist_651Title}" Style="{StaticResource CardTitleStyle}" Margin="0,0,0,4"/>
+                        <TextBlock Style="{StaticResource SubTextStyle}" TextWrapping="Wrap" Text="{tr:Tr VerHist_651Desc}" Margin="0,0,0,14"/>
 
                         <TextBlock Text="{tr:Tr VerHist_650Title}" Style="{StaticResource CardTitleStyle}" Margin="0,0,0,4"/>
                         <TextBlock Style="{StaticResource SubTextStyle}" TextWrapping="Wrap" Text="{tr:Tr VerHist_650Desc}" Margin="0,0,0,14"/>

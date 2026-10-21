@@ -55,6 +55,13 @@ namespace OptimizerWpf.Services
             ["Microsoft.DotNet.DesktopRuntime.8"] = "microsoft.com",
             ["Microsoft.DirectX"] = "microsoft.com",
             ["Microsoft.VCRedist.2015+.x64"] = "microsoft.com",
+            // 6.5.2 - προτεινόμενες εφαρμογές που δεν είχαν καθόλου domain (άρα ούτε λογότυπο): Brave, OBS, Telegram, Everything, ShareX, LibreOffice.
+            ["BraveSoftware.BraveBrowser"] = "brave.com",
+            ["OBSProject.OBSStudio"] = "obsproject.com",
+            ["Telegram.TelegramDesktop"] = "telegram.org",
+            ["voidtools.Everything"] = "voidtools.com",
+            ["ShareX.ShareX"] = "getsharex.com",
+            ["TheDocumentFoundation.LibreOffice"] = "libreoffice.org",
             // Browsers (Health tab - Καθαρισμός Cache Περιηγητών)
             ["Chrome"] = "google.com",
             ["Edge"] = "microsoft.com",
@@ -68,6 +75,9 @@ namespace OptimizerWpf.Services
         // "placeholder" εικονίδιο - χωρίς αυτόν τον έλεγχο, ένα τέτοιο placeholder αποθηκευόταν ΜΟΝΙΜΑ
         // στο cache σαν να ήταν επιτυχία, και ΠΟΤΕ δεν ξαναδοκιμαζόταν.
         private const int MinValidIconBytes = 300;
+
+        // true αν υπάρχει γνωστό επίσημο domain για το κλειδί (χωρίς domain η εφαρμογή δεν θα είχε ΠΟΤΕ λογότυπο).
+        public static bool HasLogoSource(string key) => DomainByKey.ContainsKey(key);
 
         public static async Task<ImageSource?> GetLogoAsync(string key)
         {

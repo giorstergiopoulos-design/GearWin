@@ -40,6 +40,12 @@ namespace OptimizerWpf
         // εφαρμογή τετράγωνων γωνιών (Windows Classic skin) χρειάζεται ΚΑΘΕ παράθυρο, ανεξάρτητα από
         // το αν έχει ΚΑΙ ThemedBackgroundControl - διαχωρίστηκε σε δικό του σημείο σύνδεσης ώστε τα
         // δευτερεύοντα παράθυρα (που έχασαν το animated background τους) να το καλούν απευθείας.
+        private static void OnWindowThread(System.Windows.Threading.DispatcherObject target, Action action)
+        {
+            if (target.Dispatcher.CheckAccess()) action();
+            else target.Dispatcher.BeginInvoke(action);
+        }
+
         public static void AttachWindow(Window window)
         {
             void ApplyCorners()
@@ -48,7 +54,9 @@ namespace OptimizerWpf
                 Services.WindowCornerService.SetDarkTitleBar(window, IsDarkMode);
             }
             window.SourceInitialized += (_, _) => ApplyCorners();
-            void OnChanged() => ApplyCorners();
+            // Οι συνδρομητές είναι στατικοί: αν η αλλαγή θέματος/γλώσσας γίνει από ΑΛΛΟ thread (ή το παράθυρο ανήκει σε thread που έληξε),
+            // η εφαρμογή γίνεται στο thread του παραθύρου αντί να πετάξει "different thread owns it".
+            void OnChanged() => OnWindowThread(window, ApplyCorners);
             Changed += OnChanged;
             window.Closed += (_, _) => Changed -= OnChanged;
 
@@ -61,7 +69,7 @@ namespace OptimizerWpf
             // ανοιχτό ένα δευτερεύον παράθυρο).
             void ApplyFlowDirection() => window.FlowDirection = LanguageService.Current == "ar" ? FlowDirection.RightToLeft : FlowDirection.LeftToRight;
             ApplyFlowDirection();
-            void OnLanguageChanged() => ApplyFlowDirection();
+            void OnLanguageChanged() => OnWindowThread(window, ApplyFlowDirection);
             LanguageService.Changed += OnLanguageChanged;
             window.Closed += (_, _) => LanguageService.Changed -= OnLanguageChanged;
         }
@@ -115,8 +123,9 @@ namespace OptimizerWpf
                 control.ApplyTheme(style, IsDarkMode, AnimatedBackgrounds);
             }
             Apply();
-            Changed += Apply;
-            control.Unloaded += (_, _) => Changed -= Apply;
+            void OnThemeChanged() => OnWindowThread(control, Apply);
+            Changed += OnThemeChanged;
+            control.Unloaded += (_, _) => Changed -= OnThemeChanged;
         }
 
         // ΔΙΟΡΘΩΣΗ (ρητό αίτημα χρήστη: "ολοκλήρωσε τη μεταφορά") - το θέμα επανερχόταν πάντα σε
