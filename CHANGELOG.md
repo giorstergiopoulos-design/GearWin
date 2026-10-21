@@ -6,6 +6,10 @@ available inside the app itself, via Help/Instructions → the "Version History"
 
 Format loosely follows [Keep a Changelog](https://keepachangelog.com/).
 
+## v6.5.1 — Theme button label no longer cut off
+
+- The header "Light Theme"/"Dark Theme" button had a fixed 120 px width; since the 6.4.0 padding fix its label was clipped in Greek ("☀ Φωτεινό Θέμα" needs 126 px) and Russian (122 px). It now sizes to its text (`MinWidth`), and `HeaderLayoutTests` checks all 14 languages in both modes (verified to fail on the old layout).
+
 ## v6.5.0 — New tab layout, GitHub self-update, RAM release
 
 - **New 9-tab structure with sub-pages** (`TabLayout.cs`, `CompositeTabView`): Updates & Apps (Updates | Drivers | Apps), Cleanup & Performance (Performance | Cleanup | Startup), Health & Repair, Security & Privacy (Security | Network), Games & Multimedia, Windows Tweaks, Backups & Reports (Reports | Backups & Restore), System & Tools (Information | Tools). Tags are unchanged (shortcuts/tray/settings keep working); the tabs are composed from cards of the existing views, filtered by a per-view section table that `TabLayoutTests` keeps in sync with the XAML. Similar features now live together: all startup items/tasks/services/boot timeline on one page, all backups (restore points, registry, drivers) and reports in one tab. Search, Ctrl+1..9, tray balloons, PC Manager cards, Health Check actions and Onboarding follow the new structure; Help has a tab map.

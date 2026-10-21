@@ -518,7 +518,7 @@
                         </ListBox>
                     </Border>
                 </Popup>
-                <Button x:Name="BtnThemeToggle" Width="120" Height="36" Style="{StaticResource FlatButtonStyle}" Click="BtnThemeToggle_Click" shell:WindowChrome.IsHitTestVisibleInChrome="True">
+                <Button x:Name="BtnThemeToggle" MinWidth="120" Padding="12,0" Height="36" Style="{StaticResource FlatButtonStyle}" Click="BtnThemeToggle_Click" shell:WindowChrome.IsHitTestVisibleInChrome="True">
                     <TextBlock x:Name="TxtThemeToggle"/>
                 </Button>
 

@@ -459,10 +459,13 @@
 
                         <Border Background="{DynamicResource AccentBrush}" CornerRadius="6" Padding="12" Margin="0,0,0,16">
                             <StackPanel>
-                                <TextBlock Text="{tr:Tr VerHist_650Title}" FontWeight="Bold" Foreground="White" FontSize="14" Margin="0,0,0,6"/>
-                                <TextBlock Foreground="White" TextWrapping="Wrap" Opacity="0.95" Text="{tr:Tr VerHist_650Desc}"/>
+                                <TextBlock Text="{tr:Tr VerHist_651Title}" FontWeight="Bold" Foreground="White" FontSize="14" Margin="0,0,0,6"/>
+                                <TextBlock Foreground="White" TextWrapping="Wrap" Opacity="0.95" Text="{tr:Tr VerHist_651Desc}"/>
                             </StackPanel>
                         </Border>
+
+                        <TextBlock Text="{tr:Tr VerHist_650Title}" Style="{StaticResource CardTitleStyle}" Margin="0,0,0,4"/>
+                        <TextBlock Style="{StaticResource SubTextStyle}" TextWrapping="Wrap" Text="{tr:Tr VerHist_650Desc}" Margin="0,0,0,14"/>
 
                         <TextBlock Text="{tr:Tr VerHist_640Title}" Style="{StaticResource CardTitleStyle}" Margin="0,0,0,4"/>
                         <TextBlock Style="{StaticResource SubTextStyle}" TextWrapping="Wrap" Text="{tr:Tr VerHist_640Desc}" Margin="0,0,0,14"/>
