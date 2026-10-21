@@ -62,6 +62,7 @@ namespace OptimizerWpf.Views
             // καρτέλας ξαναχτίζει το view, άρα ένα ενεργό Gaming Mode εμφανιζόταν ξανά ως "κλειστό" ενώ τα Windows έμεναν σε αυτό.
             ToggleOfficeMode.IsChecked = AppSettingsService.Current.OfficeModeActive;
             ToggleGamingMode.IsChecked = AppSettingsService.Current.GamingModeActive;
+            ChkGamingFreeRam.IsChecked = AppSettingsService.Current.GamingModeFreeRam;
 
             // ΝΕΟ - ROADMAP.md REQ-570-03 - βλ. σχόλιο στο TweakService.IsUltimatePerformanceActive.
             // Off the UI thread (spawns powercfg.exe) - ίδιο μοτίβο με τις υπόλοιπες αργές
@@ -191,6 +192,7 @@ namespace OptimizerWpf.Views
                         AppSettingsService.Save();
                     });
                     TxtGamingModeStatus.Text = guard == RestoreGuardResult.Created ? LanguageService.T("Opt_RestorePointCreated") : "";
+                    if (AppSettingsService.Current.GamingModeFreeRam) await FreeRamAsync();
                     StatusService.SetIdle(LanguageService.T("Opt_GamingModeEnabled"));
                 }
                 else
@@ -205,6 +207,34 @@ namespace OptimizerWpf.Views
             }
             catch { StatusService.SetIdle(LanguageService.T("Ready")); }
             finally { ToggleGamingMode.IsEnabled = true; }
+        }
+
+        private void ChkGamingFreeRam_Click(object sender, RoutedEventArgs e)
+        {
+            AppSettingsService.Current.GamingModeFreeRam = ChkGamingFreeRam.IsChecked == true;
+            AppSettingsService.Save();
+        }
+
+        private async void BtnFreeRamNow_Click(object sender, RoutedEventArgs e)
+        {
+            BtnFreeRamNow.IsEnabled = false;
+            try { await FreeRamAsync(); }
+            finally { BtnFreeRamNow.IsEnabled = true; }
+        }
+
+        // Ελευθερώνει RAM (MemoryCleanerService) και δείχνει την ΠΡΑΓΜΑΤΙΚΗ μέτρηση ελεύθερης μνήμης πριν/μετά.
+        private async Task FreeRamAsync()
+        {
+            StatusService.SetBusy(LanguageService.T("Opt_FreeingRam"));
+            try
+            {
+                var r = await MemoryCleanerService.CleanAsync();
+                var text = string.Format(LanguageService.T("Opt_FreeRamResult"), r.Before.FreeGb.ToString("0.0"), r.After.FreeGb.ToString("0.0"));
+                if (!r.ListsPurged) text += LanguageService.T("Opt_FreeRamTrimOnly");
+                TxtFreeRamResult.Text = text;
+            }
+            catch { TxtFreeRamResult.Text = ""; }
+            finally { StatusService.SetIdle(LanguageService.T("Ready")); }
         }
 
         private async void ToggleNightlyUpdates_Click(object sender, RoutedEventArgs e)

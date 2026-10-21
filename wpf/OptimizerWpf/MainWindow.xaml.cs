@@ -770,22 +770,55 @@ public partial class MainWindow : Window
     private void ShowHorizModernStrip()
     {
         TitleTextPanel.Visibility = Visibility.Collapsed;
-        TxtSearch.Visibility = Visibility.Collapsed;
+        SearchBox.Visibility = Visibility.Collapsed;
         SearchPopup.IsOpen = false;
         HorizModernStrip.Visibility = Visibility.Visible;
+        UpdateLayout();
 
-        HorizModernStripInner.Measure(new Size(double.PositiveInfinity, double.PositiveInfinity));
-        var targetWidth = HorizModernStripInner.DesiredSize.Width;
+        var targetWidth = FitHorizModernStrip();
         HorizModernStrip.Width = 0;
         var anim = new DoubleAnimation(0, targetWidth, new Duration(System.TimeSpan.FromMilliseconds(400))) { EasingFunction = new QuadraticEase { EasingMode = EasingMode.EaseOut } };
+        anim.Completed += (_, _) => { if (HorizModernStrip.Visibility == Visibility.Visible) { HorizModernStrip.BeginAnimation(WidthProperty, null); HorizModernStrip.Width = targetWidth; } };
         HorizModernStrip.BeginAnimation(WidthProperty, anim);
+        SizeChanged -= HorizStripWindowSizeChanged;
+        SizeChanged += HorizStripWindowSizeChanged;
+    }
+
+    // Όταν το παράθυρο αλλάζει μέγεθος με ανοιχτό το οριζόντιο μενού, ξαναχωρά τα κενά ώστε τα κουμπιά δεξιά να μένουν στη θέση τους.
+    private void HorizStripWindowSizeChanged(object sender, SizeChangedEventArgs e)
+    {
+        if (HorizModernStrip.Visibility != Visibility.Visible) return;
+        UpdateLayout();
+        HorizModernStrip.BeginAnimation(WidthProperty, null);
+        HorizModernStrip.Width = FitHorizModernStrip();
+    }
+
+    // Μικραίνει σταδιακά το εσωτερικό περιθώριο των στοιχείων και τα κενά ανάμεσά τους μέχρι να χωρέσουν στον διαθέσιμο χώρο
+    // της στήλης (ανάμεσα στο λογότυπο και τα κουμπιά γλώσσας/θέματος/παραθύρου). Επιστρέφει το πλάτος της λωρίδας.
+    private double FitHorizModernStrip()
+    {
+        var grid = (Grid)HorizModernStrip.Parent;
+        var available = grid.ColumnDefinitions[1].ActualWidth - HorizModernStrip.Margin.Left - HorizModernStrip.Margin.Right;
+        double width = 0;
+        foreach (var (pad, sep) in new[] { (14.0, 3.0), (10.0, 2.0), (7.0, 2.0), (5.0, 1.0), (3.0, 1.0) })
+        {
+            Resources["HorizItemPadding"] = new Thickness(pad, 0, pad, 0);
+            Resources["HorizSepMargin"] = new Thickness(sep, 0, sep, 0);
+            HorizModernStripInner.InvalidateMeasure();
+            HorizModernStripInner.Measure(new Size(double.PositiveInfinity, double.PositiveInfinity));
+            width = HorizModernStripInner.DesiredSize.Width;
+            if (width <= available) break;
+        }
+        return System.Math.Min(width, System.Math.Max(0, available));
     }
 
     private void HideHorizModernStrip()
     {
+        SizeChanged -= HorizStripWindowSizeChanged;
         HorizModernStrip.BeginAnimation(WidthProperty, null);
         HorizModernStrip.Visibility = Visibility.Collapsed;
         TitleTextPanel.Visibility = Visibility.Visible;
+        SearchBox.Visibility = Visibility.Visible;
         TxtSearch.Visibility = Visibility.Visible;
     }
 

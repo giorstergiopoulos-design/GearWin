@@ -251,13 +251,15 @@ namespace OptimizerWpf.Services
         public static Task<(int ProcessCount, double FreedMb)> FreeBackgroundMemoryAsync() => Task.Run(() =>
         {
             var currentPid = Environment.ProcessId;
+            // Η εφαρμογή/παιχνίδι που βρίσκεται μπροστά δεν κλαδεύεται - θα έπαιζε "κόλλημα" μέχρι να ξαναφορτώσει τη μνήμη της.
+            var foregroundPid = NativeMethods.ForegroundPid();
             var count = 0;
             long freedBytes = 0;
             foreach (var p in Process.GetProcesses())
             {
                 try
                 {
-                    if (p.Id == currentPid || CriticalProcessNames.Contains(p.ProcessName)) continue;
+                    if (p.Id == currentPid || p.Id == foregroundPid || CriticalProcessNames.Contains(p.ProcessName)) continue;
                     var before = SafeWorkingSet(p);
                     if (before <= 0) continue;
                     if (!NativeMethods.EmptyWorkingSet(p.Handle)) continue;
@@ -274,6 +276,18 @@ namespace OptimizerWpf.Services
         {
             [System.Runtime.InteropServices.DllImport("psapi.dll", SetLastError = true)]
             public static extern bool EmptyWorkingSet(IntPtr hProcess);
+
+            [System.Runtime.InteropServices.DllImport("user32.dll")]
+            private static extern IntPtr GetForegroundWindow();
+
+            [System.Runtime.InteropServices.DllImport("user32.dll")]
+            private static extern uint GetWindowThreadProcessId(IntPtr hWnd, out uint pid);
+
+            public static int ForegroundPid()
+            {
+                var h = GetForegroundWindow();
+                return h != IntPtr.Zero && GetWindowThreadProcessId(h, out var pid) != 0 ? (int)pid : -1;
+            }
         }
 
         // ===== Αποθηκευτικός Χώρος - διπλότυπα/μεγάλα αρχεία, ΜΟΝΟ προσωπικοί φάκελοι =====

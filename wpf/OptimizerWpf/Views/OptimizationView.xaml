@@ -317,6 +317,12 @@
                             </StackPanel>
                             <TextBlock Text="{tr:Tr Opt_GamingModeDesc}" Style="{StaticResource SubTextStyle}" TextWrapping="Wrap"/>
                             <TextBlock x:Name="TxtGamingModeStatus" Style="{StaticResource SubTextStyle}" TextWrapping="Wrap" Margin="0,4,0,0"/>
+                            <CheckBox x:Name="ChkGamingFreeRam" Content="{tr:Tr Opt_GamingFreeRam}" Foreground="{DynamicResource TextBrush}" Margin="0,8,0,0" Click="ChkGamingFreeRam_Click"/>
+                            <TextBlock Text="{tr:Tr Opt_GamingFreeRamHint}" Style="{StaticResource SubTextStyle}" TextWrapping="Wrap" Margin="22,2,0,0"/>
+                            <StackPanel Orientation="Horizontal" Margin="0,8,0,0">
+                                <Button x:Name="BtnFreeRamNow" Content="{tr:Tr Opt_FreeRamNow}" Style="{StaticResource FlatButtonStyle}" Click="BtnFreeRamNow_Click"/>
+                            </StackPanel>
+                            <TextBlock x:Name="TxtFreeRamResult" Style="{StaticResource SubTextStyle}" TextWrapping="Wrap" Margin="0,4,0,0"/>
                         </StackPanel>
                         <ToggleButton x:Name="ToggleGamingMode" Grid.Column="1" VerticalAlignment="Center" Style="{StaticResource ToggleSwitchStyle}" Click="ToggleGamingMode_Click"/>
                     </Grid>

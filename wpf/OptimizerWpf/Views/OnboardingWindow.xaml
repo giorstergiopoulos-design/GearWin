@@ -61,9 +61,9 @@
                 <ColumnDefinition Width="*"/>
                 <ColumnDefinition Width="Auto"/>
             </Grid.ColumnDefinitions>
-            <Button x:Name="BtnBack" Grid.Column="0" Content="◀" Style="{StaticResource FlatButtonStyle}"
+            <Button x:Name="BtnBack" Padding="0" Grid.Column="0" Content="◀" Style="{StaticResource FlatButtonStyle}"
                     Width="44" Height="44" FontSize="16" Click="BtnBack_Click" AutomationProperties.Name="{tr:Tr Onb_BackAuto}"/>
-            <Button x:Name="BtnNext" Grid.Column="2" Content="▶" Style="{StaticResource FlatButtonStyle}"
+            <Button x:Name="BtnNext" Padding="0" Grid.Column="2" Content="▶" Style="{StaticResource FlatButtonStyle}"
                     Width="44" Height="44" FontSize="16" Click="BtnNext_Click" AutomationProperties.Name="{tr:Tr Onb_NextAuto}"/>
             <Button x:Name="BtnConfirm" Grid.Column="2" Content="{tr:Tr Onb_Confirm}" Style="{StaticResource AccentButtonStyle}"
                     MinWidth="140" Padding="18,10" Visibility="Collapsed" Click="BtnConfirm_Click"/>

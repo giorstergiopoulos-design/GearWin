@@ -66,6 +66,8 @@ namespace OptimizerWpf.Services
         public bool AutoGamingModeEnabled { get; set; }
         // Τελευταία γνωστή κατάσταση των χειροκίνητων Office/Gaming Mode (το view ξαναχτίζεται σε κάθε εναλλαγή καρτέλας).
         public bool GamingModeActive { get; set; }
+        // Ελευθέρωση RAM (κλάδεμα διεργασιών παρασκηνίου + cache μνήμης, όπως το RAMMap) κατά την ενεργοποίηση του Gaming Mode.
+        public bool GamingModeFreeRam { get; set; } = true;
         public bool NightlyUpdatesEnabled { get; set; }
         public bool OfficeModeActive { get; set; }
 
