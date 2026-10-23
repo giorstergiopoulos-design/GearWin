@@ -6,6 +6,13 @@ available inside the app itself, via Help/Instructions → the "Version History"
 
 Format loosely follows [Keep a Changelog](https://keepachangelog.com/).
 
+## v6.5.4 — Cards regrouped: Games | Media, and a Devices page in System
+
+- **Games & Multimedia** is now two sub-pages: *Games* (library, per-game settings, gaming settings, shader cache, game-save backup) and *Media* (codecs, video/audio converter).
+- **Displays, Audio devices and Camera & microphone usage** - cards that have nothing to do with games - moved to **System & Tools > Devices** (new sub-page between Information and Tools). Nothing was removed: every card, button and setting works as before.
+- Global search (Ctrl+K) now points to the new pages, the in-app tab map and user guide describe them, and `TabLayoutTests.DeviceCardsMovedFromGamesToSystemDevices` guards the layout.
+- Still open (needs a product decision, not changed): the gaming switches that exist in three places, the video/audio converter and the font cards, and the duplicated startup management.
+
 ## v6.5.3 — Updaters keep their state, wheel scrolls the list under the mouse, tab strip and text boxes fixed
 
 - **Updaters (apps and drivers):** the scan/install state now lives in a shared `ScanState`, not in the view that is recreated on every tab change. Coming back to the tab shows the running scan (button locked, progress, status text) instead of an idle button, a second scan cannot start while one runs, and the result list is replaced atomically and de-duplicated (source + id) - no more doubled results after checking twice. The driver scan's cancel button works from any view instance.

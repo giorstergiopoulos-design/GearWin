@@ -74,6 +74,24 @@ namespace OptimizerWpf.Tests
             });
         }
 
+        // 6.5.4: οι κάρτες συσκευών (οθόνες, ήχος, κάμερα/μικρόφωνο) ζουν στο Σύστημα › Συσκευές, όχι πια στα Παιχνίδια.
+        [Fact]
+        public void DeviceCardsMovedFromGamesToSystemDevices()
+        {
+            RunSta(() =>
+            {
+                Assert.Equal(new[] { "Sub_Info", "Sub_Devices", "Sub_Tools" }, TabLayout.SubPages("System")!.Select(p => p.TitleKey).ToArray());
+                Assert.Equal(new[] { "Sub_Games", "Sub_Media" }, TabLayout.SubPages("GamesMedia")!.Select(p => p.TitleKey).ToArray());
+                var devices = new CompositeTabView("System", 1);
+                var games = new CompositeTabView("GamesMedia", 0);
+                var media = new CompositeTabView("GamesMedia", 1);
+                int Cards(CompositeTabView v) => ((StackPanel)v.FindName("PageHost")).Children.OfType<UserControl>().Sum(c => TabLayout.RootPanel(c)?.Children.Count ?? 0);
+                Assert.Equal(3, Cards(devices));   // οθόνες, ήχος, κάμερα/μικρόφωνο
+                Assert.Equal(6, Cards(games));     // βιβλιοθήκη, ανά παιχνίδι, gaming, shader, save backup, σημείωση ενημερώσεων
+                Assert.Equal(2, Cards(media));     // κωδικοποιητές, μετατροπέας
+            });
+        }
+
         [Fact]
         public void EveryCardOfTheComposedViewsAppearsInExactlyOnePage()
         {

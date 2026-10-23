@@ -459,11 +459,13 @@ public partial class MainWindow : Window
         ("Network#0", new[] { "Network_PrivacyTitle", "Network_FirewallRules", "Network_OpenPorts", "Network_FirewallPolicy", "Advanced_Autologon", "FolderLock_Title" }),
         ("Network#1", new[] { "Network_TrafficPerApp", "Network_QuickDns", "Network_HostsEditor" }),
         ("Tweaks", new[] { "Tweaks_NamedProfilesTitle", "Tweaks_Main", "Tweaks_AiCopilot", "Tweaks_Performance", "Tweaks_LighterWindows", "Tweaks_Encryption", "Tweaks_VisualEffects", "Tweaks_RightClick" }),
-        ("GamesMedia", new[] { "Games_LibraryTitle", "Games_PerGameTitle", "Games_TweaksTitle", "Games_ShaderTitle", "Games_SaveBackupTitle", "Media_DisplaysTitle", "Media_AudioTitle", "Media_PrivacyTitle", "Media_CodecsTitle", "Media_ConverterTitle" }),
+        ("GamesMedia#0", new[] { "Games_LibraryTitle", "Games_PerGameTitle", "Games_TweaksTitle", "Games_ShaderTitle", "Games_SaveBackupTitle" }),
+        ("GamesMedia#1", new[] { "Media_CodecsTitle", "Media_ConverterTitle" }),
         ("Advanced#0", new[] { "Reports_Title" }),
         ("Advanced#1", new[] { "Health_RegBackupHistory", "System_RestorePoints", "Backup_Title", "Optimization_DriverBackup" }),
         ("System#0", new[] { "Sys_MbTitle", "Sys_DrivesTitle", "Sys_OsTitle", "Sys_NetTitle", "Sys_CpuTitle", "Sys_BatteryTitle", "Sys_RamTitle", "Sys_GpuTitle", "Timeline_Title", "Appr_FontsInstalledTitle" }),
-        ("System#1", new[] { "Advanced_Maintenance", "Advanced_Toolbox", "UsbHistory_Title", "Wsl_Title", "Rgb_Title" }),
+        ("System#1", new[] { "Media_DisplaysTitle", "Media_AudioTitle", "Media_PrivacyTitle" }),
+        ("System#2", new[] { "Advanced_Maintenance", "Advanced_Toolbox", "UsbHistory_Title", "Wsl_Title", "Rgb_Title" }),
     };
 
     private static List<SearchResultRow> BuildSearchIndex()

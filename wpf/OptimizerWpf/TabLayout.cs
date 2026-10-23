@@ -56,7 +56,15 @@ namespace OptimizerWpf
             ["System"] = new[]
             {
                 new TabSubPage("Sub_Info", new TabPart("System", "Info")),
+                // 6.5.4: οι κάρτες συσκευών (οθόνες, ήχος, κάμερα/μικρόφωνο) ζούσαν στην καρτέλα "Παιχνίδια & Πολυμέσα" χωρίς σχέση με παιχνίδια.
+                new TabSubPage("Sub_Devices", new TabPart("GamesMedia", "Devices")),
                 new TabSubPage("Sub_Tools", new TabPart("Advanced", "Tools")),
+            },
+            // 6.5.4: Παιχνίδια | Πολυμέσα - η καρτέλα είχε 10 κάρτες σε μία σελίδα.
+            ["GamesMedia"] = new[]
+            {
+                new TabSubPage("Sub_Games", new TabPart("GamesMedia", "Games")),
+                new TabSubPage("Sub_Media", new TabPart("GamesMedia", "Media")),
             },
         };
 
@@ -69,6 +77,8 @@ namespace OptimizerWpf
             ["Advanced"] = new[] { null, "Tools", "Tools", "Ghost", "Tools", "Tools", "Tools", "Startup", "Startup", "Security", "@PowerTools" },
             ["System"] = new[] { "Info", "Info", "Info", "Info", "Processes", "Storage", "Info", "Info" },
             ["Bloatware"] = new[] { "All", "All", "All", "All", "All", "All" },
+            // GamesMediaView: βιβλιοθήκη, ανά παιχνίδι, gaming, shader, save backup, σημείωση ενημερώσεων | διαχωριστής | οθόνες, ήχος, κάμερα/μικρόφωνο | κωδικοποιητές, μετατροπέας
+            ["GamesMedia"] = new[] { "Games", "Games", "Games", "Games", "Games", "Games", null, "Devices", "Devices", "Devices", "Media", "Media" },
         };
 
         // Εσωτερικές κάρτες των UserControl που είναι ΜΙΑ θέση της ρίζας (@Recovery, @PowerTools).

@@ -327,6 +327,12 @@
                         <TextBlock Style="{StaticResource SubTextStyle}" TextWrapping="Wrap" Text="{tr:Tr Help_MediaDesc}"/>
                         <Grid Margin="0,14,0,4">
                             <Grid.ColumnDefinitions><ColumnDefinition Width="Auto"/><ColumnDefinition Width="*"/></Grid.ColumnDefinitions>
+                            <Border Grid.Column="0" Style="{StaticResource PulsingIconContainerStyle}" Margin="0,0,8,0"><views:HeaderGlyphIcon Kind="Monitor" Width="19" Height="19"/></Border>
+                            <TextBlock Grid.Column="1" Text="{tr:Tr Sub_Devices}" Style="{StaticResource CardTitleStyle}" VerticalAlignment="Center"/>
+                        </Grid>
+                        <TextBlock Style="{StaticResource SubTextStyle}" TextWrapping="Wrap" Text="{tr:Tr Help_DevicesDesc}"/>
+                        <Grid Margin="0,14,0,4">
+                            <Grid.ColumnDefinitions><ColumnDefinition Width="Auto"/><ColumnDefinition Width="*"/></Grid.ColumnDefinitions>
                             <Border Grid.Column="0" Style="{StaticResource PulsingIconContainerStyle}" Margin="0,0,8,0"><views:HeaderGlyphIcon Kind="Wrench" Width="19" Height="19"/></Border>
                             <TextBlock Grid.Column="1" Text="{tr:Tr TabTweaks}" Style="{StaticResource CardTitleStyle}" VerticalAlignment="Center"/>
                         </Grid>
@@ -488,10 +494,13 @@
 
                         <Border Background="{DynamicResource AccentBrush}" CornerRadius="6" Padding="12" Margin="0,0,0,16">
                             <StackPanel>
-                                <TextBlock Text="{tr:Tr VerHist_653Title}" FontWeight="Bold" Foreground="White" FontSize="14" Margin="0,0,0,6"/>
-                                <TextBlock Foreground="White" TextWrapping="Wrap" Opacity="0.95" Text="{tr:Tr VerHist_653Desc}"/>
+                                <TextBlock Text="{tr:Tr VerHist_654Title}" FontWeight="Bold" Foreground="White" FontSize="14" Margin="0,0,0,6"/>
+                                <TextBlock Foreground="White" TextWrapping="Wrap" Opacity="0.95" Text="{tr:Tr VerHist_654Desc}"/>
                             </StackPanel>
                         </Border>
+
+                        <TextBlock Text="{tr:Tr VerHist_653Title}" Style="{StaticResource CardTitleStyle}" Margin="0,0,0,4"/>
+                        <TextBlock Style="{StaticResource SubTextStyle}" TextWrapping="Wrap" Text="{tr:Tr VerHist_653Desc}" Margin="0,0,0,14"/>
 
                         <TextBlock Text="{tr:Tr VerHist_652Title}" Style="{StaticResource CardTitleStyle}" Margin="0,0,0,4"/>
                         <TextBlock Style="{StaticResource SubTextStyle}" TextWrapping="Wrap" Text="{tr:Tr VerHist_652Desc}" Margin="0,0,0,14"/>
