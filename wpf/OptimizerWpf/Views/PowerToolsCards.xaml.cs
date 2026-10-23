@@ -63,6 +63,13 @@ namespace OptimizerWpf.Views
 
         private async void BtnRefreshStartup_Click(object sender, RoutedEventArgs e) => await LoadStartupAsync();
 
+        private void BtnStartupDelay_Click(object sender, RoutedEventArgs e)
+        {
+            var center = new MaintenanceCenterWindow { Owner = Window.GetWindow(this) };
+            center.ShowStartupTab();
+            center.ShowDialog();
+        }
+
         private void ToggleStartupItem_Click(object sender, RoutedEventArgs e)
         {
             if (sender is not ToggleButton { Tag: StartupRow row }) return;

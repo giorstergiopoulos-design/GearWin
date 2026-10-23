@@ -334,12 +334,19 @@ namespace OptimizerWpf.Views
         /// <summary>Αντικαθιστά τη λίστα ενημερώσεων με τα νέα αποτελέσματα, χωρίς διπλότυπα (κλειδί: πηγή + id, χωρίς διάκριση πεζών-κεφαλαίων).</summary>
         internal static void ReplaceUpdates(IEnumerable<WingetUpdate> results)
         {
-            var seen = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
-            var rows = new List<WingetUpdateRow>();
-            foreach (var u in results)
-                if (seen.Add((u.Source ?? "") + "|" + u.Id)) rows.Add(new WingetUpdateRow(u));
+            var rows = DeduplicateUpdates(results).Select(u => new WingetUpdateRow(u)).ToList();
             _updates.Clear();
             foreach (var r in rows) _updates.Add(r);
+        }
+
+        /// <summary>Καθαρή λογική (χωρίς UI): κρατά την πρώτη εμφάνιση κάθε πηγή+id, χωρίς διάκριση πεζών-κεφαλαίων, με την αρχική σειρά.</summary>
+        internal static List<WingetUpdate> DeduplicateUpdates(IEnumerable<WingetUpdate> results)
+        {
+            var seen = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+            var list = new List<WingetUpdate>();
+            foreach (var u in results)
+                if (seen.Add((u.Source ?? "") + "|" + u.Id)) list.Add(u);
+            return list;
         }
 
         private void BtnCheckMsStore_Click(object sender, RoutedEventArgs e)

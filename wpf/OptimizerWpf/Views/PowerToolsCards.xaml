@@ -21,7 +21,11 @@
                             <views:HeaderGlyphIcon Grid.Column="0" Kind="Bolt" Width="16" Height="16" Margin="0,0,8,0" VerticalAlignment="Center"/>
                             <TextBlock Grid.Column="1" Text="{tr:Tr System_Startup}" Style="{StaticResource CardTitleStyle}"/>
                         </Grid>
-                        <Button Grid.Column="1" Content="{tr:Tr Refresh}" Style="{StaticResource FlatButtonStyle}" Width="120" Click="BtnRefreshStartup_Click"/>
+                        <!-- 6.5.5: η καθυστέρηση εκκίνησης ζούσε μόνο στο Κέντρο Συντήρησης (Ctrl+J) - εδώ, δίπλα στη λίστα εκκίνησης, ανοίγει κατευθείαν σε εκείνη την καρτέλα. -->
+                        <StackPanel Grid.Column="1" Orientation="Horizontal">
+                            <Button Content="{tr:Tr Center_TabStartup}" Style="{StaticResource FlatButtonStyle}" Margin="0,0,8,0" Click="BtnStartupDelay_Click"/>
+                            <Button Content="{tr:Tr Refresh}" Style="{StaticResource FlatButtonStyle}" Width="120" Click="BtnRefreshStartup_Click"/>
+                        </StackPanel>
                     </Grid>
                     <ItemsControl x:Name="ListStartup">
                         <ItemsControl.ItemTemplate>

@@ -156,8 +156,13 @@ namespace OptimizerWpf.Services
                 DisableSysMain, EnableSysMain, Id: "SysMain", DetectState: DetectSysMainOff, RequiresAdmin: true),
         };
 
+        // 6.5.4+: το HAGS εμφανιζόταν ΚΑΙ εδώ ΚΑΙ στα Παιχνίδια › Ρυθμίσεις gaming (GamingTweaksService "Hags"), με διαφορετική σημασιολογία "off"
+        // (εδώ επαναφορά/διαγραφή της τιμής, εκεί HwSchMode=1) - δύο διακόπτες για το ίδιο μητρώο. Ο διακόπτης ζει πλέον ΜΟΝΟ στα Παιχνίδια· το RegTweak
+        // "HAGS" παραμένει στο PerfRegTweaks ώστε η επαναφορά (RestoreAllTrackedTweaks/CountRestorableTweaks) να αναιρεί ό,τι είχε αλλάξει παλιότερα από εδώ.
+        public const string HagsBackupKey = "HAGS";
+
         public static IReadOnlyList<SimpleTweak> PerfTweaksSimple() =>
-            PerfRegTweaks.Select(ToSimple).Concat(PerfPowercfgTweaks).ToList();
+            PerfRegTweaks.Where(t => t.BackupKey != HagsBackupKey).Select(ToSimple).Concat(PerfPowercfgTweaks).ToList();
 
         private static void MouseAccelOff()
         {

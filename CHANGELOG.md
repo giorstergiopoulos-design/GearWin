@@ -6,6 +6,13 @@ available inside the app itself, via Help/Instructions → the "Version History"
 
 Format loosely follows [Keep a Changelog](https://keepachangelog.com/).
 
+## v6.5.5 — Gaming switches and startup in one place
+
+- **HAGS** (hardware-accelerated GPU scheduling) had two switches for the same registry value with different "off" behaviour: Windows Tweaks > Performance (restores the previous value) and Games > Gaming settings (writes 1). It now lives only in **Games > Gaming settings**. The old tweak definition stays internally, so anything changed from the Tweaks tab earlier is still undone by "Restore all tweaks".
+- **Startup:** the startup list (Cleanup & Performance > Startup) has a "Startup Delay" button that opens the Maintenance Center straight on its delayed-start tab, instead of a feature you could only find with Ctrl+J.
+- Unchanged on purpose: the *Gaming Mode* bundle (Performance modes) still sets HAGS/Game DVR/network throttling as one action; the individual Game Bar and network-throttling switches stay in Windows Tweaks.
+- Tests: 257 (new `GamingStartupGroupingTests`). Not verified live: toggling HAGS (needs administrator and a restart).
+
 ## v6.5.4 — Cards regrouped: Games | Media, and a Devices page in System
 
 - **Games & Multimedia** is now two sub-pages: *Games* (library, per-game settings, gaming settings, shader cache, game-save backup) and *Media* (codecs, video/audio converter).

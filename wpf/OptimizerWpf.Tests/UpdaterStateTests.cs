@@ -47,19 +47,20 @@ namespace OptimizerWpf.Tests
         [Fact]
         public void ReplacingTheUpdateListNeverDuplicatesResults()
         {
+            // Η καθαρή λογική δοκιμάζεται χωρίς τη static συλλογή: τα views άλλων δοκιμών ζουν σε νήματα που έχουν τελειώσει και η δέσμευση της
+            // ObservableCollection σε αυτά θα έριχνε exception από άλλο νήμα (στην εφαρμογή υπάρχει ένα μόνο UI νήμα).
             var first = new[]
             {
                 new WingetUpdate("App A", "Vendor.A", "1.0", "2.0", "winget"),
                 new WingetUpdate("App B", "Vendor.B", "1.0", "2.0", "winget"),
             };
-            OptimizationView.ReplaceUpdates(first);
-            Assert.Equal(2, OptimizationView.UpdateCountForTests);
-            OptimizationView.ReplaceUpdates(first);          // δεύτερος έλεγχος με τα ίδια αποτελέσματα
-            Assert.Equal(2, OptimizationView.UpdateCountForTests);
-            OptimizationView.ReplaceUpdates(first.Concat(new[] { new WingetUpdate("App A", "vendor.a", "1.0", "2.0", "winget"), new WingetUpdate("App A", "Vendor.A", "1.0", "2.0", "msstore") }));
-            Assert.Equal(3, OptimizationView.UpdateCountForTests);   // ίδιο id/πηγή (πεζά-κεφαλαία) = ένα· άλλη πηγή = ξεχωριστό
-            OptimizationView.ReplaceUpdates(Array.Empty<WingetUpdate>());
-            Assert.Equal(0, OptimizationView.UpdateCountForTests);
+            Assert.Equal(2, OptimizationView.DeduplicateUpdates(first).Count);
+            Assert.Equal(2, OptimizationView.DeduplicateUpdates(first.Concat(first)).Count);              // δεύτερος έλεγχος με τα ίδια αποτελέσματα
+            var mixed = first.Concat(new[] { new WingetUpdate("App A", "vendor.a", "1.0", "2.0", "winget"), new WingetUpdate("App A", "Vendor.A", "1.0", "2.0", "msstore") });
+            var deduped = OptimizationView.DeduplicateUpdates(mixed);
+            Assert.Equal(3, deduped.Count);                                                                 // ίδιο id/πηγή (πεζά-κεφαλαία) = ένα· άλλη πηγή = ξεχωριστό
+            Assert.Equal(new[] { "Vendor.A", "Vendor.B", "Vendor.A" }, deduped.Select(u => u.Id).ToArray());
+            Assert.Empty(OptimizationView.DeduplicateUpdates(Array.Empty<WingetUpdate>()));
         }
     }
 

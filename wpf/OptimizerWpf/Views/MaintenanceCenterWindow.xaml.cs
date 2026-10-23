@@ -45,6 +45,9 @@ namespace OptimizerWpf.Views
 
         private void Window_Closed(object sender, EventArgs e) => ChangeJournalService.Changed -= OnJournalChanged;
 
+        /// <summary>Ανοίγει το παράθυρο κατευθείαν στην καρτέλα "Καθυστέρηση εκκίνησης" (4η).</summary>
+        public void ShowStartupTab() => Tabs.SelectedIndex = 3;
+
         // ΔΙΟΡΘΩΣΗ (ρητό αίτημα χρήστη: "οι καρτέλες να είναι σε μία ευθεία, προσάρμοσε το μέγεθος
         // του παραθύρου ανάλογα") - 5 καρτέλες με PillTabItemStyle (Padding 18,9 + Margin 0,0,6,6, βλ.
         // Styles.xaml) δεν χωρούσαν πάντα σε μία γραμμή στο σταθερό Width="760" - ειδικά σε γλώσσες με
