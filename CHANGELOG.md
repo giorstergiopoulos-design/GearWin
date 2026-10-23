@@ -6,6 +6,16 @@ available inside the app itself, via Help/Instructions → the "Version History"
 
 Format loosely follows [Keep a Changelog](https://keepachangelog.com/).
 
+## v6.5.3 — Updaters keep their state, wheel scrolls the list under the mouse, tab strip and text boxes fixed
+
+- **Updaters (apps and drivers):** the scan/install state now lives in a shared `ScanState`, not in the view that is recreated on every tab change. Coming back to the tab shows the running scan (button locked, progress, status text) instead of an idle button, a second scan cannot start while one runs, and the result list is replaced atomically and de-duplicated (source + id) - no more doubled results after checking twice. The driver scan's cancel button works from any view instance.
+- **Mouse wheel:** over an inner list (updates, drivers, processes…) the wheel scrolls that list; the page scrolls only when the list is at its end. Root cause: since 6.5.0 every hosted view has its own vertical-scroll-disabled `ScrollViewer` with the forwarding handler, which ran first (events tunnel from outside in) and always handed the wheel to the page. `NestedScrollHelper` now lets a deeper scroller that can still move take it, and forwards only to an ancestor that really scrolls.
+- **Tab strip:** when the 9 tabs do not fit (narrow window, 150% scaling), only the selected tab keeps its name (others show the icon + tooltip), so no tab is cut at the right edge.
+- **Wide side rail (PC Manager, Windows 11 Settings, Gaming Hub skins):** long labels wrap instead of being cut (Russian "Очистка и производительность", "Безопасность и конфиденциальность").
+- **Text boxes / password boxes** are themed (they were unstyled light-grey Windows boxes in dark themes).
+- **Status bar:** identical messages from parallel tasks appear once; the spinner no longer stays on if the hardware scan throws; concurrent hardware scans share one run.
+- Tests: 252 (new: `ScanStateTests`, `NestedScrollTests` - the wheel test fails on the old helper - and `UiClippingProbeTests`, which opens the real window on every tab and sub-page and reports button text that is cut by its button or tabs cut by the strip; `GEARWIN_UIPROBE_*` environment variables select theme/skin, width, languages, screenshots).
+
 ## v6.5.2 — User guide rewritten, missing app logos, thread-safe language/theme switching
 
 - **Help (user guide)** rebuilt around the new tab/sub-page structure (`HelpWindow.xaml`): cards are described on the tab where they live; new entries for RAM release, nightly updates, GearWin self-update, the Reports card, registry backup history and the Home security summary; the maintenance entry lists the real 10 buttons; obsolete per-old-tab section texts (`Help_OptTitle` etc.) removed from all 14 languages.

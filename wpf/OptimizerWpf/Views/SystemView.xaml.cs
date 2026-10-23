@@ -74,13 +74,20 @@ namespace OptimizerWpf.Views
 
         // ΝΕΟ v3.3.0 - βλ. σχόλιο στο SystemView.xaml/MyDeviceService.cs. Μία φορά στην εκκίνηση -
         // το hardware δεν αλλάζει μέσα στη διάρκεια μιας συνεδρίας, καμία ανάγκη για refresh timer.
+        // 6.5.3: το SetIdle είναι πλέον σε finally - αν η σάρωση WMI πετούσε εξαίρεση, ο "κύκλος" της γραμμής κατάστασης έμενε αιώνια.
         private async System.Threading.Tasks.Task LoadMyDeviceAsync()
+        {
+            StatusService.SetBusy(LanguageService.T("Sys_ScanningDevice"));
+            try { await LoadMyDeviceCoreAsync(); }
+            finally { StatusService.SetIdle(LanguageService.T("Ready")); }
+        }
+
+        private async System.Threading.Tasks.Task LoadMyDeviceCoreAsync()
         {
             // ΔΙΟΡΘΩΣΗ (ρητό αίτημα χρήστη: "όταν σαρώνει η εφαρμογή... η γραμμή κατάστασης δεν
             // εμφανίζει το κυκλάκι") - αυτή η μέθοδος κάνει πραγματικές, όχι-στιγμιαίες κλήσεις WMI
             // (Motherboard/CPU/OS/Drives/κ.λπ. - βλ. MyDeviceService.GetSummaryAsync) χωρίς να αγγίζει
             // καθόλου το StatusService, ασυνεπές με κάθε άλλη σάρωση της εφαρμογής.
-            StatusService.SetBusy(LanguageService.T("Sys_ScanningDevice"));
             var d = await MyDeviceService.GetSummaryAsync();
             var na = LanguageService.T("Sys_NotAvailable");
             string S(string? v) => string.IsNullOrWhiteSpace(v) ? na : v;
@@ -198,8 +205,6 @@ namespace OptimizerWpf.Views
                         $"{S(g.Vendor)} | VRAM: {(g.VramGb.HasValue ? $"{g.VramGb} GB" : na)} | {LanguageService.T("Sys_GpuDriver")}: {S(g.DriverVersion)} ({S(g.DriverDate)}) | {S(g.Status)}{(g.Resolution != null ? $" | {g.Resolution}" : "")}",
                         outdated, outdated ? LanguageService.T("Sys_GpuDriverOutdatedHint") : "");
                 }).ToList();
-
-            StatusService.SetIdle(LanguageService.T("Ready"));
 
             // ΝΕΟ - roadmap "Εξαγωγή Η Συσκευή Μου" - το ίδιο κείμενο που δείχνουν οι κάρτες παραπάνω,
             // μαζεμένο σε ένα απλό .txt (βλ. BtnExportDevice_Click) - καμία επανάληψη WMI queries.

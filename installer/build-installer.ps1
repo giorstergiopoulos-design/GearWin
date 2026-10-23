@@ -29,12 +29,15 @@ dotnet publish $proj -c Release -r win-x64 --self-contained true -o $publish
 if ($LASTEXITCODE -ne 0) { throw 'dotnet publish failed.' }
 
 $candidates = @(
+    "$env:LOCALAPPDATA\Programs\Inno Setup 7\ISCC.exe",
+    "${env:ProgramFiles(x86)}\Inno Setup 7\ISCC.exe",
+    "$env:ProgramFiles\Inno Setup 7\ISCC.exe",
     "$env:LOCALAPPDATA\Programs\Inno Setup 6\ISCC.exe",
     "${env:ProgramFiles(x86)}\Inno Setup 6\ISCC.exe",
     "$env:ProgramFiles\Inno Setup 6\ISCC.exe"
 )
 $iscc = $candidates | Where-Object { Test-Path $_ } | Select-Object -First 1
-if (-not $iscc) { throw 'ISCC.exe (Inno Setup 6) not found.' }
+if (-not $iscc) { throw 'ISCC.exe (Inno Setup 7 or 6) not found.' }
 
 Write-Host '== Inno Setup ==' -ForegroundColor Cyan
 & $iscc $iss

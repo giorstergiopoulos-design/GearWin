@@ -65,7 +65,27 @@ namespace OptimizerWpf.Services
         // SystemView (βλ. BtnRefreshDevice_Click) αντί για σιωπηλά stale δεδομένα χωρίς καμία διέξοδο.
         public static void ClearCache() => _cachedSummary = null;
 
-        public static Task<DeviceSummary> GetSummaryAsync() => Task.Run(() =>
+        // 6.5.3: μία σάρωση τη φορά. Από το 6.5.0 κάθε επίσκεψη στην καρτέλα δημιουργεί νέο SystemView· αν ο χρήστης άλλαζε καρτέλες πριν
+        // τελειώσει η πρώτη σάρωση (αργές κλήσεις WMI), κάθε νέο View ξεκινούσε δική του - πολλαπλές ίδιες σαρώσεις και διπλά μηνύματα στη γραμμή κατάστασης.
+        private static readonly object _gate = new();
+        private static Task<DeviceSummary>? _inflight;
+
+        public static Task<DeviceSummary> GetSummaryAsync()
+        {
+            lock (_gate)
+            {
+                if (_cachedSummary != null) return Task.FromResult(_cachedSummary);
+                return _inflight ??= RunSharedAsync();
+            }
+        }
+
+        private static async Task<DeviceSummary> RunSharedAsync()
+        {
+            try { return await ComputeSummaryAsync(); }
+            finally { lock (_gate) _inflight = null; }
+        }
+
+        private static Task<DeviceSummary> ComputeSummaryAsync() => Task.Run(() =>
         {
             if (_cachedSummary != null) return _cachedSummary;
             var mb = GetMotherboard();

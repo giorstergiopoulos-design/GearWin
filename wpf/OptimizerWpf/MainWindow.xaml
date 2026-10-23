@@ -46,11 +46,14 @@
         </DataTemplate>
         <!-- Πλατιά κάθετη μπάρα (PC Manager / Windows 11 Settings): εικονίδιο + κείμενο δίπλα-δίπλα, επιλεγμένο στοιχείο με pill + accent γραμμή. -->
         <DataTemplate x:Key="RailItemWide">
-            <RadioButton GroupName="Rail" Tag="{Binding}" Style="{StaticResource RailPillStyle}" Click="PcManagerRailRadio_Click" Loaded="RailRadio_Loaded">
-                <StackPanel Orientation="Horizontal">
-                    <views:HeaderGlyphIcon Kind="{Binding IconKind}" Width="18" Height="18" Margin="0,0,12,0"/>
-                    <TextBlock Text="{Binding Label}" VerticalAlignment="Center"/>
-                </StackPanel>
+            <!-- 6.5.3: το κείμενο ΤΥΛΙΓΕΤΑΙ σε δύο γραμμές όταν δεν χωράει (πριν η ρωσική "Очистка и производительность" και η
+                 "Безопасность и конфиденциальность" ξεπερνούσαν το πλάτος της μπάρας των 216px και κόβονταν)· το πλήρες όνομα είναι και tooltip. -->
+            <RadioButton GroupName="Rail" Tag="{Binding}" Style="{StaticResource RailPillStyle}" HorizontalContentAlignment="Stretch" ToolTip="{Binding Label}" Click="PcManagerRailRadio_Click" Loaded="RailRadio_Loaded">
+                <Grid>
+                    <Grid.ColumnDefinitions><ColumnDefinition Width="Auto"/><ColumnDefinition Width="*"/></Grid.ColumnDefinitions>
+                    <views:HeaderGlyphIcon Kind="{Binding IconKind}" Width="18" Height="18" Margin="0,0,12,0" VerticalAlignment="Center"/>
+                    <TextBlock Grid.Column="1" Text="{Binding Label}" TextWrapping="Wrap" VerticalAlignment="Center"/>
+                </Grid>
             </RadioButton>
         </DataTemplate>
         <!-- ΝΕΟ - roadmap "Παλλόμενο κόκκινο dot προσοχής" - το DotHealthAttention ήταν στατικό·

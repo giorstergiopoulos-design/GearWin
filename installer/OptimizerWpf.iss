@@ -16,7 +16,7 @@
 ; ΔΙΟΡΘΩΣΗ - ρητό αίτημα χρήστη: μετονομασία σε "GearWin" (υπότιτλος "Complete PC Care") - βλ.
 ; OptimizerWpf.csproj για την πλήρη αιτιολόγηση/έλεγχο εμπορικού σήματος.
 #define MyAppName "GearWin - Complete PC Care"
-#define MyAppVersion "6.5.2"
+#define MyAppVersion "6.5.3"
 #define MyAppPublisher "GearWin"
 ; ΝΕΟ - ρητό αίτημα χρήστη: "το όνομα του exe να προσαρμοστεί στο όνομα της εφαρμογής" - πρέπει να
 ; ταιριάζει ΑΚΡΙΒΩΣ με το <AssemblyName> στο OptimizerWpf.csproj (το πραγματικό όνομα του .exe που
@@ -56,7 +56,7 @@ DisableWelcomePage=no
 ; "Πληροφορίες" στον οδηγό (πριν την επιλογή φακέλου), ένα .txt ανά γλώσσα ίδιο μοτίβο με το
 ; LicenseFile παραπάνω, ώστε να εμφανίζεται στη γλώσσα που επέλεξε ο χρήστης.
 [Languages]
-Name: "greek"; MessagesFile: "compiler:Languages\Greek.isl"; LicenseFile: "license_el.txt"; InfoBeforeFile: "app_description_el.txt"
+Name: "greek"; MessagesFile: "Greek.isl"; LicenseFile: "license_el.txt"; InfoBeforeFile: "app_description_el.txt"
 Name: "english"; MessagesFile: "compiler:Default.isl"; LicenseFile: "license_en.txt"; InfoBeforeFile: "app_description_en.txt"
 Name: "german"; MessagesFile: "compiler:Languages\German.isl"; LicenseFile: "license_de.txt"; InfoBeforeFile: "app_description_de.txt"
 Name: "french"; MessagesFile: "compiler:Languages\French.isl"; LicenseFile: "license_fr.txt"; InfoBeforeFile: "app_description_fr.txt"

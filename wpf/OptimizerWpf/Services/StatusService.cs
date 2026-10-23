@@ -55,6 +55,7 @@ namespace OptimizerWpf.Services
 
         // 2+ ταυτόχρονες εργασίες εμφανίζονται μαζί, χωρισμένες με "  •  " - διαβάσιμο σε μια γραμμή
         // χωρίς να χρειάζεται η γραμμή κατάστασης να γίνει λίστα πολλαπλών γραμμών.
-        private static string Combine() => string.Join("  •  ", _active.Where(m => !string.IsNullOrWhiteSpace(m)));
+        // 6.5.3: ίδιο μήνυμα από πολλές ταυτόχρονες εργασίες (π.χ. "Σάρωση υλικού συστήματος..." ×3 μετά από γρήγορες αλλαγές καρτέλας) εμφανίζεται μία φορά.
+        private static string Combine() => string.Join("  •  ", _active.Where(m => !string.IsNullOrWhiteSpace(m)).Distinct());
     }
 }

@@ -31,10 +31,14 @@ namespace OptimizerWpf.Views
         // Μικρά πεδία κατάστασης (κείμενο γραμμής κατάστασης, ορατότητα, κάρτες κατασκευαστή) που ΔΕΝ
         // ζουν μέσα σε κάποια από τις παραπάνω συλλογές, αλλά χάνονταν με τον ίδιο ακριβώς τρόπο - ίδιο
         // static-cache μοτίβο, αποκαθίστανται ρητά στον constructor.
-        private static string? s_driverStatusCache;
         private static VendorScanResult? s_vendorCache;
-        private static string? s_wingetStatusCache;
         private static string? s_driverStoreStatusCache;
+
+        // 6.5.3: ΜΙΑ σάρωση τη φορά και κατάσταση που επιβιώνει της αλλαγής καρτέλας (βλ. ScanState). Πριν, ένα νέο View έδειχνε το κουμπί
+        // "ελεύθερο" ενώ η σάρωση του παλιού έτρεχε ακόμα: ο χρήστης "ξεκινούσε από την αρχή" και τα αποτελέσματα διπλασιάζονταν.
+        internal static readonly ScanState AppScan = new();
+        internal static readonly ScanState DriverScan = new();
+        private bool _driverWasBusy;
 
         // Δημόσια πρόσβαση μόνο-για-ανάγνωση στο ήδη υπάρχον cache (όχι νέο σκανάρισμα) - το
         // GamesMediaView το διαβάζει για το "ο οδηγός της κάρτας γραφικών είναι παλιός" hint, ΧΩΡΙΣ
@@ -48,10 +52,13 @@ namespace OptimizerWpf.Views
             ListDriverUpdates.ItemsSource = _driverUpdates;
             ListDriverStore.ItemsSource = _driverStoreEntries;
 
-            if (s_driverStatusCache != null) TxtDriverStatus.Text = s_driverStatusCache;
             BorderDriverResults.Visibility = _driverUpdates.Count > 0 ? Visibility.Visible : Visibility.Collapsed;
             if (s_vendorCache != null) ShowVendorExtras(s_vendorCache);
-            if (s_wingetStatusCache != null) TxtWingetStatus.Text = s_wingetStatusCache;
+            _driverWasBusy = DriverScan.Busy;
+            ApplyAppScanUi();
+            ApplyDriverScanUi();
+            Loaded += (_, _) => { AppScan.Changed += OnAppScanChanged; DriverScan.Changed += OnDriverScanChanged; ApplyAppScanUi(); ApplyDriverScanUi(); };
+            Unloaded += (_, _) => { AppScan.Changed -= OnAppScanChanged; DriverScan.Changed -= OnDriverScanChanged; };
             if (s_driverStoreStatusCache != null) TxtDriverStoreStatus.Text = s_driverStoreStatusCache;
 
             ToggleScheduledMaintenance.IsChecked = AppSettingsService.Current.ScheduledMaintenanceEnabled;
@@ -258,35 +265,81 @@ namespace OptimizerWpf.Views
 
         private void BtnOpenGamesTab_Click(object sender, RoutedEventArgs e) => TrayIconService.OpenTab("GamesMedia");
 
+        private void OnAppScanChanged() { if (Dispatcher.CheckAccess()) ApplyAppScanUi(); else Dispatcher.BeginInvoke(new Action(ApplyAppScanUi)); }
+
+        private void ApplyAppScanUi()
+        {
+            var busy = AppScan.Busy;
+            ProgressWinget.Visibility = busy ? Visibility.Visible : Visibility.Collapsed;
+            BtnScanWinget.SetScanning(busy, AppScan.Installing && busy ? "Opt_InstallingCaps" : null);
+            BtnScanWinget.IsEnabled = !busy;
+            BtnUpgradeSelected.IsEnabled = !busy;
+            if (AppScan.Status != null) TxtWingetStatus.Text = AppScan.Status;
+        }
+
+        private void OnDriverScanChanged() { if (Dispatcher.CheckAccess()) ApplyDriverScanUi(); else Dispatcher.BeginInvoke(new Action(ApplyDriverScanUi)); }
+
+        private void ApplyDriverScanUi()
+        {
+            var busy = DriverScan.Busy;
+            BtnScanDrivers.SetScanning(busy);
+            BtnScanDrivers.IsEnabled = !busy;
+            BtnCancelDriverScan.Visibility = busy ? Visibility.Visible : Visibility.Collapsed;
+            if (DriverScan.Status != null) TxtDriverStatus.Text = DriverScan.Status;
+            BorderDriverResults.Visibility = _driverUpdates.Count > 0 ? Visibility.Visible : Visibility.Collapsed;
+            // Όταν τελειώνει μια σάρωση που ξεκίνησε από ΑΛΛΟ (πλέον κλειστό) View, οι έξτρα κάρτες κατασκευαστή πρέπει να εμφανιστούν εδώ.
+            if (_driverWasBusy && !busy && s_vendorCache != null)
+            {
+                TxtVendorExtra.Text = "";
+                PanelVendorExtraButtons.Children.Clear();
+                ShowVendorExtras(s_vendorCache);
+            }
+            _driverWasBusy = busy;
+        }
+
+        // Μία σάρωση τη φορά, από όποιο View κι αν πατηθεί το κουμπί (βλ. ScanState). Η νέα λίστα αντικαθιστά την παλιά ΜΟΝΟ όταν
+        // ολοκληρωθεί και χωρίς διπλότυπα (ίδια πηγή + ίδιο id), ώστε ούτε μια πολύ γρήγορη διπλή πάτηση ούτε δύο πηγές να τα δείξουν δύο φορές.
         private async void BtnScanWinget_Click(object sender, RoutedEventArgs e)
         {
+            if (!AppScan.TryBegin()) return;
             SetBusy(true);
-            TxtWingetStatus.Text = LanguageService.T("Opt_ScanInProgress");
-            _updates.Clear();
+            AppScan.SetStatus(LanguageService.T("Opt_ScanInProgress"));
 
             // ΔΙΟΡΘΩΣΗ - roadmap "Καμία επαναφορά progress bar σε exception": χωρίς try/finally, μια
             // εξαίρεση μέσα στο ScanAsync άφηνε το ProgressWinget μόνιμα ορατό και τα κουμπιά μόνιμα
-            // απενεργοποιημένα - το μόνο "δίχτυ ασφαλείας" ήταν το καθολικό DispatcherUnhandledException
-            // (App.xaml.cs), που δείχνει message box αλλά ΔΕΝ αγγίζει καθόλου την τοπική κατάσταση UI.
+            // απενεργοποιημένα (το μόνο "δίχτυ ασφαλείας" ήταν το καθολικό DispatcherUnhandledException).
             try
             {
                 var results = await WingetService.ScanAsync();
-                foreach (var u in results) _updates.Add(new WingetUpdateRow(u));
+                ReplaceUpdates(results);
 
-                TxtWingetStatus.Text = results.Count == 0
+                AppScan.SetStatus(_updates.Count == 0
                     ? LanguageService.T("Opt_NoUpdatesFound")
-                    : $"{LanguageService.T("Opt_UpdatesFoundPrefix")}{results.Count}{LanguageService.T("Opt_UpdatesFoundSuffix")}";
-                UpdatesHubService.ReportAppScan(results.Count);
+                    : $"{LanguageService.T("Opt_UpdatesFoundPrefix")}{_updates.Count}{LanguageService.T("Opt_UpdatesFoundSuffix")}");
+                UpdatesHubService.ReportAppScan(_updates.Count);
             }
             catch (Exception ex)
             {
-                TxtWingetStatus.Text = $"{LanguageService.T("Opt_ScanFailed")}{ex.Message}";
+                AppScan.SetStatus($"{LanguageService.T("Opt_ScanFailed")}{ex.Message}");
             }
             finally
             {
                 SetBusy(false);
-                s_wingetStatusCache = TxtWingetStatus.Text;
+                AppScan.End();
             }
+        }
+
+        internal static int UpdateCountForTests => _updates.Count;
+
+        /// <summary>Αντικαθιστά τη λίστα ενημερώσεων με τα νέα αποτελέσματα, χωρίς διπλότυπα (κλειδί: πηγή + id, χωρίς διάκριση πεζών-κεφαλαίων).</summary>
+        internal static void ReplaceUpdates(IEnumerable<WingetUpdate> results)
+        {
+            var seen = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+            var rows = new List<WingetUpdateRow>();
+            foreach (var u in results)
+                if (seen.Add((u.Source ?? "") + "|" + u.Id)) rows.Add(new WingetUpdateRow(u));
+            _updates.Clear();
+            foreach (var r in rows) _updates.Add(r);
         }
 
         private void BtnCheckMsStore_Click(object sender, RoutedEventArgs e)
@@ -322,6 +375,7 @@ namespace OptimizerWpf.Views
         {
             var selected = _updates.Where(u => u.IsSelected).ToList();
             if (selected.Count == 0) return;
+            if (!AppScan.TryBegin(installing: true)) return;
 
             SetBusy(true, installing: true);
             var succeeded = new List<string>();
@@ -335,7 +389,7 @@ namespace OptimizerWpf.Views
             {
             foreach (var row in selected)
             {
-                TxtWingetStatus.Text = $"{LanguageService.T("Opt_UpgradingPrefix")}{row.Update.Name}... ({succeeded.Count + failed.Count + openedInStore.Count + 1}/{selected.Count})";
+                AppScan.SetStatus($"{LanguageService.T("Opt_UpgradingPrefix")}{row.Update.Name}... ({succeeded.Count + failed.Count + openedInStore.Count + 1}/{selected.Count})");
 
                 if (row.Update.Source == "msstore")
                 {
@@ -366,7 +420,7 @@ namespace OptimizerWpf.Views
                 else { failed.Add(reason == null ? row.Update.Name : $"{row.Update.Name} [{reason}]"); }
             }
             }
-            finally { SetBusy(false); }
+            finally { SetBusy(false); AppScan.End(); }
 
             // Όπως το Close-WmtStoreGui: το Store κλείνει μόνο όταν όλες οι ενημερώσεις του επιβεβαιώθηκαν.
             if (triggeredStoreOnce && openedInStore.Count == 0 && failed.Count == 0)
@@ -379,8 +433,7 @@ namespace OptimizerWpf.Views
                 summary += $" {openedInStore.Count}{LanguageService.T("Opt_UpgradeOpenedInStoreSuffix")}";
             if (WingetService.RestartRequiredAfterUpdates)
                 summary += " " + LanguageService.T("Opt_RestartRequiredAfterUpdates");
-            TxtWingetStatus.Text = summary;
-            s_wingetStatusCache = summary;
+            AppScan.SetStatus(summary);
             ThemedMessageBox.Show(summary, LanguageService.T("Opt_UpgradeAppsTitle"), MessageBoxButton.OK,
                 failed.Count == 0 ? MessageBoxImage.Information : MessageBoxImage.Warning);
         }
@@ -391,10 +444,6 @@ namespace OptimizerWpf.Views
         // δείχνει "ΕΓΚΑΤΑΣΤΑΣΗ" αντί γι' αυτό μόνο στο δεύτερο μονοπάτι.
         private void SetBusy(bool busy, bool installing = false)
         {
-            ProgressWinget.Visibility = busy ? Visibility.Visible : Visibility.Collapsed;
-            BtnScanWinget.SetScanning(busy, installing && busy ? "Opt_InstallingCaps" : null);
-            BtnScanWinget.IsEnabled = !busy;
-            BtnUpgradeSelected.IsEnabled = !busy;
             if (busy) StatusService.SetBusy(LanguageService.T(installing ? "Opt_InstallingUpdates" : "Opt_CheckingWingetUpdates"));
             else StatusService.SetIdle(LanguageService.T("Ready"));
         }
@@ -442,7 +491,7 @@ namespace OptimizerWpf.Views
 
         // try/catch/finally: οι 4 διαδοχικές σαρώσεις (vendor/WU/devices/Catalog) δεν είχαν καμία προστασία — μια εξαίρεση
         // άφηνε το κουμπί σάρωσης να "γυρίζει" και να μένει απενεργοποιημένο μέχρι επανεκκίνηση της εφαρμογής.
-        private System.Threading.CancellationTokenSource? _driverCts;
+        private static System.Threading.CancellationTokenSource? s_driverCts;
 
         // Αναμονή μιας εργασίας που δεν υποστηρίζει ακύρωση: ο χρήστης επιστρέφει αμέσως, η εργασία
         // παρασκηνίου απλώς τελειώνει και το αποτέλεσμά της απορρίπτεται.
@@ -455,30 +504,26 @@ namespace OptimizerWpf.Views
             return await work;
         }
 
-        private void BtnCancelDriverScan_Click(object sender, RoutedEventArgs e) => _driverCts?.Cancel();
+        private void BtnCancelDriverScan_Click(object sender, RoutedEventArgs e) => s_driverCts?.Cancel();
 
         private async void BtnScanDrivers_Click(object sender, RoutedEventArgs e)
         {
-            _driverCts = new System.Threading.CancellationTokenSource();
-            BtnCancelDriverScan.Visibility = Visibility.Visible;
-            try { await ScanDriversCoreAsync(_driverCts.Token); }
-            catch (OperationCanceledException) { TxtDriverStatus.Text = LanguageService.T("Health_ToolCancelled"); }
-            catch (Exception ex) { TxtDriverStatus.Text = $"{LanguageService.T("Opt_ScanFailed")}{ex.Message}"; }
+            if (!DriverScan.TryBegin()) return;
+            s_driverCts = new System.Threading.CancellationTokenSource();
+            try { await ScanDriversCoreAsync(s_driverCts.Token); }
+            catch (OperationCanceledException) { DriverScan.SetStatus(LanguageService.T("Health_ToolCancelled")); }
+            catch (Exception ex) { DriverScan.SetStatus($"{LanguageService.T("Opt_ScanFailed")}{ex.Message}"); }
             finally
             {
-                BtnCancelDriverScan.Visibility = Visibility.Collapsed;
-                _driverCts.Dispose();
-                _driverCts = null;
+                s_driverCts?.Dispose();
+                s_driverCts = null;
                 StatusService.SetIdle(LanguageService.T("Ready"));
-                BtnScanDrivers.SetScanning(false);
-                BtnScanDrivers.IsEnabled = true;
+                DriverScan.End();
             }
         }
 
         private async Task ScanDriversCoreAsync(System.Threading.CancellationToken ct)
         {
-            BtnScanDrivers.SetScanning(true);
-            BtnScanDrivers.IsEnabled = false;
             _driverUpdates.Clear();
             TxtVendorExtra.Text = "";
             PanelVendorExtraButtons.Children.Clear();
@@ -487,7 +532,7 @@ namespace OptimizerWpf.Views
             // IObit Driver Booster") - AMD/NVIDIA τρέχουν ΠΡΩΤΑ (ίδια σειρά με το ps1's Complete-
             // DriverScan, "εμφανίζεται πάντα πρώτη") ώστε τα ονόματα GPU τους να είναι διαθέσιμα για
             // trust-overlap πριν προστεθούν τα WU αποτελέσματα.
-            TxtDriverStatus.Text = LanguageService.T("Opt_CheckingVendorSources");
+            DriverScan.SetStatus(LanguageService.T("Opt_CheckingVendorSources"));
             StatusService.SetBusy(LanguageService.T("Opt_ScanningVendorSources"));
             var vendor = await OrCancelAsync(DriverService.ScanVendorSourcesAsync(), ct);
             var confirmedGpuNames = new List<string>();
@@ -517,7 +562,7 @@ namespace OptimizerWpf.Views
                 });
             }
 
-            TxtDriverStatus.Text = LanguageService.T("Opt_CheckingWuDrivers");
+            DriverScan.SetStatus(LanguageService.T("Opt_CheckingWuDrivers"));
             StatusService.SetBusy(LanguageService.T("Opt_ScanningWuDrivers"));
             var wuResult = await OrCancelAsync(DriverService.ScanAsync(), ct);
             foreach (var u in wuResult.Updates)
@@ -534,7 +579,7 @@ namespace OptimizerWpf.Views
                 });
             }
 
-            TxtDriverStatus.Text = LanguageService.T("Opt_EnumeratingDevices");
+            DriverScan.SetStatus(LanguageService.T("Opt_EnumeratingDevices"));
             StatusService.SetBusy(LanguageService.T("Opt_EnumeratingDevicesShort"));
             var devices = await OrCancelAsync(DriverService.GetSystemDevicesAsync(), ct);
             var progress = new Progress<string>(name => StatusService.SetBusy($"{LanguageService.T("Opt_CheckingCatalogPrefix")}{name}..."));
@@ -549,9 +594,6 @@ namespace OptimizerWpf.Views
                 });
 
             StatusService.SetIdle(LanguageService.T("Ready"));
-            BtnScanDrivers.SetScanning(false);
-            BtnScanDrivers.IsEnabled = true;
-            BorderDriverResults.Visibility = _driverUpdates.Count > 0 ? Visibility.Visible : Visibility.Collapsed;
 
             var parts = new List<string>();
             parts.Add(wuResult.PolicyBlocked
@@ -560,11 +602,10 @@ namespace OptimizerWpf.Views
             parts.Add(looksBlocked
                 ? $"{LanguageService.T("Opt_CatalogNoResponsePrefix")}{devices.Count}{LanguageService.T("Opt_CatalogNoResponseSuffix")}"
                 : $"Update Catalog: {candidates.Count}{LanguageService.T("Opt_CatalogUpdatesMid")}{devices.Count}{LanguageService.T("Opt_CatalogUpdatesSuffix")}");
-            TxtDriverStatus.Text = _driverUpdates.Count == 0
+            DriverScan.SetStatus(_driverUpdates.Count == 0
                 ? $"{LanguageService.T("Opt_NoDriverUpdatesFound")} {string.Join(" ", parts)}"
-                : $"{LanguageService.T("Opt_DriverUpdatesFoundPrefix")}{_driverUpdates.Count}{LanguageService.T("Opt_DriverUpdatesFoundSuffix")} {string.Join(" ", parts)}";
+                : $"{LanguageService.T("Opt_DriverUpdatesFoundPrefix")}{_driverUpdates.Count}{LanguageService.T("Opt_DriverUpdatesFoundSuffix")} {string.Join(" ", parts)}");
             UpdatesHubService.ReportDriverScan(_driverUpdates.Count);
-            s_driverStatusCache = TxtDriverStatus.Text;
             s_vendorCache = vendor;
 
             ShowVendorExtras(vendor);

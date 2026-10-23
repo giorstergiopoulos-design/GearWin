@@ -126,6 +126,8 @@ public partial class MainWindow : Window
         };
 
         FitWidthToTabs();
+        SizeChanged += (_, _) => AdaptTabStripToWidth();
+        Loaded += (_, _) => AdaptTabStripToWidth();
 
         _ = CheckHealthAttentionAsync();
     }
@@ -165,6 +167,40 @@ public partial class MainWindow : Window
             Width = Math.Clamp(needed, MinWidth, Math.Max(MinWidth, max));
         }
         catch { /* αν αποτύχει η μέτρηση μένει το πλάτος του XAML */ }
+    }
+
+    // 6.5.3: όταν η λωρίδα καρτελών ΔΕΝ χωράει (στενό παράθυρο, οθόνη 1920px με κλιμάκωση 150%, μεγάλη γλώσσα), η τελευταία καρτέλα φαινόταν
+    // κομμένη στο δεξί άκρο. Τώρα τα ονόματα των ΜΗ επιλεγμένων καρτελών κρύβονται (μένει το εικονίδιο, με tooltip) ώστε να φαίνονται ΟΛΕΣ οι
+    // καρτέλες και το όνομα της τρέχουσας· όταν το παράθυρο ξαναμεγαλώσει, επιστρέφουν όλα τα ονόματα. Η οριζόντια κύλιση παραμένει ως δίχτυ ασφαλείας.
+    private bool _adaptingTabs;
+
+    private void AdaptTabStripToWidth()
+    {
+        if (_adaptingTabs) return;
+        _adaptingTabs = true;
+        try
+        {
+            if (TabStripScroll.Visibility != Visibility.Visible || TabStripScroll.ActualWidth <= 0) return;
+            var tabs = new List<(RadioButton Tab, TextBlock Label)>();
+            foreach (var (_, getLabel) in TabLabels)
+            {
+                var label = getLabel(this);
+                if (label.Parent is StackPanel { Parent: RadioButton rb }) tabs.Add((rb, label));
+            }
+            if (tabs.Count == 0) return;
+            foreach (var (_, label) in tabs) label.Visibility = Visibility.Visible;
+            // ΠΛΗΡΗΣ διάταξη, όχι TabStrip.Measure(): το WPF δεν περνά την "βρώμικη" κατάσταση από ένα TextBlock στους γονείς του αμέσως, και το Measure
+            // επέστρεφε τα παλιά (cached) μεγέθη των RadioButton - η λωρίδα φαινόταν "χωράει" ενώ οι καρτέλες ξεπερνούσαν το παράθυρο.
+            TabStripScroll.UpdateLayout();
+            var overflow = TabStrip.ActualWidth > TabStripScroll.ViewportWidth + 1;
+            foreach (var (tab, label) in tabs)
+            {
+                label.Visibility = !overflow || tab.IsChecked == true ? Visibility.Visible : Visibility.Collapsed;
+                tab.ToolTip = overflow ? label.Text : null;
+            }
+        }
+        catch { /* η προσαρμογή είναι διακοσμητική: αν αποτύχει μένει η οριζόντια κύλιση */ }
+        finally { _adaptingTabs = false; }
     }
 
     // GEARWIN.MD: όταν η λωρίδα καρτελών δεν χωράει, η ρόδα του ποντικιού με hover να την κυλάει -
@@ -258,6 +294,7 @@ public partial class MainWindow : Window
         LblTabBloatware.Text = LanguageService.T("TabBloatware");
         LblTabAdvanced.Text = LanguageService.T("TabAdvanced");
         LblTabSystem.Text = LanguageService.T("TabSystem");
+        Dispatcher.BeginInvoke(new Action(AdaptTabStripToWidth), System.Windows.Threading.DispatcherPriority.Loaded);   // η νέα γλώσσα αλλάζει τα πλάτη των ονομάτων
 
         PopulateClassicMenu();
         _searchIndex = BuildSearchIndex();
@@ -656,6 +693,7 @@ public partial class MainWindow : Window
         ContentHost.BeginAnimation(OpacityProperty, new System.Windows.Media.Animation.DoubleAnimation(0, 1,
             new Duration(TimeSpan.FromMilliseconds(180))) { EasingFunction = new System.Windows.Media.Animation.QuadraticEase() });
         SyncRailSelection();
+        AdaptTabStripToWidth();
     }
 
     // Γεμίζει ΟΛΟΚΛΗΡΟ το κλασικό μενού (4 ομάδες: Εργαλεία/Προβολή/Ρυθμίσεις/Βοήθεια) από το κοινό
