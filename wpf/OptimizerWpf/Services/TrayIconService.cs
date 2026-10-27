@@ -66,6 +66,10 @@ namespace OptimizerWpf.Services
             // εναλλακτική για όποιον προτιμά το ποντίκι.
             _clipboardHistoryItem = new ToolStripMenuItem(LanguageService.T("Clipboard_Title"), null, (_, _) => mainWindow.Dispatcher.Invoke(() => new Views.ClipboardHistoryWindow().Show()));
             menu.Items.Add(_clipboardHistoryItem);
+            _guideItem = new ToolStripMenuItem(LanguageService.T("Guide_MenuItem"), null, (_, _) => ShowFromTray(m => Views.StartupGuideCoordinator.ShowWelcome(m)));
+            menu.Items.Add(_guideItem);
+            _suiteItem = new ToolStripMenuItem(LanguageService.T("Suite_Title"), null, (_, _) => ShowFromTray(m => Views.StartupGuideCoordinator.ShowSuite(m)));
+            menu.Items.Add(_suiteItem);
             _widgetMenuItem = new ToolStripMenuItem(LanguageService.T("Appr_DesktopWidget"), null, (_, _) => ToggleWidget());
             menu.Items.Add(_widgetMenuItem);
             menu.Items.Add(new ToolStripSeparator());
@@ -96,8 +100,23 @@ namespace OptimizerWpf.Services
             LanguageService.Changed += ApplyLanguage;
         }
 
+        private static ToolStripMenuItem? _guideItem, _suiteItem;
+
+        // Φέρνει το κύριο παράθυρο μπροστά και ανοίγει μετά την κουρτίνα (ο οδηγός/η σουίτα καλύπτουν το κύριο παράθυρο).
+        private static void ShowFromTray(Action<MainWindow> show)
+        {
+            if (_mainWindow is not MainWindow m) return;
+            m.Dispatcher.Invoke(() =>
+            {
+                RestoreMainWindow();
+                m.Dispatcher.BeginInvoke(new Action(() => show(m)), System.Windows.Threading.DispatcherPriority.ApplicationIdle);
+            });
+        }
+
         private static void ApplyLanguage()
         {
+            if (_guideItem != null) _guideItem.Text = LanguageService.T("Guide_MenuItem");
+            if (_suiteItem != null) _suiteItem.Text = LanguageService.T("Suite_Title");
             if (_openMainItem != null) _openMainItem.Text = LanguageService.T("Tray_OpenMain");
             if (_quickCleanMenuItem != null) _quickCleanMenuItem.Text = LanguageService.T("Tray_QuickClean");
             if (_healthCheckItem != null) _healthCheckItem.Text = LanguageService.T("HealthCheck_Title");

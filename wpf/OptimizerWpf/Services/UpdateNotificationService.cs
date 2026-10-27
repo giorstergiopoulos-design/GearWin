@@ -172,23 +172,8 @@ namespace OptimizerWpf.Services
             }
             catch (Exception ex) { Log($"RunCheckAsync: Windows Update scan threw - {ex}"); }
 
-            // ΝΕΟ (6.5.0) - νέα έκδοση του ίδιου του GearWin στο GitHub (βλ. SelfUpdateService). Ειδοποίηση ΜΙΑ φορά ανά έκδοση
-            // (ή σε κάθε έλεγχο εκκίνησης, announce=true)· η εγκατάσταση γίνεται μόνο από Ρυθμίσεις › Ενημέρωση GearWin, με επιβεβαίωση.
-            try
-            {
-                if (AppSettingsService.Current.SelfUpdateCheckEnabled)
-                {
-                    var (info, error) = await SelfUpdateService.CheckAsync();
-                    Log($"RunCheckAsync: GearWin self-update check -> {(error != null ? "error: " + error : info == null ? "up to date" : "available " + info.Tag)}");
-                    if (info != null && (announce || AppSettingsService.Current.LastNotifiedSelfUpdate != info.Tag))
-                    {
-                        AppSettingsService.Current.LastNotifiedSelfUpdate = info.Tag;
-                        TrayIconService.ShowNotificationBalloon(LanguageService.T("SelfUpdate_NotifyTitle"),
-                            string.Format(LanguageService.T("SelfUpdate_NotifyBody"), info.Version), TrayIconService.OpenSettings);
-                    }
-                }
-            }
-            catch (Exception ex) { Log($"RunCheckAsync: GearWin self-update check threw - {ex}"); }
+            // 6.6.0: η ειδοποίηση νέας έκδοσης του GearWin μεταφέρθηκε στο ReleaseCheckService (δικό του timer 30 s/24 ώρες, ETag,
+            // μία φορά ανά έκδοση) - εδώ δεν περιμένει πια πίσω από τις σαρώσεις winget/οδηγών/Windows Update.
 
             AppSettingsService.Save();
 

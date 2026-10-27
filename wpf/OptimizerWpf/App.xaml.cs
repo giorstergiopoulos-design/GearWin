@@ -139,8 +139,10 @@ public partial class App : Application
         // σιωπηλή εκκίνηση στο tray - μπλοκάρει ΚΑΙ όλο τον υπόλοιπο κώδικα παρακάτω (tray icon, έλεγχος
         // ενημερώσεων) μέχρι να κλείσει, κάτι που ο χρήστης δεν θα περίμενε/πρόσεχε σε μια σιωπηλή
         // εκκίνηση. Η κουρτίνα παραμένει διαθέσιμη αργότερα από τη Βοήθεια - δεν χάνεται τίποτα.
+        var onboardingShown = false;
         if (!Services.AppSettingsService.Current.HasSeenOnboarding && !e.Args.Contains("--tray"))
         {
+            onboardingShown = true;
             ShutdownMode = ShutdownMode.OnExplicitShutdown;
             new Views.OnboardingWindow().ShowDialog();
             ShutdownMode = ShutdownMode.OnLastWindowClose;
@@ -171,6 +173,8 @@ public partial class App : Application
         {
             main.Show();
             var splash = new Views.SplashWindow(main) { Owner = main };
+            // 6.6.0 - μετά την κουρτίνα εκκίνησης: οδηγός καλωσορίσματος (μία φορά ανά νέα έκδοση) και μετά πρόταση «οικογένειας».
+            splash.Closed += (_, _) => main.Dispatcher.BeginInvoke(new Action(() => Views.StartupGuideCoordinator.RunAtStartup(main, onboardingShown)));
             splash.Show();
         }
 
@@ -184,6 +188,10 @@ public partial class App : Application
         // TrayIconService.Start παραπάνω, αφού το ShowUpdateBalloon χρειάζεται το NotifyIcon έτοιμο.
         Services.UpdateNotificationService.Start();
         Exit += (_, _) => Services.UpdateNotificationService.Stop();
+
+        // 6.6.0 - ειδοποίηση νέας έκδοσης GearWin (balloon): πρώτος έλεγχος ~30 s μετά την εκκίνηση, μετά κάθε 24 ώρες.
+        Services.ReleaseCheckService.Start();
+        Exit += (_, _) => Services.ReleaseCheckService.Stop();
 
         // ΝΕΟ (6.1.0) - ειδοποιήσεις θερμοκρασίας/S.M.A.R.T. (ρυθμίζονται στο Κέντρο Συντήρησης).
         Services.AlertService.Start();

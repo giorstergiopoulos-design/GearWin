@@ -41,7 +41,7 @@
          ενημερωμένα OptimizerWpf.dll/.exe - σιωπηλή αποτυχία ενημέρωσης. ΠΡΕΠΕΙ να ενημερώνεται σε
          ΚΑΘΕ έκδοση, μαζί με τα υπόλοιπα 3 σημεία (MainWindow.xaml/SplashWindow.xaml τίτλοι,
          installer/OptimizerWpf.iss's MyAppVersion) - βλ. HANDOFF.md/commit history για το μοτίβο. -->
-    <Version>6.5.5</Version>
+    <Version>6.6.0</Version>
     <!-- ΝΕΟ - βελτίωση απόδοσης: ReadyToRun προ-μεταγλωττίζει τη native εικόνα κατά το publish αντί
          να αφήνει τα πάντα στο JIT κατά την πρώτη εκκίνηση - πιο γρήγορο cold start, χωρίς κανένα
          ρίσκο διαγραφής κώδικα (σε αντίθεση με το trimming, το οποίο ΔΕΝ ενεργοποιείται εδώ σκόπιμα -
@@ -81,6 +81,9 @@
          ApplicationIcon παραπάνω για το ίδιο το exe/taskbar. -->
     <PackageReference Include="WPF-UI" Version="4.3.0" />
     <Resource Include="AppIcon.ico" />
+    <!-- 6.6.0: εικονίδια της σουίτας για το SuiteShowcaseWindow + ενσωματωμένο αντίγραφο του καταλόγου (fallback όταν δεν υπάρχει δίκτυο). -->
+    <Resource Include="Assets\suite\*.ico" />
+    <EmbeddedResource Include="Assets\suite-apps.json" LogicalName="suite-apps.json" />
     <!-- Ρητό αίτημα χρήστη - πραγματικές εικόνες CPU/RAM/GPU/Δίσκου στα αντίστοιχα πλακίδια της
          Αρχικής (αντικαθιστούν το διανυσματικό HardwareChipIcon και στα 4 πλακίδια). -->
     <Resource Include="Assets\cpu-icon.png" />

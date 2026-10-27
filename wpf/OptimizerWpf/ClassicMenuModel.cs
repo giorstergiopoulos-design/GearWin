@@ -77,6 +77,8 @@ namespace OptimizerWpf
             {
                 new MenuLeaf("", LanguageService.T("VerHist_Title"), new MenuAction(null, "VerHist_Title")),
                 new MenuLeaf("", LanguageService.T("Help_Title"), new MenuAction(null, "Help_Title")),
+                new MenuLeaf("", LanguageService.T("Guide_MenuItem"), new MenuAction(null, "Guide_MenuItem")),
+                new MenuLeaf("", LanguageService.T("Suite_Title"), new MenuAction(null, "Suite_Title")),
                 // Ρητό αίτημα χρήστη: "με ξεχωριστό υπομενού στο κλασικό μενού άδεια χρήσης", μετά
                 // "στην Βοήθεια/Οδηγίες να ανοίγει το παράθυρο με δύο tabs όπου το δεύτερο θα είναι η
                 // άδεια χρήσης" - ξεχωριστό στοιχείο υπομενού εδώ, αλλά ανοίγει το ΙΔΙΟ HelpWindow

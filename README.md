@@ -110,8 +110,18 @@ The app is organized into 9 tabs:
 
 Also: full support for 14 languages (Greek, English, German, French, Spanish, Italian, Russian,
 Chinese, Japanese, Portuguese, Korean, Turkish, Arabic, Hindi), Light/Dark appearance themes with
-multiple animated styles, a first-run tutorial, and an action log for full transparency on what the
+multiple animated styles, a first-run tutorial, a welcome guide for each new version, "The Opsis family" window (the
+other apps of the suite, with install state and SHA-256-verified downloads after your confirmation), a notice for new
+GearWin versions, and an action log for full transparency on what the
 app changed on your system.
+
+### Network use and privacy
+
+GearWin sends no telemetry. Its only own requests are plain GETs to GitHub: the daily check for a newer GearWin
+release (`api.github.com`, with ETag, ~30 s after start and then every 24 h; switch it off in Settings) and, when you open
+"The Opsis family", the app catalogue (`raw.githubusercontent.com`, at most once a day, validated, with an embedded
+fallback). Installers of other apps are downloaded only after you confirm, are verified against a SHA-256 and are never
+run by GearWin.
 
 ### Screenshots
 

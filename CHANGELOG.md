@@ -6,6 +6,16 @@ available inside the app itself, via Help/Instructions → the "Version History"
 
 Format loosely follows [Keep a Changelog](https://keepachangelog.com/).
 
+## v6.6.0 — Welcome guide, Opsis family, new-version notice
+
+- **Welcome guide** (`WelcomeGuideWindow`): 5 short pages, shown once per new major.minor version (per-version "Don't show again", on by default) and from Help / tray / classic menu. Closing it shrinks the card into the window's gear icon (~400 ms; plain fade when Windows animations are off or the render tier is low). On a first install the older detailed tutorial still runs and the guide is skipped for that run.
+- **The Opsis family** (`SuiteShowcaseWindow`): one card per app of the suite (animated icon, tagline, capabilities, "Installed vX / Not installed / Update available / You are here", Open / Install / Details). Offered once after the guide, reachable from Help, tray and classic menu. The catalogue (`suite/apps.json` in the Opsis repo) is embedded as a fallback and fetched at most once a day (5 s timeout, https and GitHub hosts only, 256 KB cap, owner pinned, unknown fields ignored). Install downloads only after a confirmation (file, size, source), saves to Downloads, verifies SHA-256 (GitHub `digest` or the `.sha256` asset) and deletes the file on mismatch; the installer is never run by GearWin. Installed state is read-only (known paths + Uninstall registry keys).
+- **New-version balloon** (`ReleaseCheckService`): own check ~30 s after start, then every 24 h (before: queued behind the winget/driver/Windows Update scans and repeated on every start). One GET to the GitHub API with ETag, once per version, deferred while a full-screen app/game or presentation is active; click opens Settings (installer with SHA-256) or the release page.
+- Reusable classes: `ReleaseVersion`, `OncePerVersionStore`, `SuiteCatalogService`, `InstalledAppDetector`, `GitHubReleaseClient`, `SuiteInstallerService`, `OverlayCardHost`.
+- Install-path corrections found in the installer scripts: Opsis `%ProgramFiles%\Opsis - Desktop Customization`, GearWin `%ProgramFiles%\GearWin - Complete PC Care` (both admin installs), Kombos uninstall name is "Κόμβος", Waveframe (NSIS per-user) `%LocalAppData%\Programs\Waveframe`.
+- Privacy: the update check and the catalogue fetch are plain GETs to api.github.com / raw.githubusercontent.com, no telemetry.
+- Tests: new `SuiteAndReleaseTests` (version comparison, once-per-version store, catalogue validation incl. bad host/oversize/malformed, SHA-256 match/mismatch, installed detection with fakes, ETag/304, balloon rule) and `WelcomeSuiteWindowTests` (text fit of every guide page and the showcase in all 14 languages, closing effect). NOT verified live: a real download of another app's installer, a real newer GearWin release, the balloon as rendered by Windows.
+
 ## v6.5.5 — Gaming switches and startup in one place
 
 - **HAGS** (hardware-accelerated GPU scheduling) had two switches for the same registry value with different "off" behaviour: Windows Tweaks > Performance (restores the previous value) and Games > Gaming settings (writes 1). It now lives only in **Games > Gaming settings**. The old tweak definition stays internally, so anything changed from the Tweaks tab earlier is still undone by "Restore all tweaks".

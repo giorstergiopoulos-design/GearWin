@@ -984,6 +984,8 @@ public partial class MainWindow : Window
         // "Cannot set Visibility to Visible or call Show, ShowDialog, or WindowInteropHelper.
         // EnsureHandle while a Window is closing." Το ίδιο το παράθυρο ΔΕΝ έγινε ποτέ modal dialog -
         // το μη-αποκλειστικό .Show() (ίδιο με το tray icon) δουλεύει σωστά από ΚΑΘΕ σημείο εισόδου.
+        if (key == "Guide_MenuItem") { Views.StartupGuideCoordinator.ShowWelcome(this); return; }
+        if (key == "Suite_Title") { Views.StartupGuideCoordinator.ShowSuite(this); return; }
         if (key == "Clipboard_Title")
         {
             new ClipboardHistoryWindow { Owner = this }.Show();

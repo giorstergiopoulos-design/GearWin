@@ -19,6 +19,9 @@ namespace OptimizerWpf.Views
 
         private void BtnClose_Click(object sender, RoutedEventArgs e) => Close();
 
+        private void BtnWelcomeGuide_Click(object sender, RoutedEventArgs e) => StartupGuideCoordinator.ShowWelcomeFrom(this);
+        private void BtnSuite_Click(object sender, RoutedEventArgs e) => StartupGuideCoordinator.ShowSuiteFrom(this);
+
         private void BtnReplayOnboarding_Click(object sender, RoutedEventArgs e) =>
             new OnboardingWindow { Owner = this }.ShowDialog();
     }
