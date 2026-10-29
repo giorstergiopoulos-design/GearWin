@@ -134,7 +134,7 @@ public partial class MainWindow : Window
 
     private static readonly (string Key, Func<MainWindow, TextBlock> Label)[] TabLabels =
     {
-        ("TabHome", w => w.LblTabHome), ("TabOptimization", w => w.LblTabOptimization), ("TabHealth", w => w.LblTabHealth),
+        ("TabHome", w => w.LblTabHome), ("TabHealth", w => w.LblTabHealth),
         ("TabNetwork", w => w.LblTabNetwork), ("TabTweaks", w => w.LblTabTweaks), ("TabGamesMedia", w => w.LblTabGamesMedia),
         ("TabBloatware", w => w.LblTabBloatware),
         ("TabAdvanced", w => w.LblTabAdvanced), ("TabSystem", w => w.LblTabSystem),
@@ -286,7 +286,6 @@ public partial class MainWindow : Window
         // Στατικοί συνδρομητές: μπορεί να κληθεί από άλλο thread (π.χ. υπηρεσία παρασκηνίου/δοκιμή) - εκτελείται στο thread του παραθύρου.
         if (!Dispatcher.CheckAccess()) { Dispatcher.BeginInvoke(ApplyLanguage); return; }
         LblTabHome.Text = LanguageService.T("TabHome");
-        LblTabOptimization.Text = LanguageService.T("TabOptimization");
         LblTabHealth.Text = LanguageService.T("TabHealth");
         LblTabNetwork.Text = LanguageService.T("TabNetwork");
         LblTabTweaks.Text = LanguageService.T("TabTweaks");
@@ -452,9 +451,9 @@ public partial class MainWindow : Window
         ("Bloatware#0", new[] { "Optimization_SoftwareUpdate", "Opt_NightlyUpdates" }),
         ("Bloatware#1", new[] { "Optimization_Drivers", "Optimization_DriverStore", "Advanced_GhostDevices" }),
         ("Bloatware#2", new[] { "Bloatware_Builtin", "Advanced_OptionalFeatures", "Bloatware_Recommended", "Bloatware_UwpManager", "Bloatware_DeepUninstall" }),
-        ("Optimization#0", new[] { "Opt_ModesSection", "Optimization_GamingMode", "Optimization_OfficeMode", "Opt_UltimatePerformance", "Opt_AutoGamingMode", "Opt_ScheduledMaintenance", "System_Processes", "System_Benchmark" }),
-        ("Optimization#1", new[] { "Health_BrowserCache", "System_Storage", "Advanced_DuplicateFinder" }),
-        ("Optimization#2", new[] { "Advanced_ScheduledTasks", "Advanced_BootTimeline", "System_Startup", "System_Services" }),
+        ("Health#1", new[] { "Opt_ModesSection", "Optimization_GamingMode", "Optimization_OfficeMode", "Opt_UltimatePerformance", "Opt_AutoGamingMode", "Opt_ScheduledMaintenance", "System_Processes", "System_Benchmark" }),
+        ("Health#2", new[] { "Health_BrowserCache", "System_Storage", "Advanced_DuplicateFinder" }),
+        ("Health#3", new[] { "Advanced_ScheduledTasks", "Advanced_BootTimeline", "System_Startup", "System_Services" }),
         ("Health", new[] { "Health_Tools", "Health_RegistryCleaner", "Health_WinRE", "Health_DiskTrend" }),
         ("Network#0", new[] { "Network_PrivacyTitle", "Network_FirewallRules", "Network_OpenPorts", "Network_FirewallPolicy", "Advanced_Autologon", "FolderLock_Title" }),
         ("Network#1", new[] { "Network_TrafficPerApp", "Network_QuickDns", "Network_HostsEditor" }),
@@ -587,7 +586,7 @@ public partial class MainWindow : Window
         {
             Key.D1 or Key.NumPad1 => "Home",
             Key.D2 or Key.NumPad2 => "Bloatware",
-            Key.D3 or Key.NumPad3 => "Optimization",
+            Key.D3 or Key.NumPad3 => "Health#1",
             Key.D4 or Key.NumPad4 => "Health",
             Key.D5 or Key.NumPad5 => "Network",
             Key.D6 or Key.NumPad6 => "GamesMedia",
@@ -776,6 +775,8 @@ public partial class MainWindow : Window
         var hash = tagSpec.IndexOf('#');
         var tag = hash < 0 ? tagSpec : tagSpec[..hash];
         var sub = hash >= 0 && int.TryParse(tagSpec[(hash + 1)..], out var n) ? n : 0;
+        // 6.8.0: η καρτέλα «Καθαρισμός & Απόδοση» ενσωματώθηκε στην «Υγεία & Επισκευή» (υποσελίδες 1-3)
+        if (tag == "Optimization") { tag = "Health"; sub += 1; }
         foreach (var child in TabStrip.Children)
         {
             if (child is not RadioButton rb || rb.Tag as string != tag) continue;

@@ -579,9 +579,6 @@
             <RadioButton Tag="Bloatware" Style="{StaticResource TabPillStyle}" Checked="TabButton_Checked">
                 <StackPanel Orientation="Horizontal"><views:HeaderGlyphIcon Kind="Package" Width="20" Height="20" Margin="0,0,7,0"/><TextBlock x:Name="LblTabBloatware" Text="Εφαρμογές &amp; Bloat"/></StackPanel>
             </RadioButton>
-            <RadioButton Tag="Optimization" Style="{StaticResource TabPillStyle}" Checked="TabButton_Checked">
-                <StackPanel Orientation="Horizontal"><views:HeaderGlyphIcon Kind="Bolt" Width="20" Height="20" Margin="0,0,7,0"/><TextBlock x:Name="LblTabOptimization" Text="Βελτιστοποίηση"/></StackPanel>
-            </RadioButton>
             <!-- ΔΙΟΡΘΩΣΗ (χρήστης ζήτησε ρητά: "εικονίδια καρδιάς όπως στην 2.8.2" - το ps1 original
                  όντως χρησιμοποιεί καρδιά, [char]0xE95E στο δικό του Fluent icon font, βλ. $fluentGlyphMap
                  στο Optimizer.ps1 ~432). Χρήση του U+2764 (❤, καθολικά υποστηριζόμενο emoji) αντί για

@@ -34,7 +34,6 @@ namespace OptimizerWpf
             new NavItem("Home", "\U0001F3E0", LanguageService.T("TabHome"), GlyphKind.Home),
             // 6.5.0 - νέα δομή 9 καρτελών (βλ. TabLayout.cs): τα tags μένουν ίδια, αλλάζει το περιεχόμενο/όνομα και η σειρά.
             new NavItem("Bloatware", "\U0001F4E6", LanguageService.T("TabBloatware"), GlyphKind.Package),
-            new NavItem("Optimization", "⚡", LanguageService.T("TabOptimization"), GlyphKind.Bolt),
             new NavItem("Health", "❤", LanguageService.T("TabHealth"), GlyphKind.Heart),
             new NavItem("Network", "\U0001F6E1", LanguageService.T("TabNetwork"), GlyphKind.Shield),
             // 6.3.5 - συγχώνευση Παιχνίδια+Πολυμέσα σε μία καρτέλα (βλ. GamesMediaView, Tag="GamesMedia" στο MainWindow.xaml) -

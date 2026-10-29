@@ -33,15 +33,14 @@ namespace OptimizerWpf
                 new TabSubPage("Sub_Drivers", new TabPart("Optimization", "Drivers"), new TabPart("Advanced", "Ghost")),
                 new TabSubPage("Sub_Apps", new TabPart("Bloatware", "All")),
             },
-            ["Optimization"] = new[]
-            {
-                new TabSubPage("Sub_Performance", new TabPart("Optimization", "Modes"), new TabPart("System", "Processes"), new TabPart("Advanced", "Benchmark")),
-                new TabSubPage("Sub_Cleanup", new TabPart("Health", "Cleanup"), new TabPart("System", "Storage"), new TabPart("Advanced", "Duplicates")),
-                new TabSubPage("Sub_Startup", new TabPart("Advanced", "Startup")),
-            },
+            // 6.8.0: «Καθαρισμός & Απόδοση» συγχωνεύθηκε στην «Υγεία & Επισκευή» (Επισκευή | Απόδοση | Καθαρισμός | Εκκίνηση).
+            // Το παλιό tag "Optimization#N" ανακατευθύνεται στο Health#(N+1) (βλ. MainWindow.SelectTab).
             ["Health"] = new[]
             {
                 new TabSubPage("Sub_Repair", new TabPart("Health", "Repair")),
+                new TabSubPage("Sub_Performance", new TabPart("Optimization", "Modes"), new TabPart("System", "Processes"), new TabPart("Advanced", "Benchmark")),
+                new TabSubPage("Sub_Cleanup", new TabPart("Health", "Cleanup"), new TabPart("System", "Storage"), new TabPart("Advanced", "Duplicates")),
+                new TabSubPage("Sub_Startup", new TabPart("Advanced", "Startup")),
             },
             ["Network"] = new[]
             {
