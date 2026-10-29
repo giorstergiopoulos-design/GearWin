@@ -100,6 +100,10 @@
                          μοτίβο με το BtnScanDrivers/DriverScanButton παραπάνω στην κάρτα Οδηγών: μεγάλο
                          κυκλικό κουμπί σάρωσης αντί για το προηγούμενο απλό ορθογώνιο "Σάρωση". -->
                     <views:AppUpdateScanButton x:Name="BtnScanWinget" HorizontalAlignment="Center" Margin="0,10,0,10" Click="BtnScanWinget_Click"/>
+                    <!-- 6.8.0: ένα κουμπί που σαρώνει ταυτόχρονα εφαρμογές + Windows Update (ήδη στη λίστα εφαρμογών) + οδηγούς. -->
+                    <Button x:Name="BtnScanAll" Content="{tr:Tr Opt_ScanAllBtn}" Style="{StaticResource FlatButtonStyle}" Padding="16,7"
+                            HorizontalAlignment="Center" Margin="0,0,0,4" Click="BtnScanAll_Click"/>
+                    <TextBlock Text="{tr:Tr Opt_ScanAllHint}" Style="{StaticResource SubTextStyle}" TextWrapping="Wrap" HorizontalAlignment="Center" TextAlignment="Center" Margin="0,0,0,10"/>
 
                     <Grid Margin="0,0,0,0">
                         <Grid.ColumnDefinitions>

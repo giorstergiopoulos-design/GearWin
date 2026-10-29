@@ -513,6 +513,13 @@ namespace OptimizerWpf.Views
 
         private void BtnCancelDriverScan_Click(object sender, RoutedEventArgs e) => s_driverCts?.Cancel();
 
+        // 6.8.0: εφαρμογές (+Windows Update) και οδηγοί μαζί - οι δύο σαρώσεις είναι ανεξάρτητες και η καθεμία single-flight (ScanState).
+        private void BtnScanAll_Click(object sender, RoutedEventArgs e)
+        {
+            BtnScanWinget_Click(sender, e);
+            BtnScanDrivers_Click(sender, e);
+        }
+
         private async void BtnScanDrivers_Click(object sender, RoutedEventArgs e)
         {
             if (!DriverScan.TryBegin()) return;
