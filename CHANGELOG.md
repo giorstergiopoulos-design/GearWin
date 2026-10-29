@@ -6,6 +6,11 @@ available inside the app itself, via Help/Instructions → the "Version History"
 
 Format loosely follows [Keep a Changelog](https://keepachangelog.com/).
 
+## v6.7.1 — Update popup like the Crawler's
+
+- New-version notice is now a small popup (bottom right, never steals focus) with the same buttons and messages as Opsis News Crawler: **Install** (Settings > GearWin update, SHA-256 mandatory, explicit confirmation; release page when the release has no digest), **Later**, **Skip this version** (never announced again, nor any older one) and **What's new** (release page), plus the tray balloon. Check/ETag/once-per-version/full-screen deferral unchanged from 6.6.0. New strings in 14 languages, new test for the skip rule (306 tests).
+- NOT done in 6.7.1 (carry over): system updates together with the updater, updater progress/cancel/filters/ignore list, "Cleanup & Performance" into "Health & Repair", card spacing, SDI core download, winget uninstall, git-repo updates, Vivetool list button, UWP view, Windows-features list, fonts/devices/timeline/codecs/reports regrouping, merging the two guides, keep-alive tab pages, accessibility names, README screenshots, async-void/blocking-wait audit, repo hygiene, grammar pass. Not verified live: the popup in the real app (only built and unit-tested).
+
 ## v6.7.0 — Media converter removed
 
 - **Removed the video/audio converter** (user decision: conversion now lives in Opsis Media Player Pro for video/image and Waveframe for audio): the card, `MediaConverterService`/`MediaPreset`/`MediaQuality`, the ffmpeg detection, 28 unused translation keys in all 14 languages and their tests. In its place a "File conversion has moved" card on Games & Multimedia > Media opens "The Opsis family". The Media page keeps the Codecs card; `Help_MediaDesc` no longer mentions ffmpeg (14 languages). The font cards stay for now.

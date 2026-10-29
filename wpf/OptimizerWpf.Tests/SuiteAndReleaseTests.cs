@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
@@ -333,6 +333,15 @@ namespace OptimizerWpf.Tests
         [InlineData("6.5.5", "6.6.0", null, false)]
         public void OncePerVersionRule(string latest, string current, string? notified, bool expected) =>
             Assert.Equal(expected, ReleaseCheckService.ShouldNotify(ReleaseVersion.ParseOrNull(current)!, ReleaseVersion.ParseOrNull(latest)!, notified));
+
+        [Fact]
+        public void SkippedVersionIsNeverAnnounced()
+        {
+            var cur = ReleaseVersion.ParseOrNull("6.7.0")!;
+            Assert.False(ReleaseCheckService.ShouldNotify(cur, ReleaseVersion.ParseOrNull("6.8.0")!, null, "6.8.0"));
+            Assert.False(ReleaseCheckService.ShouldNotify(cur, ReleaseVersion.ParseOrNull("6.7.5")!, null, "6.8.0"));
+            Assert.True(ReleaseCheckService.ShouldNotify(cur, ReleaseVersion.ParseOrNull("6.9.0")!, null, "6.8.0"));
+        }
 
         [Fact]
         public async Task CheckAsyncRemembersEtagAndUsesStoredTagOn304()

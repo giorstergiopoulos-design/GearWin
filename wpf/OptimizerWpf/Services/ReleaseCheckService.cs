@@ -25,9 +25,11 @@ namespace OptimizerWpf.Services
         private static bool _inFlight;
 
         // Καθαρός κανόνας: ειδοποίηση μόνο αν η νέα έκδοση είναι μεγαλύτερη από την τρέχουσα ΚΑΙ μεγαλύτερη από αυτήν για την οποία ειδοποιήθηκε ο χρήστης.
-        public static bool ShouldNotify(ReleaseVersion current, ReleaseVersion latest, string? notifiedVersion)
+        public static bool ShouldNotify(ReleaseVersion current, ReleaseVersion latest, string? notifiedVersion, string? skippedVersion = null)
         {
             if (!(latest > current)) return false;
+            var skipped = ReleaseVersion.ParseOrNull(skippedVersion);
+            if (skipped != null && latest <= skipped) return false;   // «Παράλειψη έκδοσης»
             var seen = ReleaseVersion.ParseOrNull(notifiedVersion);
             return seen == null || latest > seen;
         }
@@ -58,7 +60,7 @@ namespace OptimizerWpf.Services
             }
             var latest = ReleaseVersion.ParseOrNull(tag);
             if (latest == null) return new ReleaseCheckOutcome(res.Status, tag, null, page, can, false);
-            return new ReleaseCheckOutcome(res.Status, tag, latest, page, can, ShouldNotify(current, latest, store.Get(KeyBalloon)));
+            return new ReleaseCheckOutcome(res.Status, tag, latest, page, can, ShouldNotify(current, latest, store.Get(KeyBalloon), store.Get(Views.UpdateAnnounceWindow.SkippedKey)));
         }
 
         public static void Start()
@@ -85,10 +87,10 @@ namespace OptimizerWpf.Services
                 if (!outcome.ShouldNotify || outcome.Latest == null) return;
                 if (UserIsBusy()) { next = BusyRetry; return; }
                 store.MarkSeen(KeyBalloon, outcome.Latest);
-                var body = outcome.CanInstallInApp
-                    ? string.Format(LanguageService.T("SelfUpdate_NotifyBody"), outcome.Latest)
-                    : string.Format(LanguageService.T("SelfUpdate_NotifyBodyPage"), outcome.Latest);
-                TrayIconService.ShowNotificationBalloon(LanguageService.T("SelfUpdate_NotifyTitle"), body,
+                // 6.7.1: popup με Εγκατάσταση / Αργότερα / Παράλειψη έκδοσης / Τι νέο υπάρχει (όπως στο Crawler) + μπαλόνι του tray
+                Views.UpdateAnnounceWindow.ShowFor(outcome, store);
+                TrayIconService.ShowNotificationBalloon(LanguageService.T("SelfUpdate_NotifyTitle"),
+                    string.Format(LanguageService.T("SelfUpdate_NotifyBodyPage"), outcome.Latest),
                     outcome.CanInstallInApp ? TrayIconService.OpenSettings : () => OpenReleasePage(outcome.PageUrl));
             }
             catch { /* ο έλεγχος νέας έκδοσης δεν πρέπει ποτέ να ρίξει την εφαρμογή */ }
