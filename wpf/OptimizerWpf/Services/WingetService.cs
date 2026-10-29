@@ -249,6 +249,32 @@ namespace OptimizerWpf.Services
         // Ίδια αντιστοίχιση με το Get-UpgradeCommandForSource του ps1 - τα script-wrapper εργαλεία
         // (npm/pnpm/scoop/gem/composer) περνάνε από cmd.exe /c, ΟΧΙ απευθείας exe (Process.Start με
         // UseShellExecute=false δεν ψάχνει .cmd/.ps1 wrappers στο PATH όπως κάνει ένα πραγματικό shell).
+        // 6.8.0: απεγκατάσταση πακέτου από τη λίστα (winget, pip, npm/pnpm global, choco, scoop, gem, cargo, dotnet tool). null = δεν υποστηρίζεται
+        // (π.χ. Windows Update, Microsoft Store). Ο id ελέγχεται ΠΡΙΝ με IsSafePackageId (ίδιο whitelist με τις αναβαθμίσεις).
+        public static (string FileName, string Arguments)? GetUninstallCommandForSource(string source, string id) => source switch
+        {
+            "winget" => ("winget.exe", $"uninstall --id \"{id}\" --exact --silent --accept-source-agreements --disable-interactivity"),
+            "pip" => ("python.exe", $"-m pip --disable-pip-version-check --no-input uninstall -y \"{id}\""),
+            "npm (global)" => ("cmd.exe", $"/c npm uninstall -g \"{id}\""),
+            "pnpm (global)" => ("cmd.exe", $"/c pnpm remove -g \"{id}\""),
+            "chocolatey" => ("choco.exe", $"uninstall \"{id}\" -y"),
+            "scoop" => ("cmd.exe", $"/c scoop uninstall \"{id}\""),
+            "gem" => ("cmd.exe", $"/c gem uninstall \"{id}\" -x -a"),
+            "cargo" => ("cargo.exe", $"uninstall \"{id}\""),
+            "dotnet" => ("dotnet.exe", $"tool uninstall --global \"{id}\""),
+            _ => null,
+        };
+
+        public static async Task<(bool Ok, string? Reason)> UninstallAsync(string id, string source)
+        {
+            if (!IsSafePackageId(id, source)) return (false, "Unsafe package id rejected");
+            var cmd = GetUninstallCommandForSource(source, id);
+            if (cmd == null) return (false, null);
+            var (_, exitCode, started) = await RunToolAsync(cmd.Value.FileName, cmd.Value.Arguments, TimeSpan.FromMinutes(5));
+            if (!started) return (false, null);
+            return exitCode == 0 ? (true, null) : (false, DescribeExitCode(exitCode));
+        }
+
         private static (string FileName, string Arguments) GetUpgradeCommandForSource(string source, string id) => source switch
         {
             "winget" => ("winget.exe", $"upgrade --id \"{id}\" --exact --silent --accept-source-agreements --accept-package-agreements --disable-interactivity"),

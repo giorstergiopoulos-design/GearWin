@@ -40,7 +40,7 @@
                                     <DataTemplate>
                                         <Border Background="{DynamicResource CardBgBrush}" CornerRadius="4" Margin="4" Padding="10">
                                             <Grid>
-                                                <Grid.ColumnDefinitions><ColumnDefinition Width="Auto"/><ColumnDefinition Width="*"/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions>
+                                                <Grid.ColumnDefinitions><ColumnDefinition Width="Auto"/><ColumnDefinition Width="*"/><ColumnDefinition Width="Auto"/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions>
                                                 <CheckBox Grid.Column="0" IsChecked="{Binding IsSelected}" VerticalAlignment="Center" Margin="0,0,10,0"/>
                                                 <StackPanel Grid.Column="1">
                                                     <TextBlock Foreground="{DynamicResource TextBrush}" FontWeight="SemiBold">
@@ -61,6 +61,9 @@
                                                 </StackPanel>
                                                 <!-- ΝΕΟ - roadmap "winget pin" - μόνο για πακέτα με πηγή winget (το "winget pin"
                                                      δεν έχει νόημα/δεν λειτουργεί για msstore/pip/npm/κ.λπ. πηγές). -->
+                                                <Button Grid.Column="3" Click="BtnUninstallApp_Click" Tag="{Binding}" VerticalAlignment="Center" Margin="6,0,0,0"
+                                                        Padding="16,4" Content="{tr:Tr Opt_UninstallButton}" Style="{StaticResource FlatButtonStyle}"
+                                                        AutomationProperties.Name="{tr:Tr Opt_UninstallButton}"/>
                                                 <Button Grid.Column="2" Click="BtnPinWingetApp_Click" Tag="{Binding}" VerticalAlignment="Center"
                                                         Padding="16,4" Content="{tr:Tr Opt_PinAppButton}"
                                                         AutomationProperties.Name="{tr:Tr Opt_PinAppButton}">

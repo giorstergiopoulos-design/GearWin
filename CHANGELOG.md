@@ -6,6 +6,16 @@ available inside the app itself, via Help/Instructions → the "Version History"
 
 Format loosely follows [Keep a Changelog](https://keepachangelog.com/).
 
+## v6.8.0 — Tabs merged, one scan button, uninstall, Windows features list
+
+- **"Cleanup & Performance" merged into "Health & Repair"**: the tab now has Repair | Performance | Cleanup | Startup. The old `Optimization#N` tags (tray, Health Check, PC Manager quick cards, search index, Ctrl+3) redirect to `Health#N+1`. 8 tabs instead of 9; the welcome-guide text (14 languages) was updated to the new tab names.
+- **Uniform card spacing**: after tab composition every page now gets the same 16 px between cards (the first card has none), also between views of one page (`TabLayout.NormalizeSpacing`).
+- **One scan for updates**: "Scan everything (apps, Windows, drivers)" starts the app scan (which already lists Windows Update items) and the driver scan together; single-flight kept.
+- **Uninstall from the update list** (winget, pip, npm/pnpm global, choco, scoop, gem, cargo, dotnet tool — also AI agents installed that way): per-row button with explicit confirmation, id whitelist as for upgrades; Windows Update and Store rows have no uninstall.
+- **Windows optional features**: the list with each feature's state is now always shown (loaded automatically the first time, silent on failure).
+- Tests: +9 (uninstall commands/unsafe ids, Health sub-pages, no Optimization nav item).
+- **Remaining for 6.8.1** (not done): system updates inside the nightly task (kept out on purpose: restarts), SDI core download for the driver updater, git-repo update detection, Vivetool "update feature list" (needs a verified online source of feature IDs), UWP view redesign, fonts/devices/health-timeline/codecs/reports re-grouping, merging the two guides, accessibility names, async-void/blocking-wait audit, README screenshots, repo-hygiene pass, grammar pass of the 14 languages.
+
 ## v6.7.1 — Update popup like the Crawler's
 
 - New-version notice is now a small popup (bottom right, never steals focus) with the same buttons and messages as Opsis News Crawler: **Install** (Settings > GearWin update, SHA-256 mandatory, explicit confirmation; release page when the release has no digest), **Later**, **Skip this version** (never announced again, nor any older one) and **What's new** (release page), plus the tray balloon. Check/ETag/once-per-version/full-screen deferral unchanged from 6.6.0. New strings in 14 languages, new test for the skip rule (306 tests).

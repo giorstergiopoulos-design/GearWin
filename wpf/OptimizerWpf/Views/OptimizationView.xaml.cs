@@ -456,6 +456,32 @@ namespace OptimizerWpf.Views
         }
 
         // ΝΕΟ - roadmap "winget pin" - βλ. σχόλιο στο XAML/WingetService.PinAsync.
+        // 6.8.0: απεγκατάσταση εφαρμογής/εργαλείου (και AI agents που μπήκαν με npm/pip/κ.λπ.) από τη λίστα, με ρητή επιβεβαίωση.
+        private async void BtnUninstallApp_Click(object sender, RoutedEventArgs e)
+        {
+            if (sender is not Button { Tag: WingetUpdateRow row } btn) return;
+            if (WingetService.GetUninstallCommandForSource(row.Update.Source, row.Update.Id) == null) return;
+            if (ThemedMessageBox.Show(string.Format(LanguageService.T("Opt_UninstallConfirm"), row.Update.Name), LanguageService.T("Opt_UninstallButton"),
+                    MessageBoxButton.YesNo, MessageBoxImage.Warning) != MessageBoxResult.Yes) return;
+            btn.IsEnabled = false;
+            try
+            {
+                var (ok, reason) = await WingetService.UninstallAsync(row.Update.Id, row.Update.Source);
+                if (ok)
+                {
+                    _updates.Remove(row);
+                    StatusService.SetIdle(string.Format(LanguageService.T("Opt_UninstallDone"), row.Update.Name));
+                }
+                else
+                {
+                    ThemedMessageBox.Show(string.Format(LanguageService.T("Opt_UninstallFailed"), row.Update.Name) + (reason == null ? "" : "\n" + reason),
+                        LanguageService.T("Opt_UninstallButton"), MessageBoxButton.OK, MessageBoxImage.Warning);
+                }
+            }
+            catch (Exception ex) { ThemedMessageBox.Show(ex.Message, LanguageService.T("Opt_UninstallButton"), MessageBoxButton.OK, MessageBoxImage.Warning); }
+            finally { btn.IsEnabled = true; }
+        }
+
         private async void BtnPinWingetApp_Click(object sender, RoutedEventArgs e)
         {
             if (sender is not Button { Tag: WingetUpdateRow row }) return;

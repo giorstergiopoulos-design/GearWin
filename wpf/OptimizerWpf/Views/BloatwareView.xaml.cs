@@ -56,7 +56,7 @@ namespace OptimizerWpf.Views
         // Στοιχεία Windows" παραπάνω) - static για τον ίδιο λόγο όπως παραπάνω, το scan δεν τρέχει
         // αυτόματα στον constructor. =====
         private static List<AllFeatureRow> _allFeatures = new();
-        private static readonly ObservableCollection<AllFeatureRow> _displayedFeatures = new();
+        private readonly ObservableCollection<AllFeatureRow> _displayedFeatures = new();
 
         public BloatwareView()
         {
