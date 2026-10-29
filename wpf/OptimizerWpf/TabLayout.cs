@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Windows;
 using System.Windows.Controls;
 using OptimizerWpf.Views;
 
@@ -148,7 +149,23 @@ namespace OptimizerWpf
                 }
                 if (section == null || !keep.Contains(section)) panel.Children.RemoveAt(i);
             }
+            NormalizeSpacing(panel);
             return true;
+        }
+
+        // 6.8.0: ενιαίο κενό 16 px ανάμεσα στις κάρτες μιας σελίδας (η πρώτη χωρίς πάνω κενό) - μετά τη σύνθεση, η πρώτη εναπομείνασα κάρτα
+        // κρατούσε το κενό της προηγούμενης θέσης της και οι ενότητες έδειχναν άνισα κενά. Κάρτες δίπλα-δίπλα (αριστερό/δεξί περιθώριο) δεν αγγίζονται.
+        public static void NormalizeSpacing(Panel panel)
+        {
+            var first = true;
+            foreach (var c in panel.Children.OfType<FrameworkElement>())
+            {
+                if (c.Visibility == Visibility.Collapsed) continue;
+                var m = c.Margin;
+                if (m.Left == 0 && m.Right == 0 && (m.Top == 0 || m.Top == 16))
+                    c.Margin = new Thickness(0, first ? 0 : 16, 0, m.Bottom);
+                first = false;
+            }
         }
 
         // Ρίζα προβολής: UserControl -> ScrollViewer -> StackPanel (ή UserControl -> StackPanel για τις εσωτερικές κάρτες).

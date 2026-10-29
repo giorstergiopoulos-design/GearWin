@@ -57,7 +57,11 @@ namespace OptimizerWpf.Views
                 views = BuildViews(_pages[index]);
                 _pageViews[index] = views;
             }
-            foreach (var v in views) PageHost.Children.Add(v);
+            for (var i = 0; i < views.Count; i++)
+            {
+                views[i].Margin = new Thickness(0, i == 0 ? 0 : 16, 0, 0);   // ίδιο κενό 16 px και ανάμεσα στις προβολές μιας σελίδας
+                PageHost.Children.Add(views[i]);
+            }
         }
 
         // Μία παρουσία ανά προβολή (με την ένωση των ενοτήτων που ζητούν τα τμήματα της σελίδας), με τη σειρά πρώτης εμφάνισης.
