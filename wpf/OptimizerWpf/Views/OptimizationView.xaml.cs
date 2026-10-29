@@ -539,6 +539,17 @@ namespace OptimizerWpf.Views
 
         private void BtnCancelDriverScan_Click(object sender, RoutedEventArgs e) => s_driverCts?.Cancel();
 
+        // 6.9.0: προσθήκη φακέλου με git repos στον έλεγχο ενημερώσεων (ο έλεγχος γίνεται στην επόμενη σάρωση).
+        private void BtnAddGitFolder_Click(object sender, RoutedEventArgs e)
+        {
+            using var dlg = new System.Windows.Forms.FolderBrowserDialog { ShowNewFolderButton = false };
+            if (dlg.ShowDialog() != System.Windows.Forms.DialogResult.OK || string.IsNullOrWhiteSpace(dlg.SelectedPath)) return;
+            var roots = AppSettingsService.Current.GitRepoRoots;
+            if (!roots.Contains(dlg.SelectedPath, StringComparer.OrdinalIgnoreCase)) roots.Add(dlg.SelectedPath);
+            AppSettingsService.Save();
+            StatusService.SetIdle(string.Format(LanguageService.T("Opt_GitFolderAdded"), dlg.SelectedPath));
+        }
+
         // 6.8.0: εφαρμογές (+Windows Update) και οδηγοί μαζί - οι δύο σαρώσεις είναι ανεξάρτητες και η καθεμία single-flight (ScanState).
         private void BtnScanAll_Click(object sender, RoutedEventArgs e)
         {

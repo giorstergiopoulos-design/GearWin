@@ -71,6 +71,8 @@ namespace OptimizerWpf.Services
         public bool NightlyUpdatesEnabled { get; set; }
         // Έλεγχος για νέα έκδοση του ίδιου του GearWin στο GitHub (βλ. SelfUpdateService) και η τελευταία έκδοση για την οποία ειδοποιήθηκε ο χρήστης.
         public bool SelfUpdateCheckEnabled { get; set; } = true;
+        // 6.9.0: φάκελοι με git repos που ελέγχονται για ενημερώσεις στον ενημερωτή εφαρμογών (βλ. GitRepoUpdateService).
+        public System.Collections.Generic.List<string> GitRepoRoots { get; set; } = new();
         public string? LastNotifiedSelfUpdate { get; set; }
         public bool OfficeModeActive { get; set; }
 

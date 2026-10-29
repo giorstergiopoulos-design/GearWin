@@ -76,6 +76,16 @@ namespace OptimizerWpf.Services
                 }
             }
 
+            // 6.9.0: repos git στους φακέλους που δήλωσε ο χρήστης (μόνο fast-forward pull στην ενημέρωση)
+            try
+            {
+                var roots = AppSettingsService.Current.GitRepoRoots;
+                if (roots.Count > 0)
+                    foreach (var u in await GitRepoUpdateService.ScanAsync(roots))
+                        if (seenIds.Add($"git:{u.Id}")) results.Add(u);
+            }
+            catch (Exception ex) { System.Diagnostics.Debug.WriteLine("git repo scan failed: " + ex.Message); }
+
             return results;
         }
 
@@ -163,6 +173,7 @@ namespace OptimizerWpf.Services
                 if (ok && reboot) RestartRequiredAfterUpdates = true;
                 return (ok, ok ? null : error);
             }
+            if (source == GitRepoUpdateService.Source) return await GitRepoUpdateService.PullAsync(id);
             var (fileName, arguments) = GetUpgradeCommandForSource(source, id);
             var (_, exitCode, started) = await RunToolAsync(fileName, arguments, TimeSpan.FromMinutes(5));
             if (!started) return (false, null);
@@ -179,6 +190,7 @@ namespace OptimizerWpf.Services
             if (string.IsNullOrWhiteSpace(id) || id.Length > 200) return false;
             if (source == "windowsupdate") // "UpdateID|Revision" όπως το επιστρέφει το WUA
                 return System.Text.RegularExpressions.Regex.IsMatch(id, @"^[0-9a-fA-F-]{36}\|\d{1,6}$");
+            if (source == GitRepoUpdateService.Source) return GitRepoUpdateService.IsSafeRepoPath(id);
             if (source is "winget" or "msstore")
                 return !id.Any(c => c == '"' || char.IsControl(c));
             return System.Text.RegularExpressions.Regex.IsMatch(id, @"^[A-Za-z0-9._@/+~\-]+$");

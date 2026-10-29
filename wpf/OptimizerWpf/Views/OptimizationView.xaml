@@ -106,6 +106,7 @@
                     <!-- 6.8.0: ένα κουμπί που σαρώνει ταυτόχρονα εφαρμογές + Windows Update (ήδη στη λίστα εφαρμογών) + οδηγούς. -->
                     <Button x:Name="BtnScanAll" Content="{tr:Tr Opt_ScanAllBtn}" Style="{StaticResource FlatButtonStyle}" Padding="16,7"
                             HorizontalAlignment="Center" Margin="0,0,0,4" Click="BtnScanAll_Click"/>
+                    <Button Content="{tr:Tr Opt_GitFolderBtn}" Style="{StaticResource FlatButtonStyle}" Padding="16,6" HorizontalAlignment="Center" Margin="0,0,0,6" Click="BtnAddGitFolder_Click"/>
                     <TextBlock Text="{tr:Tr Opt_ScanAllHint}" Style="{StaticResource SubTextStyle}" TextWrapping="Wrap" HorizontalAlignment="Center" TextAlignment="Center" Margin="0,0,0,10"/>
 
                     <Grid Margin="0,0,0,0">
