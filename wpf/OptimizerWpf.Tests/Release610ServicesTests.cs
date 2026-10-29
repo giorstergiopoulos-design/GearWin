@@ -270,7 +270,7 @@ public class Release610LanguageTests
         "DryRun_Title", "DryRun_Intro", "DryRun_Footer", "Health_ToolCancelled", "Guard_PointFailedContinue",
         "Journal_On", "Journal_Off", "Tweak_RequiresAdminTip", "Report_Title", "Sec_Firewall", "Sec_UacOff",
         "VerHist_610Title", "VerHist_610Desc", "Home_AnalysisDriveTip", "Appr_ThemeSettingsTab",
-        "TabGamesMedia", "Games_Summary", "Games_Scan", "Gaming_HagsLabel", "Media_ConverterTitle", "Media_ConvertDone", "Media_FfmpegMissing",
+        "TabGamesMedia", "Games_Summary", "Games_Scan", "Gaming_HagsLabel", "Media_MovedTitle", "Media_MovedDesc", "Media_MovedOpen",
         "PcmHome_Boost", "PcmHome_BoostDone", "Appr_SkinSettings11", "Appr_SkinGamingHub", "Appr_SkinOfficeRibbon", "Menu_Language", "Sidebar_CenterLabel", "Autostart_Failed",
     };
 
@@ -293,7 +293,6 @@ public class Release610LanguageTests
     [InlineData("Games_LastPlayed")]
     [InlineData("Games_ShaderDone")]
     [InlineData("Media_LastUsed")]
-    [InlineData("Media_ConvertDone")]
     [InlineData("PcmHome_BoostDone")]
     public void FormatKeys_HaveSamePlaceholdersInEveryLanguage(string key)
     {

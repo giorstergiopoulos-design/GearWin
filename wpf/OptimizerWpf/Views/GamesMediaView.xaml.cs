@@ -77,10 +77,6 @@ namespace OptimizerWpf.Views
         private bool _gamesLoading = true;
 
         // ── Πολυμέσα ───────────────────────────────────────────────────────────────────────
-        private string? _ffmpeg;
-        private CancellationTokenSource? _convertCts;
-        // Πρόταση χρήστη: "batch conversion" - πολλά αρχεία αντί για ένα.
-        private List<string> _mediaInputs = new();
 
         // Κρατά τη λίστα ζωντανή (όχι μόνο ItemsSource) ώστε η Εφαρμογή Προφίλ Παιχνιδιού να μπορεί
         // να αλλάξει IsOn + να καλέσει OnAction/OffAction στα ΙΔΙΑ TweakRowVm που βλέπει ο χρήστης.
@@ -103,29 +99,6 @@ namespace OptimizerWpf.Views
 
             if (s_gamesCache != null) { _allGames = s_gamesCache; ApplyFilter(); }
             else Loaded += async (_, _) => { if (_allGames.Count == 0) await ScanGamesAsync(); };
-
-            // Media init
-            // ΔΙΟΡΘΩΣΗ (GEARWIN.MD: "πολλά περισσότερα αρχεία ήχου/εικόνας με επιλογή ποιότητας") -
-            // WebM/MKV (βίντεο) + OGG/AAC/WAV/FLAC (ήχος) προστέθηκαν στα 5 προηγούμενα presets, συν
-            // ξεχωριστό CmbQuality (Low/Medium/High) - βλ. MediaConverterService.MediaQuality.
-            foreach (var (preset, key) in new[]
-            {
-                (MediaPreset.VideoToMp4H264, "Media_PresetH264"), (MediaPreset.VideoToMp4H265, "Media_PresetH265"),
-                (MediaPreset.VideoToWebm, "Media_PresetWebm"), (MediaPreset.VideoToMkvH264, "Media_PresetMkv"),
-                (MediaPreset.ShareSized720p, "Media_Preset720"), (MediaPreset.VideoToGif, "Media_PresetGif"),
-                (MediaPreset.ExtractMp3, "Media_PresetMp3"), (MediaPreset.ExtractAac, "Media_PresetAac"),
-                (MediaPreset.ExtractOgg, "Media_PresetOgg"), (MediaPreset.ExtractWav, "Media_PresetWav"),
-                (MediaPreset.ExtractFlac, "Media_PresetFlac"),
-            })
-                CmbPreset.Items.Add(new ComboBoxItem { Content = LanguageService.T(key), Tag = preset });
-            CmbPreset.SelectedIndex = 0;
-
-            foreach (var (quality, key) in new[]
-            {
-                (MediaQuality.Low, "Media_QualityLow"), (MediaQuality.Medium, "Media_QualityMedium"), (MediaQuality.High, "Media_QualityHigh"),
-            })
-                CmbQuality.Items.Add(new ComboBoxItem { Content = LanguageService.T(key), Tag = quality });
-            CmbQuality.SelectedIndex = 1; // Medium - ίδια προεπιλογή με τις παλιές σταθερές τιμές
 
             Loaded += async (_, _) => await LoadMediaAsync();
         }
@@ -374,7 +347,6 @@ namespace OptimizerWpf.Views
                 .Concat(thirdParty.Select(c => new CodecRowVm(c)))
                 .ToList();
 
-            DetectFfmpeg();
         }
 
         private async System.Threading.Tasks.Task LoadAccessAsync()
@@ -427,119 +399,11 @@ namespace OptimizerWpf.Views
         // υπάρχει επιβεβαιωμένο σταθερό package id γι' αυτό το πακέτο ώστε να το μαντέψουμε με σιγουριά).
         private void BtnGetCodecPack_Click(object sender, RoutedEventArgs e) => Open("https://www.codecguide.com/download_kl.htm");
 
-        // ── Πολυμέσα: Μετατροπέας ────────────────────────────────────────────────────────
-
-        private void DetectFfmpeg()
+        // ── Πολυμέσα: η μετατροπή αρχείων μεταφέρθηκε (6.7.0) ──────────
+        // Βίντεο/εικόνα → Opsis Media Player Pro, ήχος → Waveframe. Το κουμπί ανοίγει το παράθυρο «Η οικογένεια Opsis».
+        private void BtnOpenFamily_Click(object sender, RoutedEventArgs e)
         {
-            _ffmpeg = MediaConverterService.FindFfmpeg();
-            PanelNoFfmpeg.Visibility = _ffmpeg == null ? Visibility.Visible : Visibility.Collapsed;
-            PanelConverter.IsEnabled = _ffmpeg != null;
+            if (Window.GetWindow(this) is MainWindow main) StartupGuideCoordinator.ShowSuite(main);
         }
-
-        private void BtnRecheckFfmpeg_Click(object sender, RoutedEventArgs e) => DetectFfmpeg();
-
-        // Εγκατάσταση μέσω winget σε ορατή κονσόλα (ο χρήστης βλέπει πρόοδο/ερώτηση αδειών).
-        private void BtnInstallFfmpeg_Click(object sender, RoutedEventArgs e)
-        {
-            try
-            {
-                Process.Start(new ProcessStartInfo("winget", "install --id Gyan.FFmpeg -e --accept-source-agreements --accept-package-agreements") { UseShellExecute = true });
-            }
-            catch (Exception ex) { TxtConvertStatus.Text = ex.Message; }
-        }
-
-        private static readonly string[] MediaExtensions =
-            { ".mp4", ".mkv", ".avi", ".mov", ".wmv", ".webm", ".flv", ".m4v", ".mp3", ".wav", ".flac", ".m4a", ".aac", ".ogg" };
-
-        // Πρόταση χρήστη: "batch conversion" - Multiselect=true αντί για ένα αρχείο τη φορά.
-        private void BtnChooseMedia_Click(object sender, RoutedEventArgs e)
-        {
-            var dlg = new Microsoft.Win32.OpenFileDialog
-            {
-                Filter = "Media|*.mp4;*.mkv;*.avi;*.mov;*.wmv;*.webm;*.flv;*.m4v;*.mp3;*.wav;*.flac;*.m4a;*.aac;*.ogg|All files|*.*",
-                CheckFileExists = true, Multiselect = true,
-            };
-            if (dlg.ShowDialog() != true) return;
-            SetMediaInputs(dlg.FileNames);
-        }
-
-        private void SetMediaInputs(IEnumerable<string> files)
-        {
-            _mediaInputs = files.ToList();
-            TxtMediaInput.Text = _mediaInputs.Count == 1
-                ? Path.GetFileName(_mediaInputs[0])
-                : string.Format(LanguageService.T("Media_FilesSelectedCount"), _mediaInputs.Count);
-            BtnConvert.IsEnabled = _mediaInputs.Count > 0;
-            TxtConvertStatus.Text = "";
-        }
-
-        // Πρόταση χρήστη: "drag-and-drop" στο μετατροπέα - φιλτράρει στις ίδιες επεκτάσεις πολυμέσων
-        // με το OpenFileDialog, ώστε ένα τυχαίο αρχείο να μην καταλήξει σαν είσοδος στο ffmpeg.
-        private void PanelConverter_DragOver(object sender, System.Windows.DragEventArgs e)
-        {
-            e.Effects = e.Data.GetDataPresent(DataFormats.FileDrop) ? DragDropEffects.Copy : DragDropEffects.None;
-            e.Handled = true;
-        }
-
-        private void PanelConverter_Drop(object sender, System.Windows.DragEventArgs e)
-        {
-            if (e.Data.GetData(DataFormats.FileDrop) is not string[] files) return;
-            var media = files.Where(f => MediaExtensions.Contains(Path.GetExtension(f).ToLowerInvariant())).ToList();
-            if (media.Count > 0) SetMediaInputs(media);
-        }
-
-        private async void BtnConvert_Click(object sender, RoutedEventArgs e)
-        {
-            if (_ffmpeg == null || _mediaInputs.Count == 0 || CmbPreset.SelectedItem is not ComboBoxItem { Tag: MediaPreset preset }) return;
-            var quality = CmbQuality.SelectedItem is ComboBoxItem { Tag: MediaQuality q } ? q : MediaQuality.Medium;
-            var inputs = _mediaInputs;
-
-            _convertCts = new CancellationTokenSource();
-            BtnConvert.IsEnabled = false;
-            BtnCancelConvert.Visibility = Visibility.Visible;
-            ConvertProgress.Value = 0;
-            ConvertProgress.Visibility = Visibility.Visible;
-            StatusService.SetBusy(LanguageService.T("Media_Converting"));
-            var doneOutputs = new List<string>();
-            var failedNames = new List<string>();
-            try
-            {
-                for (var i = 0; i < inputs.Count; i++)
-                {
-                    var input = inputs[i];
-                    var output = MediaConverterService.SuggestOutputPath(input, preset);
-                    TxtConvertStatus.Text = inputs.Count == 1
-                        ? LanguageService.T("Media_Converting")
-                        : string.Format(LanguageService.T("Media_ConvertingBatch"), i + 1, inputs.Count, Path.GetFileName(input));
-                    ConvertProgress.Value = 0;
-                    var progress = new Progress<double>(v => ConvertProgress.Value = v);
-                    var (ok, message) = await MediaConverterService.ConvertAsync(_ffmpeg, preset, quality, input, output, progress, _convertCts.Token);
-                    if (_convertCts.IsCancellationRequested) break;
-                    if (ok)
-                    {
-                        doneOutputs.Add(output);
-                        ChangeJournalService.Record($"ffmpeg: {Path.GetFileName(output)}", () => { try { File.Delete(output); } catch { } });
-                    }
-                    else failedNames.Add(Path.GetFileName(input));
-                }
-
-                TxtConvertStatus.Text = _convertCts.IsCancellationRequested
-                    ? LanguageService.T("Health_ToolCancelled")
-                    : failedNames.Count == 0
-                        ? string.Format(LanguageService.T("Media_ConvertDone"), doneOutputs.Count == 1 ? doneOutputs[0] : string.Format(LanguageService.T("Media_ConvertDoneCount"), doneOutputs.Count))
-                        : LanguageService.T("Media_ConvertFailed") + string.Join(", ", failedNames);
-            }
-            catch (Exception ex) { TxtConvertStatus.Text = LanguageService.T("Media_ConvertFailed") + ex.Message; }
-            finally
-            {
-                StatusService.SetIdle(LanguageService.T("Ready"));
-                _convertCts.Dispose(); _convertCts = null;
-                BtnCancelConvert.Visibility = Visibility.Collapsed;
-                ConvertProgress.Visibility = Visibility.Collapsed;
-                BtnConvert.IsEnabled = true;
-            }
-        }
-
-        private void BtnCancelConvert_Click(object sender, RoutedEventArgs e) => _convertCts?.Cancel();
     }
 }

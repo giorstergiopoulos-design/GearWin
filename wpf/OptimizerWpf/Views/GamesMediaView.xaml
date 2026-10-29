@@ -9,7 +9,7 @@
     <!-- GEARWIN.MD (6.3.5, ρητό αίτημα χρήστη: "Παιχνιδια & Πολυμεσα μια καρτελα") - συγχώνευση των
          πρώην ξεχωριστών καρτελών GamesView + MultimediaView σε ΜΙΑ. Καμία αλλαγή λειτουργίας -
          ίδια Services (GameLibraryService/GamingTweaksService/DisplayInfoService/AudioDeviceService/
-         PrivacyAccessService/MediaCodecService/MediaConverterService), μόνο ενοποιημένο UI. -->
+         PrivacyAccessService/MediaCodecService), μόνο ενοποιημένο UI. -->
     <UserControl.Resources>
         <BooleanToVisibilityConverter x:Key="BoolToVis"/>
         <DataTemplate x:Key="GameRowTemplate">
@@ -299,48 +299,17 @@
                 </StackPanel>
             </Border>
 
-            <!-- Μετατροπέας -->
-            <!-- ΔΙΟΡΘΩΣΗ (GEARWIN.MD, ρητό αίτημα χρήστη: "ο μετατροπέας βίντεο/ήχου να παράγει πολλά
-                 περισσότερα αρχεία ήχου/εικόνας με επιλογή ποιότητας") - βλ. MediaConverterService.
-                 MediaPreset (επεκτάθηκε με πολύ περισσότερα presets + CmbQuality για ποιότητα/bitrate). -->
+            <!-- 6.7.0: ο μετατροπέας βίντεο/ήχου αφαιρέθηκε (ρητή απόφαση χρήστη) - η μετατροπή ζει πλέον στο Opsis Media Player Pro (βίντεο/εικόνα)
+                 και στο Waveframe (ήχος). Η κάρτα δείχνει πού πήγε και ανοίγει το παράθυρο «Η οικογένεια Opsis». -->
             <Border Style="{StaticResource CardStyle}" Margin="0,16,0,0">
                 <StackPanel>
                     <Grid Margin="0,0,0,10">
                         <Grid.ColumnDefinitions><ColumnDefinition Width="Auto"/><ColumnDefinition Width="*"/></Grid.ColumnDefinitions>
                         <views:HeaderGlyphIcon Grid.Column="0" Kind="Play" Width="16" Height="16" Margin="0,0,8,0" VerticalAlignment="Center"/>
-                        <TextBlock Grid.Column="1" Text="{tr:Tr Media_ConverterTitle}" Style="{StaticResource CardTitleStyle}"/>
+                        <TextBlock Grid.Column="1" Text="{tr:Tr Media_MovedTitle}" Style="{StaticResource CardTitleStyle}"/>
                     </Grid>
-                    <TextBlock Text="{tr:Tr Media_ConverterDesc}" Style="{StaticResource SubTextStyle}" TextWrapping="Wrap" Margin="0,0,0,10"/>
-
-                    <StackPanel x:Name="PanelNoFfmpeg" Visibility="Collapsed" Margin="0,0,0,10">
-                        <TextBlock Text="{tr:Tr Media_FfmpegMissing}" Foreground="{DynamicResource TextBrush}" TextWrapping="Wrap" Margin="0,0,0,8"/>
-                        <StackPanel Orientation="Horizontal">
-                            <Button Content="{tr:Tr Media_InstallFfmpeg}" Style="{StaticResource AccentButtonStyle}" Padding="16,6" Margin="0,0,8,0" Click="BtnInstallFfmpeg_Click"/>
-                            <Button Content="{tr:Tr Media_Recheck}" Style="{StaticResource FlatButtonStyle}" Padding="16,6" Click="BtnRecheckFfmpeg_Click"/>
-                        </StackPanel>
-                    </StackPanel>
-
-                    <!-- Προτάσεις χρήστη: "batch conversion" (πολλά αρχεία μαζί) + "drag-and-drop" -
-                         TxtMediaInput δείχνει πλέον πλήθος αρχείων αντί για ένα μονοπάτι (_mediaInputs
-                         στο .xaml.cs), AllowDrop δέχεται αρχεία σερνόμενα απευθείας εδώ. -->
-                    <StackPanel x:Name="PanelConverter" AllowDrop="True" DragOver="PanelConverter_DragOver" Drop="PanelConverter_Drop">
-                        <Grid Margin="0,0,0,10">
-                            <Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions>
-                            <TextBox x:Name="TxtMediaInput" IsReadOnly="True" Height="32" VerticalContentAlignment="Center" Padding="8,0" Margin="0,0,10,0"/>
-                            <Button Grid.Column="1" Content="{tr:Tr Media_ChooseFile}" Style="{StaticResource FlatButtonStyle}" Padding="16,6" MinWidth="170" Click="BtnChooseMedia_Click"/>
-                        </Grid>
-                        <TextBlock Text="{tr:Tr Media_DropHint}" Style="{StaticResource SubTextStyle}" TextWrapping="Wrap" Margin="0,0,0,10"/>
-                        <StackPanel Orientation="Horizontal" Margin="0,0,0,10">
-                            <ComboBox x:Name="CmbPreset" Width="260" Margin="0,0,10,0"/>
-                            <ComboBox x:Name="CmbQuality" Width="140"/>
-                        </StackPanel>
-                        <StackPanel Orientation="Horizontal">
-                            <Button x:Name="BtnConvert" Content="{tr:Tr Media_Convert}" Style="{StaticResource AccentButtonStyle}" Padding="16,7" Margin="0,0,8,0" IsEnabled="False" Click="BtnConvert_Click"/>
-                            <Button x:Name="BtnCancelConvert" Content="{tr:Tr Cancel}" Style="{StaticResource FlatButtonStyle}" Padding="16,7" Visibility="Collapsed" Click="BtnCancelConvert_Click"/>
-                        </StackPanel>
-                        <ProgressBar x:Name="ConvertProgress" Height="6" Minimum="0" Maximum="1" Margin="0,10,0,0" Visibility="Collapsed"/>
-                        <TextBlock x:Name="TxtConvertStatus" Style="{StaticResource SubTextStyle}" TextWrapping="Wrap" Margin="0,8,0,0"/>
-                    </StackPanel>
+                    <TextBlock Text="{tr:Tr Media_MovedDesc}" Style="{StaticResource SubTextStyle}" TextWrapping="Wrap" Margin="0,0,0,10"/>
+                    <Button Content="{tr:Tr Media_MovedOpen}" Style="{StaticResource AccentButtonStyle}" Padding="16,7" HorizontalAlignment="Left" Click="BtnOpenFamily_Click"/>
                 </StackPanel>
             </Border>
         </StackPanel>

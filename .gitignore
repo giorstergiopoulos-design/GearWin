@@ -15,3 +15,4 @@ installer/Output/
 
 # Scratch/working files from translation passes - not meant for the repo
 wpf/.lang_scratch/
+release/

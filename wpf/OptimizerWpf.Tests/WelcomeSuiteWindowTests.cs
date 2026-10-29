@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Globalization;
 using System.IO;
@@ -164,6 +164,19 @@ namespace OptimizerWpf.Tests
                 }
             });
             Assert.True(problems.Count == 0, problems.Count + " problems:" + Environment.NewLine + string.Join(Environment.NewLine, problems.Take(40)));
+        }
+
+        [Fact]
+        public void EveryCatalogueAppResolvesToAnEmbeddedRealIcon()
+        {
+            RunSta(_ =>
+            {
+                foreach (var app in SuiteCatalogService.LoadEmbedded().Apps)
+                {
+                    var img = SuiteIcon.LoadIcon(app.Id) as BitmapSource;
+                    Assert.True(img != null && img.PixelWidth >= 64, $"{app.Id}: no embedded icon of at least 64 px");
+                }
+            });
         }
 
         [Fact]

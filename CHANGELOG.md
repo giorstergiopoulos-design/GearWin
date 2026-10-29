@@ -6,6 +6,14 @@ available inside the app itself, via Help/Instructions → the "Version History"
 
 Format loosely follows [Keep a Changelog](https://keepachangelog.com/).
 
+## v6.7.0 — Media converter removed
+
+- **Removed the video/audio converter** (user decision: conversion now lives in Opsis Media Player Pro for video/image and Waveframe for audio): the card, `MediaConverterService`/`MediaPreset`/`MediaQuality`, the ffmpeg detection, 28 unused translation keys in all 14 languages and their tests. In its place a "File conversion has moved" card on Games & Multimedia > Media opens "The Opsis family". The Media page keeps the Codecs card; `Help_MediaDesc` no longer mentions ffmpeg (14 languages). The font cards stay for now.
+- New test: every app of the suite catalogue resolves to an embedded real icon (>= 64 px).
+- Audit: all `new HttpClient` in the code already have a timeout (checked).
+- Tests: 305. Installs to Program Files (admin installer) as before.
+- **Remaining for 6.7.1** (not done in this release): system updates together with the updater and updater bug fixes (progress/cancel/filters/ignore list), merging "Cleanup & Performance" into "Health & Repair" and card spacing, SDI core download, winget uninstall, git-repo update detection, Vivetool list button, UWP view, Windows-features list, fonts/devices/health-timeline/codecs/reports re-grouping, merging usage and welcome guides, keep-alive tab pages, accessibility names, README screenshots, async-void/blocking-wait audit, repo-hygiene pass, grammar pass of 14 languages.
+
 ## v6.6.0 — Welcome guide, Opsis family, new-version notice
 
 - **Welcome guide** (`WelcomeGuideWindow`): 5 short pages, shown once per new major.minor version (per-version "Don't show again", on by default) and from Help / tray / classic menu. Closing it shrinks the card into the window's gear icon (~400 ms; plain fade when Windows animations are off or the render tier is low). On a first install the older detailed tutorial still runs and the guide is skipped for that run.
