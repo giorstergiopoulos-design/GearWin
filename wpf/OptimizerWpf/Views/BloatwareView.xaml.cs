@@ -64,6 +64,9 @@ namespace OptimizerWpf.Views
             ListBuiltin.ItemsSource = _builtin;
             ListAllFeatures.ItemsSource = _displayedFeatures;
             LoadPopularFeatureChips();
+            // 6.8.0: η λίστα των πρόσθετων λειτουργιών των Windows (με την κατάστασή τους) φαίνεται πάντα· φορτώνεται αυτόματα την πρώτη φορά.
+            UpdateAllFeaturesDisplay();
+            Loaded += async (_, _) => { if (_allFeatures.Count == 0) await RefreshAllFeaturesAsync(silent: true); };
             // Ρητό αίτημα χρήστη: "στις προτεινόμενες εφαρμογές υπήρχε ομαδοποίηση... να είναι
             // διακριτά τα είδη" - ομαδοποίηση κατά App.Group (ίδιες ομάδες με το ps1 original) μέσω
             // ListCollectionView, βλ. ItemsControl.GroupStyle στο XAML για τις επικεφαλίδες.
@@ -285,7 +288,9 @@ namespace OptimizerWpf.Views
             }
         }
 
-        private async void BtnRefreshAllFeatures_Click(object sender, RoutedEventArgs e)
+        private async void BtnRefreshAllFeatures_Click(object sender, RoutedEventArgs e) => await RefreshAllFeaturesAsync(silent: false);
+
+        private async System.Threading.Tasks.Task RefreshAllFeaturesAsync(bool silent)
         {
             StatusService.SetBusy(LanguageService.T("Adv_ScanningFeatures"));
             var curatedNames = AdvancedToolsService.CuratedFeatures.ToDictionary(f => f.FeatureName, f => f.DisplayName);
@@ -296,6 +301,7 @@ namespace OptimizerWpf.Views
                     ? LanguageService.T("Adv_FeatureScanFailed")
                     : $"{LanguageService.T("Adv_FeatureScanFailed")}\n\n{error}";
                 StatusService.SetIdle(LanguageService.T("Adv_FeatureScanFailed"));
+                if (silent) return;   // αυτόματη φόρτωση: σιωπηλά, ο χρήστης μπορεί να πατήσει «Ανανέωση λίστας»
                 ThemedMessageBox.Show(msg, LanguageService.T("Adv_ErrorTitle"), MessageBoxButton.OK, MessageBoxImage.Warning);
                 return;
             }
