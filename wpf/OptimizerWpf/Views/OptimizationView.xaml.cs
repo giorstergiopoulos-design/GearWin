@@ -692,6 +692,21 @@ namespace OptimizerWpf.Views
                 else if (!sdio.Installed)
                 {
                     lines.Add(LanguageService.T("Opt_SdioNotInstalled"));
+                    var btnGet = new Button { Content = LanguageService.T("Opt_SdioInstallBtn"), Style = (Style)FindResource("AccentButtonStyle"), Padding = new Thickness(14, 6, 14, 6), Margin = new Thickness(0, 0, 10, 0) };
+                    btnGet.Click += async (_, __) =>
+                    {
+                        if (ThemedMessageBox.Show(LanguageService.T("Opt_SdioInstallConfirm"), LanguageService.T("Opt_SdioInstallBtn"), MessageBoxButton.YesNo, MessageBoxImage.Question) != MessageBoxResult.Yes) return;
+                        btnGet.IsEnabled = false;
+                        try
+                        {
+                            var (ok, reason) = await WingetService.InstallSdioAsync();
+                            ThemedMessageBox.Show(ok ? LanguageService.T("Opt_SdioInstalledOk") : LanguageService.T("Opt_SdioInstallFailed") + (reason == null ? "" : "\n" + reason),
+                                LanguageService.T("Opt_SdioInstallBtn"), MessageBoxButton.OK, ok ? MessageBoxImage.Information : MessageBoxImage.Warning);
+                        }
+                        catch (Exception ex) { ThemedMessageBox.Show(ex.Message, LanguageService.T("Opt_SdioInstallBtn"), MessageBoxButton.OK, MessageBoxImage.Warning); }
+                        finally { btnGet.IsEnabled = true; }
+                    };
+                    PanelVendorExtraButtons.Children.Add(btnGet);
                 }
             }
 

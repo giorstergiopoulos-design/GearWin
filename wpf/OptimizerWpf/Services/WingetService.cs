@@ -277,6 +277,17 @@ namespace OptimizerWpf.Services
             _ => null,
         };
 
+        // 6.9.0: εγκατάσταση του SDI core (Snappy Driver Installer Origin) για τον ενημερωτή οδηγών - σταθερό id, ποτέ από είσοδο χρήστη.
+        public const string SdioPackageId = "GlennDelahoy.SnappyDriverInstallerOrigin";
+
+        public static async Task<(bool Ok, string? Reason)> InstallSdioAsync()
+        {
+            var (_, exitCode, started) = await RunToolAsync("winget.exe",
+                "install --id " + SdioPackageId + " --exact --silent --accept-source-agreements --accept-package-agreements --disable-interactivity", TimeSpan.FromMinutes(10));
+            if (!started) return (false, null);
+            return exitCode == 0 ? (true, null) : (false, DescribeExitCode(exitCode));
+        }
+
         public static async Task<(bool Ok, string? Reason)> UninstallAsync(string id, string source)
         {
             if (!IsSafePackageId(id, source)) return (false, "Unsafe package id rejected");
