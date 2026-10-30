@@ -63,6 +63,10 @@ _Η τρέχουσα διάταξη (7 καρτέλες, 6.9.x), φωτεινό 
 <td><img src="docs/img/en_Tweaks_0.png" width="400"/><br/><sub>Ρυθμίσεις Windows / Windows Tweaks</sub></td>
 <td><img src="docs/img/en_System_1.png" width="400"/><br/><sub>Σύστημα › Εργαλεία / System › Tools</sub></td>
 </tr>
+<tr>
+<td><img src="docs/img/en_dark_Updates.png" width="400"/><br/><sub>Ενημερώσεις (σκούρο θέμα) / Updates (dark theme)</sub></td>
+<td></td>
+</tr>
 </table>
 
 ### Εγκατάσταση

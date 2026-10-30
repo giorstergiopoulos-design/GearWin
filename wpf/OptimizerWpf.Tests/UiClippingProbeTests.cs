@@ -168,6 +168,10 @@ namespace OptimizerWpf.Tests
                         : System.Linq.Enumerable.First(OptimizerWpf.ThemeCatalog.AllIncludingSkins, p => p.DisplayName == themeName));
                     var original = LanguageService.Current;
                     var probeWidth = double.TryParse(Environment.GetEnvironmentVariable("GEARWIN_UIPROBE_WIDTH"), out var pw) ? pw : 1280;
+                    // 6.9.2: GEARWIN_UIPROBE_SCALE=1.5|2 (DPI 150/200 %): το ίδιο φυσικό παράθυρο έχει 1/scale DIP πλάτος (το MinWidth του παραθύρου ισχύει)
+                    if (double.TryParse(Environment.GetEnvironmentVariable("GEARWIN_UIPROBE_SCALE"), NumberStyles.Float, CultureInfo.InvariantCulture, out var sc) && sc > 1) probeWidth /= sc;
+                    // GEARWIN_UIPROBE_DARK=1: σκούρος τρόπος (εναλλαγή φωτεινό/σκούρο, όχι όνομα θέματος)
+                    if (Environment.GetEnvironmentVariable("GEARWIN_UIPROBE_DARK") == "1" && !OptimizerWpf.ThemeManager.IsDarkMode) OptimizerWpf.ThemeManager.ToggleLightDark();
                     var w = new MainWindow { Width = probeWidth, Height = 860, WindowStartupLocation = WindowStartupLocation.Manual, Left = -5000, Top = 0 };
                     w.Show(); Pump(w);
                     var pending = typeof(MainWindow).GetField("_pendingSubPage", BindingFlags.Instance | BindingFlags.NonPublic);

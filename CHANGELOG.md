@@ -6,6 +6,12 @@ available inside the app itself, via Help/Instructions → the "Version History"
 
 Format loosely follows [Keep a Changelog](https://keepachangelog.com/).
 
+## v6.9.2 — Dark/DPI verification, wording of the new texts
+
+- **UiClippingProbe verified in dark mode and at 150 % / 200 %** (`GEARWIN_UIPROBE_DARK=1`, `GEARWIN_UIPROBE_SCALE=1.5|2`; the probe now toggles dark mode instead of looking a theme up by name, and simulates DPI by narrowing the window to 1/scale DIP, clamped by the window's minimum width of 946 px): 740 / 662 / 662 button texts examined on every tab and sub-page (en, el, de; el, de at the scaled sizes), **0 clipped texts, 0 cut tabs**. At 200 % the window cannot get narrower than its minimum, so the 150 % and 200 % runs examine the same minimum-width layout. Not covered: real per-monitor DPI rendering (font hinting), only layout widths.
+- **Wording check of the new texts (6.6-6.9.1, 108 keys x 14 languages)**: automated checks for missing languages, placeholder mismatches, double/trailing spaces, unbalanced brackets/guillemets, spaces before punctuation, stray Latin words in Greek/Russian; fixed 3 Greek strings (git repos, Vivetool note, version history). A native-speaker review of the machine-quality translations is still recommended.
+- README: dark-theme screenshot of the updater.
+
 ## v6.9.1 — Driver safety, driver filters, status bar, password manager
 
 - **Before every driver install** (single, catalogue or "Update selected"): restore point + `pnputil /export-driver` copy of the current third-party drivers to `%ProgramData%\\GearWin\\DriverExports\\<timestamp>` (last 3 kept).
