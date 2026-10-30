@@ -1,5 +1,6 @@
 using System;
 using System.IO;
+using System.Linq;
 using System.Threading.Tasks;
 
 namespace OptimizerWpf.Services
@@ -38,6 +39,22 @@ namespace OptimizerWpf.Services
                 Append($"=== {DateTime.Now:yyyy-MM-dd HH:mm} winget started={started} exit={exitCode} ({WingetService.DescribeExitCode(exitCode) ?? "-"}){Environment.NewLine}{tail}");
             }
             catch (Exception ex) { Append($"=== {DateTime.Now:yyyy-MM-dd HH:mm} error: {ex.Message}"); }
+
+            // 6.9.1: προαιρετικά και σημαντικές ενημερώσεις Windows - σειριακά, ποτέ επανεκκίνηση (ο χρήστης ενημερώνεται από τα Windows)
+            if (AppSettingsService.Current.NightlyWindowsUpdates)
+            {
+                try
+                {
+                    var scan = await WindowsUpdateService.ScanDetailedAsync();
+                    if (!scan.Success) { Append($"=== {DateTime.Now:yyyy-MM-dd HH:mm} windows update scan failed: {scan.Error}"); return; }
+                    foreach (var u in scan.Updates.Where(x => !x.IsOptional))
+                    {
+                        var (ok, reboot, error) = await WindowsUpdateService.InstallAsync(u.RowId);
+                        Append($"=== {DateTime.Now:yyyy-MM-dd HH:mm} windows update '{u.Title}' ok={ok} restartNeeded={reboot}{(ok ? "" : " error=" + error)}");
+                    }
+                }
+                catch (Exception ex) { Append($"=== {DateTime.Now:yyyy-MM-dd HH:mm} windows update error: {ex.Message}"); }
+            }
         }
 
         private static void Append(string text)

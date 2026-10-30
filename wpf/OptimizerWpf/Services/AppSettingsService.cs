@@ -75,6 +75,8 @@ namespace OptimizerWpf.Services
         public System.Collections.Generic.List<string> GitRepoRoots { get; set; } = new();
         // 6.9.1: ενημερώσεις που ο χρήστης επέλεξε να αγνοεί στον ενημερωτή ("πηγή|id")
         public System.Collections.Generic.List<string> IgnoredUpdates { get; set; } = new();
+        // 6.9.1: η νυχτερινή εργασία εγκαθιστά και τις σημαντικές ενημερώσεις Windows (ποτέ επανεκκίνηση)
+        public bool NightlyWindowsUpdates { get; set; }
         public string? LastNotifiedSelfUpdate { get; set; }
         public bool OfficeModeActive { get; set; }
 

@@ -65,7 +65,7 @@ namespace OptimizerWpf
         // Ενότητα ανά παιδί της ρίζας κάθε προβολής (null = κάρτα που δεν εμφανίζεται σε καμία σύνθετη σελίδα, π.χ. διπλότυπος τίτλος).
         private static readonly IReadOnlyDictionary<string, string?[]> RootSections = new Dictionary<string, string?[]>
         {
-            ["Optimization"] = new[] { "Updates", "Updates", "Updates", "Drivers", "Drivers", "DriverBackup", "Drivers", "Modes", "Modes" },
+            ["Optimization"] = new[] { "Updates", "Updates", "Updates", "Updates", "Drivers", "Drivers", "DriverBackup", "Drivers", "Modes", "Modes" },
             ["Health"] = new[] { "Repair", "Repair", "Backups", "Cleanup", "Repair", "Reports", "Repair", "@Recovery" },
             ["Network"] = new[] { "Network", "Network", "Network", "Network", "Network", "Security", "Security", "Security", "Security", "Network", "Network" },
             ["Advanced"] = new[] { null, "Tools", "Tools", "Ghost", "Tools", "Tools", "Tools", "Startup", "Startup", "Security", "@PowerTools" },

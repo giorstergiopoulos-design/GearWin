@@ -189,6 +189,17 @@
                 </Grid>
             </Border>
 
+            <Border Style="{StaticResource CardStyle}" Margin="0,16,0,0">
+                <Grid>
+                    <Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions>
+                    <StackPanel Grid.Column="0" Margin="0,0,12,0">
+                        <TextBlock Text="{tr:Tr Opt_NightlyWindowsUpdates}" FontWeight="SemiBold" Foreground="{DynamicResource TextBrush}" TextWrapping="Wrap"/>
+                        <TextBlock Text="{tr:Tr Opt_NightlyWindowsUpdatesDesc}" Style="{StaticResource SubTextStyle}" TextWrapping="Wrap" Margin="0,4,0,0"/>
+                    </StackPanel>
+                    <ToggleButton x:Name="ToggleNightlyWindowsUpdates" Grid.Column="1" VerticalAlignment="Center" Style="{StaticResource ToggleSwitchStyle}" Click="ToggleNightlyWindowsUpdates_Click"/>
+                </Grid>
+            </Border>
+
             <TextBlock Text="{tr:Tr Opt_SectionDrivers}" Style="{StaticResource CardTitleStyle}" FontSize="15" Margin="4,22,0,8"/>
             <Border Style="{StaticResource CardStyle}" Margin="0,0,0,0">
                 <StackPanel>

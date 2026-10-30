@@ -65,6 +65,7 @@ namespace OptimizerWpf.Views
             UpdateScheduledMaintenanceStatusText();
             ToggleAutoGamingMode.IsChecked = AppSettingsService.Current.AutoGamingModeEnabled;
             ToggleNightlyUpdates.IsChecked = AppSettingsService.Current.NightlyUpdatesEnabled;
+            ToggleNightlyWindowsUpdates.IsChecked = AppSettingsService.Current.NightlyWindowsUpdates;
             // ΔΙΟΡΘΩΣΗ (έλεγχος ορθής λειτουργίας): οι διακόπτες Office/Gaming Mode δεν αρχικοποιούνταν ΠΟΤΕ - κάθε εναλλαγή
             // καρτέλας ξαναχτίζει το view, άρα ένα ενεργό Gaming Mode εμφανιζόταν ξανά ως "κλειστό" ενώ τα Windows έμεναν σε αυτό.
             ToggleOfficeMode.IsChecked = AppSettingsService.Current.OfficeModeActive;
@@ -240,6 +241,12 @@ namespace OptimizerWpf.Views
             }
             catch { TxtFreeRamResult.Text = ""; }
             finally { StatusService.SetIdle(LanguageService.T("Ready")); }
+        }
+
+        private void ToggleNightlyWindowsUpdates_Click(object sender, RoutedEventArgs e)
+        {
+            AppSettingsService.Current.NightlyWindowsUpdates = ToggleNightlyWindowsUpdates.IsChecked == true;
+            AppSettingsService.Save();
         }
 
         private async void ToggleNightlyUpdates_Click(object sender, RoutedEventArgs e)
