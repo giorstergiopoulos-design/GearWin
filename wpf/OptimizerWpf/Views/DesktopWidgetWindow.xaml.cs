@@ -39,6 +39,8 @@ namespace OptimizerWpf.Views
             _timer.Start();
         }
 
+        private bool _networkCheckInFlight;
+
         private async void Refresh()
         {
             try { if (_cpuCounter != null) TxtCpu.Text = $"{_cpuCounter.NextValue():0}%"; }
@@ -47,10 +49,20 @@ namespace OptimizerWpf.Views
             if (NativeMethods.GlobalMemoryStatusEx(out var mem) && mem.ullTotalPhys > 0)
                 TxtRam.Text = $"{mem.dwMemoryLoad}%";
 
-            var (connected, latency) = await NetworkService.CheckInternetAsync();
-            TxtNetwork.Text = connected
-                ? $"{LanguageService.T("Tray_Connected")}{(latency.HasValue ? $" ({latency} ms)" : "")}"
-                : LanguageService.T("Tray_Disconnected");
+            // 6.9.1: ποτέ επικαλυπτόμενα pings (αργό δίκτυο) και καμία εξαίρεση από async void (θα έφτανε στον global handler κάθε tick)
+            if (!_networkCheckInFlight)
+            {
+                _networkCheckInFlight = true;
+                try
+                {
+                    var (connected, latency) = await NetworkService.CheckInternetAsync();
+                    TxtNetwork.Text = connected
+                        ? $"{LanguageService.T("Tray_Connected")}{(latency.HasValue ? $" ({latency} ms)" : "")}"
+                        : LanguageService.T("Tray_Disconnected");
+                }
+                catch (Exception ex) { CrashLogService.Write("Widget network check", ex); }
+                finally { _networkCheckInFlight = false; }
+            }
 
             RefreshGameOverlay();
         }

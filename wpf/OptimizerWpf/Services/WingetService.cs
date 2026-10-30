@@ -72,11 +72,13 @@ namespace OptimizerWpf.Services
                 ("psmodule", ScanPsModuleAsync),
                 ("composer", ScanComposerAsync),
             };
-            foreach (var (_, scan) in otherScans)
+            foreach (var (providerName, scan) in otherScans)
             {
                 ScanToken.ThrowIfCancellationRequested();
                 List<WingetUpdate> found;
-                try { found = await scan(); } catch { continue; }
+                try { found = await scan(); }
+                catch (OperationCanceledException) { throw; }
+                catch (Exception ex) { CrashLogService.Write("Update scan provider '" + providerName + "' failed", ex); continue; }   // 6.9.1: όχι πια σιωπηλά
                 foreach (var u in found)
                 {
                     if (seenIds.Add($"{u.Source}:{u.Id}")) results.Add(u);
