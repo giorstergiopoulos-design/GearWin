@@ -112,9 +112,10 @@ namespace OptimizerWpf.Tests
             var apps = new[] { new OptimizerWpf.Views.WingetUpdateRow(new WingetUpdate("A", "a", "1", "2", "winget")) };
             var win = new[] { new OptimizerWpf.Views.WingetUpdateRow(new WingetUpdate("KB", "u|1", "", "x", "windowsupdate")) };
             var drv = new[] { new OptimizerWpf.Views.UnifiedDriverRow { Title = "GPU" } };
-            Assert.Equal(3, OptimizerWpf.Views.OptimizationView.BuildUnified(apps, win, drv, "all").Count);
-            Assert.Single(OptimizerWpf.Views.OptimizationView.BuildUnified(apps, win, drv, "apps"));
-            Assert.IsType<OptimizerWpf.Views.UnifiedDriverRow>(OptimizerWpf.Views.OptimizationView.BuildUnified(apps, win, drv, "drivers")[0]);
+            Assert.Equal(6, OptimizerWpf.Views.OptimizationView.BuildUnified(apps, win, drv, "all").Count);   // 3 rows + 3 category headers
+            Assert.Equal(2, OptimizerWpf.Views.OptimizationView.BuildUnified(apps, win, drv, "apps").Count);   // header + row
+            Assert.IsType<OptimizerWpf.Views.UpdateGroupHeader>(OptimizerWpf.Views.OptimizationView.BuildUnified(apps, win, drv, "drivers")[0]);
+            Assert.IsType<OptimizerWpf.Views.UnifiedDriverRow>(OptimizerWpf.Views.OptimizationView.BuildUnified(apps, win, drv, "drivers")[1]);
             Assert.False(win[0].ShowAppActions);
             Assert.True(apps[0].ShowAppActions);
         }
@@ -128,6 +129,48 @@ namespace OptimizerWpf.Tests
             Assert.Equal(100, list.Count);
             Assert.Equal("drv5", list[0].Title);
             Assert.Equal("drv104", list[^1].Title);
+        }
+
+        [Fact]
+        public void StatusScopeEndsExactlyOnceAndReportsTheFinalMessage()
+        {
+            var before = StatusService.ActiveCount;
+            var shown = new System.Collections.Generic.List<(string Text, bool Busy)>();
+            void Handler(string t, bool b) => shown.Add((t, b));
+            StatusService.Changed += Handler;
+            try
+            {
+                var scope = StatusService.BeginScope("Scanning drivers...");
+                scope.Update("Checking catalogue: GPU...");
+                scope.Update("Checking catalogue: LAN...");
+                Assert.Equal(before + 1, StatusService.ActiveCount);   // many updates, ONE entry (no leak)
+                scope.End("3 driver updates found");
+                scope.End("ignored second end");
+                Assert.Equal(before, StatusService.ActiveCount);
+                if (before == 0) Assert.Equal(("3 driver updates found", false), shown[^1]);
+            }
+            finally { StatusService.Changed -= Handler; }
+        }
+
+        [Fact]
+        public void PasswordLockHashesWithSaltAndVerifies()
+        {
+            var salt = PasswordVaultLock.NewSalt();
+            var hash = PasswordVaultLock.Hash("correct horse", salt);
+            Assert.DoesNotContain("correct", hash);
+            Assert.True(PasswordVaultLock.VerifyAgainst("correct horse", salt, hash));
+            Assert.False(PasswordVaultLock.VerifyAgainst("wrong", salt, hash));
+            Assert.False(PasswordVaultLock.VerifyAgainst("correct horse", PasswordVaultLock.NewSalt(), hash));
+            Assert.False(PasswordVaultLock.VerifyAgainst("x", "###", hash));
+        }
+
+        [Fact]
+        public void PasswordExportIsPlainTextWithWarningAndAllFields()
+        {
+            var text = PasswordVaultLock.FormatExport(new[] { new PasswordVaultService.SavedCredential("Edge", "https://example.com", "me", "s3cret") }, new System.DateTime(2026, 10, 30, 12, 0, 0));
+            Assert.Contains("WARNING", text);
+            Assert.Contains("Site:     https://example.com", text);
+            Assert.Contains("Password: s3cret", text);
         }
     }
 }

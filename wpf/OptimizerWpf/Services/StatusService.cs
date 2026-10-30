@@ -27,15 +27,28 @@ namespace OptimizerWpf.Services
     {
         public static event Action<string, bool>? Changed;
 
-        private static readonly List<string> _active = new();
+        public sealed class Entry
+        {
+            public string Message = "";
+            public readonly DateTime Started = DateTime.UtcNow;
+        }
+
+        // 6.9.0: μια εργασία που ξεχάστηκε να κλείσει (SetBusy χωρίς SetIdle) δεν πρέπει να «παγώνει» τη γραμμή κατάστασης για πάντα - οι εγγραφές
+        // παλαιότερες από StaleAfter αγνοούνται. Οι νέες εργασίες με πολλά βήματα χρησιμοποιούν BeginScope (ένα μήνυμα που ενημερώνεται και κλείνει μία φορά).
+        public static readonly TimeSpan StaleAfter = TimeSpan.FromHours(3);
+
+        private static readonly List<Entry> _active = new();
         private static readonly object _lock = new();
+
+        private static void Prune() => _active.RemoveAll(e => DateTime.UtcNow - e.Started > StaleAfter);
 
         public static void SetBusy(string message)
         {
             string combined;
             lock (_lock)
             {
-                _active.Add(message);
+                Prune();
+                _active.Add(new Entry { Message = message });
                 combined = Combine();
             }
             Changed?.Invoke(combined, true);
@@ -46,6 +59,7 @@ namespace OptimizerWpf.Services
             string display; bool stillBusy;
             lock (_lock)
             {
+                Prune();
                 if (_active.Count > 0) _active.RemoveAt(0);
                 stillBusy = _active.Count > 0;
                 display = stillBusy ? Combine() : message;
@@ -53,9 +67,50 @@ namespace OptimizerWpf.Services
             Changed?.Invoke(display, stillBusy);
         }
 
-        // 2+ ταυτόχρονες εργασίες εμφανίζονται μαζί, χωρισμένες με "  •  " - διαβάσιμο σε μια γραμμή
-        // χωρίς να χρειάζεται η γραμμή κατάστασης να γίνει λίστα πολλαπλών γραμμών.
-        // 6.5.3: ίδιο μήνυμα από πολλές ταυτόχρονες εργασίες (π.χ. "Σάρωση υλικού συστήματος..." ×3 μετά από γρήγορες αλλαγές καρτέλας) εμφανίζεται μία φορά.
-        private static string Combine() => string.Join("  •  ", _active.Where(m => !string.IsNullOrWhiteSpace(m)).Distinct());
+        public static int ActiveCount { get { lock (_lock) { Prune(); return _active.Count; } } }
+
+        // Εργασία πολλών βημάτων: Update() αλλάζει το μήνυμά της, End(τελικό μήνυμα) την κλείνει ΑΚΡΙΒΩΣ μία φορά (ασφαλές να κληθεί πολλές).
+        public sealed class Scope : IDisposable
+        {
+            private readonly Entry _entry;
+            private bool _ended;
+            internal Scope(Entry e) { _entry = e; }
+
+            public void Update(string message)
+            {
+                string combined;
+                lock (_lock) { if (_ended) return; _entry.Message = message; combined = Combine(); }
+                Changed?.Invoke(combined, true);
+            }
+
+            public void End(string finalMessage)
+            {
+                string display; bool stillBusy;
+                lock (_lock)
+                {
+                    if (_ended) return;
+                    _ended = true;
+                    _active.Remove(_entry);
+                    Prune();
+                    stillBusy = _active.Count > 0;
+                    display = stillBusy ? Combine() : finalMessage;
+                }
+                Changed?.Invoke(display, stillBusy);
+            }
+
+            public void Dispose() => End("");
+        }
+
+        public static Scope BeginScope(string message)
+        {
+            Entry e;
+            string combined;
+            lock (_lock) { Prune(); e = new Entry { Message = message }; _active.Add(e); combined = Combine(); }
+            Changed?.Invoke(combined, true);
+            return new Scope(e);
+        }
+
+        // 2+ ταυτόχρονες εργασίες εμφανίζονται μαζί, χωρισμένες με "  •  ".
+        private static string Combine() => string.Join("  •  ", _active.Select(e => e.Message).Where(m => !string.IsNullOrWhiteSpace(m)).Distinct());
     }
 }

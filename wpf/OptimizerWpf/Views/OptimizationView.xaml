@@ -100,6 +100,12 @@
                                         </Border>
                                     </DataTemplate>
                                 
+                                    <DataTemplate DataType="{x:Type views:UpdateGroupHeader}">
+                                        <StackPanel Margin="4,10,4,2">
+                                            <TextBlock Text="{Binding Title}" FontWeight="Bold" FontSize="13" Foreground="{DynamicResource AccentBrush}"/>
+                                            <Border Height="1" Background="{DynamicResource AccentBrush}" Opacity="0.5" Margin="0,3,0,0"/>
+                                        </StackPanel>
+                                    </DataTemplate>
                                     <DataTemplate DataType="{x:Type views:UnifiedDriverRow}">
                                         <Border Background="{DynamicResource CardBgBrush}" CornerRadius="4" Margin="4" Padding="10">
                                             <Grid>

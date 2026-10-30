@@ -20,7 +20,65 @@ namespace OptimizerWpf.Views
             InitializeComponent();
             ThemeManager.AttachWindow(this);
             ListCredentials.ItemsSource = _filtered;
-            _ = ScanAsync();
+            BtnRemoveLock.Visibility = PasswordVaultLock.IsSet ? Visibility.Visible : Visibility.Collapsed;
+            // 6.9.0: με ενεργό κλείδωμα ο κωδικός ζητείται ΠΡΙΝ γίνει οποιαδήποτε σάρωση των κωδικών του browser
+            Loaded += (_, _) =>
+            {
+                if (PasswordVaultLock.IsSet && !AskUnlock()) { Close(); return; }
+                _ = ScanAsync();
+            };
+        }
+
+        private int _attempts;
+
+        // true αν ο χρήστης έδωσε τον σωστό κωδικό (καθυστέρηση μετά από λάθος προσπάθειες για να μη δοκιμάζονται γρήγορα κωδικοί)
+        private bool AskUnlock()
+        {
+            var dlg = new PasswordPromptDialog(LanguageService.T("PwdMgr_LockBtn"), LanguageService.T("PwdMgr_EnterPassword"), pw =>
+            {
+                if (PasswordVaultLock.Verify(pw)) return null;
+                System.Threading.Thread.Sleep(Math.Min(++_attempts, 6) * 400);
+                return LanguageService.T("PwdMgr_WrongPassword");
+            }) { Owner = this };
+            return dlg.ShowDialog() == true;
+        }
+
+        private void BtnLock_Click(object sender, RoutedEventArgs e)
+        {
+            if (PasswordVaultLock.IsSet && !AskUnlock()) return;
+            var dlg = new PasswordPromptDialog(LanguageService.T("PwdMgr_LockBtn"), LanguageService.T("PwdMgr_NewPassword"),
+                pw => pw.Length < PasswordVaultLock.MinLength ? LanguageService.T("PwdMgr_PasswordTooShort") : null, LanguageService.T("PwdMgr_RepeatPassword")) { Owner = this };
+            if (dlg.ShowDialog() != true || !PasswordVaultLock.TrySet(dlg.Value)) return;
+            BtnRemoveLock.Visibility = Visibility.Visible;
+            TxtStatus.Text = LanguageService.T("PwdMgr_LockSet");
+            StatusService.SetIdle(LanguageService.T("PwdMgr_LockSet"));
+        }
+
+        private void BtnRemoveLock_Click(object sender, RoutedEventArgs e)
+        {
+            if (!PasswordVaultLock.IsSet || !AskUnlock()) return;
+            PasswordVaultLock.Clear();
+            BtnRemoveLock.Visibility = Visibility.Collapsed;
+            TxtStatus.Text = LanguageService.T("PwdMgr_LockRemoved");
+            StatusService.SetIdle(LanguageService.T("PwdMgr_LockRemoved"));
+        }
+
+        // 6.9.0: εξαγωγή όλων των κωδικών σε αρχείο .txt (απλό κείμενο, με προειδοποίηση· αν υπάρχει κλείδωμα ζητείται ξανά ο κωδικός)
+        private void BtnExport_Click(object sender, RoutedEventArgs e)
+        {
+            if (_all.Count == 0) return;
+            if (ThemedMessageBox.Show(LanguageService.T("PwdMgr_ExportWarn"), LanguageService.T("PwdMgr_ExportBtn"), MessageBoxButton.YesNo, MessageBoxImage.Warning) != MessageBoxResult.Yes) return;
+            if (PasswordVaultLock.IsSet && !AskUnlock()) return;
+            var dlg = new Microsoft.Win32.SaveFileDialog { Filter = "Text (*.txt)|*.txt", FileName = "browser-passwords.txt" };
+            if (dlg.ShowDialog() != true) return;
+            try
+            {
+                var text = PasswordVaultLock.FormatExport(_all.Select(r => new PasswordVaultService.SavedCredential(r.Browser, r.Origin, r.Username, r.Password)), DateTime.Now);
+                System.IO.File.WriteAllText(dlg.FileName, text, new System.Text.UTF8Encoding(true));
+                TxtStatus.Text = string.Format(LanguageService.T("PwdMgr_ExportDone"), dlg.FileName);
+                StatusService.SetIdle(LanguageService.T("Ready"));
+            }
+            catch (Exception ex) { ThemedMessageBox.Show(ex.Message, LanguageService.T("PwdMgr_ExportBtn"), MessageBoxButton.OK, MessageBoxImage.Warning); }
         }
 
         private async Task ScanAsync()

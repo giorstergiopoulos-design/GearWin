@@ -709,6 +709,34 @@ try {
 
         // Ξεχωριστή background διεργασία ανά driver, ίδιο με το ps1 original - δεν περιμένει να
         // ολοκληρωθεί (η λήψη+εγκατάσταση μέσω Windows Update μπορεί να πάρει αρκετά λεπτά).
+        // 6.9.0: έκδοση που ΠΕΡΙΜΕΝΕΙ το αποτέλεσμα (η InstallInBackground παρακάτω δεν επέστρεφε ποτέ τίποτα - η γραμμή κατάστασης έμενε «παγωμένη»).
+        public static async Task<bool> InstallAndWaitAsync(string updateId, CancellationToken ct = default)
+        {
+            if (!System.Text.RegularExpressions.Regex.IsMatch(updateId ?? "", "^[0-9a-fA-F-]{36}$")) return false;
+            var script = $@"
+$ErrorActionPreference = 'Stop'
+try {{
+    $session = New-Object -ComObject Microsoft.Update.Session
+    $result = $session.CreateUpdateSearcher().Search(""UpdateID='{updateId}'"")
+    if ($result.Updates.Count -eq 0) {{ exit 1 }}
+    $toInstall = New-Object -ComObject Microsoft.Update.UpdateColl
+    $toInstall.Add($result.Updates.Item(0)) | Out-Null
+    $downloader = $session.CreateUpdateDownloader(); $downloader.Updates = $toInstall; $downloader.Download() | Out-Null
+    $installer = $session.CreateUpdateInstaller(); $installer.Updates = $toInstall
+    $r = $installer.Install()
+    if ($r.ResultCode -eq 2 -or $r.ResultCode -eq 3) {{ exit 0 }} else {{ exit 2 }}
+}} catch {{ exit 3 }}
+";
+            var psi = new ProcessStartInfo("powershell.exe", PowerShellArgs.Command(script, hidden: true)) { UseShellExecute = false, CreateNoWindow = true };
+            using var p = Process.Start(psi);
+            if (p == null) return false;
+            using var cts = CancellationTokenSource.CreateLinkedTokenSource(ct);
+            cts.CancelAfter(TimeSpan.FromMinutes(60));
+            try { await p.WaitForExitAsync(cts.Token); }
+            catch (OperationCanceledException) { try { p.Kill(true); } catch { } return false; }
+            return p.ExitCode == 0;
+        }
+
         public static void InstallInBackground(string updateId)
         {
             var script = $@"

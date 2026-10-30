@@ -77,6 +77,9 @@ namespace OptimizerWpf.Services
         public System.Collections.Generic.List<string> IgnoredUpdates { get; set; } = new();
         // 6.9.1: η νυχτερινή εργασία εγκαθιστά και τις σημαντικές ενημερώσεις Windows (ποτέ επανεκκίνηση)
         public bool NightlyWindowsUpdates { get; set; }
+        // 6.9.0: κλείδωμα διαχειριστή κωδικών browser (salted PBKDF2 hash, βλ. PasswordVaultLock)
+        public string? PwdVaultSalt { get; set; }
+        public string? PwdVaultHash { get; set; }
         public string? LastNotifiedSelfUpdate { get; set; }
         public bool OfficeModeActive { get; set; }
 

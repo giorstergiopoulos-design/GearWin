@@ -32,9 +32,16 @@ namespace OptimizerWpf.Views
         internal static List<object> BuildUnified(IEnumerable<WingetUpdateRow> apps, IEnumerable<WingetUpdateRow> windows, IEnumerable<UnifiedDriverRow> drivers, string filter)
         {
             var list = new List<object>();
-            if (filter is "all" or "apps") list.AddRange(apps);
-            if (filter is "all" or "windows") list.AddRange(windows);
-            if (filter is "all" or "drivers") list.AddRange(drivers);
+            void Group(string key, System.Collections.IEnumerable rows)
+            {
+                var items = rows.Cast<object>().ToList();
+                if (items.Count == 0) return;
+                list.Add(new UpdateGroupHeader(key, items.Count));   // διαχωριστής ανά κατηγορία μέσα στην ίδια λίστα
+                list.AddRange(items);
+            }
+            if (filter is "all" or "apps") Group("Opt_FilterApps", apps);
+            if (filter is "all" or "windows") Group("Opt_FilterWindows", windows);
+            if (filter is "all" or "drivers") Group("Opt_FilterDrivers", drivers);
             return list;
         }
 
@@ -677,6 +684,8 @@ namespace OptimizerWpf.Views
         {
             if (!DriverScan.TryBegin()) return;
             s_driverCts = new System.Threading.CancellationTokenSource();
+            var scope = StatusService.BeginScope(LanguageService.T("Opt_CheckingVendorSources"));
+            s_driverScope = scope;
             try { await ScanDriversCoreAsync(s_driverCts.Token); }
             catch (OperationCanceledException) { DriverScan.SetStatus(LanguageService.T("Health_ToolCancelled")); }
             catch (Exception ex) { DriverScan.SetStatus($"{LanguageService.T("Opt_ScanFailed")}{ex.Message}"); }
@@ -684,10 +693,15 @@ namespace OptimizerWpf.Views
             {
                 s_driverCts?.Dispose();
                 s_driverCts = null;
-                StatusService.SetIdle(LanguageService.T("Ready"));
+                s_driverScope = null;
+                // 6.9.0: η γραμμή κατάστασης δείχνει το αποτέλεσμα όταν τελειώσει η σάρωση (όχι «παγωμένο» μήνυμα προόδου)
+                scope.End(_driverUpdates.Count == 0 ? LanguageService.T("Ready")
+                    : $"{LanguageService.T("Opt_DriverUpdatesFoundPrefix")}{_driverUpdates.Count}{LanguageService.T("Opt_DriverUpdatesFoundSuffix")}");
                 DriverScan.End();
             }
         }
+
+        private static StatusService.Scope? s_driverScope;
 
         private async Task ScanDriversCoreAsync(System.Threading.CancellationToken ct)
         {
@@ -700,7 +714,7 @@ namespace OptimizerWpf.Views
             // DriverScan, "εμφανίζεται πάντα πρώτη") ώστε τα ονόματα GPU τους να είναι διαθέσιμα για
             // trust-overlap πριν προστεθούν τα WU αποτελέσματα.
             DriverScan.SetStatus(LanguageService.T("Opt_CheckingVendorSources"));
-            StatusService.SetBusy(LanguageService.T("Opt_ScanningVendorSources"));
+            s_driverScope?.Update(LanguageService.T("Opt_ScanningVendorSources"));
             var vendor = await OrCancelAsync(DriverService.ScanVendorSourcesAsync(), ct);
             var confirmedGpuNames = new List<string>();
 
@@ -730,7 +744,7 @@ namespace OptimizerWpf.Views
             }
 
             DriverScan.SetStatus(LanguageService.T("Opt_CheckingWuDrivers"));
-            StatusService.SetBusy(LanguageService.T("Opt_ScanningWuDrivers"));
+            s_driverScope?.Update(LanguageService.T("Opt_ScanningWuDrivers"));
             var wuResult = await OrCancelAsync(DriverService.ScanAsync(), ct);
             foreach (var u in wuResult.Updates)
             {
@@ -747,9 +761,9 @@ namespace OptimizerWpf.Views
             }
 
             DriverScan.SetStatus(LanguageService.T("Opt_EnumeratingDevices"));
-            StatusService.SetBusy(LanguageService.T("Opt_EnumeratingDevicesShort"));
+            s_driverScope?.Update(LanguageService.T("Opt_EnumeratingDevicesShort"));
             var devices = await OrCancelAsync(DriverService.GetSystemDevicesAsync(), ct);
-            var progress = new Progress<string>(name => StatusService.SetBusy($"{LanguageService.T("Opt_CheckingCatalogPrefix")}{name}..."));
+            var progress = new Progress<string>(name => s_driverScope?.Update($"{LanguageService.T("Opt_CheckingCatalogPrefix")}{name}..."));
             var (candidates, looksBlocked) = await DriverService.ScanCatalogAsync(devices, progress, ct);
             foreach (var c in candidates)
                 _driverUpdates.Add(new UnifiedDriverRow
@@ -760,7 +774,6 @@ namespace OptimizerWpf.Views
                     CatalogCandidate = c,
                 });
 
-            StatusService.SetIdle(LanguageService.T("Ready"));
 
             var parts = new List<string>();
             parts.Add(wuResult.PolicyBlocked
@@ -903,9 +916,20 @@ namespace OptimizerWpf.Views
                 if (wuConfirm != MessageBoxResult.Yes) return;
 
                 await RestoreGuardService.EnsureRecentAsync();   // 6.9.0: σημείο επαναφοράς πριν από κάθε εγκατάσταση οδηγού
-                DriverHistoryService.Record(row.WuUpdate.Title, "Windows Update", "started");
-                DriverService.InstallInBackground(row.WuUpdate.UpdateId);
-                TxtDriverStatus.Text = $"{LanguageService.T("Opt_WuInstallingPrefix")}{row.WuUpdate.Title}";
+                button.IsEnabled = false;
+                var installingText = $"{LanguageService.T("Opt_WuInstallingPrefix")}{row.WuUpdate.Title}";
+                TxtDriverStatus.Text = installingText;
+                StatusService.SetBusy(installingText);
+                bool installed;
+                try { installed = await DriverService.InstallAndWaitAsync(row.WuUpdate.UpdateId); }
+                catch { installed = false; }
+                finally { StatusService.SetIdle(LanguageService.T("Ready")); }
+                DriverHistoryService.Record(row.WuUpdate.Title, "Windows Update", installed ? "installed" : "failed");
+                // 6.9.0: το αποτέλεσμα φαίνεται (κάρτα + γραμμή κατάστασης), η γραμμή δεν μένει «παγωμένη» στο «Εγκατάσταση…»
+                var resultText = string.Format(LanguageService.T(installed ? "Opt_DriverWuDone" : "Opt_DriverWuFailed"), row.WuUpdate.Title);
+                TxtDriverStatus.Text = resultText;
+                StatusService.SetIdle(resultText);
+                if (installed) _driverUpdates.Remove(row); else button.IsEnabled = true;
                 return;
             }
             if (row.CatalogCandidate == null) return;
@@ -1060,6 +1084,13 @@ namespace OptimizerWpf.Views
     // CatalogCandidate (Microsoft Update Catalog) - επιτρέπει ΜΙΑ κοινή λίστα/ένα κοινό DataTemplate
     // στο XAML, με το κουμπί εγκατάστασης να δρομολογείται στη σωστή πηγή ανάλογα με ποιο από τα δύο
     // είναι μη-null (βλ. BtnInstallDriver_Click).
+    // Επικεφαλίδα κατηγορίας στην ενιαία λίστα ενημερώσεων (Εφαρμογές / Windows / Οδηγοί)
+    public sealed class UpdateGroupHeader
+    {
+        public string Title { get; }
+        public UpdateGroupHeader(string key, int count) { Title = $"{LanguageService.T(key)} ({count})"; }
+    }
+
     public class UnifiedDriverRow
     {
         public string Title { get; init; } = "";
