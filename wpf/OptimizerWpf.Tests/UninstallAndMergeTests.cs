@@ -172,5 +172,22 @@ namespace OptimizerWpf.Tests
             Assert.Contains("Site:     https://example.com", text);
             Assert.Contains("Password: s3cret", text);
         }
+
+        [Fact]
+        public void DriverFiltersHidePreviewAndFilterByVendor()
+        {
+            var drivers = new[]
+            {
+                new OptimizerWpf.Views.UnifiedDriverRow { Title = "Intel LAN", Vendor = "Intel", IsPreview = false },
+                new OptimizerWpf.Views.UnifiedDriverRow { Title = "Intel Graphics Beta", Vendor = "Intel", IsPreview = OptimizerWpf.Views.UnifiedDriverRow.LooksPreview("Intel Graphics Beta", null) },
+                new OptimizerWpf.Views.UnifiedDriverRow { Title = "Realtek Audio", Vendor = "Realtek", IsPreview = OptimizerWpf.Views.UnifiedDriverRow.LooksPreview("Realtek Audio", false) },
+            };
+            var none = System.Array.Empty<OptimizerWpf.Views.WingetUpdateRow>();
+            Assert.Equal(2, OptimizerWpf.Views.OptimizationView.BuildUnified(none, none, drivers, "drivers", showPreview: false).Count);   // header + Intel LAN
+            Assert.Equal(4, OptimizerWpf.Views.OptimizationView.BuildUnified(none, none, drivers, "drivers", showPreview: true).Count);
+            Assert.Equal(2, OptimizerWpf.Views.OptimizationView.BuildUnified(none, none, drivers, "drivers", showPreview: true, vendor: "Realtek").Count);
+            Assert.True(OptimizerWpf.Views.UnifiedDriverRow.LooksPreview("Some Driver (Insider Preview)", null));
+            Assert.False(OptimizerWpf.Views.UnifiedDriverRow.LooksPreview("Latency tester", true));
+        }
     }
 }

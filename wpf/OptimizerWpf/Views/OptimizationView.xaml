@@ -43,6 +43,10 @@
                         <RadioButton x:Name="ChipWindows" GroupName="UpdFilter" Style="{StaticResource SubPageChipStyle}" Tag="windows" Checked="UpdateFilter_Checked"/>
                         <RadioButton x:Name="ChipDrivers" GroupName="UpdFilter" Style="{StaticResource SubPageChipStyle}" Tag="drivers" Checked="UpdateFilter_Checked"/>
                     </WrapPanel>
+                    <WrapPanel Margin="0,0,0,8">
+                        <CheckBox x:Name="ChkShowPreview" Content="{tr:Tr Opt_ShowPreviewDrivers}" Foreground="{DynamicResource TextBrush}" VerticalAlignment="Center" Margin="0,0,16,0" Checked="DriverFilter_Changed" Unchecked="DriverFilter_Changed"/>
+                        <ComboBox x:Name="ComboVendor" MinWidth="200" SelectionChanged="DriverFilter_Changed" AutomationProperties.Name="{tr:Tr Opt_AllVendors}"/>
+                    </WrapPanel>
 
                     <Border Background="{DynamicResource MainBgBrush}" CornerRadius="6" MinHeight="120" MaxHeight="320" Padding="4">
                         <ScrollViewer VerticalScrollBarVisibility="Auto" PreviewMouseWheel="NestedScroll_PreviewMouseWheel">
@@ -109,8 +113,9 @@
                                     <DataTemplate DataType="{x:Type views:UnifiedDriverRow}">
                                         <Border Background="{DynamicResource CardBgBrush}" CornerRadius="4" Margin="4" Padding="10">
                                             <Grid>
-                                                <Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions>
-                                                <StackPanel Grid.Column="0">
+                                                <Grid.ColumnDefinitions><ColumnDefinition Width="Auto"/><ColumnDefinition Width="*"/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions>
+                                                <CheckBox Grid.Column="0" IsChecked="{Binding IsSelected, Mode=TwoWay}" VerticalAlignment="Center" Margin="0,0,10,0" Visibility="{Binding CanSelect, Converter={StaticResource BoolToVisUpd}}"/>
+                                                <StackPanel Grid.Column="1">
                                                     <StackPanel Orientation="Horizontal">
                                                         <Border Background="{DynamicResource AccentBrush}" CornerRadius="3" Padding="6,1" Margin="0,0,8,0">
                                                             <TextBlock Text="{Binding SourceBadge}" FontSize="11" Foreground="White"/>
@@ -119,7 +124,7 @@
                                                     </StackPanel>
                                                     <TextBlock Text="{Binding SubText}" Style="{StaticResource SubTextStyle}"/>
                                                 </StackPanel>
-                                                <Button Grid.Column="1" Content="{Binding ActionLabel}" Style="{StaticResource FlatButtonStyle}" VerticalAlignment="Center"
+                                                <Button Grid.Column="2" Content="{Binding ActionLabel}" Style="{StaticResource FlatButtonStyle}" VerticalAlignment="Center"
                                                         Click="BtnInstallDriver_Click" Tag="{Binding}" Margin="10,0,0,0"/>
                                             </Grid>
                                         </Border>

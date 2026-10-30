@@ -737,6 +737,24 @@ try {{
             return p.ExitCode == 0;
         }
 
+        // 6.9.1: αντίγραφο των τρεχόντων οδηγών τρίτων (pnputil /export-driver) σε φάκελο με timestamp ΠΡΙΝ από κάθε εγκατάσταση οδηγού· κρατούνται τα 3 τελευταία.
+        public static async Task<string?> ExportCurrentDriversAsync()
+        {
+            try
+            {
+                var rootDir = Path.Combine(SecureStorage.RootDir, "DriverExports");
+                SecureStorage.SecureDirectory(rootDir);
+                var dest = Path.Combine(rootDir, DateTime.Now.ToString("yyyyMMdd-HHmmss"));
+                Directory.CreateDirectory(dest);
+                var ok = await RunProcessAsync("pnputil.exe", "/export-driver * " + BS_Q + dest + BS_Q, TimeSpan.FromMinutes(20));
+                foreach (var old in Directory.GetDirectories(rootDir).OrderByDescending(d => d).Skip(3))
+                    try { Directory.Delete(old, true); } catch { }
+                return ok ? dest : null;
+            }
+            catch { return null; }
+        }
+        private const string BS_Q = "\"";
+
         public static void InstallInBackground(string updateId)
         {
             var script = $@"

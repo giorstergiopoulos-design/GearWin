@@ -6,6 +6,13 @@ available inside the app itself, via Help/Instructions → the "Version History"
 
 Format loosely follows [Keep a Changelog](https://keepachangelog.com/).
 
+## v6.9.1 — Driver safety, driver filters, status bar, password manager
+
+- **Before every driver install** (single, catalogue or "Update selected"): restore point + `pnputil /export-driver` copy of the current third-party drivers to `%ProgramData%\\GearWin\\DriverExports\\<timestamp>` (last 3 kept).
+- **Driver filters** in the unified updater: preview/beta/insider/non-WHQL drivers are hidden unless "Show preview/beta/non-WHQL" is ticked; vendor drop-down (vendor known for Windows Update drivers). **Update selected now includes drivers** (Windows Update and catalogue rows; one confirmation, sequential, progress "Drivers i/n: name" in the status bar, result in the status bar and the driver history).
+- **Status bar** no longer freezes (driver scan scope, awaited Windows Update driver installs, final result text, 3-hour expiry of unclosed entries); one list with a heading per category; password manager: export to .txt + password lock; Help version history (these four were committed after the 6.9.0 build was made).
+- Tests: 335. **Not done** (decision needed / no budget): grammar/spelling pass of the 14 languages (native review needed), dark-theme screenshot of the updater (the probe's theme name did not resolve), 150/200 % DPI run, per-category progress for the apps/Windows part (only drivers have "i/n"); Vivetool unchanged (no verified source).
+
 ## v6.9.0 — Unified updater, git repos, SDI, System tab, one guide, accessibility, repo hygiene
 
 - **Status bar no longer freezes** (user report): the driver scan called `SetBusy` for every device it checked but ended with only two `SetIdle`, so "Checking catalogue: ..." stayed in the status bar forever. It now uses one status *scope* (`StatusService.BeginScope`: one message that is updated and ended exactly once, with the result as final text, e.g. "3 driver updates found"); entries that were never closed expire after 3 hours; Windows Update driver installs are now awaited (they used to be fire-and-forget, so the card kept saying "Installing..." forever) and report success/failure in the card and the status bar.
