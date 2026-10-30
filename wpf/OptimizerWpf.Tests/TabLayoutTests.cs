@@ -80,15 +80,16 @@ namespace OptimizerWpf.Tests
         {
             RunSta(() =>
             {
-                Assert.Equal(new[] { "Sub_Info", "Sub_Devices", "Sub_Tools" }, TabLayout.SubPages("System")!.Select(p => p.TitleKey).ToArray());
-                Assert.Equal(new[] { "Sub_Games", "Sub_Media" }, TabLayout.SubPages("GamesMedia")!.Select(p => p.TitleKey).ToArray());
-                var devices = new CompositeTabView("System", 1);
+                Assert.Equal(new[] { "Sub_Info", "Sub_Tools" }, TabLayout.SubPages("System")!.Select(p => p.TitleKey).ToArray());
+                Assert.Equal(new[] { "Sub_Games" }, TabLayout.SubPages("GamesMedia")!.Select(p => p.TitleKey).ToArray());
                 var games = new CompositeTabView("GamesMedia", 0);
-                var media = new CompositeTabView("GamesMedia", 1);
+                var info = new CompositeTabView("System", 0);
                 int Cards(CompositeTabView v) => ((StackPanel)v.FindName("PageHost")).Children.OfType<UserControl>().Sum(c => TabLayout.RootPanel(c)?.Children.Count ?? 0);
-                Assert.Equal(3, Cards(devices));   // οθόνες, ήχος, κάμερα/μικρόφωνο
                 Assert.Equal(6, Cards(games));     // βιβλιοθήκη, ανά παιχνίδι, gaming, shader, save backup, σημείωση ενημερώσεων
-                Assert.Equal(2, Cards(media));     // κωδικοποιητές, μετατροπέας
+                // 6.9.0: Πληροφορίες συστήματος = (8 κάρτες συστήματος σε 4 ομάδες ενοτήτων "Info") + οθόνες, ήχος, κάμερα/μικρόφωνο + κωδικοποιητές, κάρτα «μεταφέρθηκε»
+                var types = ((StackPanel)info.FindName("PageHost")).Children.OfType<UserControl>().Select(c => c.GetType().Name).ToArray();
+                Assert.Contains("GamesMediaView", types);
+                Assert.True(Cards(info) >= 3 + 2 + 1);
             });
         }
 

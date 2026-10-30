@@ -604,9 +604,6 @@
             <RadioButton Tag="Tweaks" Style="{StaticResource TabPillStyle}" Checked="TabButton_Checked">
                 <StackPanel Orientation="Horizontal"><views:HeaderGlyphIcon Kind="Wrench" Width="20" Height="20" Margin="0,0,7,0"/><TextBlock x:Name="LblTabTweaks" Text="Επιπλέον Ρυθμίσεις"/></StackPanel>
             </RadioButton>
-            <RadioButton Tag="Advanced" Style="{StaticResource TabPillStyle}" Checked="TabButton_Checked">
-                <StackPanel Orientation="Horizontal"><views:HeaderGlyphIcon Kind="Document" Width="20" Height="20" Margin="0,0,7,0"/><TextBlock x:Name="LblTabAdvanced" Text="Προηγμένα Εργαλεία"/></StackPanel>
-            </RadioButton>
             <RadioButton Tag="System" Style="{StaticResource TabPillStyle}" Checked="TabButton_Checked">
                 <StackPanel Orientation="Horizontal"><views:HeaderGlyphIcon Kind="Monitor" Width="20" Height="20" Margin="0,0,7,0"/><TextBlock x:Name="LblTabSystem" Text="Σύστημα"/></StackPanel>
             </RadioButton>

@@ -137,7 +137,7 @@ public partial class MainWindow : Window
         ("TabHome", w => w.LblTabHome), ("TabHealth", w => w.LblTabHealth),
         ("TabNetwork", w => w.LblTabNetwork), ("TabTweaks", w => w.LblTabTweaks), ("TabGamesMedia", w => w.LblTabGamesMedia),
         ("TabBloatware", w => w.LblTabBloatware),
-        ("TabAdvanced", w => w.LblTabAdvanced), ("TabSystem", w => w.LblTabSystem),
+        ("TabSystem", w => w.LblTabSystem),
     };
 
     // 6.2.5 - το πλάτος του παραθύρου υπολογίζεται από τη ΜΕΓΑΛΥΤΕΡΗ λωρίδα καρτελών ανάμεσα σε ΟΛΕΣ τις γλώσσες
@@ -291,7 +291,6 @@ public partial class MainWindow : Window
         LblTabTweaks.Text = LanguageService.T("TabTweaks");
         LblTabGamesMedia.Text = LanguageService.T("TabGamesMedia");
         LblTabBloatware.Text = LanguageService.T("TabBloatware");
-        LblTabAdvanced.Text = LanguageService.T("TabAdvanced");
         LblTabSystem.Text = LanguageService.T("TabSystem");
         Dispatcher.BeginInvoke(new Action(AdaptTabStripToWidth), System.Windows.Threading.DispatcherPriority.Loaded);   // η νέα γλώσσα αλλάζει τα πλάτη των ονομάτων
 
@@ -459,12 +458,12 @@ public partial class MainWindow : Window
         ("Network#1", new[] { "Network_TrafficPerApp", "Network_QuickDns", "Network_HostsEditor" }),
         ("Tweaks", new[] { "Tweaks_NamedProfilesTitle", "Tweaks_Main", "Tweaks_AiCopilot", "Tweaks_Performance", "Tweaks_LighterWindows", "Tweaks_Encryption", "Tweaks_VisualEffects", "Tweaks_RightClick" }),
         ("GamesMedia#0", new[] { "Games_LibraryTitle", "Games_PerGameTitle", "Games_TweaksTitle", "Games_ShaderTitle", "Games_SaveBackupTitle" }),
-        ("GamesMedia#1", new[] { "Media_CodecsTitle", "Media_MovedTitle" }),
-        ("Advanced#0", new[] { "Reports_Title" }),
-        ("Advanced#1", new[] { "Health_RegBackupHistory", "System_RestorePoints", "Backup_Title", "Optimization_DriverBackup" }),
+        ("System#0", new[] { "Media_CodecsTitle", "Media_MovedTitle" }),
+        ("System#1", new[] { "Reports_Title" }),
+        ("System#1", new[] { "Health_RegBackupHistory", "System_RestorePoints", "Backup_Title", "Optimization_DriverBackup" }),
         ("System#0", new[] { "Sys_MbTitle", "Sys_DrivesTitle", "Sys_OsTitle", "Sys_NetTitle", "Sys_CpuTitle", "Sys_BatteryTitle", "Sys_RamTitle", "Sys_GpuTitle", "Timeline_Title", "Appr_FontsInstalledTitle" }),
-        ("System#1", new[] { "Media_DisplaysTitle", "Media_AudioTitle", "Media_PrivacyTitle" }),
-        ("System#2", new[] { "Advanced_Maintenance", "Advanced_Toolbox", "UsbHistory_Title", "Wsl_Title", "Rgb_Title" }),
+        ("System#0", new[] { "Media_DisplaysTitle", "Media_AudioTitle", "Media_PrivacyTitle" }),
+        ("System#1", new[] { "Advanced_Maintenance", "Advanced_Toolbox", "UsbHistory_Title", "Wsl_Title", "Rgb_Title" }),
     };
 
     private static List<SearchResultRow> BuildSearchIndex()
@@ -591,7 +590,7 @@ public partial class MainWindow : Window
             Key.D5 or Key.NumPad5 => "Network",
             Key.D6 or Key.NumPad6 => "GamesMedia",
             Key.D7 or Key.NumPad7 => "Tweaks",
-            Key.D8 or Key.NumPad8 => "Advanced",
+            Key.D8 or Key.NumPad8 => "System#1",
             Key.D9 or Key.NumPad9 => "System",
             _ => null,
         };
@@ -777,6 +776,10 @@ public partial class MainWindow : Window
         var sub = hash >= 0 && int.TryParse(tagSpec[(hash + 1)..], out var n) ? n : 0;
         // 6.8.0: η καρτέλα «Καθαρισμός & Απόδοση» ενσωματώθηκε στην «Υγεία & Επισκευή» (υποσελίδες 1-3)
         if (tag == "Optimization") { tag = "Health"; sub += 1; }
+        // 6.9.0: «Αντίγραφα & Αναφορές» -> Σύστημα › Εργαλεία· οι παλιές υποσελίδες Συσκευές/Εργαλεία του Συστήματος -> Πληροφορίες/Εργαλεία
+        else if (tag == "Advanced") { tag = "System"; sub = 1; }
+        else if (tag == "GamesMedia" && sub == 1) { tag = "System"; sub = 0; }
+        
         foreach (var child in TabStrip.Children)
         {
             if (child is not RadioButton rb || rb.Tag as string != tag) continue;

@@ -48,23 +48,17 @@ namespace OptimizerWpf
                 new TabSubPage("Sub_Security", new TabPart("Network", "Security"), new TabPart("Advanced", "Security")),
                 new TabSubPage("Sub_Network", new TabPart("Network", "Network")),
             },
-            ["Advanced"] = new[]
-            {
-                new TabSubPage("Sub_Reports", new TabPart("Health", "Reports")),
-                new TabSubPage("Sub_Backups", new TabPart("Health", "Backups"), new TabPart("Optimization", "DriverBackup")),
-            },
+            // 6.9.0: οι καρτέλες «Αντίγραφα & Αναφορές» και «Συσκευές» καταργήθηκαν: Συσκευές (οθόνες, ήχος, κάμερα/μικρόφωνο) και Κωδικοποιητές
+            // μπήκαν κάτω από τις Πληροφορίες συστήματος· Αναφορές, Αντίγραφα και Εργαλεία στην υποσελίδα Εργαλεία. Το tag "Advanced#N" ανακατευθύνεται.
             ["System"] = new[]
             {
-                new TabSubPage("Sub_Info", new TabPart("System", "Info")),
-                // 6.5.4: οι κάρτες συσκευών (οθόνες, ήχος, κάμερα/μικρόφωνο) ζούσαν στην καρτέλα "Παιχνίδια & Πολυμέσα" χωρίς σχέση με παιχνίδια.
-                new TabSubPage("Sub_Devices", new TabPart("GamesMedia", "Devices")),
-                new TabSubPage("Sub_Tools", new TabPart("Advanced", "Tools")),
+                new TabSubPage("Sub_Info", new TabPart("System", "Info"), new TabPart("GamesMedia", "Devices"), new TabPart("GamesMedia", "Media")),
+                new TabSubPage("Sub_Tools", new TabPart("Advanced", "Tools"), new TabPart("Health", "Reports"), new TabPart("Health", "Backups"), new TabPart("Optimization", "DriverBackup")),
             },
             // 6.5.4: Παιχνίδια | Πολυμέσα - η καρτέλα είχε 10 κάρτες σε μία σελίδα.
             ["GamesMedia"] = new[]
             {
                 new TabSubPage("Sub_Games", new TabPart("GamesMedia", "Games")),
-                new TabSubPage("Sub_Media", new TabPart("GamesMedia", "Media")),
             },
         };
 

@@ -40,7 +40,6 @@ namespace OptimizerWpf
             // το tag εδώ ΠΡΕΠΕΙ να ταιριάζει, αλλιώς το κλασικό μενού/PC Manager rail καλούν SelectTab με tag χωρίς RadioButton.
             new NavItem("GamesMedia", "\U0001F3AE", LanguageService.T("TabGamesMedia"), GlyphKind.Gamepad),
             new NavItem("Tweaks", "\U0001F527", LanguageService.T("TabTweaks"), GlyphKind.Wrench),
-            new NavItem("Advanced", "\U0001F4BE", LanguageService.T("TabAdvanced"), GlyphKind.Document),
             new NavItem("System", "\U0001F5A5", LanguageService.T("TabSystem"), GlyphKind.Monitor),
         };
     }

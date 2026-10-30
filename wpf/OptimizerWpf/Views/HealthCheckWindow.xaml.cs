@@ -382,7 +382,7 @@ namespace OptimizerWpf.Views
                     mw.SelectTab(first switch
                     {
                         "Startup" => "Optimization#2",
-                        "RestorePoint" => "Advanced#1",
+                        "RestorePoint" => "System#1",
                         "Defender" or "DefenderOtherAV" => "Network#0",
                         _ => "Health",
                     });

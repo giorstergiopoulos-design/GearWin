@@ -6,6 +6,15 @@ available inside the app itself, via Help/Instructions → the "Version History"
 
 Format loosely follows [Keep a Changelog](https://keepachangelog.com/).
 
+## v6.9.0 — Git repo updates, SDI core, System tab absorbs Advanced/Devices
+
+- **Git repositories in the app updater**: choose a folder ("Git repos folder…"); repos up to 3 levels deep are fetched and listed as `git` rows ("+N commits"); the update is `git pull --ff-only` only (never merge/rebase/force, no prompts, 40 s timeout per command, paths validated). Real fetch/pull round trip covered by a test.
+- **SDI core**: when Snappy Driver Installer Origin is missing the driver card offers "Install SDI core (winget)" (fixed package id `GlennDelahoy.SnappyDriverInstallerOrigin`, confirmation first; SDIO is used scan-only as before).
+- **Tab merge**: "Backup & Reports" (Advanced) is gone: Reports, Backups and Tools are on System › Tools; Devices (displays, audio, camera/microphone) and Codecs now sit under System › Information; Games & Media keeps only Games. Old tags (`Advanced#N`, `System#2`, `GamesMedia#1`) were remapped in the search index/Health Check/shortcuts; the first-run tutorial lost the two slides of removed tabs; welcome-guide text updated in 14 languages. 7 tabs.
+- **Installer**: already machine-wide (Program Files, admin, 64-bit); GearWin never had a per-user install, so there is nothing to migrate or remove.
+- Tests: 323.
+- **Remaining for 6.9.1** (not done): Vivetool "update feature list" (needs a verified online source), UWP view redesign, fonts (more sources, move to Tools), health timeline into Health & Repair, system updates inside the nightly task, merging the two guides, per-source updater progress/cancel/filters/ignore list, accessibility names, async-void/blocking-wait audit and silent-failure review of the updater, README/screenshots, repo hygiene (`reference\`, old notes), grammar pass of the 14 languages, Help tab-map texts still describe the pre-6.5 tabs.
+
 ## v6.8.0 — Tabs merged, one scan button, uninstall, Windows features list
 
 - **"Cleanup & Performance" merged into "Health & Repair"**: the tab now has Repair | Performance | Cleanup | Startup. The old `Optimization#N` tags (tray, Health Check, PC Manager quick cards, search index, Ctrl+3) redirect to `Health#N+1`. 8 tabs instead of 9; the welcome-guide text (14 languages) was updated to the new tab names.
