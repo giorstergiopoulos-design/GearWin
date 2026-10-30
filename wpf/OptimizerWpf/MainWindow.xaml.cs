@@ -127,7 +127,7 @@ public partial class MainWindow : Window
 
         FitWidthToTabs();
         SizeChanged += (_, _) => AdaptTabStripToWidth();
-        Loaded += (_, _) => AdaptTabStripToWidth();
+        Loaded += (_, _) => { AdaptTabStripToWidth(); NameTabButtonsForAutomation(); };
 
         _ = CheckHealthAttentionAsync();
     }
@@ -297,6 +297,7 @@ public partial class MainWindow : Window
         PopulateClassicMenu();
         _searchIndex = BuildSearchIndex();
         ConfigureRail();
+        NameTabButtonsForAutomation();
 
         // ΔΙΟΡΘΩΣΗ (χρήστης ανέφερε: "κάποια elements μένουν στην προηγούμενη γλώσσα μέχρι το
         // κλείσιμο και άνοιγμα ξανά") - το SidebarNav είναι μόνιμο UserControl (μόνο Visibility
@@ -664,6 +665,13 @@ public partial class MainWindow : Window
     // Tab pill Content is now an icon+text StackPanel (ρητό αίτημα χρήστη: εικονίδια στις καρτέλες),
     // όχι πλέον απλό string - rb.Content.ToString() θα επέστρεφε το όνομα του StackPanel type αντί
     // για το πραγματικό ελληνικό label, οπότε τραβάμε το κείμενο από το δεύτερο TextBlock παιδί.
+    // 6.9.1: προσβασιμότητα - στη συμπαγή λωρίδα οι καρτέλες δείχνουν μόνο εικονίδιο· οι screen readers/UI Automation χρειάζονται όνομα.
+    internal void NameTabButtonsForAutomation()
+    {
+        foreach (var rb in TabStrip.Children.OfType<RadioButton>())
+            if (GetTabLabel(rb) is { Length: > 0 } label) System.Windows.Automation.AutomationProperties.SetName(rb, label);
+    }
+
     private static string? GetTabLabel(RadioButton rb) =>
         (rb.Content as StackPanel)?.Children.OfType<TextBlock>().LastOrDefault()?.Text;
 
@@ -694,6 +702,7 @@ public partial class MainWindow : Window
             new Duration(TimeSpan.FromMilliseconds(180))) { EasingFunction = new System.Windows.Media.Animation.QuadraticEase() });
         SyncRailSelection();
         AdaptTabStripToWidth();
+        Dispatcher.BeginInvoke(new Action(() => App.NameUnlabelledToggles(ContentHost)), System.Windows.Threading.DispatcherPriority.ApplicationIdle);
     }
 
     // Γεμίζει ΟΛΟΚΛΗΡΟ το κλασικό μενού (4 ομάδες: Εργαλεία/Προβολή/Ρυθμίσεις/Βοήθεια) από το κοινό

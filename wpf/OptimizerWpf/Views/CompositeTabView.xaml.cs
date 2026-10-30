@@ -62,6 +62,7 @@ namespace OptimizerWpf.Views
                 views[i].Margin = new Thickness(0, i == 0 ? 0 : 16, 0, 0);   // ίδιο κενό 16 px και ανάμεσα στις προβολές μιας σελίδας
                 PageHost.Children.Add(views[i]);
             }
+            Dispatcher.BeginInvoke(new Action(() => App.NameUnlabelledToggles(PageHost)), System.Windows.Threading.DispatcherPriority.ApplicationIdle);
         }
 
         // Μία παρουσία ανά προβολή (με την ένωση των ενοτήτων που ζητούν τα τμήματα της σελίδας), με τη σειρά πρώτης εμφάνισης.

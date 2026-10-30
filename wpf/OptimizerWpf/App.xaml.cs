@@ -18,6 +18,61 @@ public partial class App : Application
     // ξαναμείνει stale σε μελλοντικά version bumps.
     public static string DisplayVersion { get; } = $"v{System.Reflection.Assembly.GetExecutingAssembly().GetName().Version!.ToString(3)}";
 
+    // 6.9.1 - προσβασιμότητα: οι διακόπτες (ToggleSwitchStyle) δεν έχουν δικό τους κείμενο· τους δίνουμε όνομα από την ετικέτα της ίδιας γραμμής
+    // (πρώτο μη-κενό TextBlock σε κάποιον από τους 4 πρώτους γονείς), εκτός αν ο προγραμματιστής όρισε ήδη AutomationProperties.Name.
+    static App()
+    {
+        EventManager.RegisterClassHandler(typeof(System.Windows.Controls.Primitives.ToggleButton), FrameworkElement.LoadedEvent, new RoutedEventHandler(NameToggleFromRowLabel));
+    }
+
+    // Περπατά το δέντρο ενός περιεχομένου και δίνει ετικέτα σε διακόπτες που ακόμα δεν έχουν (καλείται μετά την εμφάνιση καρτέλας/υποσελίδας).
+    internal static void NameUnlabelledToggles(DependencyObject root)
+    {
+        void Walk(DependencyObject d)
+        {
+            for (var i = 0; i < System.Windows.Media.VisualTreeHelper.GetChildrenCount(d); i++)
+            {
+                var c = System.Windows.Media.VisualTreeHelper.GetChild(d, i);
+                if (c is System.Windows.Controls.Primitives.ToggleButton tb) NameToggleFromRowLabel(tb, new RoutedEventArgs());
+                Walk(c);
+            }
+        }
+        Walk(root);
+    }
+
+    private static void NameToggleFromRowLabel(object sender, RoutedEventArgs e)
+    {
+        if (sender is not System.Windows.Controls.Primitives.ToggleButton tb || tb is System.Windows.Controls.RadioButton) return;
+        if (!string.IsNullOrWhiteSpace(System.Windows.Automation.AutomationProperties.GetName(tb)) || tb.Content != null) return;
+        if (System.Windows.Automation.AutomationProperties.GetLabeledBy(tb) != null) return;
+        DependencyObject? cur = tb;
+        for (var level = 0; level < 4 && cur != null; level++)
+        {
+            cur = System.Windows.Media.VisualTreeHelper.GetParent(cur);
+            if (cur is System.Windows.Controls.ComboBox) return;   // εσωτερικό μέρος ComboBox
+            if (cur is not System.Windows.Controls.Panel panel) continue;
+            foreach (var child in panel.Children)
+            {
+                if (child is not UIElement ui || ReferenceEquals(ui, tb) || ui.IsAncestorOf(tb)) continue;
+                var label = child as System.Windows.Controls.TextBlock ?? FirstTextBlock(ui);
+                // LabeledBy: το όνομα διαβάζεται δυναμικά από το κείμενο της ετικέτας (έστω κι αν το binding γεμίσει αργότερα / αλλάξει η γλώσσα)
+                if (label != null) { System.Windows.Automation.AutomationProperties.SetLabeledBy(tb, label); return; }
+            }
+        }
+    }
+
+    private static System.Windows.Controls.TextBlock? FirstTextBlock(DependencyObject root)
+    {
+        for (var i = 0; i < System.Windows.Media.VisualTreeHelper.GetChildrenCount(root); i++)
+        {
+            var c = System.Windows.Media.VisualTreeHelper.GetChild(root, i);
+            if (c is System.Windows.Controls.TextBlock tb && tb.Visibility == Visibility.Visible) return tb;
+            var r = FirstTextBlock(c);
+            if (r != null) return r;
+        }
+        return null;
+    }
+
     private static System.Threading.Mutex? _singleInstanceMutex;
     private static DateTime _lastErrorDialog = DateTime.MinValue;
 
