@@ -25,6 +25,9 @@ namespace OptimizerWpf.Views
         // s_recommendedInstalledCache) - καμία αλλαγή χρειάζεται στον υπόλοιπο κώδικα του αρχείου,
         // αφού το Add/Remove/Clear στην ΙΔΙΑ συλλογή παραμένει ορατό στο επόμενο instance.
         private static readonly ObservableCollection<WingetUpdateRow> _updates = new();
+        // 6.9.1: οι ενημερώσεις Windows (πηγή "windowsupdate") σε δικό τους πλαίσιο
+        private static readonly ObservableCollection<WingetUpdateRow> _windowsUpdates = new();
+        private static bool IsWindowsSource(WingetUpdate u) => string.Equals(u.Source, "windowsupdate", StringComparison.OrdinalIgnoreCase);
         private static readonly ObservableCollection<UnifiedDriverRow> _driverUpdates = new();
         private static readonly ObservableCollection<DriverStoreEntry> _driverStoreEntries = new();
 
@@ -49,6 +52,8 @@ namespace OptimizerWpf.Views
         {
             InitializeComponent();
             ListWingetUpdates.ItemsSource = _updates;
+            ListWindowsUpdates.ItemsSource = _windowsUpdates;
+            _windowsUpdates.CollectionChanged += (_, _) => TxtWindowsUpdatesNone.Visibility = _windowsUpdates.Count == 0 ? Visibility.Visible : Visibility.Collapsed;
             ListDriverUpdates.ItemsSource = _driverUpdates;
             ListDriverStore.ItemsSource = _driverStoreEntries;
 
@@ -324,11 +329,12 @@ namespace OptimizerWpf.Views
                 _scanCts.Token.ThrowIfCancellationRequested();
                 ReplaceUpdates(results);
 
-                AppScan.SetStatus((_updates.Count == 0
+                AppScan.SetStatus(((_updates.Count + _windowsUpdates.Count) == 0
                     ? LanguageService.T("Opt_NoUpdatesFound")
-                    : $"{LanguageService.T("Opt_UpdatesFoundPrefix")}{_updates.Count}{LanguageService.T("Opt_UpdatesFoundSuffix")}")
+                    : $"{LanguageService.T("Opt_UpdatesFoundPrefix")}{_updates.Count + _windowsUpdates.Count}{LanguageService.T("Opt_UpdatesFoundSuffix")}")
                     + " · " + string.Format(LanguageService.T("Opt_LastScanned"), DateTime.Now.ToString("HH:mm:ss")));
                 UpdatesHubService.ReportAppScan(_updates.Count);
+                UpdatesHubService.ReportWindowsUpdateScan(_windowsUpdates.Count);
                 RefreshIgnoredButton();
             }
             catch (OperationCanceledException)
@@ -389,16 +395,28 @@ namespace OptimizerWpf.Views
 
         internal static int UpdateCountForTests => _updates.Count;
 
+        /// <summary>Καθαρή λογική (χωρίς UI): χωρίζει τα αποτελέσματα σε εφαρμογές / ενημερώσεις Windows / αγνοημένες (οι αγνοημένες αφορούν μόνο εφαρμογές).</summary>
+        internal static (List<WingetUpdate> Apps, List<WingetUpdate> Windows, List<WingetUpdate> Ignored) SplitUpdates(IEnumerable<WingetUpdate> results, IEnumerable<string> ignoredKeys)
+        {
+            var ignored = new HashSet<string>(ignoredKeys, StringComparer.OrdinalIgnoreCase);
+            var all = DeduplicateUpdates(results);
+            var windows = all.Where(IsWindowsSource).ToList();
+            var apps = all.Where(u => !IsWindowsSource(u)).ToList();
+            return (apps.Where(u => !ignored.Contains(IgnoreKey(u))).ToList(), windows, apps.Where(u => ignored.Contains(IgnoreKey(u))).ToList());
+        }
+
+        private static void RemoveUpdateRow(WingetUpdateRow row) { if (!_updates.Remove(row)) _windowsUpdates.Remove(row); }
+
         /// <summary>Αντικαθιστά τη λίστα ενημερώσεων με τα νέα αποτελέσματα, χωρίς διπλότυπα (κλειδί: πηγή + id, χωρίς διάκριση πεζών-κεφαλαίων).</summary>
         internal static void ReplaceUpdates(IEnumerable<WingetUpdate> results)
         {
-            var ignored = new HashSet<string>(AppSettingsService.Current.IgnoredUpdates, StringComparer.OrdinalIgnoreCase);
-            var all = DeduplicateUpdates(results).Select(u => new WingetUpdateRow(u)).ToList();
-            var rows = all.Where(r => !ignored.Contains(IgnoreKey(r.Update))).ToList();
+            var (apps, windows, ignoredUpdates) = SplitUpdates(results, AppSettingsService.Current.IgnoredUpdates);
             _ignoredRows.Clear();
-            _ignoredRows.AddRange(all.Where(r => ignored.Contains(IgnoreKey(r.Update))));
+            _ignoredRows.AddRange(ignoredUpdates.Select(u => new WingetUpdateRow(u)));
             _updates.Clear();
-            foreach (var r in rows) _updates.Add(r);
+            foreach (var u in apps) _updates.Add(new WingetUpdateRow(u));
+            _windowsUpdates.Clear();
+            foreach (var u in windows) _windowsUpdates.Add(new WingetUpdateRow(u));
         }
 
         /// <summary>Καθαρή λογική (χωρίς UI): κρατά την πρώτη εμφάνιση κάθε πηγή+id, χωρίς διάκριση πεζών-κεφαλαίων, με την αρχική σειρά.</summary>
@@ -421,7 +439,7 @@ namespace OptimizerWpf.Views
         private void ChkSelectAll_Click(object sender, RoutedEventArgs e)
         {
             var selectAll = ChkSelectAll.IsChecked == true;
-            foreach (var row in _updates) row.IsSelected = selectAll;
+            foreach (var row in _updates.Concat(_windowsUpdates)) row.IsSelected = selectAll;
         }
 
         // ΝΕΟ (χρήστης ανέφερε: "δεν βγαίνει κανένα μήνυμα επιτυχούς εγκατάστασης, ελέγξτο, pop-up ή
@@ -442,7 +460,7 @@ namespace OptimizerWpf.Views
         // ειλικρίνειας με τις υπόλοιπες "μόνο ό,τι πραγματικά επιβεβαιώθηκε" ενδείξεις της εφαρμογής.
         private async void BtnUpgradeSelected_Click(object sender, RoutedEventArgs e)
         {
-            var selected = _updates.Where(u => u.IsSelected).ToList();
+            var selected = _updates.Concat(_windowsUpdates).Where(u => u.IsSelected).ToList();
             if (selected.Count == 0) return;
             if (!AppScan.TryBegin(installing: true)) return;
 
@@ -473,7 +491,7 @@ namespace OptimizerWpf.Views
                     {
                         case StoreUpdateOutcome.Updated:
                         case StoreUpdateOutcome.AlreadyCurrent:
-                            succeeded.Add(row.Update.Name); _updates.Remove(row); break;
+                            succeeded.Add(row.Update.Name); RemoveUpdateRow(row); break;
                         case StoreUpdateOutcome.TimedOut:
                             openedInStore.Add(row.Update.Name); break;
                         default:
@@ -485,7 +503,7 @@ namespace OptimizerWpf.Views
                 bool ok; string? reason = null;
                 try { (ok, reason) = await WingetService.UpgradeDetailedAsync(row.Update.Id, row.Update.Source); }
                 catch { ok = false; } // ένα προβληματικό πακέτο δεν πρέπει να σταματά τα υπόλοιπα
-                if (ok) { succeeded.Add(row.Update.Name); _updates.Remove(row); }
+                if (ok) { succeeded.Add(row.Update.Name); RemoveUpdateRow(row); }
                 else { failed.Add(reason == null ? row.Update.Name : $"{row.Update.Name} [{reason}]"); }
             }
             }
@@ -751,6 +769,22 @@ namespace OptimizerWpf.Views
                     btnSdio.Click += (_, __) => { try { System.Diagnostics.Process.Start(new System.Diagnostics.ProcessStartInfo("explorer.exe", $"\"{path}\"") { UseShellExecute = true }); } catch { } };
                     PanelVendorExtraButtons.Children.Add(btnSdio);
                 }
+                if (sdio.Installed)
+                {
+                    // 6.9.1: μετά την εγκατάσταση του SDI - ρητά κουμπιά «Λήψη» (ευρετήρια/ενημερώσεις packs) και «Ενσωμάτωση» (εγκατάσταση, με επιβεβαίωση + σημείο επαναφοράς)
+                    var btnDl = new Button { Content = LanguageService.T("Opt_SdioDownloadBtn"), Style = (Style)FindResource("FlatButtonStyle"), Padding = new Thickness(14, 6, 14, 6), Margin = new Thickness(0, 0, 10, 0) };
+                    btnDl.Click += async (_, __) => await RunSdioAsync(SdioAction.Download, btnDl);
+                    var btnInt = new Button { Content = LanguageService.T("Opt_SdioIntegrateBtn"), Style = (Style)FindResource("AccentButtonStyle"), Padding = new Thickness(14, 6, 14, 6), Margin = new Thickness(0, 0, 10, 0) };
+                    btnInt.Click += async (_, __) =>
+                    {
+                        if (ThemedMessageBox.Show(LanguageService.T("Opt_SdioIntegrateConfirm"), LanguageService.T("Opt_SdioIntegrateBtn"), MessageBoxButton.YesNo, MessageBoxImage.Warning) != MessageBoxResult.Yes) return;
+                        var guard = await RestoreGuardService.EnsureRecentAsync();
+                        if (guard == RestoreGuardResult.Failed && ThemedMessageBox.Show(LanguageService.T("Guard_PointFailedContinue"), LanguageService.T("Opt_SdioIntegrateBtn"), MessageBoxButton.YesNo, MessageBoxImage.Warning) != MessageBoxResult.Yes) return;
+                        await RunSdioAsync(SdioAction.Integrate, btnInt);
+                    };
+                    PanelVendorExtraButtons.Children.Add(btnDl);
+                    PanelVendorExtraButtons.Children.Add(btnInt);
+                }
                 else if (!sdio.Installed)
                 {
                     lines.Add(LanguageService.T("Opt_SdioNotInstalled"));
@@ -782,6 +816,21 @@ namespace OptimizerWpf.Views
             }
 
             TxtVendorExtra.Text = string.Join(" ", lines);
+        }
+
+        private async System.Threading.Tasks.Task RunSdioAsync(SdioAction action, Button button)
+        {
+            button.IsEnabled = false;
+            StatusService.SetBusy(LanguageService.T(action == SdioAction.Download ? "Opt_SdioDownloadBtn" : "Opt_SdioIntegrateBtn"));
+            try
+            {
+                var (started, exit, logDir) = await SdioService.RunAsync(action);
+                var ok = started && exit == 0;
+                ThemedMessageBox.Show(ok ? string.Format(LanguageService.T("Opt_SdioRunDone"), logDir) : string.Format(LanguageService.T("Opt_SdioRunFailed"), exit) + "\n" + logDir,
+                    LanguageService.T("Opt_SdioDownloadBtn"), MessageBoxButton.OK, ok ? MessageBoxImage.Information : MessageBoxImage.Warning);
+            }
+            catch (Exception ex) { ThemedMessageBox.Show(ex.Message, LanguageService.T("Opt_SdioDownloadBtn"), MessageBoxButton.OK, MessageBoxImage.Warning); }
+            finally { StatusService.SetIdle(LanguageService.T("Ready")); button.IsEnabled = true; }
         }
 
         private async void BtnInstallDriver_Click(object sender, RoutedEventArgs e)

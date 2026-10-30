@@ -30,8 +30,8 @@ namespace OptimizerWpf
         {
             ["Bloatware"] = new[]
             {
-                new TabSubPage("Sub_Updates", new TabPart("Optimization", "Updates")),
-                new TabSubPage("Sub_Drivers", new TabPart("Optimization", "Drivers"), new TabPart("Advanced", "Ghost")),
+                // 6.9.1: ένας ενιαίος ενημερωτής - εφαρμογές, Windows και οδηγοί στην ίδια σελίδα, σε ξεχωριστά πλαίσια
+                new TabSubPage("Sub_Updates", new TabPart("Optimization", "Updates"), new TabPart("Optimization", "Drivers"), new TabPart("Advanced", "Ghost")),
                 new TabSubPage("Sub_Apps", new TabPart("Bloatware", "All")),
             },
             // 6.8.0: «Καθαρισμός & Απόδοση» συγχωνεύθηκε στην «Υγεία & Επισκευή» (Επισκευή | Απόδοση | Καθαρισμός | Εκκίνηση).
@@ -65,7 +65,7 @@ namespace OptimizerWpf
         // Ενότητα ανά παιδί της ρίζας κάθε προβολής (null = κάρτα που δεν εμφανίζεται σε καμία σύνθετη σελίδα, π.χ. διπλότυπος τίτλος).
         private static readonly IReadOnlyDictionary<string, string?[]> RootSections = new Dictionary<string, string?[]>
         {
-            ["Optimization"] = new[] { "Updates", "Updates", "Updates", "Updates", "Drivers", "Drivers", "DriverBackup", "Drivers", "Modes", "Modes" },
+            ["Optimization"] = new[] { "Updates", "Updates", "Updates", "Updates", "Updates", "Drivers", "Drivers", "DriverBackup", "Drivers", "Modes", "Modes" },
             ["Health"] = new[] { "Repair", "Repair", "Backups", "Cleanup", "Repair", "Reports", "Repair", "@Recovery" },
             ["Network"] = new[] { "Network", "Network", "Network", "Network", "Network", "Security", "Security", "Security", "Security", "Network", "Network" },
             ["Advanced"] = new[] { null, "Tools", "Tools", "Ghost", "Tools", "Tools", "Tools", "Startup", "Startup", "Security", "@PowerTools" },

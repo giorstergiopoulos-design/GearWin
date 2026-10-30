@@ -52,23 +52,23 @@ namespace OptimizerWpf.Tests
         }
 
         [Fact]
-        public void IgnoredUpdatesAreHiddenFromTheListAndCancellationKillsTheScan()
+        public void ResultsAreSplitIntoAppsWindowsAndIgnored()
         {
-            var settings = AppSettingsService.Current;
-            var saved = settings.IgnoredUpdates.ToList();
-            try
+            var results = new[]
             {
-                settings.IgnoredUpdates.Clear();
-                settings.IgnoredUpdates.Add("winget|Vendor.Tool");
-                OptimizerWpf.Views.OptimizationView.ReplaceUpdates(new[]
-                {
-                    new WingetUpdate("Tool", "Vendor.Tool", "1", "2", "winget"),
-                    new WingetUpdate("Other", "Vendor.Other", "1", "2", "winget"),
-                });
-                Assert.Equal(1, OptimizerWpf.Views.OptimizationView.UpdateCountForTests);
-                Assert.Equal("winget|Vendor.Tool", OptimizerWpf.Views.OptimizationView.IgnoreKey(new WingetUpdate("Tool", "Vendor.Tool", "1", "2", "winget")));
-            }
-            finally { settings.IgnoredUpdates.Clear(); settings.IgnoredUpdates.AddRange(saved); OptimizerWpf.Views.OptimizationView.ReplaceUpdates(System.Array.Empty<WingetUpdate>()); }
+                new WingetUpdate("Tool", "Vendor.Tool", "1", "2", "winget"),
+                new WingetUpdate("Other", "Vendor.Other", "1", "2", "winget"),
+                new WingetUpdate("KB5001", "11111111-1111-1111-1111-111111111111|200", "", "Important", "windowsupdate"),
+                new WingetUpdate("Other", "Vendor.Other", "1", "2", "winget"),   // duplicate
+            };
+            var (apps, windows, ignored) = OptimizerWpf.Views.OptimizationView.SplitUpdates(results, new[] { "winget|Vendor.Tool" });
+            Assert.Equal(new[] { "Vendor.Other" }, apps.Select(u => u.Id).ToArray());
+            Assert.Single(windows);
+            Assert.Equal("windowsupdate", windows[0].Source);
+            Assert.Equal(new[] { "Vendor.Tool" }, ignored.Select(u => u.Id).ToArray());
+            // ignoring never hides Windows updates
+            var (_, win2, _) = OptimizerWpf.Views.OptimizationView.SplitUpdates(results, new[] { "windowsupdate|11111111-1111-1111-1111-111111111111|200" });
+            Assert.Single(win2);
         }
 
         [Fact]
@@ -90,6 +90,20 @@ namespace OptimizerWpf.Tests
             Assert.Equal("11.2405.1.0 · x64", a.Details);
             Assert.Equal("C", a.Initial);
             Assert.Equal("", new UwpAppInfo("X", "weird").Details);
+        }
+
+        [Fact]
+        public void SdioScriptsDownloadOnlyOrIntegrateAndAlwaysEnd()
+        {
+            var dl = SdioService.BuildScript(SdioAction.Download);
+            Assert.Contains("checkupdates", dl);
+            Assert.Contains("get indexes", dl);
+            Assert.DoesNotContain("install", dl);
+            Assert.DoesNotContain("enableinstall on", dl);
+            var integrate = SdioService.BuildScript(SdioAction.Integrate);
+            Assert.Contains("select missing better", integrate);
+            Assert.True(integrate.IndexOf("enableinstall on") < integrate.IndexOf("\r\ninstall"));
+            foreach (var script in new[] { dl, integrate }) Assert.EndsWith(":end\r\nend\r\n", script);
         }
     }
 }

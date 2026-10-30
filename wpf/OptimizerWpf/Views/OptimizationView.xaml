@@ -106,9 +106,9 @@
                          μοτίβο με το BtnScanDrivers/DriverScanButton παραπάνω στην κάρτα Οδηγών: μεγάλο
                          κυκλικό κουμπί σάρωσης αντί για το προηγούμενο απλό ορθογώνιο "Σάρωση". -->
                     <Button x:Name="BtnCancelAppScan" Content="{tr:Tr Cancel}" Style="{StaticResource FlatButtonStyle}" Padding="16,6" HorizontalAlignment="Center" Margin="0,10,0,0" Visibility="Collapsed" Click="BtnCancelAppScan_Click"/>
-                    <views:AppUpdateScanButton x:Name="BtnScanWinget" HorizontalAlignment="Center" Margin="0,10,0,10" Click="BtnScanWinget_Click"/>
+                    <views:AppUpdateScanButton x:Name="BtnScanWinget" HorizontalAlignment="Center" Margin="0,10,0,10" Click="BtnScanAll_Click"/>
                     <!-- 6.8.0: ένα κουμπί που σαρώνει ταυτόχρονα εφαρμογές + Windows Update (ήδη στη λίστα εφαρμογών) + οδηγούς. -->
-                    <Button x:Name="BtnScanAll" Content="{tr:Tr Opt_ScanAllBtn}" Style="{StaticResource FlatButtonStyle}" Padding="16,7"
+                    <Button x:Name="BtnScanAll" Visibility="Collapsed" Content="{tr:Tr Opt_ScanAllBtn}" Style="{StaticResource FlatButtonStyle}" Padding="16,7"
                             HorizontalAlignment="Center" Margin="0,0,0,4" Click="BtnScanAll_Click"/>
                     <Button x:Name="BtnIgnored" Content="{tr:Tr Opt_IgnoredButton}" Style="{StaticResource FlatButtonStyle}" Padding="16,6" HorizontalAlignment="Center" Margin="0,0,0,6" Visibility="Collapsed" Click="BtnIgnored_Click"/>
                     <Button Content="{tr:Tr Opt_GitFolderBtn}" Style="{StaticResource FlatButtonStyle}" Padding="16,6" HorizontalAlignment="Center" Margin="0,0,0,6" Click="BtnAddGitFolder_Click"/>
@@ -173,6 +173,30 @@
                  (port του New-DriverScanButton, ~5555) αντί για απλό ορθογώνιο κουμπί - βλ.
                  DriverScanButton.xaml. Η λίστα αποτελεσμάτων μένει κρυφή μέχρι να υπάρξουν
                  αποτελέσματα (καθαρή "δεν έχει σαρωθεί ακόμα" κατάσταση, όπως στο screenshot). -->
+            <!-- 6.9.1: ξεχωριστό πλαίσιο για τις ενημερώσεις Windows (πηγή windowsupdate) - ίδια σάρωση με τις εφαρμογές, ίδιο κουμπί «Ενημέρωση επιλεγμένων» -->
+            <Border Style="{StaticResource CardStyle}" Margin="0,16,0,0">
+                <StackPanel>
+                    <TextBlock Text="{tr:Tr Opt_WindowsUpdatesCardTitle}" Style="{StaticResource CardTitleStyle}" Margin="0,0,0,6"/>
+                    <TextBlock x:Name="TxtWindowsUpdatesNone" Text="{tr:Tr Opt_WindowsUpdatesNone}" Style="{StaticResource SubTextStyle}" TextWrapping="Wrap" Margin="0,0,0,6"/>
+                    <ItemsControl x:Name="ListWindowsUpdates">
+                        <ItemsControl.ItemTemplate>
+                            <DataTemplate>
+                                <Border Background="{DynamicResource MainBgBrush}" CornerRadius="6" Margin="0,3" Padding="10,8">
+                                    <Grid>
+                                        <Grid.ColumnDefinitions><ColumnDefinition Width="Auto"/><ColumnDefinition Width="*"/></Grid.ColumnDefinitions>
+                                        <CheckBox Grid.Column="0" IsChecked="{Binding IsSelected}" VerticalAlignment="Center" Margin="0,0,10,0"/>
+                                        <StackPanel Grid.Column="1">
+                                            <TextBlock Text="{Binding Update.Name, Mode=OneWay}" Foreground="{DynamicResource TextBrush}" FontWeight="SemiBold" TextWrapping="Wrap"/>
+                                            <TextBlock Text="{Binding Update.AvailableVersion, Mode=OneWay}" Style="{StaticResource SubTextStyle}" FontSize="11"/>
+                                        </StackPanel>
+                                    </Grid>
+                                </Border>
+                            </DataTemplate>
+                        </ItemsControl.ItemTemplate>
+                    </ItemsControl>
+                </StackPanel>
+            </Border>
+
             <!-- ΝΕΟ (πρόταση "χρονοδιάγραμμα ενημερώσεων"): βλ. AutoUpdateService - μόνο ενημερώσεις εφαρμογών winget, κάθε νύχτα 03:30. -->
             <Border Style="{StaticResource CardStyle}" Margin="0,16,0,0">
                 <Grid>

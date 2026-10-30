@@ -371,7 +371,7 @@ namespace OptimizerWpf.Views
                     // "App Uninstall" ΔΕΝ απεγκαθιστά αυτόματα (μη αναστρέψιμη ενέργεια) - ανοίγει την
                     // καρτέλα Εφαρμογές & Bloat για έλεγχο/επιβεβαίωση από τον χρήστη, ίδιο πνεύμα
                     // ασφάλειας με όλες τις υπόλοιπες καταστροφικές ενέργειες της εφαρμογής.
-                    mw.SelectTab("Bloatware#2");
+                    mw.SelectTab("Bloatware#1");
                     break;
                 case "Score":
                     // ΝΕΟ - βλ. σχόλιο στο BuildResults(): τα ευρήματα HealthScoreService (Defender/

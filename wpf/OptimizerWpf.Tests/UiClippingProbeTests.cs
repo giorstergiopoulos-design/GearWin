@@ -206,8 +206,8 @@ namespace OptimizerWpf.Tests
             t.SetApartmentState(ApartmentState.STA); t.Start(); t.Join();
             if (!string.IsNullOrEmpty(outDir)) File.WriteAllLines(Path.Combine(outDir, "inventory.txt"), inventory);
             if (!string.IsNullOrEmpty(outDir)) File.WriteAllLines(Path.Combine(outDir, "clipping-report.txt"), new[] { "# button texts examined: " + Examined }.Concat(problems));
-            Assert.True(Examined > 200, "the probe examined only " + Examined + " button texts - the layout was not realised");
             if (error != null) throw new Exception(error.Message, error);
+            Assert.True(Examined > 200, "the probe examined only " + Examined + " button texts - the layout was not realised");
             Assert.True(problems.Count == 0, problems.Count + " clipped button texts:" + Environment.NewLine + string.Join(Environment.NewLine, problems.Take(60)));
         }
     }

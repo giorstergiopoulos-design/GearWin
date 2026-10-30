@@ -61,6 +61,7 @@ namespace OptimizerWpf.Tests
                     if (Application.Current == null) { var app = new OptimizerWpf.App(); app.InitializeComponent(); }
                     OptimizerWpf.ThemeManager.LoadPersisted();
                     SynchronizationContext.SetSynchronizationContext(new DispatcherSynchronizationContext(Dispatcher.CurrentDispatcher));
+                    var originalLanguage = LanguageService.Current;
                     LanguageService.SetLanguage("en");
                     var w = new MainWindow { Width = 1000, Height = 760, WindowStartupLocation = WindowStartupLocation.Manual, Left = -5000, Top = 0 };
                     w.Show();
@@ -76,6 +77,7 @@ namespace OptimizerWpf.Tests
                             if (string.IsNullOrWhiteSpace(AccessibleName(b))) problems.Add($"{item.Tag}: {b.GetType().Name}#{b.Name} (tag {b.Tag}) has no accessible name; loaded={b.IsLoaded} content={b.Content?.GetType().Name} chain={Chain(b)}");
                     }
                     w.Close();
+                    LanguageService.SetLanguage(originalLanguage);
                 }
                 catch (Exception ex) { error = ex; }
             });

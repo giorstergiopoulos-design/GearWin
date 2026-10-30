@@ -448,9 +448,8 @@ public partial class MainWindow : Window
     private static readonly (string Tag, string[] CardKeys)[] CardIndex =
     {
         ("Home", new[] { "Home_PerfMonitoring", "Home_HealthScore", "Home_Pinned", "Home_UpdatesTitle", "Home_DiskAnalysis", "Home_RecentActivity" }),
-        ("Bloatware#0", new[] { "Optimization_SoftwareUpdate", "Opt_NightlyUpdates" }),
-        ("Bloatware#1", new[] { "Optimization_Drivers", "Optimization_DriverStore", "Advanced_GhostDevices" }),
-        ("Bloatware#2", new[] { "Bloatware_Builtin", "Advanced_OptionalFeatures", "Bloatware_Recommended", "Bloatware_UwpManager", "Bloatware_DeepUninstall" }),
+        ("Bloatware#0", new[] { "Optimization_SoftwareUpdate", "Opt_WindowsUpdatesCardTitle", "Opt_NightlyUpdates", "Optimization_Drivers", "Optimization_DriverStore", "Advanced_GhostDevices" }),
+        ("Bloatware#1", new[] { "Bloatware_Builtin", "Advanced_OptionalFeatures", "Bloatware_Recommended", "Bloatware_UwpManager", "Bloatware_DeepUninstall" }),
         ("Health#0", new[] { "Timeline_Title" }),
         ("System#1", new[] { "Appr_FontsInstalledTitle", "Appr_FontsSuggestedTitle" }),
         ("Health#1", new[] { "Opt_ModesSection", "Optimization_GamingMode", "Optimization_OfficeMode", "Opt_UltimatePerformance", "Opt_AutoGamingMode", "Opt_ScheduledMaintenance", "System_Processes", "System_Benchmark" }),
@@ -789,6 +788,7 @@ public partial class MainWindow : Window
         if (tag == "Optimization") { tag = "Health"; sub += 1; }
         // 6.9.0: «Αντίγραφα & Αναφορές» -> Σύστημα › Εργαλεία· οι παλιές υποσελίδες Συσκευές/Εργαλεία του Συστήματος -> Πληροφορίες/Εργαλεία
         else if (tag == "Advanced") { tag = "System"; sub = 1; }
+        else if (tag == "Bloatware" && sub == 2) { sub = 1; }   // 6.9.1: οι υποσελίδες Ενημερώσεις+Οδηγοί έγιναν μία
         else if (tag == "GamesMedia" && sub == 1) { tag = "System"; sub = 0; }
         
         foreach (var child in TabStrip.Children)
