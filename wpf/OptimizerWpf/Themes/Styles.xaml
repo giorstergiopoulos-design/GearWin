@@ -283,6 +283,11 @@
                         <Trigger Property="IsMouseOver" Value="True">
                             <Setter TargetName="Bg" Property="Background" Value="{DynamicResource BtnHoverBrush}"/>
                         </Trigger>
+                        <!-- 6.9.1: ορατό focus πληκτρολογίου (Tab/βέλη) -->
+                        <Trigger Property="IsKeyboardFocused" Value="True">
+                            <Setter TargetName="Bg" Property="BorderBrush" Value="{DynamicResource AccentBrush}"/>
+                            <Setter TargetName="Bg" Property="BorderThickness" Value="2"/>
+                        </Trigger>
                     </ControlTemplate.Triggers>
                 </ControlTemplate>
             </Setter.Value>
@@ -310,6 +315,11 @@
                         <Trigger Property="IsChecked" Value="True">
                             <Setter TargetName="Bg" Property="Background" Value="{DynamicResource AccentBrush}"/>
                             <Setter Property="Foreground" Value="White"/>
+                        </Trigger>
+                        <!-- 6.9.1: ορατό focus πληκτρολογίου (Tab/βέλη) -->
+                        <Trigger Property="IsKeyboardFocused" Value="True">
+                            <Setter TargetName="Bg" Property="BorderBrush" Value="{DynamicResource AccentBrush}"/>
+                            <Setter TargetName="Bg" Property="BorderThickness" Value="2"/>
                         </Trigger>
                     </ControlTemplate.Triggers>
                 </ControlTemplate>
@@ -345,6 +355,11 @@
                             <Setter TargetName="Bg" Property="Background" Value="{DynamicResource TabSelectBrush}"/>
                             <Setter TargetName="Bar" Property="Visibility" Value="Visible"/>
                             <Setter Property="Foreground" Value="{DynamicResource TextBrush}"/>
+                        </Trigger>
+                        <!-- 6.9.1: ορατό focus πληκτρολογίου (Tab/βέλη) -->
+                        <Trigger Property="IsKeyboardFocused" Value="True">
+                            <Setter TargetName="Bg" Property="BorderBrush" Value="{DynamicResource AccentBrush}"/>
+                            <Setter TargetName="Bg" Property="BorderThickness" Value="2"/>
                         </Trigger>
                     </ControlTemplate.Triggers>
                 </ControlTemplate>
@@ -415,6 +430,11 @@
                     <ControlTemplate.Triggers>
                         <Trigger Property="IsMouseOver" Value="True">
                             <Setter TargetName="Bg" Property="Background" Value="{DynamicResource BtnHoverBrush}"/>
+                        </Trigger>
+                        <!-- 6.9.1: ορατό focus πληκτρολογίου (Tab/βέλη) -->
+                        <Trigger Property="IsKeyboardFocused" Value="True">
+                            <Setter TargetName="Bg" Property="BorderBrush" Value="{DynamicResource AccentBrush}"/>
+                            <Setter TargetName="Bg" Property="BorderThickness" Value="2"/>
                         </Trigger>
                     </ControlTemplate.Triggers>
                 </ControlTemplate>
