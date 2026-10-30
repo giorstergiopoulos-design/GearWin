@@ -522,9 +522,9 @@ namespace OptimizerWpf.Views
             // εικονίδιο" - HDD/USB/Unknown συνεχίζουν με το γενικό disk-icon.png.
             ImgDiskIcon.Source = new BitmapImage(new Uri(kind switch
             {
-                PhysicalDriveKind.Nvme => "/Assets/nvme-icon.png",
-                PhysicalDriveKind.Ssd => "/Assets/ssd-icon.png",
-                _ => "/Assets/disk-icon.png",
+                PhysicalDriveKind.Nvme => "/GearWin;component/Assets/nvme-icon.png",
+                PhysicalDriveKind.Ssd => "/GearWin;component/Assets/ssd-icon.png",
+                _ => "/GearWin;component/Assets/disk-icon.png",
             }, UriKind.Relative));
 
             // Μάρκα/περιγραφή δίσκου + θερμοκρασία (ρητό αίτημα χρήστη) - μαζί με το είδος δίσκου

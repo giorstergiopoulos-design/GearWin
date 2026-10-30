@@ -1,3 +1,5 @@
+<p align="center"><img src="docs/img/icon.png" width="96" alt="GearWin"/></p>
+
 # GearWin — Complete PC Care
 
 Ένα δωρεάν, ανοιχτού κώδικα εργαλείο συντήρησης και βελτιστοποίησης για Windows 11 — μαζεύει σε ένα
@@ -17,45 +19,49 @@
 
 ### Λειτουργίες
 
-Η εφαρμογή είναι οργανωμένη σε 9 καρτέλες:
+Η εφαρμογή είναι οργανωμένη σε 7 καρτέλες (με υποσελίδες):
 
 | Καρτέλα | Τι κάνει |
 |---|---|
 | 🏠 Αρχική | Βαθμολογία υγείας συστήματος, γρήγορες ενέργειες συντήρησης, κατάσταση σύνδεσης δικτύου με ζωντανό γράφημα ταχύτητας |
-| 📦 Ενημερώσεις & Εφαρμογές | Ενημερώσεις εφαρμογών, Windows και οδηγών από πολλές πηγές, προαιρετικές νυχτερινές ενημερώσεις, ασφαλής αφαίρεση προεγκατεστημένων εφαρμογών και εγκατάσταση προτεινόμενων |
-| ⚡ Καθαρισμός & Απόδοση | Λειτουργίες Office/Gaming/Ultimate, άμεση ελευθέρωση RAM με πραγματική μέτρηση, καθαρισμός προσωρινών/cache, διαχείριση εκκίνησης, προγραμματισμένη συντήρηση |
-| ❤ Υγεία & Επισκευή | SFC/DISM/CHKDSK, Καθαριστής Μητρώου με αυτόματο αντίγραφο, WinRE, τάση υγείας δίσκου |
+| 📦 Ενημερώσεις & Εφαρμογές | Ενημερώσεις εφαρμογών, Windows και οδηγών από πολλές πηγές (και git repos), «Σάρωση όλων», λίστα αγνόησης, ακύρωση σάρωσης, προαιρετικές νυχτερινές ενημερώσεις (προαιρετικά και Windows), απεγκατάσταση από τη λίστα, εγκατάσταση SDI core, ασφαλής αφαίρεση προεγκατεστημένων εφαρμογών και εγκατάσταση προτεινόμενων |
+| ❤ Υγεία & Επισκευή | Επισκευή (SFC/DISM/CHKDSK, Καθαριστής Μητρώου, WinRE, χρονολόγιο υγείας) · Απόδοση (Office/Gaming/Ultimate, ελευθέρωση RAM) · Καθαρισμός · Εκκίνηση |
 | 🛡 Ασφάλεια & Απόρρητο | Windows Defender, κανόνες Firewall και ανοιχτές θύρες, μπλοκάρισμα τηλεμετρίας, διαχειριστής κωδικών browser, DNS/hosts και εργαλεία δικτύου |
-| 🎮 Παιχνίδια & Πολυμέσα | Βιβλιοθήκη Steam/Epic/GOG/Ubisoft/Xbox με εκκίνηση, προφίλ GPU/gaming ανά παιχνίδι, καθαρισμός cache launcher και αντίγραφο ασφαλείας αποθηκεύσεων· έλεγχος οθονών/ήχου/κάμερας/μικροφώνου, εντοπισμός codecs, μετατροπέας βίντεο/ήχου με μαζική μετατροπή |
+| 🎮 Παιχνίδια & Πολυμέσα | Βιβλιοθήκη Steam/Epic/GOG/Ubisoft/Xbox με εκκίνηση, προφίλ GPU/gaming ανά παιχνίδι, καθαρισμός cache launcher και αντίγραφο ασφαλείας αποθηκεύσεων |
 | 🔧 Ρυθμίσεις Windows | Δεκάδες tweaks διεπαφής/απόδοσης/απορρήτου, με ασφαλή επαναφορά στην αρχική τιμή και ονομασμένα προφίλ |
-| 💾 Αντίγραφα & Αναφορές | Αναφορές (PDF/TXT, ZIP διαγνωστικών, μπαταρία, πακέτο προβλήματος), σημεία επαναφοράς, αντίγραφα μητρώου και οδηγών |
-| 🖥 Σύστημα & Εργαλεία | Πλήρης ανάλυση υλικού/λειτουργικού ("Η Συσκευή Μου"), πλήρης συντήρηση, Εργαλειοθήκη Windows, WSL, ιστορικό USB |
+| 🖥 Σύστημα & Εργαλεία | Πληροφορίες (υλικό/λειτουργικό, οθόνες, ήχος, κάμερα/μικρόφωνο, κωδικοποιητές) · Εργαλεία (αναφορές, αντίγραφα και σημεία επαναφοράς, Εργαλειοθήκη Windows, UWP εφαρμογές, WSL, ιστορικό USB, γραμματοσειρές) |
+
+Η μετατροπή αρχείων δεν υπάρχει πια στο GearWin: γίνεται στο Opsis Media Player Pro (βίντεο/εικόνα) και στο Waveframe (ήχος) — δείτε το παράθυρο «Η οικογένεια Opsis».
 
 Επίσης: πλήρης υποστήριξη 14 γλωσσών (Ελληνικά, Αγγλικά, Γερμανικά, Γαλλικά, Ισπανικά, Ιταλικά,
 Ρωσικά, Κινέζικα, Ιαπωνικά, Πορτογαλικά, Κορεατικά, Τουρκικά, Αραβικά, Χίντι), θέματα εμφάνισης
 Ανοιχτού/Σκούρου φόντου με πολλαπλά κινούμενα στυλ, οδηγός χρήσης στο πρώτο άνοιγμα, και ιστορικό
 ενεργειών για πλήρη διαφάνεια στο τι άλλαξε η εφαρμογή στο σύστημα.
 
+### Δίκτυο και απόρρητο
+
+Το GearWin δεν στέλνει τηλεμετρία. Οι μόνες δικές του κλήσεις είναι απλά GET στο GitHub: ο ημερήσιος έλεγχος για νέα έκδοση (`api.github.com`, με ETag, ~30 δευτ. μετά την εκκίνηση και μετά ανά 24 ώρες· απενεργοποιείται από τις Ρυθμίσεις) και, όταν ανοίγετε το «Η οικογένεια Opsis», ο κατάλογος εφαρμογών (`raw.githubusercontent.com`, το πολύ μία φορά την ημέρα, επικυρωμένος, με ενσωματωμένο αντίγραφο). Οι installers άλλων εφαρμογών κατεβαίνουν μόνο μετά από επιβεβαίωσή σας, ελέγχονται με SHA-256 και δεν εκτελούνται ποτέ από το GearWin.
+
 ### Στιγμιότυπα οθόνης / Screenshots
 
-_Τα στιγμιότυπα δείχνουν την προηγούμενη διάταξη καρτελών (έως 6.4.0) / The screenshots show the previous tab layout (up to 6.4.0)._
+_Η τρέχουσα διάταξη (7 καρτέλες, 6.9.x), φωτεινό θέμα / The current layout (7 tabs, 6.9.x), light theme._
 
 <table>
 <tr>
-<td><img src="screenshots/01-home.png" width="400"/><br/><sub>Αρχική / Home</sub></td>
-<td><img src="screenshots/02-optimization.png" width="400"/><br/><sub>Βελτιστοποίηση / Optimization</sub></td>
+<td><img src="docs/img/en_Home.png" width="400"/><br/><sub>Αρχική / Home</sub></td>
+<td><img src="docs/img/el_Bloatware_0.png" width="400"/><br/><sub>Ενημερώσεις & Εφαρμογές / Updates & Apps (Ελληνικά / Greek UI)</sub></td>
 </tr>
 <tr>
-<td><img src="screenshots/03-health.png" width="400"/><br/><sub>Υγεία & Συντήρηση / Health & Maintenance</sub></td>
-<td><img src="screenshots/04-network.png" width="400"/><br/><sub>Δίκτυο & Ασφάλεια / Network & Security</sub></td>
+<td><img src="docs/img/en_Health_0.png" width="400"/><br/><sub>Υγεία & Επισκευή › Επισκευή / Health & Repair › Repair</sub></td>
+<td><img src="docs/img/en_Health_1.png" width="400"/><br/><sub>Υγεία & Επισκευή › Απόδοση / Health & Repair › Performance</sub></td>
 </tr>
 <tr>
-<td><img src="screenshots/05-tweaks.png" width="400"/><br/><sub>Επιπλέον Ρυθμίσεις / Extra Settings</sub></td>
-<td><img src="screenshots/06-apps.png" width="400"/><br/><sub>Εφαρμογές & Bloat / Apps & Bloat</sub></td>
+<td><img src="docs/img/en_Network_0.png" width="400"/><br/><sub>Ασφάλεια & Απόρρητο / Security & Privacy</sub></td>
+<td><img src="docs/img/en_GamesMedia_0.png" width="400"/><br/><sub>Παιχνίδια & Πολυμέσα / Games & Multimedia</sub></td>
 </tr>
 <tr>
-<td><img src="screenshots/07-advanced.png" width="400"/><br/><sub>Προηγμένα Εργαλεία / Advanced Tools</sub></td>
-<td><img src="screenshots/08-system.png" width="400"/><br/><sub>Σύστημα / System</sub></td>
+<td><img src="docs/img/en_Tweaks_0.png" width="400"/><br/><sub>Ρυθμίσεις Windows / Windows Tweaks</sub></td>
+<td><img src="docs/img/en_System_1.png" width="400"/><br/><sub>Σύστημα › Εργαλεία / System › Tools</sub></td>
 </tr>
 </table>
 
@@ -69,6 +75,16 @@ _Τα στιγμιότυπα δείχνουν την προηγούμενη δι
 υποστηρίζει ήδη τα τυπικά flags χωρίς καμία επιπλέον ρύθμιση: `GearWin-Setup-*.exe /VERYSILENT
 /SUPPRESSMSGBOXES /NORESTART` (προαιρετικά και `/DIR="C:\path"` για διαφορετικό φάκελο εγκατάστασης).
 Χρειάζεται ούτως ή άλλως δικαιώματα διαχειριστή, οπότε τρέξτε το από ένα ήδη-elevated shell/task.
+
+**Επαλήθευση SHA-256:** κάθε release έχει αρχείο `.sha256` δίπλα στον installer. Ελέγξτε το πριν τρέξετε το αρχείο:
+
+```
+certutil -hashfile GearWin-Setup-<έκδοση>.exe SHA256
+```
+
+Το αποτέλεσμα πρέπει να ταυτίζεται με το περιεχόμενο του `.sha256` (και με το SHA-256 στις σημειώσεις του release). Η εγκατάσταση γίνεται στο `C:\Program Files\` (machine-wide). Η ενημέρωση μέσα από την εφαρμογή (Ρυθμίσεις › Ενημέρωση GearWin) ελέγχει το ίδιο SHA-256 και αρνείται να τρέξει αν δεν ταιριάζει.
+
+Απαιτήσεις: Windows 11 (64-bit). Το .NET 10 περιλαμβάνεται στον installer (self-contained).
 
 ### Χτίσιμο από τον πηγαίο κώδικα
 
@@ -94,19 +110,19 @@ more hunting through dozens of separate tools or manually editing the Windows re
 
 ### Features
 
-The app is organized into 9 tabs:
+The app is organized into 7 tabs (with sub-pages):
 
 | Tab | What it does |
 |---|---|
 | 🏠 Home | System health score, quick maintenance actions, network status with a live throughput graph |
-| 📦 Updates & Apps | App, Windows and driver updates from several sources, optional nightly updates, safe removal of pre-installed apps and one-click installs of recommended apps |
-| ⚡ Cleanup & Performance | Office/Gaming/Ultimate modes, instant RAM release with a real before/after reading, temp/cache cleanup, startup management, scheduled maintenance |
-| ❤ Health & Repair | SFC/DISM/CHKDSK, Registry Cleaner with automatic backups, WinRE, disk-health trend |
+| 📦 Updates & Apps | App, Windows and driver updates from several sources (and git repos), "Scan everything", ignore list, cancellable scans, optional nightly updates (optionally Windows too), uninstall from the list, SDI core install, safe removal of pre-installed apps and one-click installs of recommended apps |
+| ❤ Health & Repair | Repair (SFC/DISM/CHKDSK, Registry Cleaner, WinRE, health timeline) · Performance (Office/Gaming/Ultimate, RAM release) · Cleanup · Startup |
 | 🛡 Security & Privacy | Windows Defender, firewall rules and open ports, telemetry blocking, browser password manager, DNS/hosts and network tools |
-| 🎮 Games & Multimedia | Steam/Epic/GOG/Ubisoft/Xbox library with launch, per-game GPU/gaming profiles, launcher-cache cleanup and game-save backup; display/audio/camera/microphone checks, codec detection, a video/audio converter with batch conversion |
+| 🎮 Games & Multimedia | Steam/Epic/GOG/Ubisoft/Xbox library with launch, per-game GPU/gaming profiles, launcher-cache cleanup and game-save backup |
 | 🔧 Windows Tweaks | Dozens of interface/performance/privacy tweaks, safely restorable to their original value, with named profiles |
-| 💾 Backups & Reports | Reports (PDF/TXT, diagnostics ZIP, battery, problem bundle), restore points, registry and driver backups |
-| 🖥 System & Tools | Full hardware/OS breakdown ("My Device"), full maintenance, Windows toolbox, WSL, USB history |
+| 🖥 System & Tools | Information (hardware/OS, displays, audio, camera/microphone, codecs) · Tools (reports, backups and restore points, Windows toolbox, UWP apps, WSL, USB history, fonts) |
+
+File conversion is no longer part of GearWin: it lives in Opsis Media Player Pro (video/image) and Waveframe (audio) — see "The Opsis family" window.
 
 Also: full support for 14 languages (Greek, English, German, French, Spanish, Italian, Russian,
 Chinese, Japanese, Portuguese, Korean, Turkish, Arabic, Hindi), Light/Dark appearance themes with
@@ -125,7 +141,7 @@ run by GearWin.
 
 ### Screenshots
 
-See the [screenshot gallery](#στιγμιότυπα-οθόνης--screenshots) above (it predates the merged Games & Multimedia tab, which has no screenshot yet).
+See the [screenshot gallery](#στιγμιότυπα-οθόνης--screenshots) above.
 
 ### Installation
 
@@ -137,6 +153,16 @@ For unattended/scripted installs, the installer (Inno Setup) already supports th
 flags with no extra setup needed: `GearWin-Setup-*.exe /VERYSILENT /SUPPRESSMSGBOXES
 /NORESTART` (optionally add `/DIR="C:\path"` for a custom install folder). It still needs
 administrator rights either way, so run it from an already-elevated shell/task.
+
+**Verify the SHA-256:** every release has a `.sha256` file next to the installer. Check it before running the file:
+
+```
+certutil -hashfile GearWin-Setup-<version>.exe SHA256
+```
+
+The output must equal the content of the `.sha256` file (and the SHA-256 in the release notes). The installer puts GearWin in `C:\Program Files\` (machine-wide). The in-app update (Settings › GearWin update) verifies the same SHA-256 and refuses to run a mismatching file.
+
+Requirements: Windows 11 (64-bit). .NET 10 is bundled in the installer (self-contained).
 
 ### Building from source
 
@@ -152,7 +178,12 @@ The final `GearWin-Setup-<version>.exe` lands in `installer/Output/`.
 - `wpf/OptimizerWpf/` — the current app (.NET 10, WPF/C#, one view per tab)
 - `wpf/OptimizerWpf.Tests/` — unit tests (xUnit)
 - `Optimizer.ps1` — the original PowerShell/WinForms tool (kept for historical reasons)
+- `docs/img/` — README screenshots, icon and the social-preview image
 - `installer/` — Inno Setup script + per-language license/description files
+
+## Η οικογένεια Opsis / The Opsis family
+
+Άλλες εφαρμογές του ίδιου δημιουργού (Opsis, Opsis News Crawler, Opsis Appearance, Opsis Media Player Pro, Kombos, Waveframe) — ανοίξτε το «Η οικογένεια Opsis» από τη Βοήθεια ή το εικονίδιο στην περιοχή ειδοποιήσεων. / Other apps by the same author (Opsis, Opsis News Crawler, Opsis Appearance, Opsis Media Player Pro, Kombos, Waveframe) — open "The Opsis family" from Help or the tray icon.
 
 ## Άδεια / License
 

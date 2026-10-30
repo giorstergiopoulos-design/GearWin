@@ -52,7 +52,7 @@
                     <Grid>
                         <Grid.RowDefinitions><RowDefinition Height="*"/><RowDefinition Height="Auto"/></Grid.RowDefinitions>
                         <StackPanel Grid.Row="0" HorizontalAlignment="Center">
-                            <Image Source="/Assets/cpu-icon.png" Width="200" Height="130" Stretch="Uniform" Margin="0,0,0,8"/>
+                            <Image Source="/GearWin;component/Assets/cpu-icon.png" Width="200" Height="130" Stretch="Uniform" Margin="0,0,0,8"/>
                             <TextBlock Text="CPU" Style="{StaticResource CardTitleStyle}" HorizontalAlignment="Center"/>
                             <!-- ΔΙΟΡΘΩΣΗ (ρητό αίτημα χρήστη: "το εμφανιζόμενο ποσοστό να είναι πάνω από
                                  την μπάρα και κάτω από τη θερμοκρασία") - η θερμοκρασία μετακινήθηκε πριν
@@ -76,7 +76,7 @@
                                  έκοβε τις άκρες της εικόνας (πολύ διαφορετική αναλογία διαστάσεων από την
                                  πηγή). Uniform δείχνει ΟΛΗ την εικόνα χωρίς περικοπή. -->
                             <Border Width="200" Height="130" CornerRadius="4" ClipToBounds="True" Margin="0,0,0,8">
-                                <Image Source="/Assets/ram-icon.png" Stretch="Uniform"/>
+                                <Image Source="/GearWin;component/Assets/ram-icon.png" Stretch="Uniform"/>
                             </Border>
                             <TextBlock Text="RAM" Style="{StaticResource CardTitleStyle}" HorizontalAlignment="Center"/>
                             <StackPanel Orientation="Horizontal" HorizontalAlignment="Center" Margin="0,4,0,0">
@@ -98,7 +98,7 @@
                     <Grid>
                         <Grid.RowDefinitions><RowDefinition Height="*"/><RowDefinition Height="Auto"/></Grid.RowDefinitions>
                         <StackPanel Grid.Row="0" HorizontalAlignment="Center">
-                            <Image x:Name="ImgDiskIcon" Source="/Assets/disk-icon.png" Width="200" Height="130" Stretch="Uniform" Margin="0,0,0,8"/>
+                            <Image x:Name="ImgDiskIcon" Source="/GearWin;component/Assets/disk-icon.png" Width="200" Height="130" Stretch="Uniform" Margin="0,0,0,8"/>
                             <!-- ΔΙΟΡΘΩΣΗ (ρητό αίτημα χρήστη: "το όνομα και το είδος του δίσκου δίπλα από
                                  το γράμμα του δίσκου για εξοικονόμηση γραμμών" + "στοίχισε το γράμμα με
                                  το είδος & την περιγραφή βάλε την μετά το γράμμα δίσκου") - "C:"/"NVMe"/
@@ -139,7 +139,7 @@
                     <Grid>
                         <Grid.RowDefinitions><RowDefinition Height="*"/><RowDefinition Height="Auto"/></Grid.RowDefinitions>
                         <StackPanel Grid.Row="0" HorizontalAlignment="Center">
-                            <Image Source="/Assets/gpu-icon.png" Width="200" Height="130" Stretch="Uniform" Margin="0,0,0,8"/>
+                            <Image Source="/GearWin;component/Assets/gpu-icon.png" Width="200" Height="130" Stretch="Uniform" Margin="0,0,0,8"/>
                             <TextBlock Text="GPU" Style="{StaticResource CardTitleStyle}" HorizontalAlignment="Center"/>
                             <StackPanel Orientation="Horizontal" HorizontalAlignment="Center" Margin="0,4,0,0">
                                 <views:ThermometerIcon Width="14" Height="14" Margin="0,0,5,0"/>
