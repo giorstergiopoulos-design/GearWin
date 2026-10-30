@@ -10,7 +10,15 @@ namespace OptimizerWpf.Services
 {
     public record RecommendedApp(string Group, string Title, string WingetId);
     public record InstalledApp(string DisplayName, string? Publisher, string UninstallString);
-    public record UwpAppInfo(string Name, string PackageFullName);
+    public record UwpAppInfo(string Name, string PackageFullName)
+    {
+        // 6.9.1: PackageFullName = "Name_1.2.3.0_x64__publisherid" -> έκδοση/αρχιτεκτονική για καλύτερη οπτικοποίηση της λίστας
+        private string[] Parts => PackageFullName.Split('_');
+        public string Version => Parts.Length > 1 ? Parts[1] : "";
+        public string Architecture => Parts.Length > 2 ? Parts[2] : "";
+        public string Details => string.Join(" · ", new[] { Version, Architecture }.Where(x => x.Length > 0));
+        public string Initial => string.IsNullOrEmpty(Name) ? "?" : Name[..1].ToUpperInvariant();
+    }
 
     // Port του Optimizer.ps1's Εφαρμογές & Bloat καρτέλα (~14193-15000). Βλ. HANDOFF.md §0.4ιβ.
     public static class BloatwareService

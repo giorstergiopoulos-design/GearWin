@@ -80,5 +80,16 @@ namespace OptimizerWpf.Tests
             try { await Assert.ThrowsAnyAsync<System.OperationCanceledException>(() => WingetService.ScanAsync()); }
             finally { WingetService.ScanToken = System.Threading.CancellationToken.None; }
         }
+
+        [Fact]
+        public void UwpPackageNamesAreSplitIntoVersionAndArchitecture()
+        {
+            var a = new UwpAppInfo("Calculator", "Microsoft.WindowsCalculator_11.2405.1.0_x64__8wekyb3d8bbwe");
+            Assert.Equal("11.2405.1.0", a.Version);
+            Assert.Equal("x64", a.Architecture);
+            Assert.Equal("11.2405.1.0 · x64", a.Details);
+            Assert.Equal("C", a.Initial);
+            Assert.Equal("", new UwpAppInfo("X", "weird").Details);
+        }
     }
 }

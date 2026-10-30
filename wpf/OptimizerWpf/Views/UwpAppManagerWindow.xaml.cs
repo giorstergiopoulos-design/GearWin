@@ -15,8 +15,17 @@ namespace OptimizerWpf.Views
         {
             InitializeComponent();
             ThemeManager.AttachWindow(this);
-            ListApps.ItemsSource = _apps;
+            _view = System.Windows.Data.CollectionViewSource.GetDefaultView(_apps);
+            _view.Filter = o => o is UwpAppInfo a && (TxtSearch.Text.Trim().Length == 0 || a.Name.Contains(TxtSearch.Text.Trim(), System.StringComparison.OrdinalIgnoreCase)
+                                                    || a.PackageFullName.Contains(TxtSearch.Text.Trim(), System.StringComparison.OrdinalIgnoreCase));
+            ListApps.ItemsSource = _view;
+            Loaded += (_, _) => BtnScan_Click(this, new RoutedEventArgs());   // 6.9.1: η λίστα φαίνεται αμέσως (αυτόματη σάρωση στο άνοιγμα)
         }
+
+        private readonly System.ComponentModel.ICollectionView _view;
+        private bool _scanning;
+
+        private void TxtSearch_TextChanged(object sender, TextChangedEventArgs e) => _view.Refresh();
 
         // ΔΙΟΡΘΩΣΗ (γενικός έλεγχος γραμμής κατάστασης, ρητό αίτημα χρήστη) - και οι δύο χειριστές
         // εδώ έκαναν πραγματική, όχι-στιγμιαία δουλειά (σάρωση Appx, απεγκατάσταση) χωρίς να αγγίζουν
@@ -24,6 +33,8 @@ namespace OptimizerWpf.Views
         // σαρώσεις/ενέργειες της εφαρμογής που ήδη δείχνουν το κυκλάκι στην κύρια γραμμή κατάστασης.
         private async void BtnScan_Click(object sender, RoutedEventArgs e)
         {
+            if (_scanning) return;
+            _scanning = true;
             TxtStatus.Text = LanguageService.T("Adv_Scanning");
             StatusService.SetBusy(LanguageService.T("Adv_Scanning"));
             _apps.Clear();
@@ -31,6 +42,7 @@ namespace OptimizerWpf.Views
             StatusService.SetIdle(LanguageService.T("Ready"));
             foreach (var a in results) _apps.Add(a);
             TxtStatus.Text = $"{LanguageService.T("Uwp_FoundPrefix")}{results.Count}{LanguageService.T("Uwp_FoundSuffix")}";
+            _scanning = false;
         }
 
         private async void BtnUninstall_Click(object sender, RoutedEventArgs e)
