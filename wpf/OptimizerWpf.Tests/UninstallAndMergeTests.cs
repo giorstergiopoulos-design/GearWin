@@ -105,5 +105,29 @@ namespace OptimizerWpf.Tests
             Assert.True(integrate.IndexOf("enableinstall on") < integrate.IndexOf("\r\ninstall"));
             foreach (var script in new[] { dl, integrate }) Assert.EndsWith(":end\r\nend\r\n", script);
         }
+
+        [Fact]
+        public void UnifiedListFiltersByCategoryAndKeepsAllSourcesInOneList()
+        {
+            var apps = new[] { new OptimizerWpf.Views.WingetUpdateRow(new WingetUpdate("A", "a", "1", "2", "winget")) };
+            var win = new[] { new OptimizerWpf.Views.WingetUpdateRow(new WingetUpdate("KB", "u|1", "", "x", "windowsupdate")) };
+            var drv = new[] { new OptimizerWpf.Views.UnifiedDriverRow { Title = "GPU" } };
+            Assert.Equal(3, OptimizerWpf.Views.OptimizationView.BuildUnified(apps, win, drv, "all").Count);
+            Assert.Single(OptimizerWpf.Views.OptimizationView.BuildUnified(apps, win, drv, "apps"));
+            Assert.IsType<OptimizerWpf.Views.UnifiedDriverRow>(OptimizerWpf.Views.OptimizationView.BuildUnified(apps, win, drv, "drivers")[0]);
+            Assert.False(win[0].ShowAppActions);
+            Assert.True(apps[0].ShowAppActions);
+        }
+
+        [Fact]
+        public void DriverHistoryKeepsTheLast100Entries()
+        {
+            var path = System.IO.Path.Combine(System.IO.Path.GetTempPath(), "gwdh_" + System.Guid.NewGuid().ToString("N"), "h.json");
+            for (var i = 0; i < 105; i++) DriverHistoryService.Record("drv" + i, "Windows Update", "started", path, new System.DateTime(2026, 1, 1).AddMinutes(i));
+            var list = DriverHistoryService.Load(path);
+            Assert.Equal(100, list.Count);
+            Assert.Equal("drv5", list[0].Title);
+            Assert.Equal("drv104", list[^1].Title);
+        }
     }
 }

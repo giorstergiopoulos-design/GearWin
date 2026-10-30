@@ -25,6 +25,35 @@ namespace OptimizerWpf.Views
         // s_recommendedInstalledCache) - καμία αλλαγή χρειάζεται στον υπόλοιπο κώδικα του αρχείου,
         // αφού το Add/Remove/Clear στην ΙΔΙΑ συλλογή παραμένει ορατό στο επόμενο instance.
         private static readonly ObservableCollection<WingetUpdateRow> _updates = new();
+        private readonly ObservableCollection<object> _unified = new();
+        private static string _updateFilter = "all";
+
+        /// <summary>Καθαρή λογική (χωρίς UI): η ενιαία λίστα για ένα φίλτρο (all/apps/windows/drivers).</summary>
+        internal static List<object> BuildUnified(IEnumerable<WingetUpdateRow> apps, IEnumerable<WingetUpdateRow> windows, IEnumerable<UnifiedDriverRow> drivers, string filter)
+        {
+            var list = new List<object>();
+            if (filter is "all" or "apps") list.AddRange(apps);
+            if (filter is "all" or "windows") list.AddRange(windows);
+            if (filter is "all" or "drivers") list.AddRange(drivers);
+            return list;
+        }
+
+        private void RebuildUnified()
+        {
+            _unified.Clear();
+            foreach (var o in BuildUnified(_updates, _windowsUpdates, _driverUpdates, _updateFilter)) _unified.Add(o);
+            ChipAll.Content = $"{LanguageService.T("Opt_FilterAll")} ({_updates.Count + _windowsUpdates.Count + _driverUpdates.Count})";
+            ChipApps.Content = $"{LanguageService.T("Opt_FilterApps")} ({_updates.Count})";
+            ChipWindows.Content = $"{LanguageService.T("Opt_FilterWindows")} ({_windowsUpdates.Count})";
+            ChipDrivers.Content = $"{LanguageService.T("Opt_FilterDrivers")} ({_driverUpdates.Count})";
+        }
+
+        private void UpdateFilter_Checked(object sender, RoutedEventArgs e)
+        {
+            if (sender is not RadioButton { Tag: string tag }) return;
+            _updateFilter = tag;
+            if (_unified != null && ChipDrivers != null) RebuildUnified();
+        }
         // 6.9.1: οι ενημερώσεις Windows (πηγή "windowsupdate") σε δικό τους πλαίσιο
         private static readonly ObservableCollection<WingetUpdateRow> _windowsUpdates = new();
         private static bool IsWindowsSource(WingetUpdate u) => string.Equals(u.Source, "windowsupdate", StringComparison.OrdinalIgnoreCase);
@@ -51,13 +80,16 @@ namespace OptimizerWpf.Views
         public OptimizationView()
         {
             InitializeComponent();
-            ListWingetUpdates.ItemsSource = _updates;
-            ListWindowsUpdates.ItemsSource = _windowsUpdates;
-            _windowsUpdates.CollectionChanged += (_, _) => TxtWindowsUpdatesNone.Visibility = _windowsUpdates.Count == 0 ? Visibility.Visible : Visibility.Collapsed;
+            // 6.9.1: ενιαία λίστα (εφαρμογές + Windows + οδηγοί) με φίλτρα· ανακατασκευάζεται όταν αλλάζει οποιαδήποτε από τις τρεις πηγές
+            ListWingetUpdates.ItemsSource = _unified;
+            _updates.CollectionChanged += (_, _) => RebuildUnified();
+            _windowsUpdates.CollectionChanged += (_, _) => RebuildUnified();
+            _driverUpdates.CollectionChanged += (_, _) => RebuildUnified();
+            RebuildUnified();
             ListDriverUpdates.ItemsSource = _driverUpdates;
             ListDriverStore.ItemsSource = _driverStoreEntries;
 
-            BorderDriverResults.Visibility = _driverUpdates.Count > 0 ? Visibility.Visible : Visibility.Collapsed;
+            BorderDriverResults.Visibility = Visibility.Collapsed;   // 6.9.1: οι οδηγοί εμφανίζονται στην ενιαία λίστα ενημερώσεων
             if (s_vendorCache != null) ShowVendorExtras(s_vendorCache);
             _driverWasBusy = DriverScan.Busy;
             ApplyAppScanUi();
@@ -298,7 +330,7 @@ namespace OptimizerWpf.Views
             BtnScanDrivers.IsEnabled = !busy;
             BtnCancelDriverScan.Visibility = busy ? Visibility.Visible : Visibility.Collapsed;
             if (DriverScan.Status != null) TxtDriverStatus.Text = DriverScan.Status;
-            BorderDriverResults.Visibility = _driverUpdates.Count > 0 ? Visibility.Visible : Visibility.Collapsed;
+            BorderDriverResults.Visibility = Visibility.Collapsed;
             // Όταν τελειώνει μια σάρωση που ξεκίνησε από ΑΛΛΟ (πλέον κλειστό) View, οι έξτρα κάρτες κατασκευαστή πρέπει να εμφανιστούν εδώ.
             if (_driverWasBusy && !busy && s_vendorCache != null)
             {
@@ -462,6 +494,10 @@ namespace OptimizerWpf.Views
         {
             var selected = _updates.Concat(_windowsUpdates).Where(u => u.IsSelected).ToList();
             if (selected.Count == 0) return;
+            var selWindows = selected.Count(r => IsWindowsSource(r.Update));
+            if (ThemedMessageBox.Show(string.Format(LanguageService.T("Opt_UpdateAllConfirm"), selected.Count - selWindows, selWindows), LanguageService.T("Opt_UpgradeSelected"),
+                    MessageBoxButton.YesNo, MessageBoxImage.Question) != MessageBoxResult.Yes) return;
+            if (selWindows > 0) await RestoreGuardService.EnsureRecentAsync();
             if (!AppScan.TryBegin(installing: true)) return;
 
             SetBusy(true, installing: true);
@@ -833,6 +869,14 @@ namespace OptimizerWpf.Views
             finally { StatusService.SetIdle(LanguageService.T("Ready")); button.IsEnabled = true; }
         }
 
+        private void BtnDriverHistory_Click(object sender, RoutedEventArgs e)
+        {
+            var list = DriverHistoryService.Load();
+            var text = list.Count == 0 ? LanguageService.T("Opt_DriverHistoryEmpty")
+                : string.Join("\n", list.AsEnumerable().Reverse().Take(25).Select(h => $"{h.Time:yyyy-MM-dd HH:mm}  {h.Title} - {h.Source} - {h.Result}"));
+            ThemedMessageBox.Show(text, LanguageService.T("Opt_DriverHistoryBtn"), MessageBoxButton.OK, MessageBoxImage.Information);
+        }
+
         private async void BtnInstallDriver_Click(object sender, RoutedEventArgs e)
         {
             if (sender is not Button { Tag: UnifiedDriverRow row } button) return;
@@ -858,6 +902,8 @@ namespace OptimizerWpf.Views
                     LanguageService.T("Opt_ConfirmTitle"), MessageBoxButton.YesNo, MessageBoxImage.Warning);
                 if (wuConfirm != MessageBoxResult.Yes) return;
 
+                await RestoreGuardService.EnsureRecentAsync();   // 6.9.0: σημείο επαναφοράς πριν από κάθε εγκατάσταση οδηγού
+                DriverHistoryService.Record(row.WuUpdate.Title, "Windows Update", "started");
                 DriverService.InstallInBackground(row.WuUpdate.UpdateId);
                 TxtDriverStatus.Text = $"{LanguageService.T("Opt_WuInstallingPrefix")}{row.WuUpdate.Title}";
                 return;
@@ -886,12 +932,13 @@ namespace OptimizerWpf.Views
 
             StatusService.SetBusy($"{LanguageService.T("Opt_DownloadVerifyInstallPrefix")}{candidate.Title}...");
             var ok = await DriverService.InstallCatalogDriverAsync(candidate);
+            DriverHistoryService.Record(candidate.Title, "Microsoft Update Catalog", ok ? "installed (hash verified)" : "failed");
             StatusService.SetIdle(LanguageService.T("Ready"));
 
             if (ok)
             {
                 _driverUpdates.Remove(row);
-                BorderDriverResults.Visibility = _driverUpdates.Count > 0 ? Visibility.Visible : Visibility.Collapsed;
+                BorderDriverResults.Visibility = Visibility.Collapsed;
                 ThemedMessageBox.Show($"{LanguageService.T("Opt_DriverInstalledPrefix")}\n{DriverService.LastInstallLog}", LanguageService.T("Opt_SuccessTitle"), MessageBoxButton.OK, MessageBoxImage.Information);
             }
             else
@@ -1033,6 +1080,8 @@ namespace OptimizerWpf.Views
     public class WingetUpdateRow : INotifyPropertyChanged
     {
         public WingetUpdate Update { get; }
+        // 6.9.1: Windows Update γραμμές δεν έχουν Απεγκατάσταση/Παράβλεψη
+        public bool ShowAppActions => !string.Equals(Update.Source, "windowsupdate", StringComparison.OrdinalIgnoreCase);
 
         private bool _isSelected;
         public bool IsSelected

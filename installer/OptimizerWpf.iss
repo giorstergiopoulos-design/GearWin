@@ -16,7 +16,7 @@
 ; ΔΙΟΡΘΩΣΗ - ρητό αίτημα χρήστη: μετονομασία σε "GearWin" (υπότιτλος "Complete PC Care") - βλ.
 ; OptimizerWpf.csproj για την πλήρη αιτιολόγηση/έλεγχο εμπορικού σήματος.
 #define MyAppName "GearWin - Complete PC Care"
-#define MyAppVersion "6.9.1"
+#define MyAppVersion "6.9.0"
 #define MyAppPublisher "GearWin"
 ; ΝΕΟ - ρητό αίτημα χρήστη: "το όνομα του exe να προσαρμοστεί στο όνομα της εφαρμογής" - πρέπει να
 ; ταιριάζει ΑΚΡΙΒΩΣ με το <AssemblyName> στο OptimizerWpf.csproj (το πραγματικό όνομα του .exe που
@@ -44,6 +44,9 @@ PrivilegesRequired=admin
 ArchitecturesAllowed=x64compatible
 ArchitecturesInstallIn64BitMode=x64compatible
 SetupIconFile=..\wpf\OptimizerWpf\AppIcon.ico
+; 6.9.0: εικόνες wizard με το εικονίδιο του GearWin (δεν έχουν κείμενο - ο installer είναι σε 14 γλώσσες)· βλ. make_wizard_images.py
+WizardImageFile=wizard\large-100.bmp,wizard\large-125.bmp,wizard\large-150.bmp,wizard\large-200.bmp
+WizardSmallImageFile=wizard\small-100.bmp,wizard\small-125.bmp,wizard\small-150.bmp,wizard\small-200.bmp
 DisableWelcomePage=no
 
 ; Ρητό αίτημα χρήστη: "είναι δωρεάν εφαρμογή με άδεια ανοιχτού κώδικα, ουδεμία ευθύνη φέρει η

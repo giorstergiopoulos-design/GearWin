@@ -59,7 +59,10 @@
 
         <Button Grid.Row="2" Content="{tr:Tr Vive_RefreshAll}" Style="{StaticResource AccentButtonStyle}" HorizontalAlignment="Stretch" Height="36" Margin="0,0,0,10" Click="BtnRefresh_Click"/>
 
-        <TextBlock Grid.Row="3" x:Name="TxtStatus" Text="" Style="{StaticResource SubTextStyle}" Margin="0,0,0,6"/>
+        <StackPanel Grid.Row="3">
+            <TextBlock Text="{tr:Tr Vive_ListNote}" Style="{StaticResource SubTextStyle}" TextWrapping="Wrap" FontSize="11" Margin="0,0,0,4"/>
+            <TextBlock x:Name="TxtStatus" Text="" Style="{StaticResource SubTextStyle}" Margin="0,0,0,6"/>
+        </StackPanel>
 
         <Border Grid.Row="4" Background="{DynamicResource CardBgBrush}" BorderBrush="{DynamicResource CardBorderBrush}" BorderThickness="1" CornerRadius="8" Padding="4">
             <ScrollViewer VerticalScrollBarVisibility="Auto" PreviewMouseWheel="NestedScroll_PreviewMouseWheel">
