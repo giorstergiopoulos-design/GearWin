@@ -38,7 +38,7 @@ namespace OptimizerWpf
             // Το παλιό tag "Optimization#N" ανακατευθύνεται στο Health#(N+1) (βλ. MainWindow.SelectTab).
             ["Health"] = new[]
             {
-                new TabSubPage("Sub_Repair", new TabPart("Health", "Repair")),
+                new TabSubPage("Sub_Repair", new TabPart("Health", "Repair"), new TabPart("System", "Timeline")),
                 new TabSubPage("Sub_Performance", new TabPart("Optimization", "Modes"), new TabPart("System", "Processes"), new TabPart("Advanced", "Benchmark")),
                 new TabSubPage("Sub_Cleanup", new TabPart("Health", "Cleanup"), new TabPart("System", "Storage"), new TabPart("Advanced", "Duplicates")),
                 new TabSubPage("Sub_Startup", new TabPart("Advanced", "Startup")),
@@ -53,7 +53,7 @@ namespace OptimizerWpf
             ["System"] = new[]
             {
                 new TabSubPage("Sub_Info", new TabPart("System", "Info"), new TabPart("GamesMedia", "Devices"), new TabPart("GamesMedia", "Media")),
-                new TabSubPage("Sub_Tools", new TabPart("Advanced", "Tools"), new TabPart("Health", "Reports"), new TabPart("Health", "Backups"), new TabPart("Optimization", "DriverBackup")),
+                new TabSubPage("Sub_Tools", new TabPart("Advanced", "Tools"), new TabPart("System", "Fonts"), new TabPart("Health", "Reports"), new TabPart("Health", "Backups"), new TabPart("Optimization", "DriverBackup")),
             },
             // 6.5.4: Παιχνίδια | Πολυμέσα - η καρτέλα είχε 10 κάρτες σε μία σελίδα.
             ["GamesMedia"] = new[]
@@ -69,7 +69,7 @@ namespace OptimizerWpf
             ["Health"] = new[] { "Repair", "Repair", "Backups", "Cleanup", "Repair", "Reports", "Repair", "@Recovery" },
             ["Network"] = new[] { "Network", "Network", "Network", "Network", "Network", "Security", "Security", "Security", "Security", "Network", "Network" },
             ["Advanced"] = new[] { null, "Tools", "Tools", "Ghost", "Tools", "Tools", "Tools", "Startup", "Startup", "Security", "@PowerTools" },
-            ["System"] = new[] { "Info", "Info", "Info", "Info", "Processes", "Storage", "Info", "Info" },
+            ["System"] = new[] { "Info", "Info", "Info", "Info", "Processes", "Storage", "Timeline", "Fonts" },
             ["Bloatware"] = new[] { "All", "All", "All", "All", "All", "All" },
             // GamesMediaView: βιβλιοθήκη, ανά παιχνίδι, gaming, shader, save backup, σημείωση ενημερώσεων | διαχωριστής | οθόνες, ήχος, κάμερα/μικρόφωνο | κωδικοποιητές, μετατροπέας
             ["GamesMedia"] = new[] { "Games", "Games", "Games", "Games", "Games", "Games", null, "Devices", "Devices", "Devices", "Media", "Media" },

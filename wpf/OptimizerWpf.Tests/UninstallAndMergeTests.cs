@@ -40,5 +40,15 @@ namespace OptimizerWpf.Tests
             Assert.Equal(new[] { "Sub_Repair", "Sub_Performance", "Sub_Cleanup", "Sub_Startup" }, pages.Select(p => p.TitleKey).ToArray());
             Assert.DoesNotContain(NavItems.All, n => n.Tag == "Optimization");
         }
+
+        [Fact]
+        public void SuggestedFontsAreUniqueHttpsLinksOnKnownFontSources()
+        {
+            var hosts = new[] { "fonts.google.com", "fontsource.org", "fonts.bunny.net", "github.com", "www.brailleinstitute.org" };
+            var fonts = FontSuggestionService.SuggestedFonts;
+            Assert.True(fonts.Count >= 20);
+            Assert.Equal(fonts.Count, fonts.Select(f => f.Name).Distinct().Count());
+            Assert.All(fonts, f => { var u = new System.Uri(f.Url); Assert.Equal("https", u.Scheme); Assert.Contains(u.Host, hosts); });
+        }
     }
 }

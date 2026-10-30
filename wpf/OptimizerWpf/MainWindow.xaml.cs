@@ -451,6 +451,8 @@ public partial class MainWindow : Window
         ("Bloatware#0", new[] { "Optimization_SoftwareUpdate", "Opt_NightlyUpdates" }),
         ("Bloatware#1", new[] { "Optimization_Drivers", "Optimization_DriverStore", "Advanced_GhostDevices" }),
         ("Bloatware#2", new[] { "Bloatware_Builtin", "Advanced_OptionalFeatures", "Bloatware_Recommended", "Bloatware_UwpManager", "Bloatware_DeepUninstall" }),
+        ("Health#0", new[] { "Timeline_Title" }),
+        ("System#1", new[] { "Appr_FontsInstalledTitle", "Appr_FontsSuggestedTitle" }),
         ("Health#1", new[] { "Opt_ModesSection", "Optimization_GamingMode", "Optimization_OfficeMode", "Opt_UltimatePerformance", "Opt_AutoGamingMode", "Opt_ScheduledMaintenance", "System_Processes", "System_Benchmark" }),
         ("Health#2", new[] { "Health_BrowserCache", "System_Storage", "Advanced_DuplicateFinder" }),
         ("Health#3", new[] { "Advanced_ScheduledTasks", "Advanced_BootTimeline", "System_Startup", "System_Services" }),
@@ -462,7 +464,7 @@ public partial class MainWindow : Window
         ("System#0", new[] { "Media_CodecsTitle", "Media_MovedTitle" }),
         ("System#1", new[] { "Reports_Title" }),
         ("System#1", new[] { "Health_RegBackupHistory", "System_RestorePoints", "Backup_Title", "Optimization_DriverBackup" }),
-        ("System#0", new[] { "Sys_MbTitle", "Sys_DrivesTitle", "Sys_OsTitle", "Sys_NetTitle", "Sys_CpuTitle", "Sys_BatteryTitle", "Sys_RamTitle", "Sys_GpuTitle", "Timeline_Title", "Appr_FontsInstalledTitle" }),
+        ("System#0", new[] { "Sys_MbTitle", "Sys_DrivesTitle", "Sys_OsTitle", "Sys_NetTitle", "Sys_CpuTitle", "Sys_BatteryTitle", "Sys_RamTitle", "Sys_GpuTitle" }),
         ("System#0", new[] { "Media_DisplaysTitle", "Media_AudioTitle", "Media_PrivacyTitle" }),
         ("System#1", new[] { "Advanced_Maintenance", "Advanced_Toolbox", "UsbHistory_Title", "Wsl_Title", "Rgb_Title" }),
     };

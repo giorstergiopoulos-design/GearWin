@@ -24,6 +24,17 @@ namespace OptimizerWpf.Services
             new SuggestedFont("Playfair Display", "Serif", "OFL", "https://fonts.google.com/specimen/Playfair+Display"),
             new SuggestedFont("JetBrains Mono", "Monospace", "OFL", "https://fonts.google.com/specimen/JetBrains+Mono"),
             new SuggestedFont("Fira Code", "Monospace", "OFL", "https://fonts.google.com/specimen/Fira+Code"),
+            // 6.9.1: περισσότερες πηγές λήψης (Fontsource, Bunny Fonts, GitHub, Braille Institute) και γραμματοσειρές με ελληνικά
+            new SuggestedFont("Noto Sans", "Sans-serif · Fontsource", "OFL", "https://fontsource.org/fonts/noto-sans"),
+            new SuggestedFont("Fira Sans", "Sans-serif · Fontsource", "OFL", "https://fontsource.org/fonts/fira-sans"),
+            new SuggestedFont("IBM Plex Sans", "Sans-serif · Fontsource", "OFL", "https://fontsource.org/fonts/ibm-plex-sans"),
+            new SuggestedFont("PT Sans", "Sans-serif · Bunny Fonts", "OFL", "https://fonts.bunny.net/family/pt-sans"),
+            new SuggestedFont("Ubuntu", "Sans-serif · Bunny Fonts", "Ubuntu Font Licence", "https://fonts.bunny.net/family/ubuntu"),
+            new SuggestedFont("Atkinson Hyperlegible", "Sans-serif · Braille Institute", "OFL", "https://www.brailleinstitute.org/freefont/"),
+            new SuggestedFont("Noto Serif", "Serif · Fontsource", "OFL", "https://fontsource.org/fonts/noto-serif"),
+            new SuggestedFont("EB Garamond", "Serif · Bunny Fonts", "OFL", "https://fonts.bunny.net/family/eb-garamond"),
+            new SuggestedFont("Cascadia Code", "Monospace · GitHub", "OFL", "https://github.com/microsoft/cascadia-code/releases"),
+            new SuggestedFont("Source Code Pro", "Monospace · Fontsource", "OFL", "https://fontsource.org/fonts/source-code-pro"),
         };
     }
 }
