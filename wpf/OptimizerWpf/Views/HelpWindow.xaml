@@ -48,8 +48,6 @@
                              απλό κείμενο, χωρίς ορατό περίγραμμα/φόντο που να δηλώνει "πάτα με". Το
                              AccentButtonStyle (συμπαγές χρώμα έμφασης, ίδιο με το "Ξεκινήστε" του ίδιου
                              του οδηγού) το κάνει αδιαμφισβήτητα ορατό ως κλικαρίσιμο στοιχείο. -->
-                        <Button Content="{tr:Tr Onb_ReplayButton}" Style="{StaticResource AccentButtonStyle}"
-                                HorizontalAlignment="Left" Padding="16,8" Margin="0,0,0,8" Click="BtnReplayOnboarding_Click"/>
                         <!-- 6.6.0 - σύντομος οδηγός καλωσορίσματος + «οικογένεια Opsis» -->
                         <WrapPanel Margin="0,0,0,14">
                             <Button Content="{tr:Tr Guide_MenuItem}" Style="{StaticResource AccentButtonStyle}" Padding="16,8" Margin="0,0,8,6" Click="BtnWelcomeGuide_Click"/>

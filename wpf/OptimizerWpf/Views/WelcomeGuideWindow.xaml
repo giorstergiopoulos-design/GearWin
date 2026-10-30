@@ -40,8 +40,11 @@
                                TextAlignment="Center" HorizontalAlignment="Center" Margin="0,0,0,10"/>
                     <TextBlock x:Name="TxtDesc" FontSize="14" Foreground="{DynamicResource SubTextBrush}" LineHeight="21" TextWrapping="Wrap"
                                TextAlignment="Center" HorizontalAlignment="Center"/>
-                    <Button x:Name="BtnFamily" Content="{tr:Tr Guide_MeetFamily}" Style="{StaticResource FlatButtonStyle}" Padding="16,7"
-                            HorizontalAlignment="Center" Margin="0,16,0,0" Visibility="Collapsed" Click="BtnFamily_Click"/>
+                    <WrapPanel x:Name="PanelSetup" HorizontalAlignment="Center" Margin="0,16,0,0" Visibility="Collapsed">
+                        <Button x:Name="BtnLanguage" Content="Ελληνικά / English / Deutsch / Français" Style="{StaticResource FlatButtonStyle}" Padding="14,7" Margin="0,0,8,6" Click="BtnLanguage_Click"/>
+                        <Button x:Name="BtnTheme" Style="{StaticResource FlatButtonStyle}" Padding="14,7" Margin="0,0,8,6" Click="BtnTheme_Click"/>
+                        <Button x:Name="BtnFamily" Content="{tr:Tr Guide_MeetFamily}" Style="{StaticResource FlatButtonStyle}" Padding="14,7" Margin="0,0,0,6" Click="BtnFamily_Click"/>
+                    </WrapPanel>
                 </StackPanel>
 
                 <StackPanel x:Name="DotsPanel" Grid.Row="2" Orientation="Horizontal" HorizontalAlignment="Center" Margin="0,10,0,12"/>

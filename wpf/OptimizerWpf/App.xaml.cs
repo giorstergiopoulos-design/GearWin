@@ -139,14 +139,9 @@ public partial class App : Application
         // σιωπηλή εκκίνηση στο tray - μπλοκάρει ΚΑΙ όλο τον υπόλοιπο κώδικα παρακάτω (tray icon, έλεγχος
         // ενημερώσεων) μέχρι να κλείσει, κάτι που ο χρήστης δεν θα περίμενε/πρόσεχε σε μια σιωπηλή
         // εκκίνηση. Η κουρτίνα παραμένει διαθέσιμη αργότερα από τη Βοήθεια - δεν χάνεται τίποτα.
+        // 6.9.1: ο «οδηγός χρήσης» (παλιό OnboardingWindow) συγχωνεύθηκε με τον οδηγό καλωσορίσματος - στην πρώτη εκκίνηση τον δείχνει ο
+        // StartupGuideCoordinator μετά την κουρτίνα εκκίνησης (το store είναι κενό), όχι πριν το κύριο παράθυρο.
         var onboardingShown = false;
-        if (!Services.AppSettingsService.Current.HasSeenOnboarding && !e.Args.Contains("--tray"))
-        {
-            onboardingShown = true;
-            ShutdownMode = ShutdownMode.OnExplicitShutdown;
-            new Views.OnboardingWindow().ShowDialog();
-            ShutdownMode = ShutdownMode.OnLastWindowClose;
-        }
 
         // ΝΕΟ - ROADMAP.md REQ-570-02/12 (ρητό αίτημα χρήστη: "εκκίνηση εφαρμογής με τα windows στο
         // tray" + "όταν ανοίγει η εφαρμογή αυτόματα στο tray να γίνεται έλεγχος ενημερώσεων για να

@@ -231,7 +231,6 @@ namespace OptimizerWpf.Tests
             // ενέργεια σε κανένα κουμπί - ασφαλές για τυφλό κλικ, σε αντίθεση με τα 3 εξαιρεμένα πιο πάνω.
             ("HealthTimelineWindow", () => new HealthTimelineWindow()),
             ("HelpWindow", () => new HelpWindow()),
-            ("OnboardingWindow", () => new OnboardingWindow()),
             ("PasswordManagerWindow", () => new PasswordManagerWindow()),
             ("UwpAppManagerWindow", () => new UwpAppManagerWindow()),
         };

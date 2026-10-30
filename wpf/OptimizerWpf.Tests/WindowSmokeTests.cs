@@ -49,7 +49,6 @@ namespace OptimizerWpf.Tests
                         ("HealthTimelineWindow", () => new HealthTimelineWindow()),
                         ("MaintenanceCenterWindow", () => new MaintenanceCenterWindow()),
                         ("HelpWindow", () => new HelpWindow()),
-                        ("OnboardingWindow", () => new OnboardingWindow()),
                         ("PasswordManagerWindow", () => new PasswordManagerWindow()),
                         ("TrayPopupWindow", () => new TrayPopupWindow()),
                         ("UwpAppManagerWindow", () => new UwpAppManagerWindow()),

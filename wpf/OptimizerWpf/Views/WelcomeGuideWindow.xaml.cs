@@ -74,9 +74,22 @@ namespace OptimizerWpf.Views
             BtnBack.Visibility = _index == 0 ? Visibility.Hidden : Visibility.Visible;
             BtnNext.Visibility = last ? Visibility.Collapsed : Visibility.Visible;
             BtnFinish.Visibility = last ? Visibility.Visible : Visibility.Collapsed;
-            BtnFamily.Visibility = last ? Visibility.Visible : Visibility.Collapsed;
+            PanelSetup.Visibility = last ? Visibility.Visible : Visibility.Collapsed;
+            if (last) UpdateThemeButtonText();
             BtnSkip.Visibility = last ? Visibility.Collapsed : Visibility.Visible;
             if (last) BtnFinish.Focus();
+        }
+
+        // Βήμα ρύθμισης (από τον παλιό οδηγό χρήσης που συγχωνεύθηκε εδώ): γλώσσα και φωτεινό/σκούρο θέμα.
+        private void UpdateThemeButtonText() =>
+            BtnTheme.Content = ThemeManager.IsDarkMode ? LanguageService.T("Onb_SwitchToLight") : LanguageService.T("Onb_SwitchToDark");
+
+        private void BtnLanguage_Click(object sender, RoutedEventArgs e) => new AppearanceSettingsWindow(initialTabIndex: 2) { Owner = this }.ShowDialog();
+
+        private void BtnTheme_Click(object sender, RoutedEventArgs e)
+        {
+            ThemeManager.ToggleLightDark();
+            UpdateThemeButtonText();
         }
 
         private void BtnBack_Click(object sender, RoutedEventArgs e) { if (_index > 0) ShowPage(_index - 1); }
@@ -98,6 +111,8 @@ namespace OptimizerWpf.Views
         {
             if (_closing) return;
             _closing = true;
+            AppSettingsService.Current.HasSeenOnboarding = true;   // ο παλιός οδηγός χρήσης είναι πλέον αυτός ο οδηγός
+            AppSettingsService.Save();
             if (ChkDontShow.IsChecked == true) _store.MarkSeen(StoreKey, ReleaseVersion.ParseOrNull(App.DisplayVersion) ?? ReleaseVersion.FromVersion(SelfUpdateService.Current));
             OpenFamilyAfterClose = openFamily;
             OverlayCardHost.CloseIntoWindow(this, Card, Backdrop, OverlayCardHost.TitleIcon(_main));
