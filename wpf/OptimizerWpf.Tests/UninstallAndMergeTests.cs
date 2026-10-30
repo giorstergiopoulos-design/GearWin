@@ -50,5 +50,35 @@ namespace OptimizerWpf.Tests
             Assert.Equal(fonts.Count, fonts.Select(f => f.Name).Distinct().Count());
             Assert.All(fonts, f => { var u = new System.Uri(f.Url); Assert.Equal("https", u.Scheme); Assert.Contains(u.Host, hosts); });
         }
+
+        [Fact]
+        public void IgnoredUpdatesAreHiddenFromTheListAndCancellationKillsTheScan()
+        {
+            var settings = AppSettingsService.Current;
+            var saved = settings.IgnoredUpdates.ToList();
+            try
+            {
+                settings.IgnoredUpdates.Clear();
+                settings.IgnoredUpdates.Add("winget|Vendor.Tool");
+                OptimizerWpf.Views.OptimizationView.ReplaceUpdates(new[]
+                {
+                    new WingetUpdate("Tool", "Vendor.Tool", "1", "2", "winget"),
+                    new WingetUpdate("Other", "Vendor.Other", "1", "2", "winget"),
+                });
+                Assert.Equal(1, OptimizerWpf.Views.OptimizationView.UpdateCountForTests);
+                Assert.Equal("winget|Vendor.Tool", OptimizerWpf.Views.OptimizationView.IgnoreKey(new WingetUpdate("Tool", "Vendor.Tool", "1", "2", "winget")));
+            }
+            finally { settings.IgnoredUpdates.Clear(); settings.IgnoredUpdates.AddRange(saved); OptimizerWpf.Views.OptimizationView.ReplaceUpdates(System.Array.Empty<WingetUpdate>()); }
+        }
+
+        [Fact]
+        public async System.Threading.Tasks.Task ACancelledScanTokenStopsTheScanBeforeTheNextProvider()
+        {
+            using var cts = new System.Threading.CancellationTokenSource();
+            cts.Cancel();
+            WingetService.ScanToken = cts.Token;
+            try { await Assert.ThrowsAnyAsync<System.OperationCanceledException>(() => WingetService.ScanAsync()); }
+            finally { WingetService.ScanToken = System.Threading.CancellationToken.None; }
+        }
     }
 }

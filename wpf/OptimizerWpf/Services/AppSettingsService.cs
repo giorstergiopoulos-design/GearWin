@@ -73,6 +73,8 @@ namespace OptimizerWpf.Services
         public bool SelfUpdateCheckEnabled { get; set; } = true;
         // 6.9.0: φάκελοι με git repos που ελέγχονται για ενημερώσεις στον ενημερωτή εφαρμογών (βλ. GitRepoUpdateService).
         public System.Collections.Generic.List<string> GitRepoRoots { get; set; } = new();
+        // 6.9.1: ενημερώσεις που ο χρήστης επέλεξε να αγνοεί στον ενημερωτή ("πηγή|id")
+        public System.Collections.Generic.List<string> IgnoredUpdates { get; set; } = new();
         public string? LastNotifiedSelfUpdate { get; set; }
         public bool OfficeModeActive { get; set; }
 

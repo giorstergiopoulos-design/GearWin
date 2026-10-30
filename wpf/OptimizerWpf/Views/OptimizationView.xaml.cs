@@ -310,13 +310,23 @@ namespace OptimizerWpf.Views
             // απενεργοποιημένα (το μόνο "δίχτυ ασφαλείας" ήταν το καθολικό DispatcherUnhandledException).
             try
             {
+                _scanCts = new System.Threading.CancellationTokenSource(TimeSpan.FromMinutes(8));   // συνολικό όριο χρόνου
+                WingetService.ScanToken = _scanCts.Token;
+                BtnCancelAppScan.Visibility = Visibility.Visible;
                 var results = await WingetService.ScanAsync();
+                _scanCts.Token.ThrowIfCancellationRequested();
                 ReplaceUpdates(results);
 
-                AppScan.SetStatus(_updates.Count == 0
+                AppScan.SetStatus((_updates.Count == 0
                     ? LanguageService.T("Opt_NoUpdatesFound")
-                    : $"{LanguageService.T("Opt_UpdatesFoundPrefix")}{_updates.Count}{LanguageService.T("Opt_UpdatesFoundSuffix")}");
+                    : $"{LanguageService.T("Opt_UpdatesFoundPrefix")}{_updates.Count}{LanguageService.T("Opt_UpdatesFoundSuffix")}")
+                    + " · " + string.Format(LanguageService.T("Opt_LastScanned"), DateTime.Now.ToString("HH:mm:ss")));
                 UpdatesHubService.ReportAppScan(_updates.Count);
+                RefreshIgnoredButton();
+            }
+            catch (OperationCanceledException)
+            {
+                AppScan.SetStatus(LanguageService.T("Health_ToolCancelled"));
             }
             catch (Exception ex)
             {
@@ -324,9 +334,50 @@ namespace OptimizerWpf.Views
             }
             finally
             {
+                WingetService.ScanToken = System.Threading.CancellationToken.None;
+                _scanCts?.Dispose(); _scanCts = null;
+                BtnCancelAppScan.Visibility = Visibility.Collapsed;
                 SetBusy(false);
                 AppScan.End();
             }
+        }
+
+        private static System.Threading.CancellationTokenSource? _scanCts;
+        private void BtnCancelAppScan_Click(object sender, RoutedEventArgs e) => _scanCts?.Cancel();
+
+        // 6.9.1: λίστα «αγνόησης» ενημερώσεων (πηγή|id) που ο χρήστης δεν θέλει να βλέπει.
+        internal static string IgnoreKey(WingetUpdate u) => (u.Source ?? "") + "|" + u.Id;
+        private static readonly List<WingetUpdateRow> _ignoredRows = new();
+
+        private void RefreshIgnoredButton()
+        {
+            BtnIgnored.Content = string.Format(LanguageService.T("Opt_IgnoredButton"), _ignoredRows.Count);
+            BtnIgnored.Visibility = _ignoredRows.Count > 0 ? Visibility.Visible : Visibility.Collapsed;
+        }
+
+        private void BtnIgnoreUpdate_Click(object sender, RoutedEventArgs e)
+        {
+            if (sender is not Button { Tag: WingetUpdateRow row }) return;
+            var key = IgnoreKey(row.Update);
+            if (!AppSettingsService.Current.IgnoredUpdates.Contains(key, StringComparer.OrdinalIgnoreCase)) AppSettingsService.Current.IgnoredUpdates.Add(key);
+            AppSettingsService.Save();
+            _updates.Remove(row);
+            _ignoredRows.Add(row);
+            UpdatesHubService.ReportAppScan(_updates.Count);
+            RefreshIgnoredButton();
+        }
+
+        private void BtnIgnored_Click(object sender, RoutedEventArgs e)
+        {
+            var names = string.Join("\n", _ignoredRows.Take(15).Select(r => "• " + r.Update.Name)) + (_ignoredRows.Count > 15 ? "\n…" : "");
+            if (ThemedMessageBox.Show(string.Format(LanguageService.T("Opt_IgnoredRestoreConfirm"), names), LanguageService.T("Opt_IgnoredButton").Replace("({0})", "").Trim(),
+                    MessageBoxButton.YesNo, MessageBoxImage.Question) != MessageBoxResult.Yes) return;
+            AppSettingsService.Current.IgnoredUpdates.Clear();
+            AppSettingsService.Save();
+            foreach (var r in _ignoredRows) _updates.Add(r);
+            _ignoredRows.Clear();
+            UpdatesHubService.ReportAppScan(_updates.Count);
+            RefreshIgnoredButton();
         }
 
         internal static int UpdateCountForTests => _updates.Count;
@@ -334,7 +385,11 @@ namespace OptimizerWpf.Views
         /// <summary>Αντικαθιστά τη λίστα ενημερώσεων με τα νέα αποτελέσματα, χωρίς διπλότυπα (κλειδί: πηγή + id, χωρίς διάκριση πεζών-κεφαλαίων).</summary>
         internal static void ReplaceUpdates(IEnumerable<WingetUpdate> results)
         {
-            var rows = DeduplicateUpdates(results).Select(u => new WingetUpdateRow(u)).ToList();
+            var ignored = new HashSet<string>(AppSettingsService.Current.IgnoredUpdates, StringComparer.OrdinalIgnoreCase);
+            var all = DeduplicateUpdates(results).Select(u => new WingetUpdateRow(u)).ToList();
+            var rows = all.Where(r => !ignored.Contains(IgnoreKey(r.Update))).ToList();
+            _ignoredRows.Clear();
+            _ignoredRows.AddRange(all.Where(r => ignored.Contains(IgnoreKey(r.Update))));
             _updates.Clear();
             foreach (var r in rows) _updates.Add(r);
         }

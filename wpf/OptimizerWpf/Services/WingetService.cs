@@ -21,8 +21,13 @@ namespace OptimizerWpf.Services
     // δεν εμποδίζει τους υπόλοιπους), με συγχώνευση/αφαίρεση διπλότυπων ίδια με το ps1 original.
     public static class WingetService
     {
+        // 6.9.1: ακύρωση σάρωσης - το token ορίζεται από την οθόνη ενημερώσεων· κάθε εξωτερικό εργαλείο (winget/pip/npm/git...) σκοτώνεται (δέντρο διεργασιών)
+        // όταν ακυρωθεί και οι πάροχοι ελέγχουν το token μεταξύ τους.
+        public static CancellationToken ScanToken { get; set; } = CancellationToken.None;
+
         public static async Task<IReadOnlyList<WingetUpdate>> ScanAsync()
         {
+            ScanToken.ThrowIfCancellationRequested();
             var results = new List<WingetUpdate>();
             var seenIds = new HashSet<string>();
 
@@ -47,6 +52,7 @@ namespace OptimizerWpf.Services
             // Microsoft Store CLI ("store updates") - αντικατέστησε το παλιό "winget upgrade --source
             // msstore" στο ps1 (v1.9.6): τεκμηριωμένα πιο αξιόπιστο, το ΙΔΙΟ εργαλείο που χρησιμοποιεί
             // το Store εσωτερικά.
+            ScanToken.ThrowIfCancellationRequested();
             foreach (var u in await ScanMsStoreAsync())
             {
                 if (seenIds.Add($"{u.Source}:{u.Id}")) results.Add(u);
@@ -68,6 +74,7 @@ namespace OptimizerWpf.Services
             };
             foreach (var (_, scan) in otherScans)
             {
+                ScanToken.ThrowIfCancellationRequested();
                 List<WingetUpdate> found;
                 try { found = await scan(); } catch { continue; }
                 foreach (var u in found)
@@ -661,7 +668,8 @@ $out | ConvertTo-Json -Compress";
                 _ = proc.StandardError.ReadToEndAsync(); // το stderr δεν διαβαζόταν ποτέ → block αν γέμιζε το pipe
                 try
                 {
-                    using var cts = new CancellationTokenSource(timeout);
+                    using var cts = CancellationTokenSource.CreateLinkedTokenSource(ScanToken);
+                    cts.CancelAfter(timeout);
                     await proc.WaitForExitAsync(cts.Token);
                 }
                 catch (OperationCanceledException)
