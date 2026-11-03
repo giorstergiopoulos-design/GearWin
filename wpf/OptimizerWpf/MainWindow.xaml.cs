@@ -191,12 +191,14 @@ public partial class MainWindow : Window
             foreach (var (_, label) in tabs) label.Visibility = Visibility.Visible;
             // ΠΛΗΡΗΣ διάταξη, όχι TabStrip.Measure(): το WPF δεν περνά την "βρώμικη" κατάσταση από ένα TextBlock στους γονείς του αμέσως, και το Measure
             // επέστρεφε τα παλιά (cached) μεγέθη των RadioButton - η λωρίδα φαινόταν "χωράει" ενώ οι καρτέλες ξεπερνούσαν το παράθυρο.
-            TabStripScroll.UpdateLayout();
-            var overflow = TabStrip.ActualWidth > TabStripScroll.ViewportWidth + 1;
-            foreach (var (tab, label) in tabs)
+            // 6.9.4: οι περιγραφές των καρτελών φαίνονται ΠΑΝΤΑ και οι καρτέλες μένουν σε ΜΙΑ γραμμή: αν δεν χωράνε, μικραίνει σταδιακά το
+            // padding/γράμμα (18/13 -> 4/10)· μόνο αν ούτε έτσι χωράνε μένει η οριζόντια κύλιση (με όλα τα κείμενα ορατά).
+            foreach (var (tab, label) in tabs) { label.Visibility = Visibility.Visible; tab.ToolTip = null; }
+            foreach (var (pad, size, gap) in new[] { (18.0, 13.0, 3.0), (12.0, 13.0, 3.0), (9.0, 12.0, 3.0), (6.0, 11.0, 2.0), (4.0, 10.0, 1.0), (3.0, 10.0, 0.0), (2.0, 9.0, 0.0), (0.0, 9.0, 0.0) })
             {
-                label.Visibility = Visibility.Visible;   // 6.9.3: οι περιγραφές των καρτελών δεν κρύβονται ποτέ - η λωρίδα αναδιπλώνεται σε δεύτερη γραμμή
-                tab.ToolTip = null;
+                foreach (var (tab, label) in tabs) { tab.Padding = new Thickness(pad, 9, pad, 9); tab.Margin = new Thickness(0, 0, gap, 0); label.FontSize = size; }
+                TabStripScroll.UpdateLayout();
+                if (TabStrip.ActualWidth <= TabStripScroll.ViewportWidth + 1) break;
             }
         }
         catch { /* η προσαρμογή είναι διακοσμητική: αν αποτύχει μένει η οριζόντια κύλιση */ }

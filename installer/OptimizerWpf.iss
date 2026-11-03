@@ -16,7 +16,7 @@
 ; ΔΙΟΡΘΩΣΗ - ρητό αίτημα χρήστη: μετονομασία σε "GearWin" (υπότιτλος "Complete PC Care") - βλ.
 ; OptimizerWpf.csproj για την πλήρη αιτιολόγηση/έλεγχο εμπορικού σήματος.
 #define MyAppName "GearWin - Complete PC Care"
-#define MyAppVersion "6.9.4"
+#define MyAppVersion "6.9.5"
 #define MyAppPublisher "GearWin"
 ; ΝΕΟ - ρητό αίτημα χρήστη: "το όνομα του exe να προσαρμοστεί στο όνομα της εφαρμογής" - πρέπει να
 ; ταιριάζει ΑΚΡΙΒΩΣ με το <AssemblyName> στο OptimizerWpf.csproj (το πραγματικό όνομα του .exe που
@@ -236,7 +236,12 @@ end;
 function InitializeUninstall(): Boolean;
 begin
   Result := True;
-  ResetTweaksOnUninstall := (MsgBox(CustomMessage('ResetPromptText'), mbConfirmation, MB_YESNO) = IDYES);
+  // 6.9.5: ο σιωπηλός uninstall (/VERYSILENT, CI, διαχειριστές) ΔΕΝ ρωτά ποτέ (ο διάλογος έμενε ανοιχτός για πάντα στο installer-e2e).
+  // Σιωπηλά: οι ρυθμίσεις επαναφέρονται μόνο με ρητή παράμετρο /RESETTWEAKS=1, αλλιώς μένουν ως έχουν.
+  if UninstallSilent then
+    ResetTweaksOnUninstall := (ExpandConstant('{param:RESETTWEAKS|0}') = '1')
+  else
+    ResetTweaksOnUninstall := (MsgBox(CustomMessage('ResetPromptText'), mbConfirmation, MB_YESNO) = IDYES);
 end;
 
 function ShouldResetTweaks(): Boolean;

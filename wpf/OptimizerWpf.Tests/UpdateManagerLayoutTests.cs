@@ -51,6 +51,8 @@ namespace OptimizerWpf.Tests
                         foreach (var rb in strip.Children.OfType<RadioButton>())
                             foreach (var tb in Descendants<TextBlock>(rb).Where(t => !string.IsNullOrWhiteSpace(t.Text)))
                                 if (tb.Visibility != Visibility.Visible) problems.Add($"{lang}: label '{tb.Text}' of tab '{rb.Tag}' is hidden");
+                        var ys = strip.Children.OfType<RadioButton>().Select(r => Math.Round(r.TransformToAncestor(w).Transform(new Point(0, 0)).Y)).Distinct().Count();
+                        if (ys != 1) problems.Add($"{lang}: the tabs are on {ys} rows (must be one)");
                         var expected = lang == "ar" ? FlowDirection.RightToLeft : FlowDirection.LeftToRight;
                         if (w.FlowDirection != expected) problems.Add($"{lang}: window flow direction is {w.FlowDirection}");
                         // φίλτρα και κουμπιά «Αναβάθμιση επιλεγμένων» / MS Store στο ίδιο ύψος (ίδια γραμμή)

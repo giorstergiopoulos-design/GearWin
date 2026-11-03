@@ -44,7 +44,7 @@ jobs:
   e2e:
     needs: build-setup
     runs-on: ${{ matrix.os }}
-    timeout-minutes: 25
+    timeout-minutes: 15
     strategy:
       fail-fast: false
       matrix:

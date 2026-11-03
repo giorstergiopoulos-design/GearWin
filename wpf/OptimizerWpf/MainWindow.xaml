@@ -570,9 +570,9 @@
              ΔΙΟΡΘΩΣΗ (GEARWIN.MD: "με την ροδέλα του ποντικιού με hover να μπορεί να τις κυλήσει") -
              η μπάρα κύλισης δούλευε μόνο με drag· η ρόδα του ποντικιού δεν έκανε τίποτα γιατί το
              ScrollViewer δέχεται wheel μόνο κατακόρυφα από προεπιλογή. -->
-        <ScrollViewer x:Name="TabStripScroll" Grid.Row="2" Margin="24,4,24,16" HorizontalScrollBarVisibility="Disabled" VerticalScrollBarVisibility="Disabled"
+        <ScrollViewer x:Name="TabStripScroll" Grid.Row="2" Margin="24,4,24,16" HorizontalScrollBarVisibility="Auto" VerticalScrollBarVisibility="Disabled"
                       PreviewMouseWheel="TabStripScroll_PreviewMouseWheel">
-        <WrapPanel Orientation="Horizontal" x:Name="TabStrip" HorizontalAlignment="Center">
+        <StackPanel Orientation="Horizontal" x:Name="TabStrip" HorizontalAlignment="Center">
             <RadioButton x:Name="TabHome" Tag="Home" Style="{StaticResource TabPillStyle}" Checked="TabButton_Checked">
                 <StackPanel Orientation="Horizontal"><views:HeaderGlyphIcon Kind="Home" Width="20" Height="20" Margin="0,0,7,0"/><TextBlock x:Name="LblTabHome" Text="Αρχική"/></StackPanel>
             </RadioButton>
@@ -607,7 +607,7 @@
             <RadioButton Tag="System" Style="{StaticResource TabPillStyle}" Checked="TabButton_Checked">
                 <StackPanel Orientation="Horizontal"><views:HeaderGlyphIcon Kind="Monitor" Width="20" Height="20" Margin="0,0,7,0"/><TextBlock x:Name="LblTabSystem" Text="Σύστημα"/></StackPanel>
             </RadioButton>
-        </WrapPanel>
+        </StackPanel>
         </ScrollViewer>
 
         <!-- ===== Content row: πλευρικό μενού (προαιρετικό, toggle μέσω BtnHamburger) + content host =====

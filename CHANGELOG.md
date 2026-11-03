@@ -6,6 +6,13 @@ available inside the app itself, via Help/Instructions → the "Version History"
 
 Format loosely follows [Keep a Changelog](https://keepachangelog.com/).
 
+## v6.9.5 — Single-row tabs, silent uninstall no longer hangs
+
+- **Main tabs stay on ONE row** (the two-row wrap of 6.9.3 is gone) and every tab keeps its label: when the strip is too narrow the padding, gaps and font shrink step by step (18/13 px down to 0/9 px); horizontal scrolling remains only as a last resort. Verified with the clipping probe in all 14 languages at the minimum window width (946 px).
+- **Installer: silent uninstall hang fixed.** The uninstaller asked "restore Windows settings?" in a message box even with `/VERYSILENT`, so unattended uninstalls (and the installer-e2e CI) waited forever. Silent uninstall now never asks; it restores the tweaks only with `/RESETTWEAKS=1`. Interactive uninstall is unchanged (still asks).
+- `tools/e2e-installer.ps1`: every setup/uninstall step has a 4-minute timeout (it no longer waits for helper processes), a hang is reported as a failure with the log kept as artifact; job timeout 15 min; the runner may be detected as Low or Balanced (hosted runners have 4 vCPU / 16 GB, the log showed Balanced).
+- Test: the installer script must check `UninstallSilent` before showing the message box.
+
 ## v6.9.4 — Performance levels, installer end-to-end CI, progress per category
 
 - **Performance levels** (`PerformanceProfileService`): the app detects RAM, logical cores and battery/power saver (no WMI, no sensors at start-up) and picks Low / Balanced / High (Low: < 8 GB RAM, <= 2 cores, or on battery with power saver; High: >= 8 cores and >= 16 GB on AC). One table per tier: parallel scans (1 / 2 / 3 - on Low "Scan" runs apps/Windows and then drivers instead of both at once), animations and the tab fade (off on Low), Home refresh interval (4 s / 2 s / 1 s). Setting **Settings > Performance level: Automatic / Low / Balanced / High** shows what was detected and why; `GEARWIN_FORCE_TIER=Low|Balanced|High` overrides everything (CI/tests). **Automatic downgrade**: CPU above 85 % for 10 s lowers the level by one (at most two), 30 s below 50 % raises it again (hysteresis). Every feature stays available on every level. One line "Performance tier: ..." is written to `%LocalAppData%\OptimizerWpf\performance.log` at start-up.

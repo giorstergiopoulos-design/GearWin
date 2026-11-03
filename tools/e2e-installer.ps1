@@ -33,7 +33,15 @@ function Check([bool]$ok, [string]$what) {
 }
 function Run-Setup([string]$exe, [string[]]$arguments, [string]$logName) {
     $log = Join-Path $Out $logName
-    $p = Start-Process -FilePath $exe -ArgumentList ($arguments + "/LOG=`"$log`"") -Wait -PassThru
+    # NOT Start-Process -Wait (it also waits for the uninstaller's helper processes) and never forever: 6.9.5 timeout per step
+    $p = Start-Process -FilePath $exe -ArgumentList ($arguments + "/LOG=`"$log`"") -PassThru
+    if (-not $p.WaitForExit(240000)) {
+        $script:report.Add("- **FAIL** $logName: $exe did not finish within 4 minutes (killed); see the log in the artifact")
+        $script:failures++
+        Get-Process -ErrorAction SilentlyContinue | Where-Object { $_.ProcessName -like 'unins*' -or $_.ProcessName -like '_unins*' } | Stop-Process -Force -ErrorAction SilentlyContinue
+        try { $p.Kill() } catch { }
+        return -1
+    }
     return $p.ExitCode
 }
 function Reg-Key([string]$path) { Test-Path "HKLM:\$path" }
@@ -101,7 +109,7 @@ Screenshot 'running.png'
 Stop-GearWin
 $line = if (Test-Path $log) { (Select-String -Path $log -Pattern 'Performance tier:' | Select-Object -Last 1).Line } else { $null }
 $hasTiers = [bool]$line
-if ($hasTiers) { Check ($line -like '*Performance tier: Low (detected)*') "the runner (2 vCPU, no GPU) is detected as a Low PC: $line" }
+if ($hasTiers) { Check ($line -match 'Performance tier: (Low|Balanced) \(detected\)') "the runner is detected as a Low or Balanced PC (hosted runners have 4 vCPU / 16 GB): $line" }
 else { $report.Add('- _NOT VERIFIED_ this build writes no performance.log (versions before 6.9.4 have no performance levels)') }
 foreach ($tier in 'Low', 'Balanced', 'High') {
     $env:GEARWIN_FORCE_TIER = $tier
