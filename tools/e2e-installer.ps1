@@ -38,8 +38,8 @@ function Run-Setup([string]$exe, [string[]]$arguments, [string]$logName) {
     $p = Start-Process -FilePath $exe -ArgumentList ($arguments + "/LOG=`"$log`"") -PassThru
     if (-not $p.WaitForExit(240000)) {
         if ($Scenario -eq 'from-latest' -and $logName -eq 'uninstall.log') {
-            # an install UPGRADED from a release older than 6.9.5 keeps that release's uninstaller, which still shows the old "restore settings?" prompt
-            $script:report.Add("- _KNOWN LIMITATION_ ${logName}: the uninstaller left by the old release still shows its prompt (killed after 4 minutes); uninstall is verified by the fresh scenarios")
+            # Inno keeps the existing unins000.exe when it has a NEWER Inno version ("Existing file is a newer version. Skipping"): the CI builds the new setup with the runner's Inno 6.7.1, the published release was built with Inno 7.1.1, so the old uninstaller (with the old "restore settings?" prompt) stays. Not a product bug: release builds use Inno 7
+            $script:report.Add("- _KNOWN LIMITATION_ ${logName}: the uninstaller kept from the old release (built with a newer Inno than the CI runner has) still shows its old prompt (killed after 4 minutes); uninstall is verified by the fresh scenarios")
             $script:skipUninstallChecks = $true
         } else {
             $script:report.Add("- **FAIL** ${logName}: $exe did not finish within 4 minutes (killed); see the log in the artifact")
