@@ -11,6 +11,7 @@ Format loosely follows [Keep a Changelog](https://keepachangelog.com/).
 - **Main tabs stay on ONE row** (the two-row wrap of 6.9.3 is gone) and every tab keeps its label: when the strip is too narrow the padding, gaps and font shrink step by step (18/13 px down to 0/9 px); horizontal scrolling remains only as a last resort. Verified with the clipping probe in all 14 languages at the minimum window width (946 px).
 - **Installer: silent uninstall hang fixed.** The uninstaller asked "restore Windows settings?" in a message box even with `/VERYSILENT`, so unattended uninstalls (and the installer-e2e CI) waited forever. Silent uninstall now never asks; it restores the tweaks only with `/RESETTWEAKS=1`. Interactive uninstall is unchanged (still asks).
 - `tools/e2e-installer.ps1`: every setup/uninstall step has a 4-minute timeout (it no longer waits for helper processes), a hang is reported as a failure with the log kept as artifact; job timeout 15 min; the runner may be detected as Low or Balanced (hosted runners have 4 vCPU / 16 GB, the log showed Balanced).
+- **Installer: silent upgrade while the program is running** (found by the installer-e2e): the setup aborted with exit code 1 on the "close the program" prompt; with `/VERYSILENT` it now closes the program itself first. The interactive setup keeps its dialog.
 - Test: the installer script must check `UninstallSilent` before showing the message box.
 
 ## v6.9.4 — Performance levels, installer end-to-end CI, progress per category

@@ -221,6 +221,20 @@ begin
   Result := sVersion;
 end;
 
+// 6.9.5: σιωπηλή αναβάθμιση ενώ η εφαρμογή τρέχει: το AppMutex εμφάνιζε «κλείστε την εφαρμογή» και το /VERYSILENT setup τερμάτιζε με exit code 1
+// (βρέθηκε από το installer-e2e). Σε σιωπηλή εγκατάσταση κλείνουμε εμείς την εφαρμογή πριν τον έλεγχο του mutex· στη διαδραστική μένει ο διάλογος.
+function InitializeSetup(): Boolean;
+var
+  ResultCode: Integer;
+begin
+  Result := True;
+  if WizardSilent then
+  begin
+    Exec(ExpandConstant('{sys}\taskkill.exe'), '/F /T /IM {#MyAppExeName}', '', SW_HIDE, ewWaitUntilTerminated, ResultCode);
+    Sleep(1500);
+  end;
+end;
+
 procedure InitializeWizard();
 var
   sPrevVersion: String;

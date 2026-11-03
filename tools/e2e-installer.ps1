@@ -128,6 +128,7 @@ if ($hasTiers -and (Test-Path $log)) {
 $uninstaller = Join-Path $MachineDir 'unins000.exe'
 $code = Run-Setup $uninstaller @('/VERYSILENT', '/SUPPRESSMSGBOXES', '/NORESTART') 'uninstall.log'
 for ($i = 0; $i -lt 90 -and (Test-Path (Join-Path $MachineDir 'GearWin.exe')); $i++) { Start-Sleep -Seconds 1 }
+for ($i = 0; $i -lt 60 -and (Test-Path $MachineDir); $i++) { Start-Sleep -Seconds 1 }   # the uninstaller's helper process removes the folder a moment after the first process exits
 Check (-not (Test-Path (Join-Path $MachineDir 'GearWin.exe'))) 'the program file is gone after the uninstall'
 Check (-not (Test-Path $MachineDir) -or @(Get-ChildItem $MachineDir -Recurse -File -ErrorAction SilentlyContinue).Count -eq 0) 'no files are left in the Program Files folder'
 Check (-not (Reg-Key $UninstallKey)) 'the uninstall entry is gone (HKLM)'
