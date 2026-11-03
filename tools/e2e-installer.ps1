@@ -36,7 +36,7 @@ function Run-Setup([string]$exe, [string[]]$arguments, [string]$logName) {
     # NOT Start-Process -Wait (it also waits for the uninstaller's helper processes) and never forever: 6.9.5 timeout per step
     $p = Start-Process -FilePath $exe -ArgumentList ($arguments + "/LOG=`"$log`"") -PassThru
     if (-not $p.WaitForExit(240000)) {
-        $script:report.Add("- **FAIL** $logName: $exe did not finish within 4 minutes (killed); see the log in the artifact")
+        $script:report.Add("- **FAIL** ${logName}: $exe did not finish within 4 minutes (killed); see the log in the artifact")
         $script:failures++
         Get-Process -ErrorAction SilentlyContinue | Where-Object { $_.ProcessName -like 'unins*' -or $_.ProcessName -like '_unins*' } | Stop-Process -Force -ErrorAction SilentlyContinue
         try { $p.Kill() } catch { }
