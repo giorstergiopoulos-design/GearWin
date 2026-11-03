@@ -36,6 +36,7 @@ namespace OptimizerWpf.Views
             if (ComboUpdateInterval.SelectedItem == null && ComboUpdateInterval.Items.Count > 3) ComboUpdateInterval.SelectedIndex = 3;
             RefreshUpdateCheckStatus();
 
+            LoadPerformanceUi();
             ChkSelfUpdateCheck.IsChecked = AppSettingsService.Current.SelfUpdateCheckEnabled;
             TxtSelfUpdateStatus.Text = string.Format(LanguageService.T("SelfUpdate_Current"), SelfUpdateService.Current);
 
@@ -147,6 +148,38 @@ namespace OptimizerWpf.Views
         // ΝΕΟ - βλ. σχόλιο στο XAML/UpdateNotificationService.cs.
         private SelfUpdateInfo? _selfUpdate;
         private bool _selfUpdateBusy;
+
+        private bool _perfLoading;
+
+        private void LoadPerformanceUi()
+        {
+            _perfLoading = true;
+            ComboPerformance.Items.Clear();
+            foreach (var (mode, key) in new[] { ("auto", "Perf_Auto"), ("low", "Perf_Low"), ("balanced", "Perf_Balanced"), ("high", "Perf_High") })
+                ComboPerformance.Items.Add(new System.Windows.Controls.ComboBoxItem { Content = LanguageService.T(key), Tag = mode });
+            var current = (AppSettingsService.Current.PerformanceMode ?? "auto").ToLowerInvariant();
+            ComboPerformance.SelectedIndex = Math.Max(0, new[] { "auto", "low", "balanced", "high" }.ToList().IndexOf(current));
+            _perfLoading = false;
+            ShowPerformanceDetected();
+        }
+
+        private void ShowPerformanceDetected()
+        {
+            var d = PerformanceProfileService.Detected;
+            var tierName = LanguageService.T("Perf_" + PerformanceProfileService.ConfiguredTier);
+            var text = string.Format(LanguageService.T("Perf_Detected"), d.RamGb, d.LogicalCores, d.OnBattery ? LanguageService.T("Perf_OnBattery") : "", tierName);
+            if (PerformanceProfileService.Downgraded) text += " " + LanguageService.T("Perf_Downgraded");
+            TxtPerfDetected.Text = text;
+        }
+
+        private void ComboPerformance_SelectionChanged(object sender, System.Windows.Controls.SelectionChangedEventArgs e)
+        {
+            if (_perfLoading || ComboPerformance.SelectedItem is not System.Windows.Controls.ComboBoxItem { Tag: string mode }) return;
+            AppSettingsService.Current.PerformanceMode = mode;
+            AppSettingsService.Save();
+            PerformanceProfileService.Reevaluate();
+            ShowPerformanceDetected();
+        }
 
         private void ChkSelfUpdateCheck_Click(object sender, RoutedEventArgs e)
         {

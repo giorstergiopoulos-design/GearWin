@@ -698,9 +698,11 @@ public partial class MainWindow : Window
 
         // ΝΕΟ (roadmap: "ομαλή μετάβαση καρτελών") - απαλό fade-in αντί για ακαριαία εναλλαγή
         // περιεχομένου· μικρή διάρκεια (180ms) ώστε να μην καθυστερεί αισθητά την πλοήγηση.
+        if (Services.PerformanceProfileService.Current.TabFadeEnabled) {
         ContentHost.Opacity = 0;
         ContentHost.BeginAnimation(OpacityProperty, new System.Windows.Media.Animation.DoubleAnimation(0, 1,
             new Duration(TimeSpan.FromMilliseconds(180))) { EasingFunction = new System.Windows.Media.Animation.QuadraticEase() });
+        } else ContentHost.Opacity = 1;
         SyncRailSelection();
         AdaptTabStripToWidth();
         Dispatcher.BeginInvoke(new Action(() => App.NameUnlabelledToggles(ContentHost)), System.Windows.Threading.DispatcherPriority.ApplicationIdle);

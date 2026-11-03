@@ -1,0 +1,73 @@
+name: installer-e2e
+
+# End-to-end test of the setup on clean, FREE GitHub-hosted Windows runners (public repository: standard runners only, never larger / GPU / paid ones).
+# build the setup once -> on a clean machine: install the newest published version, upgrade to the new one while it runs, check registry / Program Files /
+# shortcuts, start the program (detected tier and every forced GEARWIN_FORCE_TIER), uninstall, check leftovers.
+# NOT checked here (a runner cannot): the UAC prompt, SmartScreen, a real graphics card, several monitors, per-monitor DPI.
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [main, master]
+    paths-ignore: ['docs/**', '**/*.md']
+
+concurrency:
+  group: installer-e2e-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  build-setup:
+    runs-on: windows-2022
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: 10.0.x
+      - name: Inno Setup (free)
+        shell: pwsh
+        run: ./tools/ci-install-inno.ps1
+      - name: Build the setup
+        shell: pwsh
+        run: ./tools/build-setup-ci.ps1
+      - uses: actions/upload-artifact@v4
+        with:
+          name: setup
+          path: |
+            installer/Output/GearWin-Setup.exe
+            installer/Output/GearWin-Setup.exe.sha256
+          retention-days: 7
+
+  e2e:
+    needs: build-setup
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 25
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [windows-2022]
+        scenario: [fresh, from-latest]
+        include:
+          - os: windows-2025
+            scenario: fresh
+    env:
+      GH_TOKEN: ${{ github.token }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/download-artifact@v4
+        with:
+          name: setup
+          path: setup
+      - name: Install, upgrade, smoke test, uninstall (${{ matrix.scenario }} on ${{ matrix.os }})
+        shell: pwsh
+        run: ./tools/e2e-installer.ps1 -Scenario '${{ matrix.scenario }}' -NewSetup "$PWD/setup/GearWin-Setup.exe" -Repository '${{ github.repository }}' -Out "${{ runner.temp }}/e2e"
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: e2e-${{ matrix.os }}-${{ matrix.scenario }}
+          path: ${{ runner.temp }}/e2e
+          if-no-files-found: ignore
+          retention-days: 7

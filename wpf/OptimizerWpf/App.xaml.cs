@@ -240,6 +240,9 @@ public partial class App : Application
         Exit += (_, _) => Services.UpdateNotificationService.Stop();
 
         // 6.6.0 - ειδοποίηση νέας έκδοσης GearWin (balloon): πρώτος έλεγχος ~30 s μετά την εκκίνηση, μετά κάθε 24 ώρες.
+        Services.PerformanceProfileService.LogStartup();
+        Services.PerformanceProfileService.StartGovernor();
+        Exit += (_, _) => Services.PerformanceProfileService.StopGovernor();
         Services.ReleaseCheckService.Start();
         Exit += (_, _) => Services.ReleaseCheckService.Stop();
 

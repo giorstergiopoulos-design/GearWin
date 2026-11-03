@@ -554,10 +554,17 @@ namespace OptimizerWpf.Views
             WingetService.RestartRequiredAfterUpdates = false;
             // try/finally: μια εξαίρεση στη μέση του βρόχου άφηνε το progress bar μόνιμα ορατό και τα κουμπιά
             // απενεργοποιημένα (ίδιο μοτίβο που ήδη διορθώθηκε στο BtnScanWinget_Click).
+            // 6.9.4: πρόοδος ανά κατηγορία στη γραμμή κατάστασης ("Εφαρμογές 2/5: όνομα", "Windows 1/2: ...")
+            var progressScope = StatusService.BeginScope(LanguageService.T("Opt_InstallingUpdates"));
+            var catTotal = new[] { selected.Count(r => !IsWindowsSource(r.Update)), selected.Count(r => IsWindowsSource(r.Update)) };
+            var catDone = new int[2];
             try
             {
             foreach (var row in selected)
             {
+                var catIndex = IsWindowsSource(row.Update) ? 1 : 0;
+                catDone[catIndex]++;
+                progressScope.Update(string.Format(LanguageService.T("Opt_UpdateProgress"), LanguageService.T(catIndex == 1 ? "Opt_FilterWindows" : "Opt_FilterApps"), catDone[catIndex], catTotal[catIndex], row.Update.Name));
                 AppScan.SetStatus($"{LanguageService.T("Opt_UpgradingPrefix")}{row.Update.Name}... ({succeeded.Count + failed.Count + openedInStore.Count + 1}/{selected.Count})");
 
                 if (row.Update.Source == "msstore")
@@ -589,7 +596,7 @@ namespace OptimizerWpf.Views
                 else { failed.Add(reason == null ? row.Update.Name : $"{row.Update.Name} [{reason}]"); }
             }
             }
-            finally { SetBusy(false); AppScan.End(); }
+            finally { progressScope.End(LanguageService.T("Ready")); SetBusy(false); AppScan.End(); }
 
             // Όπως το Close-WmtStoreGui: το Store κλείνει μόνο όταν όλες οι ενημερώσεις του επιβεβαιώθηκαν.
             if (triggeredStoreOnce && openedInStore.Count == 0 && failed.Count == 0)
@@ -742,9 +749,18 @@ namespace OptimizerWpf.Views
         }
 
         // 6.8.0: εφαρμογές (+Windows Update) και οδηγοί μαζί - οι δύο σαρώσεις είναι ανεξάρτητες και η καθεμία single-flight (ScanState).
-        private void BtnScanAll_Click(object sender, RoutedEventArgs e)
+        private async void BtnScanAll_Click(object sender, RoutedEventArgs e)
         {
+            if (PerformanceProfileService.Current.MaxParallelScans >= 2)
+            {
+                BtnScanWinget_Click(sender, e);
+                BtnScanDrivers_Click(sender, e);
+                return;
+            }
+            // 6.9.4: επίπεδο «Χαμηλή»: οι σαρώσεις τρέχουν η μία μετά την άλλη (λιγότερο φορτίο CPU/δίσκου)
             BtnScanWinget_Click(sender, e);
+            await Task.Delay(300);
+            while (AppScan.Busy) await Task.Delay(300);
             BtnScanDrivers_Click(sender, e);
         }
 

@@ -6,6 +6,14 @@ available inside the app itself, via Help/Instructions → the "Version History"
 
 Format loosely follows [Keep a Changelog](https://keepachangelog.com/).
 
+## v6.9.4 — Performance levels, installer end-to-end CI, progress per category
+
+- **Performance levels** (`PerformanceProfileService`): the app detects RAM, logical cores and battery/power saver (no WMI, no sensors at start-up) and picks Low / Balanced / High (Low: < 8 GB RAM, <= 2 cores, or on battery with power saver; High: >= 8 cores and >= 16 GB on AC). One table per tier: parallel scans (1 / 2 / 3 - on Low "Scan" runs apps/Windows and then drivers instead of both at once), animations and the tab fade (off on Low), Home refresh interval (4 s / 2 s / 1 s). Setting **Settings > Performance level: Automatic / Low / Balanced / High** shows what was detected and why; `GEARWIN_FORCE_TIER=Low|Balanced|High` overrides everything (CI/tests). **Automatic downgrade**: CPU above 85 % for 10 s lowers the level by one (at most two), 30 s below 50 % raises it again (hysteresis). Every feature stays available on every level. One line "Performance tier: ..." is written to `%LocalAppData%\OptimizerWpf\performance.log` at start-up.
+- **Installer end-to-end CI** (`.github/workflows/installer-e2e.yml`, `tools/e2e-installer.ps1`, free standard windows-2022/2025 runners only): builds the setup, installs the newest published release, starts it and upgrades while it runs, checks Program Files / registry / shortcuts / one copy, starts the program (detected tier = Low on the 2-vCPU runner, then every forced tier), uninstalls and checks leftovers. Not run yet - it needs to be pushed to GitHub (builds before 6.9.4 have no performance log, those checks are reported as NOT VERIFIED).
+- **Progress per category** while updating: the status bar shows "Apps 2/5: name" / "Windows 1/2: name" next to the existing "Drivers i/n".
+- Vivetool: unchanged (still no verified online source of feature IDs).
+- Tests: 349 (performance table, tier choice from simulated specs, forced > setting > detected, governor hysteresis, detection never throws). Not verified: the real downgrade under load, battery detection on a laptop, the new settings row visually.
+
 ## v6.9.3 — Update Manager layout, tab labels
 
 - **Renamed "Update Manager"** (card title, section, sub-page, Help tab map; 14 languages).

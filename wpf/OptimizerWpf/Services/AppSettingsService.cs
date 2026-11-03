@@ -78,6 +78,8 @@ namespace OptimizerWpf.Services
         // 6.9.1: η νυχτερινή εργασία εγκαθιστά και τις σημαντικές ενημερώσεις Windows (ποτέ επανεκκίνηση)
         public bool NightlyWindowsUpdates { get; set; }
         // 6.9.0: κλείδωμα διαχειριστή κωδικών browser (salted PBKDF2 hash, βλ. PasswordVaultLock)
+        // 6.9.4: "auto" | "low" | "balanced" | "high"
+        public string PerformanceMode { get; set; } = "auto";
         public string? PwdVaultSalt { get; set; }
         public string? PwdVaultHash { get; set; }
         public string? LastNotifiedSelfUpdate { get; set; }

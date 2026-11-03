@@ -14,7 +14,7 @@ namespace OptimizerWpf.Views
         public const int CloseMilliseconds = 400;
 
         public static bool SimpleAnimations =>
-            !SystemParameters.ClientAreaAnimation || (RenderCapability.Tier >> 16) == 0
+            !SystemParameters.ClientAreaAnimation || (RenderCapability.Tier >> 16) == 0 || !Services.PerformanceProfileService.Current.AnimationsEnabled
             || Environment.GetEnvironmentVariable("GEARWIN_SIMPLE_ANIM") == "1";
 
         // Τοποθετεί το overlay ακριβώς πάνω στο περιεχόμενο του κύριου παραθύρου και το κρατά εκεί όσο το main μετακινείται/αλλάζει μέγεθος.

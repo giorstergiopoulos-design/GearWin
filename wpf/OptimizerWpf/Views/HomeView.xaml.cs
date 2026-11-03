@@ -69,7 +69,10 @@ namespace OptimizerWpf.Views
             // απλά παραλείπεται το CPU%/GPU% για τα πρώτα ticks μέχρι να ολοκληρωθεί η αρχικοποίηση.
             _ = Task.Run(() => { TryInitCpuCounter(); TryInitGpuCounters(); });
 
-            _refreshTimer = new DispatcherTimer { Interval = TimeSpan.FromSeconds(1) };
+            _refreshTimer = new DispatcherTimer { Interval = TimeSpan.FromSeconds(PerformanceProfileService.Current.HomeRefreshSeconds) };
+            Action perfChanged = () => Dispatcher.BeginInvoke(new Action(() => _refreshTimer.Interval = TimeSpan.FromSeconds(PerformanceProfileService.Current.HomeRefreshSeconds)));
+            PerformanceProfileService.Changed += perfChanged;
+            Unloaded += (_, _) => PerformanceProfileService.Changed -= perfChanged;
             _refreshTimer.Tick += (_, _) => { RefreshCpuRamGpu(); RefreshNetworkGraph(); };
             _refreshTimer.Start();
 
@@ -83,7 +86,7 @@ namespace OptimizerWpf.Views
             if (parentWindow != null)
             {
                 EventHandler onDeactivated = (_, _) => _refreshTimer.Interval = TimeSpan.FromSeconds(4);
-                EventHandler onActivated = (_, _) => _refreshTimer.Interval = TimeSpan.FromSeconds(1);
+                EventHandler onActivated = (_, _) => _refreshTimer.Interval = TimeSpan.FromSeconds(PerformanceProfileService.Current.HomeRefreshSeconds);
                 parentWindow.Deactivated += onDeactivated;
                 parentWindow.Activated += onActivated;
                 Unloaded += (_, _) =>
