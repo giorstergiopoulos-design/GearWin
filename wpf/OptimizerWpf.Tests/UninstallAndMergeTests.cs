@@ -189,5 +189,25 @@ namespace OptimizerWpf.Tests
             Assert.True(OptimizerWpf.Views.UnifiedDriverRow.LooksPreview("Some Driver (Insider Preview)", null));
             Assert.False(OptimizerWpf.Views.UnifiedDriverRow.LooksPreview("Latency tester", true));
         }
+
+        [Fact]
+        public void VendorFilterListsTheRealVendorsOfAllResults()
+        {
+            var apps = new[]
+            {
+                new OptimizerWpf.Views.WingetUpdateRow(new WingetUpdate("Firefox", "Mozilla.Firefox", "1", "2", "winget")),
+                new OptimizerWpf.Views.WingetUpdateRow(new WingetUpdate("Git", "Git.Git", "1", "2", "winget")),
+                new OptimizerWpf.Views.WingetUpdateRow(new WingetUpdate("left-pad", "left-pad", "1", "2", "npm")),
+            };
+            var drivers = new[]
+            {
+                new OptimizerWpf.Views.UnifiedDriverRow { Title = "Realtek - Net - 10.1", Vendor = OptimizerWpf.Views.UnifiedDriverRow.VendorFromTitle("Realtek - Net - 10.1") },
+                new OptimizerWpf.Views.UnifiedDriverRow { Title = "x", Vendor = "Intel" },
+            };
+            var vendors = OptimizerWpf.Views.OptimizationView.VendorsOf(apps, System.Array.Empty<OptimizerWpf.Views.WingetUpdateRow>(), drivers);
+            Assert.Equal(new[] { "Git", "Intel", "Mozilla", "Realtek" }, vendors.ToArray());
+            var list = OptimizerWpf.Views.OptimizationView.BuildUnified(apps, System.Array.Empty<OptimizerWpf.Views.WingetUpdateRow>(), drivers, "all", true, "Mozilla");
+            Assert.Equal(2, list.Count);   // header + Firefox
+        }
     }
 }

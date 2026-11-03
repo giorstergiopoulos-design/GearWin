@@ -24,7 +24,7 @@
 | Καρτέλα | Τι κάνει |
 |---|---|
 | 🏠 Αρχική | Βαθμολογία υγείας συστήματος, γρήγορες ενέργειες συντήρησης, κατάσταση σύνδεσης δικτύου με ζωντανό γράφημα ταχύτητας |
-| 📦 Ενημερώσεις & Εφαρμογές | Ενημερώσεις εφαρμογών, Windows και οδηγών από πολλές πηγές (και git repos), «Σάρωση όλων», λίστα αγνόησης, ακύρωση σάρωσης, προαιρετικές νυχτερινές ενημερώσεις (προαιρετικά και Windows), απεγκατάσταση από τη λίστα, εγκατάσταση SDI core, ασφαλής αφαίρεση προεγκατεστημένων εφαρμογών και εγκατάσταση προτεινόμενων |
+| 📦 Ενημερώσεις & Εφαρμογές | **Διαχειριστής ενημερώσεων**: ενημερώσεις εφαρμογών, Windows και οδηγών από πολλές πηγές (και git repos), «Σάρωση όλων», λίστα αγνόησης, ακύρωση σάρωσης, προαιρετικές νυχτερινές ενημερώσεις (προαιρετικά και Windows), απεγκατάσταση από τη λίστα, εγκατάσταση SDI core, ασφαλής αφαίρεση προεγκατεστημένων εφαρμογών και εγκατάσταση προτεινόμενων |
 | ❤ Υγεία & Επισκευή | Επισκευή (SFC/DISM/CHKDSK, Καθαριστής Μητρώου, WinRE, χρονολόγιο υγείας) · Απόδοση (Office/Gaming/Ultimate, ελευθέρωση RAM) · Καθαρισμός · Εκκίνηση |
 | 🛡 Ασφάλεια & Απόρρητο | Windows Defender, κανόνες Firewall και ανοιχτές θύρες, μπλοκάρισμα τηλεμετρίας, διαχειριστής κωδικών browser, DNS/hosts και εργαλεία δικτύου |
 | 🎮 Παιχνίδια & Πολυμέσα | Βιβλιοθήκη Steam/Epic/GOG/Ubisoft/Xbox με εκκίνηση, προφίλ GPU/gaming ανά παιχνίδι, καθαρισμός cache launcher και αντίγραφο ασφαλείας αποθηκεύσεων |
@@ -119,7 +119,7 @@ The app is organized into 7 tabs (with sub-pages):
 | Tab | What it does |
 |---|---|
 | 🏠 Home | System health score, quick maintenance actions, network status with a live throughput graph |
-| 📦 Updates & Apps | App, Windows and driver updates from several sources (and git repos), "Scan everything", ignore list, cancellable scans, optional nightly updates (optionally Windows too), uninstall from the list, SDI core install, safe removal of pre-installed apps and one-click installs of recommended apps |
+| 📦 Updates & Apps | **Update Manager**: app, Windows and driver updates from several sources (and git repos), "Scan everything", ignore list, cancellable scans, optional nightly updates (optionally Windows too), uninstall from the list, SDI core install, safe removal of pre-installed apps and one-click installs of recommended apps |
 | ❤ Health & Repair | Repair (SFC/DISM/CHKDSK, Registry Cleaner, WinRE, health timeline) · Performance (Office/Gaming/Ultimate, RAM release) · Cleanup · Startup |
 | 🛡 Security & Privacy | Windows Defender, firewall rules and open ports, telemetry blocking, browser password manager, DNS/hosts and network tools |
 | 🎮 Games & Multimedia | Steam/Epic/GOG/Ubisoft/Xbox library with launch, per-game GPU/gaming profiles, launcher-cache cleanup and game-save backup |

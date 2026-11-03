@@ -29,6 +29,11 @@ namespace OptimizerWpf.Views
         private static string _updateFilter = "all";
 
         /// <summary>Καθαρή λογική (χωρίς UI): η ενιαία λίστα για ένα φίλτρο (all/apps/windows/drivers).</summary>
+        /// <summary>Καθαρή λογική: οι πραγματικοί κατασκευαστές όλων των αποτελεσμάτων (εφαρμογές winget: πρόθεμα του id· οδηγοί: κατασκευαστής/τίτλος).</summary>
+        internal static List<string> VendorsOf(IEnumerable<WingetUpdateRow> apps, IEnumerable<WingetUpdateRow> windows, IEnumerable<UnifiedDriverRow> drivers) =>
+            apps.Concat(windows).Select(r => r.Vendor).Concat(drivers.Select(d => d.Vendor))
+                .Where(v => !string.IsNullOrWhiteSpace(v)).Select(v => v!.Trim()).Distinct(StringComparer.OrdinalIgnoreCase).OrderBy(v => v, StringComparer.OrdinalIgnoreCase).ToList();
+
         internal static List<object> BuildUnified(IEnumerable<WingetUpdateRow> apps, IEnumerable<WingetUpdateRow> windows, IEnumerable<UnifiedDriverRow> drivers, string filter, bool showPreview = true, string? vendor = null)
         {
             var list = new List<object>();
@@ -39,8 +44,9 @@ namespace OptimizerWpf.Views
                 list.Add(new UpdateGroupHeader(key, items.Count));   // διαχωριστής ανά κατηγορία μέσα στην ίδια λίστα
                 list.AddRange(items);
             }
-            if (filter is "all" or "apps") Group("Opt_FilterApps", apps);
-            if (filter is "all" or "windows") Group("Opt_FilterWindows", windows);
+            bool V(string? v) => vendor == null || string.Equals(v, vendor, StringComparison.OrdinalIgnoreCase);
+            if (filter is "all" or "apps") Group("Opt_FilterApps", apps.Where(a => V(a.Vendor)));
+            if (filter is "all" or "windows") Group("Opt_FilterWindows", windows.Where(w => V(w.Vendor)));
             if (filter is "all" or "drivers") Group("Opt_FilterDrivers", drivers.Where(d => (showPreview || !d.IsPreview) && (vendor == null || string.Equals(d.Vendor, vendor, StringComparison.OrdinalIgnoreCase))));
             return list;
         }
@@ -55,7 +61,7 @@ namespace OptimizerWpf.Views
         private void RebuildUnifiedCore()
         {
             _unified.Clear();
-            var vendors = _driverUpdates.Select(d => d.Vendor).Where(v => !string.IsNullOrWhiteSpace(v)).Distinct(StringComparer.OrdinalIgnoreCase).OrderBy(v => v).ToList();
+            var vendors = VendorsOf(_updates, _windowsUpdates, _driverUpdates);
             var selected = ComboVendor.SelectedIndex > 0 ? ComboVendor.SelectedItem as string : null;
             ComboVendor.Items.Clear();
             ComboVendor.Items.Add(LanguageService.T("Opt_AllVendors"));
@@ -63,6 +69,9 @@ namespace OptimizerWpf.Views
             ComboVendor.SelectedIndex = selected != null && vendors.Contains(selected) ? vendors.IndexOf(selected) + 1 : 0;
             var vendorFilter = ComboVendor.SelectedIndex > 0 ? ComboVendor.SelectedItem as string : null;
             foreach (var o in BuildUnified(_updates, _windowsUpdates, _driverUpdates, _updateFilter, ChkShowPreview.IsChecked == true, vendorFilter)) _unified.Add(o);
+            var total = _updates.Count + _windowsUpdates.Count + _driverUpdates.Count;
+            BtnScanWinget.Visibility = total > 0 ? Visibility.Visible : Visibility.Collapsed;
+            ChkSelectAll.Visibility = total > 0 ? Visibility.Visible : Visibility.Collapsed;
             ChipAll.Content = $"{LanguageService.T("Opt_FilterAll")} ({_updates.Count + _windowsUpdates.Count + _driverUpdates.Count})";
             ChipApps.Content = $"{LanguageService.T("Opt_FilterApps")} ({_updates.Count})";
             ChipWindows.Content = $"{LanguageService.T("Opt_FilterWindows")} ({_windowsUpdates.Count})";
@@ -111,6 +120,7 @@ namespace OptimizerWpf.Views
             _driverUpdates.CollectionChanged += (_, _) => RebuildUnified();
             RebuildUnified();
             ListDriverUpdates.ItemsSource = _driverUpdates;
+            BtnInstallSdi.Visibility = SdioService.FindSdio() == null ? Visibility.Visible : Visibility.Collapsed;
             ListDriverStore.ItemsSource = _driverStoreEntries;
 
             BorderDriverResults.Visibility = Visibility.Collapsed;   // 6.9.1: οι οδηγοί εμφανίζονται στην ενιαία λίστα ενημερώσεων
@@ -339,10 +349,19 @@ namespace OptimizerWpf.Views
         {
             var busy = AppScan.Busy;
             ProgressWinget.Visibility = busy ? Visibility.Visible : Visibility.Collapsed;
-            BtnScanWinget.SetScanning(busy, AppScan.Installing && busy ? "Opt_InstallingCaps" : null);
+            BtnScanWinget.SetScanning(busy && AppScan.Installing, AppScan.Installing && busy ? "Opt_InstallingCaps" : null);
             BtnScanWinget.IsEnabled = !busy;
+            ApplyGearUi();
             BtnUpgradeSelected.IsEnabled = !busy;
             if (AppScan.Status != null) TxtWingetStatus.Text = AppScan.Status;
+        }
+
+        // 6.9.3: το κουμπί με το γρανάζι δείχνει «σάρωση σε εξέλιξη» για κάθε σάρωση (εφαρμογές/Windows ή οδηγοί)
+        private void ApplyGearUi()
+        {
+            var scanning = DriverScan.Busy || (AppScan.Busy && !AppScan.Installing);
+            BtnScanDrivers.SetScanning(scanning);
+            BtnScanDrivers.IsEnabled = !DriverScan.Busy && !AppScan.Busy;
         }
 
         private void OnDriverScanChanged() { if (Dispatcher.CheckAccess()) ApplyDriverScanUi(); else Dispatcher.BeginInvoke(new Action(ApplyDriverScanUi)); }
@@ -350,9 +369,9 @@ namespace OptimizerWpf.Views
         private void ApplyDriverScanUi()
         {
             var busy = DriverScan.Busy;
-            BtnScanDrivers.SetScanning(busy);
-            BtnScanDrivers.IsEnabled = !busy;
+            ApplyGearUi();
             BtnCancelDriverScan.Visibility = busy ? Visibility.Visible : Visibility.Collapsed;
+            if (busy) BtnCancelAppScan.Visibility = Visibility.Visible; else if (!AppScan.Busy) BtnCancelAppScan.Visibility = Visibility.Collapsed;
             if (DriverScan.Status != null) TxtDriverStatus.Text = DriverScan.Status;
             BorderDriverResults.Visibility = Visibility.Collapsed;
             // Όταν τελειώνει μια σάρωση που ξεκίνησε από ΑΛΛΟ (πλέον κλειστό) View, οι έξτρα κάρτες κατασκευαστή πρέπει να εμφανιστούν εδώ.
@@ -412,7 +431,7 @@ namespace OptimizerWpf.Views
         }
 
         private static System.Threading.CancellationTokenSource? _scanCts;
-        private void BtnCancelAppScan_Click(object sender, RoutedEventArgs e) => _scanCts?.Cancel();
+        private void BtnCancelAppScan_Click(object sender, RoutedEventArgs e) { _scanCts?.Cancel(); s_driverCts?.Cancel(); }
 
         // 6.9.1: λίστα «αγνόησης» ενημερώσεων (πηγή|id) που ο χρήστης δεν θέλει να βλέπει.
         internal static string IgnoreKey(WingetUpdate u) => (u.Source ?? "") + "|" + u.Id;
@@ -496,6 +515,7 @@ namespace OptimizerWpf.Views
         {
             var selectAll = ChkSelectAll.IsChecked == true;
             foreach (var row in _updates.Concat(_windowsUpdates)) row.IsSelected = selectAll;
+            foreach (var d in _driverUpdates.Where(x => x.CanSelect)) d.IsSelected = selectAll;
         }
 
         // ΝΕΟ (χρήστης ανέφερε: "δεν βγαίνει κανένα μήνυμα επιτυχούς εγκατάστασης, ελέγξτο, pop-up ή
@@ -822,7 +842,7 @@ namespace OptimizerWpf.Views
                     SourceBadge = "Update Catalog",
                     SubText = $"{c.DeviceName} · v{c.Version}",
                     CatalogCandidate = c,
-                    Vendor = null,
+                    Vendor = UnifiedDriverRow.VendorFromTitle(c.Title),
                     IsPreview = UnifiedDriverRow.LooksPreview(c.Title, c.IsWhql),
                 });
 
@@ -889,21 +909,6 @@ namespace OptimizerWpf.Views
                 else if (!sdio.Installed)
                 {
                     lines.Add(LanguageService.T("Opt_SdioNotInstalled"));
-                    var btnGet = new Button { Content = LanguageService.T("Opt_SdioInstallBtn"), Style = (Style)FindResource("AccentButtonStyle"), Padding = new Thickness(14, 6, 14, 6), Margin = new Thickness(0, 0, 10, 0) };
-                    btnGet.Click += async (_, __) =>
-                    {
-                        if (ThemedMessageBox.Show(LanguageService.T("Opt_SdioInstallConfirm"), LanguageService.T("Opt_SdioInstallBtn"), MessageBoxButton.YesNo, MessageBoxImage.Question) != MessageBoxResult.Yes) return;
-                        btnGet.IsEnabled = false;
-                        try
-                        {
-                            var (ok, reason) = await WingetService.InstallSdioAsync();
-                            ThemedMessageBox.Show(ok ? LanguageService.T("Opt_SdioInstalledOk") : LanguageService.T("Opt_SdioInstallFailed") + (reason == null ? "" : "\n" + reason),
-                                LanguageService.T("Opt_SdioInstallBtn"), MessageBoxButton.OK, ok ? MessageBoxImage.Information : MessageBoxImage.Warning);
-                        }
-                        catch (Exception ex) { ThemedMessageBox.Show(ex.Message, LanguageService.T("Opt_SdioInstallBtn"), MessageBoxButton.OK, MessageBoxImage.Warning); }
-                        finally { btnGet.IsEnabled = true; }
-                    };
-                    PanelVendorExtraButtons.Children.Add(btnGet);
                 }
             }
 
@@ -940,6 +945,23 @@ namespace OptimizerWpf.Views
             var text = list.Count == 0 ? LanguageService.T("Opt_DriverHistoryEmpty")
                 : string.Join("\n", list.AsEnumerable().Reverse().Take(25).Select(h => $"{h.Time:yyyy-MM-dd HH:mm}  {h.Title} - {h.Source} - {h.Result}"));
             ThemedMessageBox.Show(text, LanguageService.T("Opt_DriverHistoryBtn"), MessageBoxButton.OK, MessageBoxImage.Information);
+        }
+
+        // 6.9.3: κουμπί «Εγκατάσταση SDI core» δίπλα στον κατασκευαστή (εμφανίζεται μόνο όταν λείπει το SDIO)
+        private async void BtnInstallSdi_Click(object sender, RoutedEventArgs e)
+        {
+            var btn = (Button)sender;
+            if (ThemedMessageBox.Show(LanguageService.T("Opt_SdioInstallConfirm"), LanguageService.T("Opt_SdioInstallBtn"), MessageBoxButton.YesNo, MessageBoxImage.Question) != MessageBoxResult.Yes) return;
+            btn.IsEnabled = false;
+            try
+            {
+                var (ok, reason) = await WingetService.InstallSdioAsync();
+                ThemedMessageBox.Show(ok ? LanguageService.T("Opt_SdioInstalledOk") : LanguageService.T("Opt_SdioInstallFailed") + (reason == null ? "" : "\n" + reason),
+                    LanguageService.T("Opt_SdioInstallBtn"), MessageBoxButton.OK, ok ? MessageBoxImage.Information : MessageBoxImage.Warning);
+                BtnInstallSdi.Visibility = ok ? Visibility.Collapsed : Visibility.Visible;
+            }
+            catch (Exception ex) { ThemedMessageBox.Show(ex.Message, LanguageService.T("Opt_SdioInstallBtn"), MessageBoxButton.OK, MessageBoxImage.Warning); }
+            finally { btn.IsEnabled = true; }
         }
 
         private async void BtnInstallDriver_Click(object sender, RoutedEventArgs e)
@@ -1148,14 +1170,29 @@ namespace OptimizerWpf.Views
         public UpdateGroupHeader(string key, int count) { Title = $"{LanguageService.T(key)} ({count})"; }
     }
 
-    public class UnifiedDriverRow
+    public class UnifiedDriverRow : System.ComponentModel.INotifyPropertyChanged
     {
         // 6.9.1: επιλογή για «Ενημέρωση επιλεγμένων», φίλτρα κατασκευαστή και preview/beta/μη-WHQL
-        public bool IsSelected { get; set; }
+        private bool _isSelected;
+        public bool IsSelected
+        {
+            get => _isSelected;
+            set { _isSelected = value; PropertyChanged?.Invoke(this, new System.ComponentModel.PropertyChangedEventArgs(nameof(IsSelected))); }
+        }
+        public event System.ComponentModel.PropertyChangedEventHandler? PropertyChanged;
         public string? Vendor { get; init; }
         public bool IsPreview { get; init; }
         public bool CanSelect => VendorDownloadUrl == null && (WuUpdate != null || CatalogCandidate != null);
         private static readonly System.Text.RegularExpressions.Regex PreviewRx = new(@"\b(preview|beta|insider|prerelease|pre-release|test)\b", System.Text.RegularExpressions.RegexOptions.IgnoreCase | System.Text.RegularExpressions.RegexOptions.Compiled);
+        // Τίτλοι του Microsoft Update Catalog: "Realtek - Net - 10.1" -> "Realtek"
+        public static string? VendorFromTitle(string? title)
+        {
+            if (string.IsNullOrWhiteSpace(title)) return null;
+            var i = title.IndexOf(" - ", StringComparison.Ordinal);
+            var v = (i > 0 ? title[..i] : title.Split(' ')[0]).Trim();
+            return v.Length is > 1 and < 40 ? v : null;
+        }
+
         public static bool LooksPreview(string? title, bool? whql) => whql == false || (title != null && PreviewRx.IsMatch(title));
         public string Title { get; init; } = "";
         public string SubText { get; init; } = "";
@@ -1176,6 +1213,8 @@ namespace OptimizerWpf.Views
     {
         public WingetUpdate Update { get; }
         // 6.9.1: Windows Update γραμμές δεν έχουν Απεγκατάσταση/Παράβλεψη
+        // 6.9.3: κατασκευαστής για το φίλτρο: πρόθεμα του winget id ("Mozilla.Firefox" -> "Mozilla")
+        public string? Vendor => string.Equals(Update.Source, "winget", StringComparison.OrdinalIgnoreCase) && Update.Id.IndexOf('.') is var i and > 0 && i < 30 ? Update.Id[..i] : null;
         public bool ShowAppActions => !string.Equals(Update.Source, "windowsupdate", StringComparison.OrdinalIgnoreCase);
 
         private bool _isSelected;

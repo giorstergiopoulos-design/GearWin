@@ -36,21 +36,38 @@
                          χωρίς να προσποιείται ακρίβεια που δεν υπάρχει). -->
                     <ProgressBar x:Name="ProgressWinget" Height="6" IsIndeterminate="True" Visibility="Collapsed" Margin="0,0,0,10"/>
 
-                    <!-- 6.9.1: ενιαία λίστα (εφαρμογές + Windows + οδηγοί) με φίλτρα -->
-                    <WrapPanel x:Name="PanelUpdateFilters" Margin="0,0,0,8">
+                    <!-- 6.9.3: Διαχειριστής ενημερώσεων - φίλτρα και κουμπιά ενέργειας στην ίδια γραμμή/ύψος -->
+                    <Grid Margin="0,0,0,8">
+                        <Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions>
+                    <WrapPanel x:Name="PanelUpdateFilters" VerticalAlignment="Center">
                         <RadioButton x:Name="ChipAll" GroupName="UpdFilter" IsChecked="True" Style="{StaticResource SubPageChipStyle}" Tag="all" Checked="UpdateFilter_Checked"/>
                         <RadioButton x:Name="ChipApps" GroupName="UpdFilter" Style="{StaticResource SubPageChipStyle}" Tag="apps" Checked="UpdateFilter_Checked"/>
                         <RadioButton x:Name="ChipWindows" GroupName="UpdFilter" Style="{StaticResource SubPageChipStyle}" Tag="windows" Checked="UpdateFilter_Checked"/>
                         <RadioButton x:Name="ChipDrivers" GroupName="UpdFilter" Style="{StaticResource SubPageChipStyle}" Tag="drivers" Checked="UpdateFilter_Checked"/>
                     </WrapPanel>
+                        <StackPanel Grid.Column="1" Orientation="Horizontal" VerticalAlignment="Center">
+                            <Button x:Name="BtnUpgradeSelected" Content="{tr:Tr Opt_UpgradeSelected}" Style="{StaticResource AccentButtonStyle}" MinWidth="180" Margin="8,0,8,0" Click="BtnUpgradeSelected_Click"/>
+                            <Button x:Name="BtnCheckMsStore" Content="{tr:Tr Opt_CheckMsStore}"
+                                Style="{StaticResource AccentButtonStyle}" Height="40" Padding="24,10" MinWidth="300" Click="BtnCheckMsStore_Click"/>
+                        </StackPanel>
+                    </Grid>
                     <WrapPanel Margin="0,0,0,8">
-                        <CheckBox x:Name="ChkShowPreview" Content="{tr:Tr Opt_ShowPreviewDrivers}" Foreground="{DynamicResource TextBrush}" VerticalAlignment="Center" Margin="0,0,16,0" Checked="DriverFilter_Changed" Unchecked="DriverFilter_Changed"/>
-                        <ComboBox x:Name="ComboVendor" MinWidth="200" SelectionChanged="DriverFilter_Changed" AutomationProperties.Name="{tr:Tr Opt_AllVendors}"/>
+                        <CheckBox x:Name="ChkShowPreview" Content="{tr:Tr Opt_ShowPreviewDrivers}" Foreground="{DynamicResource TextBrush}" VerticalAlignment="Center" Margin="0,0,16,6" Checked="DriverFilter_Changed" Unchecked="DriverFilter_Changed"/>
+                        <ComboBox x:Name="ComboVendor" MinWidth="220" Margin="0,0,8,6" SelectionChanged="DriverFilter_Changed" AutomationProperties.Name="{tr:Tr Opt_AllVendors}"/>
+                        <Button x:Name="BtnDriverHistory" Content="{tr:Tr Opt_DriverHistoryBtn}" Style="{StaticResource FlatButtonStyle}" Padding="14,6" Margin="0,0,8,6" Click="BtnDriverHistory_Click"/>
+                        <Button x:Name="BtnInstallSdi" Content="{tr:Tr Opt_SdioInstallBtn}" Style="{StaticResource FlatButtonStyle}" Padding="14,6" Margin="0,0,8,6" Click="BtnInstallSdi_Click" Visibility="Collapsed"/>
+                        <StackPanel x:Name="PanelVendorExtraButtons" Orientation="Horizontal" Margin="0,0,0,6"/>
                     </WrapPanel>
+                    <TextBlock x:Name="TxtVendorExtra" Text="" Style="{StaticResource SubTextStyle}" TextWrapping="Wrap" Margin="0,0,0,6"/>
 
-                    <Border Background="{DynamicResource MainBgBrush}" CornerRadius="6" MinHeight="120" MaxHeight="320" Padding="4">
-                        <ScrollViewer VerticalScrollBarVisibility="Auto" PreviewMouseWheel="NestedScroll_PreviewMouseWheel">
-                            <ItemsControl x:Name="ListWingetUpdates">
+                    <Border Background="{DynamicResource MainBgBrush}" CornerRadius="6" Padding="4">
+                        <Grid>
+                            <Grid.RowDefinitions><RowDefinition Height="Auto"/><RowDefinition Height="*"/></Grid.RowDefinitions>
+                            <!-- 6.9.3: «Επιλογή όλων» μέσα στη λίστα αποτελεσμάτων, στο πάνω μέρος -->
+                            <CheckBox x:Name="ChkSelectAll" Grid.Row="0" Margin="10,6,0,4" Content="{tr:Tr Opt_SelectAll}" VerticalAlignment="Center"
+                                  Foreground="{DynamicResource TextBrush}" Click="ChkSelectAll_Click"/>
+                            <ScrollViewer Grid.Row="1" VerticalScrollBarVisibility="Auto" PreviewMouseWheel="NestedScroll_PreviewMouseWheel" MinHeight="120" MaxHeight="320">
+<ItemsControl x:Name="ListWingetUpdates">
                                 <ItemsControl.Resources>
                                     <DataTemplate DataType="{x:Type views:WingetUpdateRow}">
                                         <Border Background="{DynamicResource CardBgBrush}" CornerRadius="4" Margin="4" Padding="10">
@@ -132,67 +149,18 @@
                                 </ItemsControl.Resources>
                             </ItemsControl>
                         </ScrollViewer>
+                        </Grid>
                     </Border>
 
-                    <!-- ΔΙΟΡΘΩΣΗ (χρήστης έστειλε screenshot: "πλάτυνε λίγο το κουμπί για τις ενημερώσεις
-                         από το store και βάλε το κουμπί στην ίδια ευθεία με το σάρωση και αναβάθμιση
-                         επιλεγμένων") - το BtnCheckMsStore μετακινήθηκε ΜΕΣΑ στο ίδιο Grid με τα δύο
-                         άλλα κουμπιά (4η στήλη Auto) αντί για ξεχωριστή γραμμή από κάτω. Οι στήλες Auto
-                         αυτοπροσαρμόζονται στο περιεχόμενό τους, οπότε ΔΕΝ επανέρχεται ο παλιός κίνδυνος
-                         clipping σε μακρύτερες γλώσσες (π.χ. Γαλλικά) που είχε οδηγήσει στην αρχική
-                         απόφαση για ξεχωριστή γραμμή με auto-size Padding (βλ. ιστορικό σχόλιο πιο κάτω) -
-                         μια στήλη Auto είναι ΗΔΗ auto-size, απλά τώρα στην ίδια γραμμή. -->
-                    <!-- Ρητό αίτημα χρήστη: "αντί για ένα απλό κουμπί, με έμπνευση από το κυκλικό των
-                         οδηγών, φτιάξε ένα παρόμοιο με κινούμενο εικονίδιο αναβάθμισης εφαρμογών" - ίδιο
-                         μοτίβο με το BtnScanDrivers/DriverScanButton παραπάνω στην κάρτα Οδηγών: μεγάλο
-                         κυκλικό κουμπί σάρωσης αντί για το προηγούμενο απλό ορθογώνιο "Σάρωση". -->
-                    <Button x:Name="BtnCancelAppScan" Content="{tr:Tr Cancel}" Style="{StaticResource FlatButtonStyle}" Padding="16,6" HorizontalAlignment="Center" Margin="0,10,0,0" Visibility="Collapsed" Click="BtnCancelAppScan_Click"/>
-                    <views:AppUpdateScanButton x:Name="BtnScanWinget" HorizontalAlignment="Center" Margin="0,10,0,10" Click="BtnScanAll_Click"/>
-                    <!-- 6.8.0: ένα κουμπί που σαρώνει ταυτόχρονα εφαρμογές + Windows Update (ήδη στη λίστα εφαρμογών) + οδηγούς. -->
-                    <Button x:Name="BtnScanAll" Visibility="Collapsed" Content="{tr:Tr Opt_ScanAllBtn}" Style="{StaticResource FlatButtonStyle}" Padding="16,7"
-                            HorizontalAlignment="Center" Margin="0,0,0,4" Click="BtnScanAll_Click"/>
+                    <!-- 6.9.3: κουμπί σάρωσης με γρανάζι (σαρώνει εφαρμογές, Windows και οδηγούς)· όταν υπάρχουν αποτελέσματα εμφανίζεται δίπλα του το κουμπί «Ενημέρωση» (βέλος προς τα κάτω + παύλα) -->
+                    <StackPanel Orientation="Horizontal" HorizontalAlignment="Center" Margin="0,10,0,6">
+                        <views:DriverScanButton x:Name="BtnScanDrivers" HorizontalAlignment="Center" Margin="0,0,16,0" Click="BtnScanAll_Click"/>
+                        <views:AppUpdateScanButton x:Name="BtnScanWinget" IdleInstallMode="True" Visibility="Collapsed" HorizontalAlignment="Center" Click="BtnUpgradeSelected_Click"/>
+                    </StackPanel>
+                    <Button x:Name="BtnCancelAppScan" Content="{tr:Tr Cancel}" Style="{StaticResource FlatButtonStyle}" Padding="16,6" HorizontalAlignment="Center" Margin="0,0,0,6" Visibility="Collapsed" Click="BtnCancelAppScan_Click"/>
                     <Button x:Name="BtnIgnored" Content="{tr:Tr Opt_IgnoredButton}" Style="{StaticResource FlatButtonStyle}" Padding="16,6" HorizontalAlignment="Center" Margin="0,0,0,6" Visibility="Collapsed" Click="BtnIgnored_Click"/>
                     <Button Content="{tr:Tr Opt_GitFolderBtn}" Style="{StaticResource FlatButtonStyle}" Padding="16,6" HorizontalAlignment="Center" Margin="0,0,0,6" Click="BtnAddGitFolder_Click"/>
                     <TextBlock Text="{tr:Tr Opt_ScanAllHint}" Style="{StaticResource SubTextStyle}" TextWrapping="Wrap" HorizontalAlignment="Center" TextAlignment="Center" Margin="0,0,0,10"/>
-
-                    <Grid Margin="0,0,0,0">
-                        <Grid.ColumnDefinitions>
-                            <ColumnDefinition Width="*"/>
-                            <ColumnDefinition Width="Auto"/>
-                            <ColumnDefinition Width="Auto"/>
-                        </Grid.ColumnDefinitions>
-                        <CheckBox x:Name="ChkSelectAll" Grid.Column="0" Content="{tr:Tr Opt_SelectAll}" VerticalAlignment="Center"
-                                  Foreground="{DynamicResource TextBrush}" Click="ChkSelectAll_Click"/>
-                        <!-- ΔΙΟΡΘΩΣΗ (χρήστης έδειξε με screenshot: "το ένα κουμπί έχει περιθώριο, στο
-                             άλλο η περιγραφή είναι ίσα με το πλαίσιο") - Width="180" σταθερό εδώ ΚΑΙ
-                             μόνο Padding (χωρίς κατώτατο όριο) στο BtnCheckMsStore δίπλα σημαίνει ότι
-                             όταν ο 3-στηλος Grid στενεύει (λιγότερος χώρος από ό,τι χρειάζονται και τα
-                             δύο κουμπιά μαζί με το checkbox), το Auto-στήλης BtnCheckMsStore συμπιέζεται
-                             ΚΑΤΩ από το φυσικό του μέγεθος - το padding "καταπίνεται" οπτικά, ενώ αυτό
-                             εδώ (σταθερό Width) δεν συμπιέζεται ποτέ κάτω από τα 180px. MinWidth αντί
-                             για Width - ίδια προστασία, αλλά επιτρέπει να μεγαλώσει για πιο μακριές
-                             μεταφράσεις αντί να κόβει/συμπιέζει το κείμενο. -->
-                        <Button x:Name="BtnUpgradeSelected" Grid.Column="1" Content="{tr:Tr Opt_UpgradeSelected}" Style="{StaticResource AccentButtonStyle}" MinWidth="180" Margin="0,0,10,0" Click="BtnUpgradeSelected_Click"/>
-                        <!-- Port του $global:btnCheckMsStore (ρητή ανάγκη - το "store updates" CLI
-                             παραπάνω δεν πιάνει πάντα ΟΛΕΣ τις ενημερώσεις Metro/UWP εφαρμογών,
-                             τεκμηριωμένο όριο - χρήστης ανέφερε "δεν φαίνονται οι ενημερώσεις των metro
-                             εφαρμογών"). Ενεργοποιεί πραγματική σάρωση μέσω των επίσημων μηχανισμών των
-                             Windows και ανοίγει το Store για επιβεβαίωση - συμπληρωματικό, όχι
-                             υποκατάστατο της λίστας παραπάνω. Padding 24,10 διατηρείται ώστε το κείμενο
-                             να έχει άνετο χώρο σε ΚΑΘΕ γλώσσα - ΚΑΙ τώρα MinWidth ώστε αυτό το padding
-                             να ΜΗΝ μπορεί να συμπιεστεί κάτω από το ελάχιστο ασφαλές πλάτος όταν στενεύει
-                             η στήλη (βλ. σχόλιο στο BtnUpgradeSelected παραπάνω για το ακριβές bug). -->
-                        <Button x:Name="BtnCheckMsStore" Grid.Column="2" Content="{tr:Tr Opt_CheckMsStore}"
-                                Style="{StaticResource AccentButtonStyle}" Height="40" Padding="24,10" MinWidth="300" Click="BtnCheckMsStore_Click"/>
-                    </Grid>
-                    <TextBlock Text="{tr:Tr Opt_MsStoreDesc}"
-                            Style="{StaticResource SubTextStyle}" Margin="0,4,0,0"/>
-
-                    <!-- ΝΕΟ - roadmap "νεότερες δυνατότητες winget στο UI" - "winget export/import":
-                         αντιγραφή της λίστας εγκατεστημένων εφαρμογών (ID + έκδοση) σε νέο υπολογιστή,
-                         βλ. WingetService.ExportAsync/ImportAsync. -->
-                    <Separator Margin="0,12,0,10"/>
-                    <TextBlock Text="{tr:Tr Opt_WingetPortableTitle}" Style="{StaticResource SubTextStyle}" Margin="0,0,0,8"/>
                     <StackPanel Orientation="Horizontal">
                         <Button x:Name="BtnExportWingetList" Content="{tr:Tr Opt_ExportAppsListButton}" Style="{StaticResource FlatButtonStyle}" Padding="16,8" Margin="0,0,10,0" Click="BtnExportWingetList_Click"/>
                         <Button x:Name="BtnImportWingetList" Content="{tr:Tr Opt_ImportAppsListButton}" Style="{StaticResource FlatButtonStyle}" Padding="16,8" Click="BtnImportWingetList_Click"/>
@@ -241,8 +209,8 @@
                 </Grid>
             </Border>
 
-            <TextBlock Text="{tr:Tr Opt_SectionDrivers}" Style="{StaticResource CardTitleStyle}" FontSize="15" Margin="4,22,0,8"/>
-            <Border Style="{StaticResource CardStyle}" Margin="0,0,0,0">
+            <TextBlock Text="{tr:Tr Opt_SectionDrivers}" Style="{StaticResource CardTitleStyle}" FontSize="15" Margin="4,22,0,8" Visibility="Collapsed"/>
+            <Border Style="{StaticResource CardStyle}" Margin="0,0,0,0" Visibility="Collapsed">
                 <StackPanel>
                     <Grid Margin="0,0,0,4">
                         <Grid.ColumnDefinitions><ColumnDefinition Width="Auto"/><ColumnDefinition Width="*"/></Grid.ColumnDefinitions>
@@ -253,7 +221,7 @@
                     <TextBlock Text="{tr:Tr Opt_DriversDesc2}" FontStyle="Italic" Style="{StaticResource SubTextStyle}" TextWrapping="Wrap" Margin="0,2,0,0"/>
                     <TextBlock x:Name="TxtDriverStatus" Text="" Style="{StaticResource SubTextStyle}" TextWrapping="Wrap" Margin="0,8,0,0"/>
 
-                    <views:DriverScanButton x:Name="BtnScanDrivers" HorizontalAlignment="Center" Margin="0,16,0,10" Click="BtnScanDrivers_Click"/>
+                    <!-- 6.9.3: το κουμπί σάρωσης οδηγών μεταφέρθηκε στον Διαχειριστή ενημερώσεων -->
                     <Button x:Name="BtnCancelDriverScan" Content="{tr:Tr Cancel}" Style="{StaticResource FlatButtonStyle}" Padding="16,6" HorizontalAlignment="Center" Margin="0,0,0,10" Visibility="Collapsed" Click="BtnCancelDriverScan_Click"/>
                     <Button Content="{tr:Tr Opt_DriverHistoryBtn}" Style="{StaticResource FlatButtonStyle}" Padding="16,6" HorizontalAlignment="Center" Margin="0,0,0,6" Click="BtnDriverHistory_Click"/>
                     <TextBlock Text="{tr:Tr Opt_DriversScanHint}" Style="{StaticResource SubTextStyle}" HorizontalAlignment="Center" TextAlignment="Center" Margin="0,0,0,4"/>
@@ -292,8 +260,8 @@
                          (ΟΧΙ ανά-συσκευή γραμμές σαν τα παραπάνω) - port του Complete-DriverScan's Dell/
                          SDIO/OEM ενοτήτων. ΚΑΝΕΝΑ αυτόματο install - μόνο ανοίγει το επίσημο εργαλείο/
                          φάκελο αναφοράς, ο χρήστης αποφασίζει μέσα σε αυτό. -->
-                    <TextBlock x:Name="TxtVendorExtra" Text="" Style="{StaticResource SubTextStyle}" TextWrapping="Wrap" Margin="0,10,0,0"/>
-                    <StackPanel x:Name="PanelVendorExtraButtons" Orientation="Horizontal" Margin="0,8,0,0"/>
+                    
+                    
                 </StackPanel>
             </Border>
 

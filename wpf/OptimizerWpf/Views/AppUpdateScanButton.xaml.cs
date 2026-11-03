@@ -31,12 +31,16 @@ namespace OptimizerWpf.Views
         // captionKey: κλειδί μετάφρασης για το κείμενο κάτω από το εικονίδιο κατά τη λειτουργία (π.χ.
         // "Opt_InstallingCaps" στην εγκατάσταση αντί του προεπιλεγμένου "Opt_ScanCaps" στη σάρωση) -
         // μικρότερο FontSize για λέξεις μεγαλύτερες από "ΣΑΡΩΣΗ"/"SCAN" ώστε να μη ξεχειλίζουν τον κύκλο.
+        // 6.9.3: κουμπί «Ενημέρωση» (βέλος προς τα κάτω + παύλα) - εμφανίζεται όταν υπάρχουν αποτελέσματα· η σάρωση έχει το δικό της κουμπί με γρανάζι
+        public bool IdleInstallMode { get; set; }
+
         public void SetScanning(bool scanning, string? captionKey = null)
         {
+            if (IdleInstallMode && !scanning) captionKey = "Opt_UpdateCaps";
             ProgressArc.Visibility = scanning ? Visibility.Visible : Visibility.Collapsed;
             IconGroup.Opacity = scanning ? 1.0 : 0.55;
             // captionKey != null <=> εγκατάσταση (βλ. OptimizationView.SetBusy): βέλος προς τα ΚΑΤΩ + γραμμή αντί για βέλος αναβάθμισης.
-            var installing = scanning && captionKey != null;
+            var installing = (scanning || IdleInstallMode) && captionKey != null;
             ScanArrow.Visibility = installing ? Visibility.Collapsed : Visibility.Visible;
             InstallIcon.Visibility = installing ? Visibility.Visible : Visibility.Collapsed;
             if (captionKey != null)

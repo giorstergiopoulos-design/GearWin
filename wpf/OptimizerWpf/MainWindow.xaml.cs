@@ -195,8 +195,8 @@ public partial class MainWindow : Window
             var overflow = TabStrip.ActualWidth > TabStripScroll.ViewportWidth + 1;
             foreach (var (tab, label) in tabs)
             {
-                label.Visibility = !overflow || tab.IsChecked == true ? Visibility.Visible : Visibility.Collapsed;
-                tab.ToolTip = overflow ? label.Text : null;
+                label.Visibility = Visibility.Visible;   // 6.9.3: οι περιγραφές των καρτελών δεν κρύβονται ποτέ - η λωρίδα αναδιπλώνεται σε δεύτερη γραμμή
+                tab.ToolTip = null;
             }
         }
         catch { /* η προσαρμογή είναι διακοσμητική: αν αποτύχει μένει η οριζόντια κύλιση */ }

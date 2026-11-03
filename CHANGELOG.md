@@ -6,6 +6,16 @@ available inside the app itself, via Help/Instructions → the "Version History"
 
 Format loosely follows [Keep a Changelog](https://keepachangelog.com/).
 
+## v6.9.3 — Update Manager layout, tab labels
+
+- **Renamed "Update Manager"** (card title, section, sub-page, Help tab map; 14 languages).
+- **Vendor drop-down fixed**: it listed only "All vendors"; it now lists the real vendors of all results (winget id prefix for apps, manufacturer for Windows Update drivers, the first part of the title for Update Catalog drivers) and filters apps and drivers.
+- **Layout**: "Update selected" and "Check updates via Microsoft Store" sit on the same row as the All/Apps/Windows/Drivers filters; "Select all" is at the top of the results list (it also selects drivers); "Driver install history" and "Install SDI core" sit next to the vendor drop-down (the SDI button shows only while SDIO is missing); the **"Device driver updates" frame is gone** (the Dell/SDIO/OEM notes and the SDI download/integrate buttons moved under the filters).
+- **Buttons**: the round **Scan** button with the gear now scans apps, Windows and drivers; once results exist the round **Update** button (down arrow + bar) appears next to it and installs the selected rows.
+- **Tab descriptions no longer disappear**: when the tab strip was too narrow it hid every label except the active tab's; the strip now wraps to a second row instead (labels always visible). Flow is left-to-right except Arabic (right-to-left) - covered by a test in all 14 languages at the minimum window width; the same test checks that filters and action buttons share one row.
+- Probe: 5994 button texts examined in all 14 languages, 0 clipped. Tests: 337.
+- **Not done**: the hardware performance tiers of TASKS-MASTER 16-B for GearWin (number of parallel scans / animation levels) - not started.
+
 ## v6.9.2 — Dark/DPI verification, wording of the new texts
 
 - **UiClippingProbe verified in dark mode and at 150 % / 200 %** (`GEARWIN_UIPROBE_DARK=1`, `GEARWIN_UIPROBE_SCALE=1.5|2`; the probe now toggles dark mode instead of looking a theme up by name, and simulates DPI by narrowing the window to 1/scale DIP, clamped by the window's minimum width of 946 px): 740 / 662 / 662 button texts examined on every tab and sub-page (en, el, de; el, de at the scaled sizes), **0 clipped texts, 0 cut tabs**. At 200 % the window cannot get narrower than its minimum, so the 150 % and 200 % runs examine the same minimum-width layout. Not covered: real per-monitor DPI rendering (font hinting), only layout widths.
