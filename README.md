@@ -191,15 +191,14 @@ The final `GearWin-Setup-<version>.exe` lands in `installer/Output/`.
 
 ## Άδεια / License
 
-Διανέμεται δωρεάν υπό την [MIT License](installer/license_en.txt) (το πλήρες κείμενο της GNU GPL
-v3.0 εμπεριέχεται επίσης, για λόγους πληρότητας/συμβατότητας). Ορισμένες ιδέες σχεδίασης
-εμπνεύστηκαν από το ανοιχτού κώδικα εργαλείο
-[Windows Maintenance Tool](https://github.com/ios12checker/Windows-Maintenance-Tool), επίσης υπό
-άδεια MIT.
+Διανέμεται δωρεάν υπό την [άδεια MIT](LICENSE) (πρότυπο κείμενο MIT, αναγνωρίσιμο από το GitHub) — Copyright (c) 2026 giorstergiopoulos-design.
+Ο κώδικας του αποθετηρίου δεν περιέχει πλέον αντίγραφο του εργαλείου αναφοράς· ορισμένες ιδέες σχεδίασης εμπνεύστηκαν από το ανοιχτού κώδικα
+[Windows Maintenance Tool](https://github.com/ios12checker/Windows-Maintenance-Tool), επίσης υπό άδεια MIT. Ο installer εμφανίζει το κείμενο
+της άδειας στη γλώσσα του χρήστη (`installer/license_*.txt`).
 
-*Distributed for free under the [MIT License](installer/license_en.txt) (the full text of the GNU
-GPL v3.0 is also included, for completeness/license-compatibility purposes). Some design ideas were
-inspired by the open-source [Windows Maintenance Tool](https://github.com/ios12checker/Windows-Maintenance-Tool),
-also MIT-licensed.*
+*Distributed for free under the [MIT License](LICENSE) (the standard MIT text, recognised by GitHub) — Copyright (c) 2026 giorstergiopoulos-design.
+The repository no longer contains a copy of the reference tool; some design ideas were inspired by the open-source
+[Windows Maintenance Tool](https://github.com/ios12checker/Windows-Maintenance-Tool), also MIT-licensed. The installer shows the licence
+text in the user's language (`installer/license_*.txt`).*
 
 **Το λογισμικό παρέχεται "ΩΣ ΕΧΕΙ", χωρίς καμία εγγύηση. / Provided "AS IS", without warranty of any kind.**

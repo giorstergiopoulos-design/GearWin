@@ -90,6 +90,14 @@ public partial class App : Application
         // "επαναφορά όλων των ρυθμίσεων των windows στα προεπιλεγμένα αν το θέλει ο χρήστης" κατά την
         // απεγκατάσταση. Καμία οθόνη/παράθυρο - επαναφέρει ό,τι έχει καταγεγραμμένη προηγούμενη τιμή
         // και τερματίζει αμέσως, ΠΡΙΝ φορτωθεί οτιδήποτε άλλο (θέμα/γλώσσα/action log).
+        // 6.9.7: ο installer (task «Εκκίνηση με τα Windows») γράφει το flag μέσω της ίδιας της εφαρμογής - όχι με κρυφό PowerShell script
+        if (e.Args.Contains("--enable-tray-autostart"))
+        {
+            try { Services.AppSettingsService.Current.LaunchWithWindowsToTray = true; Services.AppSettingsService.Save(); } catch { }
+            Shutdown();
+            return;
+        }
+
         if (e.Args.Contains("--reset-tweaks"))
         {
             try { Services.TweakService.RestoreAllTrackedTweaks(); } catch { }

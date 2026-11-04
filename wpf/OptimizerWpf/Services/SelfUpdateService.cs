@@ -150,19 +150,11 @@ namespace OptimizerWpf.Services
             return path;
         }
 
-        // Ξεκινά κρυφό PowerShell που περιμένει να κλείσει η εφαρμογή, τρέχει σιωπηλά τον installer και μετά ξανανοίγει την εφαρμογή.
-        // (Ο installer έχει AppMutex - δεν μπορεί να συνεχίσει όσο τρέχει η εφαρμογή.) Μετά το κάλεσμα η εφαρμογή πρέπει να τερματίσει.
+        // 6.9.7: ο installer ξεκινά ΑΠΕΥΘΕΙΑΣ (όχι κρυφό PowerShell με -ExecutionPolicy Bypass). Ο installer κλείνει μόνος του την εφαρμογή που τρέχει
+        // (σιωπηλή εγκατάσταση: InitializeSetup + /CLOSEAPPLICATIONS) και, με /RELAUNCH=1, την ξανανοίγει όταν τελειώσει. Μετά το κάλεσμα η εφαρμογή πρέπει να τερματίσει.
         public static void LaunchInstallerAfterExit(string installerPath)
         {
-            var exe = Environment.ProcessPath ?? "";
-            static string Q(string s) => "'" + s.Replace("'", "''") + "'";
-            var script = new StringBuilder()
-                .AppendLine("$ErrorActionPreference = 'Stop'")
-                .AppendLine($"try {{ Wait-Process -Id {Environment.ProcessId} -Timeout 90 -ErrorAction SilentlyContinue }} catch {{ }}")
-                .AppendLine($"$p = Start-Process -FilePath {Q(installerPath)} -ArgumentList '/SILENT','/SUPPRESSMSGBOXES','/NORESTART','/CLOSEAPPLICATIONS' -Wait -PassThru")
-                .AppendLine($"if ($p.ExitCode -eq 0 -and (Test-Path -LiteralPath {Q(exe)})) {{ Start-Process -FilePath {Q(exe)} }}")
-                .ToString();
-            Process.Start(new ProcessStartInfo("powershell.exe", PowerShellArgs.Command(script, hidden: true)) { UseShellExecute = false, CreateNoWindow = true });
+            Process.Start(new ProcessStartInfo(installerPath, "/SILENT /SUPPRESSMSGBOXES /NORESTART /CLOSEAPPLICATIONS /RELAUNCH=1") { UseShellExecute = true });
         }
     }
 }

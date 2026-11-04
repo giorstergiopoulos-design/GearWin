@@ -21,17 +21,25 @@ function Missing-Languages($iscc) {
     $wanted | Where-Object { -not (Test-Path (Join-Path $dir $_)) }
 }
 
+# 6.9.7: Inno Setup 7 is REQUIRED (installer\OptimizerWpf.iss refuses older compilers: an older uninstaller would be kept on upgrades).
+# Free source: the official release of github.com/jrsoftware/issrc (the same file the winget manifest JRSoftware.InnoSetup.7 7.1.1 points to), SHA-256 pinned.
+$InnoVersion = '7.1.1'
+$InnoUrl = 'https://github.com/jrsoftware/issrc/releases/download/is-7_1_1/innosetup-7.1.1-x64.exe'
+$InnoSha256 = '8a5a6711c3766a6e5fb74f280ba0e3551e719ce94538d901fdbd1f8f9920b3f0'
+function Is-Inno7($path) { $path -and ((Get-Item $path).VersionInfo.ProductVersion -match '^7\.' -or (Split-Path (Split-Path $path) -Leaf) -like '*Setup 7*') }
 $iscc = Find-Iscc
-if (-not $iscc) { choco install innosetup -y --no-progress; $iscc = Find-Iscc }
-if (-not $iscc) { throw 'Inno Setup is not installed and could not be installed' }
+if (-not (Is-Inno7 $iscc)) {
+    $setup = Join-Path ([IO.Path]::GetTempPath()) 'innosetup-7-x64.exe'
+    Invoke-WebRequest -Uri $InnoUrl -OutFile $setup -UseBasicParsing
+    $actual = (Get-FileHash $setup -Algorithm SHA256).Hash.ToLowerInvariant()
+    if ($actual -ne $InnoSha256) { Remove-Item $setup -Force; throw "Inno Setup $InnoVersion download has the wrong SHA-256 ($actual)" }
+    $p = Start-Process -FilePath $setup -ArgumentList '/VERYSILENT', '/SUPPRESSMSGBOXES', '/NORESTART', '/ALLUSERS' -Wait -PassThru
+    if ($p.ExitCode -ne 0) { throw "Inno Setup installer failed with exit code $($p.ExitCode)" }
+    $iscc = Find-Iscc
+}
+if (-not (Is-Inno7 $iscc)) { throw "Inno Setup 7 is not available (found: $iscc)" }
 "Inno Setup found: $iscc"
 $missing = @(Missing-Languages $iscc)
-if ($missing.Count -gt 0) {
-    "Language files missing: $($missing -join ', ') - upgrading Inno Setup with Chocolatey"
-    choco upgrade innosetup -y --no-progress
-    $iscc = Find-Iscc
-    $missing = @(Missing-Languages $iscc)
-}
 foreach ($file in @($missing)) {
     $kept = Join-Path $PSScriptRoot "ci\$file"
     if (Test-Path $kept) { Copy-Item $kept (Join-Path (Split-Path $iscc) 'Languages') -Force; "copied $file from tools\ci" }

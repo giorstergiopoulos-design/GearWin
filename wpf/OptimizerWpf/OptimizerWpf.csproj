@@ -41,7 +41,24 @@
          ενημερωμένα OptimizerWpf.dll/.exe - σιωπηλή αποτυχία ενημέρωσης. ΠΡΕΠΕΙ να ενημερώνεται σε
          ΚΑΘΕ έκδοση, μαζί με τα υπόλοιπα 3 σημεία (MainWindow.xaml/SplashWindow.xaml τίτλοι,
          installer/OptimizerWpf.iss's MyAppVersion) - βλ. HANDOFF.md/commit history για το μοτίβο. -->
-    <Version>6.9.6</Version>
+    <Version>6.9.7</Version>
+    <AssemblyVersion>6.9.7.0</AssemblyVersion>
+    <FileVersion>6.9.7.0</FileVersion>
+    <Authors>giorstergiopoulos-design</Authors>
+    <Company>giorstergiopoulos-design</Company>
+    <Product>GearWin - Complete PC Care</Product>
+    <Description>GearWin - Complete PC Care: Windows maintenance, updates, drivers and tweaks in one app.</Description>
+    <Copyright>Copyright (c) 2026 giorstergiopoulos-design</Copyright>
+    <RepositoryUrl>https://github.com/giorstergiopoulos-design/GearWin</RepositoryUrl>
+    <RepositoryType>git</RepositoryType>
+    <PackageLicenseExpression>MIT</PackageLicenseExpression>
+    <!-- 6.9.7: αναπαραγώγιμο build χωρίς προσωπικές διαδρομές (PathMap) και χωρίς PDB στα δημοσιευμένα αρχεία -->
+    <Deterministic>true</Deterministic>
+    <ContinuousIntegrationBuild>true</ContinuousIntegrationBuild>
+    <DeterministicSourcePaths>true</DeterministicSourcePaths>
+    <PathMap>$(MSBuildProjectDirectory)=/src</PathMap>
+    <SourceRevisionId>release</SourceRevisionId>
+    <IncludeSourceRevisionInInformationalVersion>false</IncludeSourceRevisionInInformationalVersion>
     <!-- ΝΕΟ - βελτίωση απόδοσης: ReadyToRun προ-μεταγλωττίζει τη native εικόνα κατά το publish αντί
          να αφήνει τα πάντα στο JIT κατά την πρώτη εκκίνηση - πιο γρήγορο cold start, χωρίς κανένα
          ρίσκο διαγραφής κώδικα (σε αντίθεση με το trimming, το οποίο ΔΕΝ ενεργοποιείται εδώ σκόπιμα -
@@ -50,6 +67,11 @@
          μετά το trim). Ενεργοποιείται ΜΟΝΟ σε publish με RuntimeIdentifier (π.χ. -r win-x64), όχι σε
          απλό dotnet build. -->
     <PublishReadyToRun>true</PublishReadyToRun>
+  </PropertyGroup>
+
+  <PropertyGroup Condition="'$(Configuration)' == 'Release'">
+    <DebugType>none</DebugType>
+    <DebugSymbols>false</DebugSymbols>
   </PropertyGroup>
 
   <ItemGroup>

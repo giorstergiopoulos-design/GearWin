@@ -6,6 +6,18 @@ available inside the app itself, via Help/Instructions → the "Version History"
 
 Format loosely follows [Keep a Changelog](https://keepachangelog.com/).
 
+## v6.9.7 — Repo and release hygiene
+
+- **No traces in release files**: deterministic build (`Deterministic`, `ContinuousIntegrationBuild`, `DeterministicSourcePaths`, `PathMap`), no PDB in Release/publish output; tracked documents and tests no longer contain personal paths or user names. New tests scan the build output and all tracked text files for personal paths/names/e-mail.
+- **Release information**: every GearWin executable/DLL carries Company, Product, Description, Copyright, Authors, repository URL and File/Assembly version (publisher "giorstergiopoulos-design"); the installer has the same publisher, URLs and version info. Test reads the version info.
+- **Inno Setup 7 required**: the installer script stops with an error on older compilers; `tools/ci-install-inno.ps1` installs Inno Setup 7.1.1 from the official release (github.com/jrsoftware/issrc) after checking its pinned SHA-256 (same file as winget `JRSoftware.InnoSetup.7`).
+- **No hidden PowerShell with `-ExecutionPolicy Bypass`** in the installer and the self-update: the installer's "start with Windows" task now runs `GearWin.exe --enable-tray-autostart` (headless, no UI) instead of `SetAutostart.ps1` (removed); the in-app update starts the downloaded installer directly (`/SILENT ... /RELAUNCH=1`, SHA-256 check unchanged) and the installer relaunches the program when it is done. (The app still uses PowerShell for Windows administration tasks, with `-EncodedCommand`.)
+- **Licence**: `LICENSE` is the standard MIT text (recognised by GitHub as MIT), copyright holder giorstergiopoulos-design; `PackageLicenseExpression` MIT; README explains it; installer licence texts (13 languages) and the in-app licence text updated.
+- **Removed `reference/`** (a full copy of the MIT-licensed upstream tool Windows Maintenance Tool, 44,000 lines). gitleaks had flagged `$clientSecret` in `reference/WMT-GUI.ps1`: it is the public GOG Galaxy client_id/client_secret pair that every third-party GOG client uses (Lutris, Heroic, comet embed the same client_id) - it belongs to GOG/upstream, NOT to this project, so there is nothing of ours to revoke. The file stays in git history (commit 1978e9e), so `.gitleaks.toml` allow-lists exactly that path. `reference/` is now in `.gitignore`.
+- Git identity for new commits: giorstergiopoulos-design (noreply address).
+- In-app version history and tests extended for 6.9.7 (14 languages).
+- NOT VERIFIED: the security-scan workflow was not re-run on this version (needs a push and a published release), Defender false-positive check on the new installer, the update-then-relaunch path on a real machine.
+
 ## v6.9.6 — Update manager: one action button at a time
 
 - **Fix:** after a scan both the gear "Scan" button and the "Update" (down arrow + dash) button were shown together. Now exactly one is visible: before any scan or with no results (also after an error or a cancel) only "Scan"; while scanning only the gear (in progress); once the result list is shown only "Update"; while updating only "Update" (in progress, disabled). One function (`DecideActionButtons`) decides, used by every state change.

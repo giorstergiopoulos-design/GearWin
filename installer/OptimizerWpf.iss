@@ -16,8 +16,12 @@
 ; ΔΙΟΡΘΩΣΗ - ρητό αίτημα χρήστη: μετονομασία σε "GearWin" (υπότιτλος "Complete PC Care") - βλ.
 ; OptimizerWpf.csproj για την πλήρη αιτιολόγηση/έλεγχο εμπορικού σήματος.
 #define MyAppName "GearWin - Complete PC Care"
-#define MyAppVersion "6.9.6"
-#define MyAppPublisher "GearWin"
+#if Ver < EncodeVer(7,0,0)
+  #error GearWin needs Inno Setup 7 or newer (an older compiler writes an older uninstaller that an upgrade keeps; see CHANGELOG 6.9.5)
+#endif
+#define MyAppVersion "6.9.7"
+#define MyAppPublisher "giorstergiopoulos-design"
+#define MyAppURL "https://github.com/giorstergiopoulos-design/GearWin"
 ; ΝΕΟ - ρητό αίτημα χρήστη: "το όνομα του exe να προσαρμοστεί στο όνομα της εφαρμογής" - πρέπει να
 ; ταιριάζει ΑΚΡΙΒΩΣ με το <AssemblyName> στο OptimizerWpf.csproj (το πραγματικό όνομα του .exe που
 ; παράγει το dotnet publish μέσα στο MyPublishDir παρακάτω).
@@ -31,6 +35,15 @@ AppName={#MyAppName}
 AppMutex=GearWin.SingleInstance
 AppVersion={#MyAppVersion}
 AppPublisher={#MyAppPublisher}
+AppPublisherURL={#MyAppURL}
+AppSupportURL={#MyAppURL}/issues
+AppUpdatesURL={#MyAppURL}/releases
+VersionInfoCompany={#MyAppPublisher}
+VersionInfoDescription={#MyAppName} Setup
+VersionInfoVersion={#MyAppVersion}.0
+VersionInfoProductName={#MyAppName}
+VersionInfoProductVersion={#MyAppVersion}
+VersionInfoCopyright=Copyright (c) 2026 giorstergiopoulos-design
 DefaultDirName={autopf}\{#MyAppName}
 DefaultGroupName={#MyAppName}
 UninstallDisplayIcon={app}\{#MyAppExeName}
@@ -106,7 +119,6 @@ Name: "startwithwindows"; Description: "{cm:StartWithWindows}"; GroupDescription
 [Files]
 Source: "{#MyPublishDir}\*"; DestDir: "{app}"; Flags: recursesubdirs createallsubdirs
 ; dontcopy: εξάγεται ΜΟΝΟ προσωρινά (δεν μπαίνει στο {app}) - βλ. InitializeWizard/[Run] παρακάτω.
-Source: "SetAutostart.ps1"; Flags: dontcopy
 
 [Icons]
 Name: "{group}\{#MyAppName}"; Filename: "{app}\{#MyAppExeName}"
@@ -118,7 +130,9 @@ Name: "{autodesktop}\{#MyAppName}"; Filename: "{app}\{#MyAppExeName}"; Tasks: de
 ; AppSettings.json ΠΡΙΝ την πρώτη εκκίνηση - η ίδια η εφαρμογή (SystemService.EnsureLaunchTaskAsync,
 ; τρέχει σε ΚΑΘΕ εκκίνηση) δημιουργεί τότε την πραγματική εργασία Task Scheduler μόνη της, ίδια
 ; δοκιμασμένη λογική με το χειροκίνητο toggle στις Ρυθμίσεις - καμία διπλή υλοποίηση εδώ.
-Filename: "powershell.exe"; Parameters: "-NoProfile -ExecutionPolicy Bypass -File ""{tmp}\SetAutostart.ps1"""; Tasks: startwithwindows; Flags: runhidden waituntilterminated
+Filename: "{app}\{#MyAppExeName}"; Parameters: "--enable-tray-autostart"; Tasks: startwithwindows; Flags: runhidden waituntilterminated
+; 6.9.7: αυτόματη ενημέρωση από την εφαρμογή (/RELAUNCH=1): ξανανοίγει το πρόγραμμα όταν τελειώσει η εγκατάσταση
+Filename: "{app}\{#MyAppExeName}"; Check: WantsRelaunch; Flags: nowait
 Filename: "{app}\{#MyAppExeName}"; Description: "{cm:LaunchProgram,{#StringChange(MyAppName, '&', '&&')}}"; Flags: nowait postinstall skipifsilent
 
 [UninstallRun]
@@ -244,7 +258,6 @@ begin
     WizardForm.WelcomeLabel2.Caption := FmtMessage(CustomMessage('UpdateDetected'), [sPrevVersion]);
   // ΝΕΟ - εξάγει το dontcopy ps1 σε {tmp} ΤΩΡΑ (όχι αργότερα) ώστε να υπάρχει ήδη εκεί όταν τρέξει
   // το αντίστοιχο [Run] βήμα στο τέλος της εγκατάστασης, ανεξάρτητα από το αν το task επιλεγεί.
-  ExtractTemporaryFile('SetAutostart.ps1');
 end;
 
 function InitializeUninstall(): Boolean;
@@ -256,6 +269,11 @@ begin
     ResetTweaksOnUninstall := (ExpandConstant('{param:RESETTWEAKS|0}') = '1')
   else
     ResetTweaksOnUninstall := (MsgBox(CustomMessage('ResetPromptText'), mbConfirmation, MB_YESNO) = IDYES);
+end;
+
+function WantsRelaunch(): Boolean;
+begin
+  Result := ExpandConstant('{param:RELAUNCH|0}') = '1';
 end;
 
 function ShouldResetTweaks(): Boolean;

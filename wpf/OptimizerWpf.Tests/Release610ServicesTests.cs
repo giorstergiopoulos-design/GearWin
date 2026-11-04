@@ -120,7 +120,7 @@ public class Release610ServicesTests
     [Fact]
     public void TaskXml_LogonTaskIsWellFormedElevatedAndBatteryFriendly()
     {
-        var xml = TaskSchedulerService.BuildLogonTaskXml(@"C:\Program Files\GearWin\GearWin.exe", "--tray", 15, @"PC\gstrj", "A & B <test>");
+        var xml = TaskSchedulerService.BuildLogonTaskXml(@"C:\Program Files\GearWin\GearWin.exe", "--tray", 15, @"PC\TestUser", "A & B <test>");
         var doc = System.Xml.Linq.XDocument.Parse(xml); // πετά αν δεν είναι well-formed (π.χ. & δεν έγινε escape)
         System.Xml.Linq.XNamespace ns = "http://schemas.microsoft.com/windows/2004/02/mit/task";
         Assert.Equal("HighestAvailable", doc.Descendants(ns + "RunLevel").Single().Value);

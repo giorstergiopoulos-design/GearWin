@@ -17,3 +17,4 @@ installer/Output/
 wpf/.lang_scratch/
 release/
 *_wpftmp.csproj
+reference/

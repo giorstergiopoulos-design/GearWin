@@ -1,0 +1,11 @@
+# gitleaks configuration (used automatically by the security-scan workflow).
+# Until 6.9.6 the repository contained reference/WMT-GUI.ps1, a copy of the MIT-licensed upstream tool
+# https://github.com/ios12checker/Windows-Maintenance-Tool. It embeds the GOG Galaxy client_id/client_secret pair that is public and shared by
+# every third-party GOG client (Lutris, Heroic Games Launcher, comet use the same client_id). It is not a secret of this project.
+# The file was removed in 6.9.7 but stays in the git history, so the history scan ignores exactly that path.
+[extend]
+useDefault = true
+
+[allowlist]
+description = "public GOG Galaxy client credentials inside the removed upstream reference script"
+paths = ['''reference/WMT-GUI\.ps1''']
