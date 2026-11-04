@@ -9,6 +9,7 @@ Format loosely follows [Keep a Changelog](https://keepachangelog.com/).
 ## v6.9.6 — Update manager: one action button at a time
 
 - **Fix:** after a scan both the gear "Scan" button and the "Update" (down arrow + dash) button were shown together. Now exactly one is visible: before any scan or with no results (also after an error or a cancel) only "Scan"; while scanning only the gear (in progress); once the result list is shown only "Update"; while updating only "Update" (in progress, disabled). One function (`DecideActionButtons`) decides, used by every state change.
+- **In-app version history and help**: Help > Version history now lists 6.7.0, 6.7.1, 6.8.0 and 6.9.0 - 6.9.6 (there is no 6.7.2 in this changelog), and Help has two new cards (Update manager, Performance levels), all in 14 languages. New test: every CHANGELOG version from 6.7.0 must exist in the in-app history in every language, be shown in the help window and not be an English leftover (from 6.9.7 on, a new CHANGELOG entry needs its `VerHist_vXYZ` texts).
 - Tests: the state table (6 cases) and the real window in all 14 languages (Arabic RTL included) through initial, scanning, results, updating, re-scan with old results, and empty results.
 
 ## v6.9.5 — Single-row tabs, silent uninstall no longer hangs

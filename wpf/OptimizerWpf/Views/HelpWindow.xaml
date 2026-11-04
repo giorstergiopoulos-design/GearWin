@@ -442,6 +442,12 @@
                         <TextBlock Text="{tr:Tr Help_SecondaryTitle}" Style="{StaticResource CardTitleStyle}" Margin="0,14,0,4"/>
                         <TextBlock Style="{StaticResource SubTextStyle}" TextWrapping="Wrap" Text="{tr:Tr Help_SecondaryDesc}"/>
 
+                        <TextBlock Text="{tr:Tr Help_UpdatesTitle}" Style="{StaticResource CardTitleStyle}" Margin="0,14,0,4"/>
+                        <TextBlock Style="{StaticResource SubTextStyle}" TextWrapping="Wrap" Text="{tr:Tr Help_UpdatesDesc}"/>
+
+                        <TextBlock Text="{tr:Tr Help_PerfTitle}" Style="{StaticResource CardTitleStyle}" Margin="0,14,0,4"/>
+                        <TextBlock Style="{StaticResource SubTextStyle}" TextWrapping="Wrap" Text="{tr:Tr Help_PerfDesc}"/>
+
                         <TextBlock Text="{tr:Tr Help_SafetyTitle}" Style="{StaticResource CardTitleStyle}" Margin="0,14,0,4"/>
                         <TextBlock Style="{StaticResource SubTextStyle}" TextWrapping="Wrap" Text="{tr:Tr Help_SafetyDesc}"/>
                     </StackPanel>
@@ -501,6 +507,36 @@
                                 <TextBlock Foreground="White" TextWrapping="Wrap" Opacity="0.95" Text="{tr:Tr VerHist_690Desc}"/>
                             </StackPanel>
                         </Border>
+
+                        <TextBlock Text="{tr:Tr VerHist_v696Title}" Style="{StaticResource CardTitleStyle}" Margin="0,0,0,4"/>
+                        <TextBlock Style="{StaticResource SubTextStyle}" TextWrapping="Wrap" Text="{tr:Tr VerHist_v696Desc}" Margin="0,0,0,14"/>
+
+                        <TextBlock Text="{tr:Tr VerHist_v695Title}" Style="{StaticResource CardTitleStyle}" Margin="0,0,0,4"/>
+                        <TextBlock Style="{StaticResource SubTextStyle}" TextWrapping="Wrap" Text="{tr:Tr VerHist_v695Desc}" Margin="0,0,0,14"/>
+
+                        <TextBlock Text="{tr:Tr VerHist_v694Title}" Style="{StaticResource CardTitleStyle}" Margin="0,0,0,4"/>
+                        <TextBlock Style="{StaticResource SubTextStyle}" TextWrapping="Wrap" Text="{tr:Tr VerHist_v694Desc}" Margin="0,0,0,14"/>
+
+                        <TextBlock Text="{tr:Tr VerHist_v693Title}" Style="{StaticResource CardTitleStyle}" Margin="0,0,0,4"/>
+                        <TextBlock Style="{StaticResource SubTextStyle}" TextWrapping="Wrap" Text="{tr:Tr VerHist_v693Desc}" Margin="0,0,0,14"/>
+
+                        <TextBlock Text="{tr:Tr VerHist_v692Title}" Style="{StaticResource CardTitleStyle}" Margin="0,0,0,4"/>
+                        <TextBlock Style="{StaticResource SubTextStyle}" TextWrapping="Wrap" Text="{tr:Tr VerHist_v692Desc}" Margin="0,0,0,14"/>
+
+                        <TextBlock Text="{tr:Tr VerHist_v691Title}" Style="{StaticResource CardTitleStyle}" Margin="0,0,0,4"/>
+                        <TextBlock Style="{StaticResource SubTextStyle}" TextWrapping="Wrap" Text="{tr:Tr VerHist_v691Desc}" Margin="0,0,0,14"/>
+
+                        <TextBlock Text="{tr:Tr VerHist_v690Title}" Style="{StaticResource CardTitleStyle}" Margin="0,0,0,4"/>
+                        <TextBlock Style="{StaticResource SubTextStyle}" TextWrapping="Wrap" Text="{tr:Tr VerHist_v690Desc}" Margin="0,0,0,14"/>
+
+                        <TextBlock Text="{tr:Tr VerHist_v680Title}" Style="{StaticResource CardTitleStyle}" Margin="0,0,0,4"/>
+                        <TextBlock Style="{StaticResource SubTextStyle}" TextWrapping="Wrap" Text="{tr:Tr VerHist_v680Desc}" Margin="0,0,0,14"/>
+
+                        <TextBlock Text="{tr:Tr VerHist_v671Title}" Style="{StaticResource CardTitleStyle}" Margin="0,0,0,4"/>
+                        <TextBlock Style="{StaticResource SubTextStyle}" TextWrapping="Wrap" Text="{tr:Tr VerHist_v671Desc}" Margin="0,0,0,14"/>
+
+                        <TextBlock Text="{tr:Tr VerHist_v670Title}" Style="{StaticResource CardTitleStyle}" Margin="0,0,0,4"/>
+                        <TextBlock Style="{StaticResource SubTextStyle}" TextWrapping="Wrap" Text="{tr:Tr VerHist_v670Desc}" Margin="0,0,0,14"/>
 
                         <TextBlock Text="{tr:Tr VerHist_660Title}" Style="{StaticResource CardTitleStyle}" Margin="0,0,0,4"/>
                         <TextBlock Style="{StaticResource SubTextStyle}" TextWrapping="Wrap" Text="{tr:Tr VerHist_660Desc}" Margin="0,0,0,14"/>
