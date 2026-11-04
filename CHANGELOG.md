@@ -6,6 +6,11 @@ available inside the app itself, via Help/Instructions → the "Version History"
 
 Format loosely follows [Keep a Changelog](https://keepachangelog.com/).
 
+## v6.9.6 — Update manager: one action button at a time
+
+- **Fix:** after a scan both the gear "Scan" button and the "Update" (down arrow + dash) button were shown together. Now exactly one is visible: before any scan or with no results (also after an error or a cancel) only "Scan"; while scanning only the gear (in progress); once the result list is shown only "Update"; while updating only "Update" (in progress, disabled). One function (`DecideActionButtons`) decides, used by every state change.
+- Tests: the state table (6 cases) and the real window in all 14 languages (Arabic RTL included) through initial, scanning, results, updating, re-scan with old results, and empty results.
+
 ## v6.9.5 — Single-row tabs, silent uninstall no longer hangs
 
 - **Main tabs stay on ONE row** (the two-row wrap of 6.9.3 is gone) and every tab keeps its label: when the strip is too narrow the padding, gaps and font shrink step by step (18/13 px down to 0/9 px); horizontal scrolling remains only as a last resort. Verified with the clipping probe in all 14 languages at the minimum window width (946 px).

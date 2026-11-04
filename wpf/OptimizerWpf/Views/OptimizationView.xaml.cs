@@ -70,7 +70,7 @@ namespace OptimizerWpf.Views
             var vendorFilter = ComboVendor.SelectedIndex > 0 ? ComboVendor.SelectedItem as string : null;
             foreach (var o in BuildUnified(_updates, _windowsUpdates, _driverUpdates, _updateFilter, ChkShowPreview.IsChecked == true, vendorFilter)) _unified.Add(o);
             var total = _updates.Count + _windowsUpdates.Count + _driverUpdates.Count;
-            BtnScanWinget.Visibility = total > 0 ? Visibility.Visible : Visibility.Collapsed;
+            ApplyGearUi();
             ChkSelectAll.Visibility = total > 0 ? Visibility.Visible : Visibility.Collapsed;
             ChipAll.Content = $"{LanguageService.T("Opt_FilterAll")} ({_updates.Count + _windowsUpdates.Count + _driverUpdates.Count})";
             ChipApps.Content = $"{LanguageService.T("Opt_FilterApps")} ({_updates.Count})";
@@ -115,9 +115,11 @@ namespace OptimizerWpf.Views
             InitializeComponent();
             // 6.9.1: ενιαία λίστα (εφαρμογές + Windows + οδηγοί) με φίλτρα· ανακατασκευάζεται όταν αλλάζει οποιαδήποτε από τις τρεις πηγές
             ListWingetUpdates.ItemsSource = _unified;
-            _updates.CollectionChanged += (_, _) => RebuildUnified();
-            _windowsUpdates.CollectionChanged += (_, _) => RebuildUnified();
-            _driverUpdates.CollectionChanged += (_, _) => RebuildUnified();
+            // 6.9.6: οι static συλλογές αλλάζουν από όποιο νήμα· κάθε View ξαναχτίζει τη λίστα του στο ΔΙΚΟ ΤΟΥ dispatcher (παλιά View άλλου νήματος δεν σκάνε)
+            void OnResultsChanged() { if (Dispatcher.CheckAccess()) RebuildUnified(); else Dispatcher.BeginInvoke(new Action(RebuildUnified)); }
+            _updates.CollectionChanged += (_, _) => OnResultsChanged();
+            _windowsUpdates.CollectionChanged += (_, _) => OnResultsChanged();
+            _driverUpdates.CollectionChanged += (_, _) => OnResultsChanged();
             RebuildUnified();
             ListDriverUpdates.ItemsSource = _driverUpdates;
             BtnInstallSdi.Visibility = SdioService.FindSdio() == null ? Visibility.Visible : Visibility.Collapsed;
@@ -350,7 +352,6 @@ namespace OptimizerWpf.Views
             var busy = AppScan.Busy;
             ProgressWinget.Visibility = busy ? Visibility.Visible : Visibility.Collapsed;
             BtnScanWinget.SetScanning(busy && AppScan.Installing, AppScan.Installing && busy ? "Opt_InstallingCaps" : null);
-            BtnScanWinget.IsEnabled = !busy;
             ApplyGearUi();
             BtnUpgradeSelected.IsEnabled = !busy;
             if (AppScan.Status != null) TxtWingetStatus.Text = AppScan.Status;
@@ -360,8 +361,23 @@ namespace OptimizerWpf.Views
         private void ApplyGearUi()
         {
             var scanning = DriverScan.Busy || (AppScan.Busy && !AppScan.Installing);
+            var st = DecideActionButtons(_updates.Count + _windowsUpdates.Count + _driverUpdates.Count, scanning, AppScan.Busy && AppScan.Installing);
             BtnScanDrivers.SetScanning(scanning);
-            BtnScanDrivers.IsEnabled = !DriverScan.Busy && !AppScan.Busy;
+            BtnScanDrivers.Visibility = st.ScanVisible ? Visibility.Visible : Visibility.Collapsed;
+            BtnScanDrivers.IsEnabled = st.ScanEnabled;
+            BtnScanWinget.Visibility = st.UpdateVisible ? Visibility.Visible : Visibility.Collapsed;
+            BtnScanWinget.IsEnabled = st.UpdateEnabled;
+        }
+
+        // 6.9.6: ΕΝΑ κουμπί τη φορά - πριν/χωρίς αποτελέσματα μόνο «Σάρωση» (γρανάζι)· με λίστα αποτελεσμάτων μόνο «Ενημέρωση»· κατά τη σάρωση μόνο το
+        // γρανάζι (σε πρόοδο)· κατά την ενημέρωση μόνο η «Ενημέρωση» (σε πρόοδο, ανενεργή). Καθαρή συνάρτηση, δοκιμάζεται σε κάθε κατάσταση.
+        internal readonly record struct ActionButtonState(bool ScanVisible, bool ScanEnabled, bool UpdateVisible, bool UpdateEnabled);
+
+        internal static ActionButtonState DecideActionButtons(int resultCount, bool scanning, bool installing)
+        {
+            if (scanning) return new(true, false, false, false);
+            if (installing) return new(false, false, true, false);
+            return resultCount > 0 ? new(false, false, true, true) : new(true, true, false, false);
         }
 
         private void OnDriverScanChanged() { if (Dispatcher.CheckAccess()) ApplyDriverScanUi(); else Dispatcher.BeginInvoke(new Action(ApplyDriverScanUi)); }
