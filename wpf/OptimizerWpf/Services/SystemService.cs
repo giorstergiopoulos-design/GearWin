@@ -157,8 +157,17 @@ namespace OptimizerWpf.Services
         public static Dictionary<string, TimeSpan?> GetStartupDelayEstimates(IReadOnlyList<StartupItem> items)
         {
             var result = new Dictionary<string, TimeSpan?>();
-            DateTime? explorerStart;
-            try { explorerStart = Process.GetProcessesByName("explorer").FirstOrDefault()?.StartTime; }
+            DateTime? explorerStart = null;
+            // 6.9.8: ΕΝΑ στιγμιότυπο διεργασιών αντί για GetProcessesByName ανά στοιχείο εκκίνησης· τα Process αποδεσμεύονται
+            var snapshot = new Dictionary<string, Process>(StringComparer.OrdinalIgnoreCase);
+            try
+            {
+                foreach (var p in Process.GetProcesses())
+                {
+                    if (!snapshot.TryAdd(p.ProcessName, p)) p.Dispose();
+                }
+                if (snapshot.TryGetValue("explorer", out var ex)) explorerStart = ex.StartTime;
+            }
             catch { explorerStart = null; }
 
             foreach (var item in items)
@@ -171,13 +180,13 @@ namespace OptimizerWpf.Services
 
                 try
                 {
-                    var proc = Process.GetProcessesByName(exeName).FirstOrDefault();
-                    if (proc == null) continue;
+                    if (!snapshot.TryGetValue(exeName, out var proc)) continue;
                     var delta = proc.StartTime - explorerStart.Value;
                     if (delta > TimeSpan.Zero && delta < TimeSpan.FromMinutes(5)) result[item.Name] = delta;
                 }
                 catch { /* access-denied σε process ιδιοκτησίας άλλου χρήστη, ή η διεργασία μόλις τερμάτισε */ }
             }
+            foreach (var p in snapshot.Values) p.Dispose();
             return result;
         }
 
@@ -329,10 +338,15 @@ namespace OptimizerWpf.Services
             var results = new List<(string, double, DateTime)>();
             foreach (var group in byLength)
             {
-                var byHash = group.GroupBy(f => ComputeHash(f.FullName)).Where(g => g.Key != null && g.Count() > 1);
-                foreach (var hashGroup in byHash)
+                // 6.9.8: πρώτα φθηνός έλεγχος (hash των πρώτων 64 KB), πλήρες SHA-256 μόνο για όσα ταιριάζουν
+                var byPartial = group.GroupBy(f => ComputeHash(f.FullName, 64 * 1024)).Where(g => g.Key != null && g.Count() > 1);
+                foreach (var partialGroup in byPartial)
                 {
-                    foreach (var f in hashGroup) results.Add((f.FullName, Math.Round(f.Length / 1024.0 / 1024.0, 2), f.LastWriteTime));
+                    var byHash = partialGroup.GroupBy(f => ComputeHash(f.FullName)).Where(g => g.Key != null && g.Count() > 1);
+                    foreach (var hashGroup in byHash)
+                    {
+                        foreach (var f in hashGroup) results.Add((f.FullName, Math.Round(f.Length / 1024.0 / 1024.0, 2), f.LastWriteTime));
+                    }
                 }
             }
             return (IReadOnlyList<(string, double, DateTime)>)results;
@@ -340,13 +354,18 @@ namespace OptimizerWpf.Services
 
         private static Task<IReadOnlyList<(string Path, double SizeMb, DateTime LastWriteTime)>> FindLargeFilesInAsync(IEnumerable<string> roots) => Task.Run(() =>
         {
-            var results = roots.SelectMany(SafeEnumerateFiles)
-                .Select(f => { try { return new FileInfo(f); } catch { return null; } })
-                .Where(fi => fi != null)
-                .OrderByDescending(fi => fi!.Length)
-                .Take(50)
-                .Select(fi => (fi!.FullName, Math.Round(fi.Length / 1024.0 / 1024.0, 2), fi.LastWriteTime))
-                .ToList();
+            // 6.9.8: streaming - κρατά μόνο τα 50 μεγαλύτερα (όχι λίστα όλων των διαδρομών/FileInfo + πλήρης ταξινόμηση)
+            var top = new List<FileInfo>(51);
+            foreach (var f in roots.SelectMany(SafeEnumerateFiles))
+            {
+                FileInfo fi; long len;
+                try { fi = new FileInfo(f); len = fi.Length; } catch { continue; }
+                if (top.Count == 50 && len <= top[^1].Length) continue;
+                var idx = top.FindIndex(t => t.Length < len);
+                top.Insert(idx < 0 ? top.Count : idx, fi);
+                if (top.Count > 50) top.RemoveAt(top.Count - 1);
+            }
+            var results = top.Select(fi => (fi.FullName, Math.Round(fi.Length / 1024.0 / 1024.0, 2), fi.LastWriteTime)).ToList();
             return (IReadOnlyList<(string, double, DateTime)>)results;
         });
 
@@ -401,12 +420,18 @@ namespace OptimizerWpf.Services
         public static Task<IReadOnlyList<(string Path, double SizeMb, DateTime LastWriteTime)>> FindDuplicatesInFolderAsync(string root) => FindDuplicatesInAsync(new[] { root });
         public static Task<IReadOnlyList<(string Path, double SizeMb, DateTime LastWriteTime)>> FindLargeFilesInFolderAsync(string root) => FindLargeFilesInAsync(new[] { root });
 
-        private static string? ComputeHash(string path)
+        private static string? ComputeHash(string path, int maxBytes = 0)
         {
             try
             {
                 using var stream = File.OpenRead(path);
                 using var sha = System.Security.Cryptography.SHA256.Create();
+                if (maxBytes > 0)
+                {
+                    var buf = new byte[maxBytes];
+                    var n = stream.Read(buf, 0, buf.Length);
+                    return Convert.ToBase64String(sha.ComputeHash(buf, 0, n));
+                }
                 return Convert.ToBase64String(sha.ComputeHash(stream));
             }
             catch { return null; }
@@ -423,20 +448,19 @@ namespace OptimizerWpf.Services
         // αυτό, ώστε ένας απρόσβατος υποφάκελος να παραλείπεται αντί να ρίχνει όλη τη σάρωση.
         private static IEnumerable<string> SafeEnumerateFiles(string root)
         {
-            var results = new List<string>();
-            SafeEnumerateFilesInto(root, results);
-            return results;
-        }
-
-        private static void SafeEnumerateFilesInto(string dir, List<string> results)
-        {
-            string[] files;
-            try { files = Directory.GetFiles(dir); } catch { return; }
-            results.AddRange(files);
-
-            string[] subdirs;
-            try { subdirs = Directory.GetDirectories(dir); } catch { return; }
-            foreach (var sub in subdirs) SafeEnumerateFilesInto(sub, results);
+            // 6.9.8: τεμπέλικη απαρίθμηση με στοίβα φακέλων (δεν κρατά λίστα όλων των διαδρομών στη μνήμη)· ίδια προστασία ανά φάκελο
+            var pending = new Stack<string>();
+            pending.Push(root);
+            while (pending.Count > 0)
+            {
+                var dir = pending.Pop();
+                string[] files;
+                try { files = Directory.GetFiles(dir); } catch { continue; }
+                foreach (var f in files) yield return f;
+                string[] subdirs;
+                try { subdirs = Directory.GetDirectories(dir); } catch { continue; }
+                foreach (var sub in subdirs) pending.Push(sub);
+            }
         }
 
         // Κάδος Ανακύκλωσης, ΠΟΤΕ μόνιμη διαγραφή.
@@ -541,17 +565,20 @@ namespace OptimizerWpf.Services
         public static Task<IReadOnlyList<ServiceRow>> LoadServicesAsync() => Task.Run(() =>
         {
             var rows = new List<ServiceRow>();
-            foreach (var (name, description) in SafeServicesToOptimize)
+            // 6.9.8: ΕΝΑ WMI query για όλες τις υπηρεσίες αντί για ένα ανά υπηρεσία
+            try
             {
-                try
-                {
-                    using var searcher = new ManagementObjectSearcher($"SELECT DisplayName, StartMode FROM Win32_Service WHERE Name='{name}'");
-                    var svc = searcher.Get().Cast<ManagementBaseObject>().FirstOrDefault();
-                    if (svc == null) continue;
-                    rows.Add(new ServiceRow(name, svc["DisplayName"]?.ToString() ?? name, description, svc["StartMode"]?.ToString() ?? ""));
-                }
-                catch { }
+                var byName = new Dictionary<string, (string Display, string Mode)>(StringComparer.OrdinalIgnoreCase);
+                using (var searcher = new ManagementObjectSearcher("SELECT Name, DisplayName, StartMode FROM Win32_Service"))
+                using (var found = searcher.Get())
+                    foreach (ManagementBaseObject svc in found)
+                    {
+                        using (svc) { var n = svc["Name"]?.ToString(); if (n != null) byName[n] = (svc["DisplayName"]?.ToString() ?? n, svc["StartMode"]?.ToString() ?? ""); }
+                    }
+                foreach (var (name, description) in SafeServicesToOptimize)
+                    if (byName.TryGetValue(name, out var v)) rows.Add(new ServiceRow(name, v.Display, description, v.Mode));
             }
+            catch { }
             return (IReadOnlyList<ServiceRow>)rows;
         });
 
@@ -599,14 +626,16 @@ namespace OptimizerWpf.Services
                 var drive = new DriveInfo(driveLetter.TrimEnd('\\') + "\\");
                 if (drive.AvailableFreeSpace < 1024L * 1024 * 1024) return new BenchmarkResult(0, 0, LanguageService.T("SysSvc_InsufficientSpace"));
 
+                // 6.9.8: ίδιος όγκος δεδομένων (256 MiB) αλλά γραμμένος σε κομμάτια των 4 MiB από ΕΝΑ επαναχρησιμοποιούμενο buffer (όχι δέσμευση 256 MiB στη RAM)
                 const int size = 256 * 1024 * 1024;
-                var buffer = new byte[size];
+                const int chunk = 4 * 1024 * 1024;
+                var buffer = new byte[chunk];
                 new Random().NextBytes(buffer);
 
                 var sw = Stopwatch.StartNew();
-                using (var fs = new FileStream(testFile, FileMode.Create, FileAccess.Write, FileShare.None, 4 * 1024 * 1024, FileOptions.WriteThrough))
+                using (var fs = new FileStream(testFile, FileMode.Create, FileAccess.Write, FileShare.None, chunk, FileOptions.WriteThrough))
                 {
-                    fs.Write(buffer, 0, buffer.Length);
+                    for (var written = 0; written < size; written += chunk) fs.Write(buffer, 0, chunk);
                     fs.Flush(true);
                 }
                 sw.Stop();

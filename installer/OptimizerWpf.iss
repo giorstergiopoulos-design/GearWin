@@ -19,7 +19,7 @@
 #if Ver < EncodeVer(7,0,0)
   #error GearWin needs Inno Setup 7 or newer (an older compiler writes an older uninstaller that an upgrade keeps; see CHANGELOG 6.9.5)
 #endif
-#define MyAppVersion "6.9.7"
+#define MyAppVersion "6.9.8"
 #define MyAppPublisher "giorstergiopoulos-design"
 #define MyAppURL "https://github.com/giorstergiopoulos-design/GearWin"
 ; ΝΕΟ - ρητό αίτημα χρήστη: "το όνομα του exe να προσαρμοστεί στο όνομα της εφαρμογής" - πρέπει να

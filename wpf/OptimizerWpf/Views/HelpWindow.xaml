@@ -508,6 +508,9 @@
                             </StackPanel>
                         </Border>
 
+                        <TextBlock Text="{tr:Tr VerHist_v698Title}" Style="{StaticResource CardTitleStyle}" Margin="0,0,0,4"/>
+                        <TextBlock Style="{StaticResource SubTextStyle}" TextWrapping="Wrap" Text="{tr:Tr VerHist_v698Desc}" Margin="0,0,0,14"/>
+
                         <TextBlock Text="{tr:Tr VerHist_v697Title}" Style="{StaticResource CardTitleStyle}" Margin="0,0,0,4"/>
                         <TextBlock Style="{StaticResource SubTextStyle}" TextWrapping="Wrap" Text="{tr:Tr VerHist_v697Desc}" Margin="0,0,0,14"/>
 

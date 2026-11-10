@@ -31,7 +31,7 @@ namespace OptimizerWpf.Services
             // το firefox.com (ίδια εταιρεία, επίσημο marketing site του browser) το έχει αξιόπιστα.
             ["Mozilla.Firefox"] = "firefox.com",
             ["Opera.Opera"] = "opera.com",
-            ["Microsoft.Edge"] = "microsoft.com",
+            ["Microsoft.Edge"] = "microsoftedge.microsoft.com",   // 6.9.8: microsoft.com gab für Edge/Teams das generische Microsoft-Logo
             ["7zip.7zip"] = "7-zip.org",
             ["RARLab.WinRAR"] = "win-rar.com",
             ["VideoLAN.VLC"] = "videolan.org",
@@ -41,7 +41,7 @@ namespace OptimizerWpf.Services
             ["CodecGuide.K-LiteCodecPack.Mega"] = "codecguide.com",
             ["Zoom.Zoom"] = "zoom.us",
             ["Discord.Discord"] = "discord.com",
-            ["Microsoft.Teams"] = "microsoft.com",
+            ["Microsoft.Teams"] = "teams.microsoft.com",
             // ΔΙΟΡΘΩΣΗ (χρήστης ανέφερε: "του viber θέλει διόρθωση") - το "Viber.Viber" ΔΕΝ υπάρχει
             // καν στο winget repository (επιβεβαιώθηκε με "winget search Viber") - το σωστό winget ID
             // είναι "Rakuten.Viber" (η Rakuten είναι η μητρική εταιρεία του Viber) - βλ. και το ίδιο
@@ -64,7 +64,7 @@ namespace OptimizerWpf.Services
             ["TheDocumentFoundation.LibreOffice"] = "libreoffice.org",
             // Browsers (Health tab - Καθαρισμός Cache Περιηγητών)
             ["Chrome"] = "google.com",
-            ["Edge"] = "microsoft.com",
+            ["Edge"] = "microsoftedge.microsoft.com",
             ["Brave"] = "brave.com",
             ["Opera"] = "opera.com",
             ["Firefox"] = "firefox.com",

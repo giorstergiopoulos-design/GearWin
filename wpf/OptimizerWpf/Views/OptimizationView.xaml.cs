@@ -131,7 +131,8 @@ namespace OptimizerWpf.Views
             ApplyAppScanUi();
             ApplyDriverScanUi();
             Loaded += (_, _) => { AppScan.Changed += OnAppScanChanged; DriverScan.Changed += OnDriverScanChanged; ApplyAppScanUi(); ApplyDriverScanUi(); };
-            Unloaded += (_, _) => { AppScan.Changed -= OnAppScanChanged; DriverScan.Changed -= OnDriverScanChanged; };
+            Unloaded += (_, _) => { AppScan.Changed -= OnAppScanChanged; DriverScan.Changed -= OnDriverScanChanged; s_rescanPending = false; };
+            IsVisibleChanged += (_, e) => { if (e.NewValue is false && s_rescanPending) { s_rescanPending = false; ApplyGearUi(); } };
             if (s_driverStoreStatusCache != null) TxtDriverStoreStatus.Text = s_driverStoreStatusCache;
 
             ToggleScheduledMaintenance.IsChecked = AppSettingsService.Current.ScheduledMaintenanceEnabled;
@@ -361,7 +362,10 @@ namespace OptimizerWpf.Views
         private void ApplyGearUi()
         {
             var scanning = DriverScan.Busy || (AppScan.Busy && !AppScan.Installing);
-            var st = DecideActionButtons(_updates.Count + _windowsUpdates.Count + _driverUpdates.Count, scanning, AppScan.Busy && AppScan.Installing);
+            if (scanning) s_rescanPending = false;
+            var st = DecideActionButtons(_updates.Count + _windowsUpdates.Count + _driverUpdates.Count, scanning, AppScan.Busy && AppScan.Installing, s_rescanPending);
+            _gearTip ??= BtnScanDrivers.ToolTip;
+            BtnScanDrivers.ToolTip = s_rescanPending && !scanning ? LanguageService.T("Opt_Rescan") : _gearTip;
             BtnScanDrivers.SetScanning(scanning);
             BtnScanDrivers.Visibility = st.ScanVisible ? Visibility.Visible : Visibility.Collapsed;
             BtnScanDrivers.IsEnabled = st.ScanEnabled;
@@ -373,12 +377,17 @@ namespace OptimizerWpf.Views
         // γρανάζι (σε πρόοδο)· κατά την ενημέρωση μόνο η «Ενημέρωση» (σε πρόοδο, ανενεργή). Καθαρή συνάρτηση, δοκιμάζεται σε κάθε κατάσταση.
         internal readonly record struct ActionButtonState(bool ScanVisible, bool ScanEnabled, bool UpdateVisible, bool UpdateEnabled);
 
-        internal static ActionButtonState DecideActionButtons(int resultCount, bool scanning, bool installing)
+        // 6.9.8: μετά το τέλος μιας ενημέρωσης (rescan=true) εμφανίζεται το γρανάζι ως «Επανασάρωση» όσο ο χρήστης μένει στην καρτέλα· αλλαγή καρτέλας => επιστρέφει η κανονική κατάσταση
+        internal static ActionButtonState DecideActionButtons(int resultCount, bool scanning, bool installing, bool rescan = false)
         {
             if (scanning) return new(true, false, false, false);
             if (installing) return new(false, false, true, false);
+            if (rescan) return new(true, true, false, false);
             return resultCount > 0 ? new(false, false, true, true) : new(true, true, false, false);
         }
+
+        private static bool s_rescanPending;
+        private object? _gearTip;
 
         private void OnDriverScanChanged() { if (Dispatcher.CheckAccess()) ApplyDriverScanUi(); else Dispatcher.BeginInvoke(new Action(ApplyDriverScanUi)); }
 
@@ -496,7 +505,13 @@ namespace OptimizerWpf.Views
             return (apps.Where(u => !ignored.Contains(IgnoreKey(u))).ToList(), windows, apps.Where(u => ignored.Contains(IgnoreKey(u))).ToList());
         }
 
-        private static void RemoveUpdateRow(WingetUpdateRow row) { if (!_updates.Remove(row)) _windowsUpdates.Remove(row); }
+        private static void RemoveUpdateRow(WingetUpdateRow row)
+        {
+            if (!_updates.Remove(row)) _windowsUpdates.Remove(row);
+            // 6.9.8: τα πεδία ενημερώσεων της Αρχικής ενημερώνονται και μετά από εγκατάσταση, όχι μόνο μετά από σάρωση
+            UpdatesHubService.ReportAppScan(_updates.Count);
+            UpdatesHubService.ReportWindowsUpdateScan(_windowsUpdates.Count);
+        }
 
         /// <summary>Αντικαθιστά τη λίστα ενημερώσεων με τα νέα αποτελέσματα, χωρίς διπλότυπα (κλειδί: πηγή + id, χωρίς διάκριση πεζών-κεφαλαίων).</summary>
         internal static void ReplaceUpdates(IEnumerable<WingetUpdate> results)
@@ -555,16 +570,29 @@ namespace OptimizerWpf.Views
             var selected = _updates.Concat(_windowsUpdates).Where(u => u.IsSelected).ToList();
             var selectedDrivers = _driverUpdates.Where(d => d.IsSelected && d.CanSelect).ToList();
             if (selected.Count == 0 && selectedDrivers.Count == 0) return;
-            if (selected.Count == 0) { await UpdateSelectedDriversAsync(selectedDrivers); return; }
             var selWindows = selected.Count(r => IsWindowsSource(r.Update));
-            if (ThemedMessageBox.Show(string.Format(LanguageService.T("Opt_UpdateAllConfirm"), selected.Count - selWindows, selWindows), LanguageService.T("Opt_UpgradeSelected"),
-                    MessageBoxButton.YesNo, MessageBoxImage.Question) != MessageBoxResult.Yes) return;
+            if (selected.Count > 0 && ThemedMessageBox.Show(string.Format(LanguageService.T("Opt_UpdateAllConfirm"), selected.Count - selWindows, selWindows), LanguageService.T("Opt_UpgradeSelected"),
+                    MessageBoxButton.YesNo, MessageBoxImage.Question) != MessageBoxResult.Yes) selected.Clear();
+            // 6.9.8: όλες οι επιβεβαιώσεις ΠΡΙΝ ξεκινήσει οτιδήποτε και ΕΝΑ τελικό pop-up με τα πλήθη ανά κατηγορία (εφαρμογές / Windows / οδηγοί)
+            if (selectedDrivers.Count > 0 && ThemedMessageBox.Show(string.Format(LanguageService.T("Opt_DriverSelectedConfirm"), selectedDrivers.Count), LanguageService.T("Opt_FilterDrivers"),
+                    MessageBoxButton.YesNo, MessageBoxImage.Warning) != MessageBoxResult.Yes) selectedDrivers.Clear();
+            if (selected.Count == 0 && selectedDrivers.Count == 0) return;
+            selWindows = selected.Count(r => IsWindowsSource(r.Update));
+            if (selected.Count == 0)
+            {
+                var (dOk0, dFail0) = await UpdateSelectedDriversAsync(selectedDrivers);
+                FinishUpdateRun(new List<string>(), new List<string>(), new List<string>(), new List<string>(), dOk0, dFail0, new List<string>(), false);
+                return;
+            }
             if (selWindows > 0) await RestoreGuardService.EnsureRecentAsync();
             if (!AppScan.TryBegin(installing: true)) return;
 
             SetBusy(true, installing: true);
             var succeeded = new List<string>();
             var failed = new List<string>();
+            var appOk = new List<string>(); var appFail = new List<string>(); var winOk = new List<string>(); var winFail = new List<string>();
+            void Ok(WingetUpdateRow r, string n) { succeeded.Add(n); (IsWindowsSource(r.Update) ? winOk : appOk).Add(n); }
+            void Fail(WingetUpdateRow r, string n) { failed.Add(n); (IsWindowsSource(r.Update) ? winFail : appFail).Add(n); }
             var openedInStore = new List<string>();
             var triggeredStoreOnce = false;
             WingetService.RestartRequiredAfterUpdates = false;
@@ -596,11 +624,11 @@ namespace OptimizerWpf.Views
                     {
                         case StoreUpdateOutcome.Updated:
                         case StoreUpdateOutcome.AlreadyCurrent:
-                            succeeded.Add(row.Update.Name); RemoveUpdateRow(row); break;
+                            Ok(row, row.Update.Name); RemoveUpdateRow(row); break;
                         case StoreUpdateOutcome.TimedOut:
                             openedInStore.Add(row.Update.Name); break;
                         default:
-                            failed.Add(row.Update.Name); break;
+                            Fail(row, row.Update.Name); break;
                     }
                     continue;
                 }
@@ -608,8 +636,8 @@ namespace OptimizerWpf.Views
                 bool ok; string? reason = null;
                 try { (ok, reason) = await WingetService.UpgradeDetailedAsync(row.Update.Id, row.Update.Source); }
                 catch { ok = false; } // ένα προβληματικό πακέτο δεν πρέπει να σταματά τα υπόλοιπα
-                if (ok) { succeeded.Add(row.Update.Name); RemoveUpdateRow(row); }
-                else { failed.Add(reason == null ? row.Update.Name : $"{row.Update.Name} [{reason}]"); }
+                if (ok) { Ok(row, row.Update.Name); RemoveUpdateRow(row); }
+                else { Fail(row, reason == null ? row.Update.Name : $"{row.Update.Name} [{reason}]"); }
             }
             }
             finally { progressScope.End(LanguageService.T("Ready")); SetBusy(false); AppScan.End(); }
@@ -618,30 +646,50 @@ namespace OptimizerWpf.Views
             if (triggeredStoreOnce && openedInStore.Count == 0 && failed.Count == 0)
                 await Task.Run(StoreGuiUpdateService.CloseStoreWindow);
 
-            var summary = failed.Count == 0
-                ? $"{LanguageService.T("Opt_UpgradeAllSucceededPrefix")}{succeeded.Count}{LanguageService.T("Opt_UpgradeAllSucceededSuffix")}"
-                : $"{LanguageService.T("Opt_UpgradePartialPrefix")}{succeeded.Count}{LanguageService.T("Opt_UpgradePartialMid")}{failed.Count}{LanguageService.T("Opt_UpgradePartialSuffix")}{string.Join(", ", failed)}).";
-            if (openedInStore.Count > 0)
-                summary += $" {openedInStore.Count}{LanguageService.T("Opt_UpgradeOpenedInStoreSuffix")}";
-            if (WingetService.RestartRequiredAfterUpdates)
-                summary += " " + LanguageService.T("Opt_RestartRequiredAfterUpdates");
-            AppScan.SetStatus(summary);
-            StatusService.SetIdle(summary);   // 6.9.1: η γραμμή κατάστασης δείχνει το αποτέλεσμα
-            ThemedMessageBox.Show(summary, LanguageService.T("Opt_UpgradeAppsTitle"), MessageBoxButton.OK,
-                failed.Count == 0 ? MessageBoxImage.Information : MessageBoxImage.Warning);
-            if (selectedDrivers.Count > 0) await UpdateSelectedDriversAsync(selectedDrivers);
+            var (dOk, dFail) = selectedDrivers.Count > 0 ? await UpdateSelectedDriversAsync(selectedDrivers) : (new List<string>(), new List<string>());
+            FinishUpdateRun(appOk, appFail, winOk, winFail, dOk, dFail, openedInStore, WingetService.RestartRequiredAfterUpdates);
+        }
+
+        // 6.9.8: ΕΝΑ τελικό pop-up για όλη την εκτέλεση: ανά κατηγορία «ΟΚ / σύνολο» και οι αποτυχίες· μετά το γρανάζι γίνεται «Επανασάρωση»
+        internal static string BuildUpdateSummary(IReadOnlyList<string> appOk, IReadOnlyList<string> appFail, IReadOnlyList<string> winOk, IReadOnlyList<string> winFail,
+            IReadOnlyList<string> drvOk, IReadOnlyList<string> drvFail, int openedInStore, bool restartRequired)
+        {
+            var lines = new List<string>();
+            void Line(string labelKey, IReadOnlyList<string> ok, IReadOnlyList<string> fail)
+            {
+                if (ok.Count + fail.Count == 0) return;
+                var l = $"{LanguageService.T(labelKey)}: {ok.Count} / {ok.Count + fail.Count}";
+                if (fail.Count > 0) l += $" - {LanguageService.T("Opt_UpdateSummaryFailed")}: {string.Join(", ", fail)}";
+                lines.Add(l);
+            }
+            Line("Opt_FilterApps", appOk, appFail);
+            Line("Opt_FilterWindows", winOk, winFail);
+            Line("Opt_FilterDrivers", drvOk, drvFail);
+            if (openedInStore > 0) lines.Add($"{openedInStore}{LanguageService.T("Opt_UpgradeOpenedInStoreSuffix")}");
+            if (restartRequired) lines.Add(LanguageService.T("Opt_RestartRequiredAfterUpdates"));
+            return string.Join(Environment.NewLine, lines);
+        }
+
+        private void FinishUpdateRun(List<string> appOk, List<string> appFail, List<string> winOk, List<string> winFail, List<string> drvOk, List<string> drvFail, List<string> openedInStore, bool restartRequired)
+        {
+            var summary = BuildUpdateSummary(appOk, appFail, winOk, winFail, drvOk, drvFail, openedInStore.Count, restartRequired);
+            var anyFail = appFail.Count + winFail.Count + drvFail.Count > 0;
+            AppScan.SetStatus(summary.Replace(Environment.NewLine, " | "));
+            StatusService.SetIdle(summary.Replace(Environment.NewLine, " | "));   // 6.9.1: η γραμμή κατάστασης δείχνει το αποτέλεσμα
+            s_rescanPending = true;
+            ApplyGearUi();
+            ThemedMessageBox.Show(summary, LanguageService.T("Opt_UpgradeAppsTitle"), MessageBoxButton.OK, anyFail ? MessageBoxImage.Warning : MessageBoxImage.Information);
         }
 
         // 6.9.1: «Ενημέρωση επιλεγμένων» και για οδηγούς: μία επιβεβαίωση, σημείο επαναφοράς + αντίγραφο οδηγών, μετά σειριακά με πρόοδο «Οδηγοί i/n».
-        private async Task UpdateSelectedDriversAsync(List<UnifiedDriverRow> rows)
+        private async Task<(List<string> Ok, List<string> Failed)> UpdateSelectedDriversAsync(List<UnifiedDriverRow> rows)
         {
-            if (ThemedMessageBox.Show(string.Format(LanguageService.T("Opt_DriverSelectedConfirm"), rows.Count), LanguageService.T("Opt_FilterDrivers"),
-                    MessageBoxButton.YesNo, MessageBoxImage.Warning) != MessageBoxResult.Yes) return;
+            var okNames = new List<string>(); var failNames = new List<string>();
             using var scope = StatusService.BeginScope(LanguageService.T("Opt_CreatingRestorePoint"));
             await SystemService.CreateRestorePointAsync();
             scope.Update(LanguageService.T("Opt_DriverExporting"));
             await DriverService.ExportCurrentDriversAsync();
-            int ok = 0, failed = 0, i = 0;
+            int i = 0;
             foreach (var row in rows)
             {
                 i++;
@@ -654,9 +702,10 @@ namespace OptimizerWpf.Views
                 }
                 catch { done = false; }
                 DriverHistoryService.Record(row.Title, row.WuUpdate != null ? "Windows Update" : "Microsoft Update Catalog", done ? "installed" : "failed");
-                if (done) { ok++; _driverUpdates.Remove(row); } else failed++;
+                if (done) { okNames.Add(row.Title); _driverUpdates.Remove(row); UpdatesHubService.ReportDriverScan(_driverUpdates.Count); } else failNames.Add(row.Title);
             }
-            scope.End($"{LanguageService.T("Opt_FilterDrivers")}: {ok} / {rows.Count}" + (failed > 0 ? $" ({failed})" : ""));
+            scope.End($"{LanguageService.T("Opt_FilterDrivers")}: {okNames.Count} / {rows.Count}" + (failNames.Count > 0 ? $" ({failNames.Count})" : ""));
+            return (okNames, failNames);
         }
 
         // ΔΙΟΡΘΩΣΗ (GEARWIN.MD: "όταν γίνεται εγκατάσταση αντί του σάρωση στο κουμπί να εμφανίζεται
@@ -878,6 +927,28 @@ namespace OptimizerWpf.Views
                     IsPreview = UnifiedDriverRow.LooksPreview(c.Title, c.IsWhql),
                 });
 
+
+            // 6.9.8: τα αποτελέσματα SDIO και Dell Command Update εμφανίζονται ΚΑΙ στη λίστα, με ένδειξη πηγής (πριν ήταν μόνο κείμενο/κουμπιά κάτω από τη λίστα)
+            if (vendor.Dell is { Installed: true } dellScan)
+                foreach (var d in dellScan.Updates)
+                    _driverUpdates.Add(new UnifiedDriverRow
+                    {
+                        Title = d.Name ?? "Dell",
+                        SourceBadge = "Dell Command Update",
+                        SubText = string.Join(" · ", new[] { d.Version, d.Category, d.Urgency }.Where(x => !string.IsNullOrWhiteSpace(x))),
+                        ActionLabel = LanguageService.T("Opt_OpenDellCommandUpdate"),
+                        VendorDownloadUrl = "dcu-ui.exe",
+                        Vendor = "Dell",
+                    });
+            if (vendor.Sdio is { Installed: true, HasDriverPacks: true, ReportPath: not null } sdioScan)
+                _driverUpdates.Add(new UnifiedDriverRow
+                {
+                    Title = LanguageService.T("Opt_SdioRowTitle"),
+                    SourceBadge = "SDIO",
+                    SubText = LanguageService.T("Opt_SdioPacksFound"),
+                    ActionLabel = LanguageService.T("Opt_OpenSdioReport"),
+                    VendorDownloadUrl = sdioScan.ReportPath,
+                });
 
             var parts = new List<string>();
             parts.Add(wuResult.PolicyBlocked

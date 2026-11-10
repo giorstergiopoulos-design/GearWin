@@ -74,7 +74,7 @@ namespace OptimizerWpf.Tests
             var text = new HashSet<string> { ".md", ".cs", ".xaml", ".csproj", ".iss", ".ps1", ".yml", ".json", ".txt", ".toml", ".bat" };
             var self = "ReleaseHygieneTests.cs";
             var problems = new List<string>();
-            foreach (var rel in files.Select(f => f.Trim()).Where(f => text.Contains(Path.GetExtension(f).ToLowerInvariant()) && !f.EndsWith(self) && !f.StartsWith("release/")))
+            foreach (var rel in files.Select(f => f.Trim()).Where(f => text.Contains(Path.GetExtension(f).ToLowerInvariant()) && !f.EndsWith(self) && !f.StartsWith("release/") && f != ".github/workflows/security-scan.yml"))   // the scan workflow lists the forbidden patterns itself
             {
                 var path = Path.Combine(root, rel);
                 if (!File.Exists(path)) continue;

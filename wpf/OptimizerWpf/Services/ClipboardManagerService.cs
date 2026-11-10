@@ -58,7 +58,8 @@ namespace OptimizerWpf.Services
             _hwnd = helper.Handle != IntPtr.Zero ? helper.Handle : helper.EnsureHandle();
             _source = HwndSource.FromHwnd(_hwnd);
             _source?.AddHook(WndProc);
-            RegisterHotKey(_hwnd, HotkeyId, MOD_WIN | MOD_SHIFT, VK_V);
+            // 6.9.8 (κανόνας συντομεύσεων): αν η καταχώριση αποτύχει (άλλο πρόγραμμα κρατά τη συντόμευση) ενημερώνεται ο χρήστης, όχι σιωπηλή αποτυχία
+            if (!RegisterHotKey(_hwnd, HotkeyId, MOD_WIN | MOD_SHIFT, VK_V)) StatusService.SetIdle(LanguageService.T("Clip_HotkeyInUse"));
             AddClipboardFormatListener(_hwnd);
             IsRunning = true;
         }

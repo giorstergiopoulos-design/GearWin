@@ -161,11 +161,11 @@
                     <Button x:Name="BtnIgnored" Content="{tr:Tr Opt_IgnoredButton}" Style="{StaticResource FlatButtonStyle}" Padding="16,6" HorizontalAlignment="Center" Margin="0,0,0,6" Visibility="Collapsed" Click="BtnIgnored_Click"/>
                     <Button Content="{tr:Tr Opt_GitFolderBtn}" Style="{StaticResource FlatButtonStyle}" Padding="16,6" HorizontalAlignment="Center" Margin="0,0,0,6" Click="BtnAddGitFolder_Click"/>
                     <TextBlock Text="{tr:Tr Opt_ScanAllHint}" Style="{StaticResource SubTextStyle}" TextWrapping="Wrap" HorizontalAlignment="Center" TextAlignment="Center" Margin="0,0,0,10"/>
-                    <StackPanel Orientation="Horizontal">
+                    <StackPanel Orientation="Horizontal" HorizontalAlignment="Center">
                         <Button x:Name="BtnExportWingetList" Content="{tr:Tr Opt_ExportAppsListButton}" Style="{StaticResource FlatButtonStyle}" Padding="16,8" Margin="0,0,10,0" Click="BtnExportWingetList_Click"/>
                         <Button x:Name="BtnImportWingetList" Content="{tr:Tr Opt_ImportAppsListButton}" Style="{StaticResource FlatButtonStyle}" Padding="16,8" Click="BtnImportWingetList_Click"/>
                     </StackPanel>
-                    <TextBlock x:Name="TxtWingetPortableStatus" Style="{StaticResource SubTextStyle}" TextWrapping="Wrap" Margin="0,6,0,0"/>
+                    <TextBlock x:Name="TxtWingetPortableStatus" Style="{StaticResource SubTextStyle}" TextWrapping="Wrap" TextAlignment="Center" HorizontalAlignment="Center" Margin="0,6,0,0"/>
                 </StackPanel>
             </Border>
 

@@ -1098,18 +1098,21 @@ public partial class MainWindow : Window
     {
         a = a.ToLowerInvariant();
         b = b.ToLowerInvariant();
-        var dp = new int[a.Length + 1, b.Length + 1];
-        for (var i = 0; i <= a.Length; i++) dp[i, 0] = i;
-        for (var j = 0; j <= b.Length; j++) dp[0, j] = j;
+        // 6.9.8: δύο γραμμές αντί για πίνακα O(m*n) (λιγότερη μνήμη/GC στο live search)
+        var prev = new int[b.Length + 1];
+        var cur = new int[b.Length + 1];
+        for (var j = 0; j <= b.Length; j++) prev[j] = j;
         for (var i = 1; i <= a.Length; i++)
         {
+            cur[0] = i;
             for (var j = 1; j <= b.Length; j++)
             {
                 var cost = a[i - 1] == b[j - 1] ? 0 : 1;
-                dp[i, j] = Math.Min(Math.Min(dp[i - 1, j] + 1, dp[i, j - 1] + 1), dp[i - 1, j - 1] + cost);
+                cur[j] = Math.Min(Math.Min(prev[j] + 1, cur[j - 1] + 1), prev[j - 1] + cost);
             }
+            (prev, cur) = (cur, prev);
         }
-        return dp[a.Length, b.Length];
+        return prev[b.Length];
     }
 
     private void ListSearchResults_SelectionChanged(object sender, SelectionChangedEventArgs e)

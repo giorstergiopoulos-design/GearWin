@@ -6,6 +6,18 @@ available inside the app itself, via Help/Instructions → the "Version History"
 
 Format loosely follows [Keep a Changelog](https://keepachangelog.com/).
 
+## v6.9.8 — Update flow, SDIO sources, lighter scans
+
+- **Rescan after an update**: when an update run ends, the gear shows "Rescan" (tooltip) and does the full scan if the user stays on the tab; leaving the tab restores the normal state. The Home update counters (apps / Windows / drivers) are refreshed after every installed item, not only after a scan.
+- **One result pop-up** with the right counts per category ("Apps: 2 / 3", "Windows: 1 / 1", "Drivers: 0 / 1" plus the failed names, Store and restart notes). All confirmations come first, then everything runs, then one message (before: a separate pop-up per category, and Windows-only runs reported 0).
+- **SDIO and Dell Command Update results are rows of the list** with a source label (SDIO / Dell Command Update), like the Windows Update, Update Catalog and AMD/NVIDIA rows. SDIO is a single row "Driver packs available (SDIO)" that opens the report; per-driver SDIO rows are NOT implemented (the report format could not be checked here: SDIO is not installed on this machine).
+- Export / import list of apps: buttons and status text centered in the card.
+- **Icons**: Edge and Teams used the generic microsoft.com favicon; they now use their own hosts (checked: the favicon service returns distinct icons). PowerToys has no distinct official site, so it keeps the generic Microsoft icon (open).
+- **Cheap resource fixes (section 7)**: large-file scan streams and keeps only the top 50; duplicate scan compares the first 64 KB before hashing whole files; file enumeration is lazy; services list uses one WMI query; startup-delay estimate uses one process snapshot (disposed); disk benchmark writes the same 256 MiB in 4 MiB chunks from one buffer; fuzzy search uses two rows instead of a 2-D table.
+- **Shortcuts check (section 0B.2)**: GearWin has one global shortcut, Win+Shift+V (clipboard history; Win+V is the Windows one). The registration result was ignored; now, if another program holds it, the status bar says so (14 languages). Local shortcuts Ctrl+1..9 (tabs) do not collide with Windows defaults.
+- Tests: rescan state, one-summary counts, Edge/Teams icon sources, top-50 and partial-hash scans.
+- NOT VERIFIED: the update run and the rescan state in the real window (unit-tested state logic and the existing 14-language GUI test only), SDIO rows with a real SDIO report, the real icons in the app (only favicon service responses were compared), CPU/RAM effect of the scan changes (no measurement).
+
 ## v6.9.7 — Repo and release hygiene
 
 - **No traces in release files**: deterministic build (`Deterministic`, `ContinuousIntegrationBuild`, `DeterministicSourcePaths`, `PathMap`), no PDB in Release/publish output; tracked documents and tests no longer contain personal paths or user names. New tests scan the build output and all tracked text files for personal paths/names/e-mail.
