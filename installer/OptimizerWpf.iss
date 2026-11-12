@@ -19,7 +19,7 @@
 #if Ver < EncodeVer(7,0,0)
   #error GearWin needs Inno Setup 7 or newer (an older compiler writes an older uninstaller that an upgrade keeps; see CHANGELOG 6.9.5)
 #endif
-#define MyAppVersion "6.9.8"
+#define MyAppVersion "6.9.9"
 #define MyAppPublisher "giorstergiopoulos-design"
 #define MyAppURL "https://github.com/giorstergiopoulos-design/GearWin"
 ; ΝΕΟ - ρητό αίτημα χρήστη: "το όνομα του exe να προσαρμοστεί στο όνομα της εφαρμογής" - πρέπει να
@@ -244,7 +244,8 @@ begin
   Result := True;
   if WizardSilent then
   begin
-    Exec(ExpandConstant('{sys}\taskkill.exe'), '/F /T /IM {#MyAppExeName}', '', SW_HIDE, ewWaitUntilTerminated, ResultCode);
+    // /T would also kill the setup itself when the in-app update started it as a child of GearWin.exe (found in the 6.9.8 self-update review)
+    Exec(ExpandConstant('{sys}\taskkill.exe'), '/F /IM {#MyAppExeName}', '', SW_HIDE, ewWaitUntilTerminated, ResultCode);
     Sleep(1500);
   end;
 end;

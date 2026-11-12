@@ -119,7 +119,7 @@ namespace OptimizerWpf.Services
             if (info.Sha256 == null) throw new InvalidOperationException("no-digest");
             if (!IsTrustedDownloadUrl(info.AssetUrl)) throw new InvalidOperationException("untrusted-url");
             SecureStorage.SecureDirectory(UpdateDir);
-            foreach (var old in Directory.GetFiles(UpdateDir)) { try { File.Delete(old); } catch { } }
+            foreach (var old in Directory.GetFiles(UpdateDir)) { if (Path.GetFileName(old).Equals("last-update.log", StringComparison.OrdinalIgnoreCase)) continue; try { File.Delete(old); } catch { } }
             var path = Path.Combine(UpdateDir, info.AssetName);
 
             using var resp = await Http.GetAsync(info.AssetUrl, HttpCompletionOption.ResponseHeadersRead, ct);
@@ -154,7 +154,9 @@ namespace OptimizerWpf.Services
         // (σιωπηλή εγκατάσταση: InitializeSetup + /CLOSEAPPLICATIONS) και, με /RELAUNCH=1, την ξανανοίγει όταν τελειώσει. Μετά το κάλεσμα η εφαρμογή πρέπει να τερματίσει.
         public static void LaunchInstallerAfterExit(string installerPath)
         {
-            Process.Start(new ProcessStartInfo(installerPath, "/SILENT /SUPPRESSMSGBOXES /NORESTART /CLOSEAPPLICATIONS /RELAUNCH=1") { UseShellExecute = true });
+            // 6.9.9: το log του installer μένει στον προστατευμένο φάκελο ενημέρωσης (last-update.log) ώστε μια αποτυχημένη εγκατάσταση να είναι διαγνώσιμη
+            var log = Path.Combine(UpdateDir, "last-update.log");
+            Process.Start(new ProcessStartInfo(installerPath, $"/SILENT /SUPPRESSMSGBOXES /NORESTART /CLOSEAPPLICATIONS /RELAUNCH=1 /LOG=\"{log}\"") { UseShellExecute = true });
         }
     }
 }

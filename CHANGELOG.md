@@ -6,6 +6,14 @@ available inside the app itself, via Help/Instructions → the "Version History"
 
 Format loosely follows [Keep a Changelog](https://keepachangelog.com/).
 
+## v6.9.9 — Self-update review
+
+- **Likely cause of "the update downloads but does not install"** (found by reading the path end to end): since 6.9.7 the setup runs `taskkill /F /T /IM GearWin.exe` before the mutex check; the in-app update starts the setup as a CHILD of GearWin.exe, so `/T` could kill the setup together with the program. Removed `/T` (test: the script must not use it). Not reproduced on a real machine before the fix; the new CI scenario below is the check.
+- **`last-update.log`**: the in-app update now starts the setup with `/LOG` into the protected update folder (`%ProgramData%\GearWin\Update\last-update.log`, kept when the next download clears the folder), so a failed install can be diagnosed.
+- **installer-e2e scenario `in-app`** (GitHub runner): installs the new setup, then the RUNNING program starts the staged setup through the real update code (`--e2e-self-update`, honoured only on a GitHub runner and only for a file inside the admin-only update folder); the check waits for a complete `last-update.log`, "Installation process succeeded", no abort, and that the program was started again (`/RELAUNCH=1`). The existing `from-latest` scenario installs a newer version over a running old one with /VERYSILENT, not through the in-app code.
+- Path reviewed: asset name pattern and github.com/<owner>/<repo>/releases/download prefix only; SHA-256 from the GitHub digest is mandatory (without it only the release page opens); download into the admin-only folder; hash mismatch deletes the file; needs the program to be elevated (no extra UAC prompt then); AppId unchanged ({B7B4D3B0-...}) so the setup upgrades in place.
+- NOT VERIFIED: a real update from the published 6.9.8 to a newer release on a real PC (UAC, SmartScreen); the fix is exercised only by the runner scenario.
+
 ## v6.9.8 — Update flow, SDIO sources, lighter scans
 
 - **Rescan after an update**: when an update run ends, the gear shows "Rescan" (tooltip) and does the full scan if the user stays on the tab; leaving the tab restores the normal state. The Home update counters (apps / Windows / drivers) are refreshed after every installed item, not only after a scan.

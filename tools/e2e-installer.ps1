@@ -6,7 +6,7 @@
 #
 # Results: <Out>\report.md (also the job summary), the Inno logs, performance.log, a screenshot. Exit code 1 on any failed check.
 param(
-    [Parameter(Mandatory)][ValidateSet('fresh', 'from-latest')][string]$Scenario,
+    [Parameter(Mandatory)][ValidateSet('fresh', 'from-latest', 'in-app')][string]$Scenario,
     [Parameter(Mandatory)][string]$NewSetup,
     [string]$Repository = 'giorstergiopoulos-design/GearWin',
     [string]$Out = (Join-Path ([IO.Path]::GetTempPath()) 'gearwin-e2e'),
@@ -129,6 +129,34 @@ $env:GEARWIN_FORCE_TIER = ''
 if ($hasTiers -and (Test-Path $log)) {
     foreach ($tier in 'Low', 'Balanced', 'High') { Check (@(Select-String -Path $log -Pattern "Performance tier: $tier \(forced\)").Count -ge 1) "performance.log shows the forced $tier tier" }
     Copy-Item $log (Join-Path $Out 'performance.log') -ErrorAction SilentlyContinue
+}
+
+# ---- 3b. the REAL in-app update path: the running program starts the installer itself (child of GearWin.exe), the setup closes it, installs, relaunches ----------------------
+if ($Scenario -eq 'in-app') {
+    $updateDir = Join-Path $env:ProgramData 'GearWin\Update'
+    New-Item -ItemType Directory -Force $updateDir | Out-Null
+    $staged = Join-Path $updateDir 'GearWin-Setup-9.9.9.exe'
+    Copy-Item $NewSetup $staged -Force
+    $upLog = Join-Path $updateDir 'last-update.log'
+    Remove-Item $upLog -ErrorAction SilentlyContinue
+    $env:GEARWIN_FORCE_TIER = ''
+    $app = Start-Process -FilePath $exe -ArgumentList '--e2e-self-update', "`"$staged`"" -PassThru
+    $done = $false
+    for ($i = 0; $i -lt 150; $i++) {
+        Start-Sleep -Seconds 2
+        if ((Test-Path $upLog) -and (Select-String -Path $upLog -Pattern 'Log closed' -Quiet)) { $done = $true; break }
+    }
+    Check $done 'the in-app update started the installer and it finished (last-update.log is complete)'
+    if (Test-Path $upLog) { Copy-Item $upLog (Join-Path $Out 'last-update.log') -ErrorAction SilentlyContinue }
+    if ($done) {
+        Check ((Select-String -Path $upLog -Pattern 'Installation process succeeded' -Quiet)) 'the installer log says: Installation process succeeded'
+        Check (-not (Select-String -Path $upLog -Pattern 'Got EAbort|Setup aborted|Cancelling' -Quiet)) 'the installer was not aborted (no EAbort / cancel in the log)'
+    }
+    Start-Sleep -Seconds 12
+    $again = @(Get-Process GearWin -ErrorAction SilentlyContinue | Where-Object { $_.Id -ne $app.Id })
+    Check ($again.Count -ge 1) 'the program was started again by the installer (/RELAUNCH=1)'
+    Check ((Test-Path $exe)) 'GearWin.exe is still in Program Files after the in-app update'
+    Stop-GearWin
 }
 
 # ---- 4. uninstall ---------------------------------------------------------------------------------------------------------------------

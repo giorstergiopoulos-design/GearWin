@@ -49,7 +49,7 @@ jobs:
       fail-fast: false
       matrix:
         os: [windows-2022]
-        scenario: [fresh, from-latest]
+        scenario: [fresh, from-latest, in-app]
         include:
           - os: windows-2025
             scenario: fresh

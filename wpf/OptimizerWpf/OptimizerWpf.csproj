@@ -41,9 +41,9 @@
          ενημερωμένα OptimizerWpf.dll/.exe - σιωπηλή αποτυχία ενημέρωσης. ΠΡΕΠΕΙ να ενημερώνεται σε
          ΚΑΘΕ έκδοση, μαζί με τα υπόλοιπα 3 σημεία (MainWindow.xaml/SplashWindow.xaml τίτλοι,
          installer/OptimizerWpf.iss's MyAppVersion) - βλ. HANDOFF.md/commit history για το μοτίβο. -->
-    <Version>6.9.8</Version>
-    <AssemblyVersion>6.9.8.0</AssemblyVersion>
-    <FileVersion>6.9.8.0</FileVersion>
+    <Version>6.9.9</Version>
+    <AssemblyVersion>6.9.9.0</AssemblyVersion>
+    <FileVersion>6.9.9.0</FileVersion>
     <Authors>giorstergiopoulos-design</Authors>
     <Company>giorstergiopoulos-design</Company>
     <Product>GearWin - Complete PC Care</Product>

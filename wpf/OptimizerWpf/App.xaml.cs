@@ -91,6 +91,23 @@ public partial class App : Application
         // απεγκατάσταση. Καμία οθόνη/παράθυρο - επαναφέρει ό,τι έχει καταγεγραμμένη προηγούμενη τιμή
         // και τερματίζει αμέσως, ΠΡΙΝ φορτωθεί οτιδήποτε άλλο (θέμα/γλώσσα/action log).
         // 6.9.7: ο installer (task «Εκκίνηση με τα Windows») γράφει το flag μέσω της ίδιας της εφαρμογής - όχι με κρυφό PowerShell script
+        // 6.9.9: δοκιμή installer-e2e της ΠΡΑΓΜΑΤΙΚΗΣ διαδρομής ενημέρωσης (LaunchInstallerAfterExit) πάνω σε τρέχουσα εφαρμογή. Μόνο σε GitHub runner
+        // (GITHUB_ACTIONS=true) και μόνο για αρχείο μέσα στον προστατευμένο φάκελο ενημέρωσης (εγγράψιμος μόνο από admin) - όχι gadget ανύψωσης.
+        var e2eIdx = Array.IndexOf(e.Args, "--e2e-self-update");
+        if (e2eIdx >= 0 && e2eIdx + 1 < e.Args.Length && Environment.GetEnvironmentVariable("GITHUB_ACTIONS") == "true")
+        {
+            var file = System.IO.Path.GetFullPath(e.Args[e2eIdx + 1]);
+            if (file.StartsWith(System.IO.Path.GetFullPath(Services.SelfUpdateService.UpdateDir) + System.IO.Path.DirectorySeparatorChar, StringComparison.OrdinalIgnoreCase) && System.IO.File.Exists(file))
+            {
+                Services.SelfUpdateService.LaunchInstallerAfterExit(file);
+                // όπως η πραγματική ροή, η εφαρμογή μένει ζωντανή λίγο: ο installer πρέπει να τη βρει και να την κλείσει ο ίδιος
+                var t = new System.Windows.Threading.DispatcherTimer { Interval = TimeSpan.FromSeconds(180) };
+                t.Tick += (_, _) => Shutdown();
+                t.Start();
+                return;
+            }
+        }
+
         if (e.Args.Contains("--enable-tray-autostart"))
         {
             try { Services.AppSettingsService.Current.LaunchWithWindowsToTray = true; Services.AppSettingsService.Save(); } catch { }

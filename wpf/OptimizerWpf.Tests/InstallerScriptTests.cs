@@ -1,5 +1,6 @@
 using System;
 using System.IO;
+using System.Linq;
 using Xunit;
 
 namespace OptimizerWpf.Tests
@@ -13,6 +14,28 @@ namespace OptimizerWpf.Tests
             while (dir != null && !File.Exists(Path.Combine(dir.FullName, "installer", "OptimizerWpf.iss"))) dir = dir.Parent;
             Assert.NotNull(dir);
             return File.ReadAllText(Path.Combine(dir!.FullName, "installer", "OptimizerWpf.iss"));
+        }
+
+        // 6.9.9: το in-app update ξεκινά τον installer ως παιδί του GearWin.exe: το taskkill /T του installer θα τον σκότωνε μαζί με την εφαρμογή
+        [Fact]
+        public void SilentSetupClosesTheAppWithoutKillingItsOwnProcessTree()
+        {
+            var iss = Iss();
+            var line = iss.Split((char)10).First(l => l.Contains("taskkill.exe"));
+            Assert.DoesNotContain("/T", line.Replace("/F", "").Replace("/IM", ""));
+            Assert.Contains("/F", line);
+        }
+
+        [Fact]
+        public void InAppUpdateKeepsTheInstallerLogAndRelaunches()
+        {
+            var dir = new DirectoryInfo(AppContext.BaseDirectory);
+            while (dir != null && !File.Exists(Path.Combine(dir.FullName, "installer", "OptimizerWpf.iss"))) dir = dir.Parent;
+            var src = File.ReadAllText(Path.Combine(dir!.FullName, "wpf", "OptimizerWpf", "Services", "SelfUpdateService.cs"));
+            Assert.Contains("last-update.log", src);
+            Assert.Contains("/LOG=", src);
+            Assert.Contains("/RELAUNCH=1", src);
+            Assert.Contains("/CLOSEAPPLICATIONS", src);
         }
 
         [Fact]
